@@ -531,6 +531,8 @@ export const zh: Dict = {
     'Last sent {when}.': '上次发送于 {when}。',
     'Email the new negative comments when an update brings any': '更新带来新的负面评论时发送邮件',
     'Save the list': '保存列表',
+    'Brand report': '品牌报告',
+    Prepared: '生成日期',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

@@ -37,6 +37,38 @@ interface DayRow {
 
 const iso = (d: Date) => d.toISOString().slice(0, 10)
 
+/**
+ * The letterhead: the mark and what kind of report this is on one line, the brand large, then
+ * the facts that frame it, labelled, between hairlines. Ink on paper, like a statement.
+ */
+function PrHead({
+  title,
+  kind,
+  facts,
+}: {
+  title: string
+  kind: string
+  facts: [string, string][]
+}) {
+  return (
+    <header class="sm-pr__head">
+      <div class="sm-pr__top">
+        <Logo />
+        <span>{kind}</span>
+      </div>
+      <h1>{title}</h1>
+      <dl class="sm-pr__meta">
+        {facts.map(([k, v]) => (
+          <div>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </header>
+  )
+}
+
 /** The change against the period before, as a small coloured tag. */
 function Change({
   now,
@@ -172,17 +204,16 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
   return (
     <div class="sm-shell sm-shell--print">
       <article class="sm-pr sm-body">
-        <header class="sm-pr__band">
-          <Logo />
-          <div class="sm-pr__title">
-            <h1>{brand.name}</h1>
-            <p>
-              {brand.industry ? `${brand.industry} · ` : ''}
-              {period} · {network ? NETWORK_NAME[network] : t('All networks')}
-            </p>
-          </div>
-          <p class="sm-pr__date">{new Date().toLocaleDateString(locale, { dateStyle: 'long' })}</p>
-        </header>
+        <PrHead
+          title={brand.name}
+          kind={t('Brand report')}
+          facts={[
+            [t('Period'), period],
+            [t('Networks'), network ? NETWORK_NAME[network] : t('All networks')],
+            ...(brand.industry ? [[t('Field of work'), brand.industry] as [string, string]] : []),
+            [t('Prepared'), new Date().toLocaleDateString(locale, { dateStyle: 'long' })],
+          ]}
+        />
 
         <section class="sm-pr__figs">
           {figures.map((f) => (
@@ -430,18 +461,16 @@ export function PrintBad({ brand }: { brand: BrandRow }) {
   return (
     <div class="sm-shell sm-shell--print">
       <article class="sm-pr sm-body">
-        <header class="sm-pr__band">
-          <Logo />
-          <div class="sm-pr__title">
-            <h1>
-              {brand.name} · {t('Negative comments')}
-            </h1>
-            <p>
-              {period} · {network ? NETWORK_NAME[network] : t('All networks')}
-            </p>
-          </div>
-          <p class="sm-pr__date">{new Date().toLocaleDateString(locale, { dateStyle: 'long' })}</p>
-        </header>
+        <PrHead
+          title={brand.name}
+          kind={t('Negative comments')}
+          facts={[
+            [t('Period'), period],
+            [t('Networks'), network ? NETWORK_NAME[network] : t('All networks')],
+            [t('Negative comments'), fmt(rows.length)],
+            [t('Prepared'), new Date().toLocaleDateString(locale, { dateStyle: 'long' })],
+          ]}
+        />
 
         <section class="sm-pr__block">
           <h2>

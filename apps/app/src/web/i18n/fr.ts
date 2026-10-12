@@ -554,6 +554,8 @@ export const fr: Dict = {
     'Email the new negative comments when an update brings any':
       'Envoyer les nouveaux commentaires négatifs quand une mise à jour en apporte',
     'Save the list': 'Enregistrer la liste',
+    'Brand report': 'Rapport de marque',
+    Prepared: 'Établi le',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

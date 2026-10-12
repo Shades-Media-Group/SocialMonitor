@@ -4124,3 +4124,57 @@ a.sm-person[href]:hover .sm-person__name {
   color: var(--sm-c-complaint, #c4314b);
   font-weight: 600;
 }
+
+/* The report's letterhead: no dark band, no rounded box. A quiet top line with the mark and the
+   kind of report, the brand set large, then labelled facts between two hairlines. */
+.sm-pr__head {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 2px;
+}
+.sm-pr__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #5b6270;
+  font-size: 11px;
+  font-weight: 600;
+}
+.sm-pr__top .sm-logo {
+  color: #16181d;
+  transform: scale(0.85);
+  transform-origin: left center;
+}
+.sm-pr__head h1 {
+  margin: 14px 0 2px;
+  color: #16181d;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.sm-pr__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid #16181d;
+  border-bottom: 1px solid #dfe2e7;
+}
+.sm-pr__meta div {
+  padding: 7px 22px 8px 0;
+}
+.sm-pr__meta div + div {
+  padding-left: 22px;
+  border-left: 1px solid #dfe2e7;
+}
+.sm-pr__meta dt {
+  color: #6b7280;
+  font-size: 10px;
+}
+.sm-pr__meta dd {
+  margin: 1px 0 0;
+  color: #16181d;
+  font-size: 12.5px;
+  font-weight: 600;
+}

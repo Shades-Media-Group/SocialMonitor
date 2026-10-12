@@ -554,6 +554,8 @@ export const ro: Dict = {
     'Email the new negative comments when an update brings any':
       'Trimite pe email comentariile negative noi când o actualizare aduce',
     'Save the list': 'Salvează lista',
+    'Brand report': 'Raportul brandului',
+    Prepared: 'Pregătit',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

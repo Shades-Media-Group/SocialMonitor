@@ -552,6 +552,8 @@ export const ru: Dict = {
     'Email the new negative comments when an update brings any':
       'Присылать новые негативные комментарии, когда обновление их приносит',
     'Save the list': 'Сохранить список',
+    'Brand report': 'Отчёт по бренду',
+    Prepared: 'Подготовлен',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',
