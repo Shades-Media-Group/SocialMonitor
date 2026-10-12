@@ -3095,3 +3095,38 @@ body:has(.sm-shell) {
   background: var(--c-active);
   box-shadow: none;
 }
+
+/* The coloured line runs down the whole open brand: its name and its sections sit to its right. */
+.sm-shell .sm-nav__brand.is-open {
+  position: relative;
+  margin: 2px 0 6px;
+  padding-left: 8px;
+}
+.sm-shell .sm-nav__brand.is-open::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--hue, var(--g-blue-600));
+}
+.sm-shell .sm-nav__brand.is-open .sm-nav__sub {
+  margin: 1px 0 0;
+  padding-left: 0;
+}
+.sm-shell .sm-nav__brand.is-open .sm-nav__sub::before {
+  content: none;
+}
+.sm-shell .sm-nav__brand.is-open .sm-nav__sub .sm-nav__item {
+  padding-left: 12px;
+}
+.sm-shell .sm-nav__brand.is-open > .sm-nav__item,
+.sm-shell .sm-nav__brand.is-open > .sm-nav__item[aria-current='page'] {
+  background: none;
+  font-weight: 650;
+}
+.sm-shell .sm-nav__brand.is-open > .sm-nav__item:hover {
+  background: var(--c-hover);
+}
