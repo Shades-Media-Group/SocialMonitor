@@ -509,6 +509,8 @@ export const zh: Dict = {
     'Words you watch': '关注的词',
     Word: '词',
     Mentions: '提及',
+    'Unusual: {n} times a usual day': '异常：约为平常一天的 {n} 倍',
+    'Unusual for this period': '在这段时间内属异常',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

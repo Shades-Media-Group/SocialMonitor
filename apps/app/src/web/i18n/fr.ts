@@ -531,6 +531,8 @@ export const fr: Dict = {
     'Words you watch': 'Mots suivis',
     Word: 'Mot',
     Mentions: 'Mentions',
+    'Unusual: {n} times a usual day': 'Inhabituel : {n} fois un jour normal',
+    'Unusual for this period': 'Inhabituel pour cette période',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

@@ -426,6 +426,22 @@ export function Heatmap({
  * One measure over time, the way analytics reports draw it: this period as a solid line with a
  * faint area, the period before as a dashed grey line, a crosshair and a readout on hover.
  */
+/**
+ * Unusual days: more than two standard deviations above the period's mean, and at least 3, so a
+ * quiet brand's single comment never counts. Returns each one's index and how many times the
+ * usual day (the mean of the others) it was.
+ */
+export function spikes(values: number[]) {
+  if (values.length < 7) return []
+  const mean = values.reduce((a, b) => a + b, 0) / values.length
+  const sd = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length)
+  return values.flatMap((v, i) => {
+    if (v < 3 || v <= mean + 2 * sd) return []
+    const others = (mean * values.length - v) / (values.length - 1)
+    return [{ i, times: others > 0 ? v / others : null }]
+  })
+}
+
 export function LineChart({
   days,
   values,
@@ -440,7 +456,7 @@ export function LineChart({
   const [ref, W] = useWidth()
   const [hover, setHover] = useState<number | null>(null)
   const H2 = 240
-  const pad = { l: 36, r: 12, t: 12, b: 26 }
+  const pad = { l: 36, r: 12, t: 24, b: 26 }
   const iw = W - pad.l - pad.r
   const ih = H2 - pad.t - pad.b
   const max = niceMax(Math.max(1, ...values, ...previous))
@@ -451,6 +467,8 @@ export function LineChart({
     vs.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join('')
   const every = Math.ceil(days.length / Math.max(2, Math.floor(W / 110)))
   const h = hover === null ? null : hover
+  const odd = spikes(values)
+  const oddAt = (i: number) => odd.find((o) => o.i === i)
   return (
     <figure class="sm-chart sm-line">
       <div class="sm-chart__plot" ref={ref}>
@@ -486,6 +504,14 @@ export function LineChart({
             d={`${path(values)}L${x(values.length - 1)} ${y(0)}L${x(0)} ${y(0)}Z`}
           />
           <path class="sm-line__now" d={path(values)} />
+          {odd.map((o) => (
+            <g class="sm-line__spike">
+              <circle cx={x(o.i)} cy={y(values[o.i]!)} r={6} />
+              <text x={x(o.i)} y={Math.max(10, y(values[o.i]!) - 11)} text-anchor="middle">
+                {o.times ? `×${o.times < 10 ? o.times.toFixed(1) : Math.round(o.times)}` : '!'}
+              </text>
+            </g>
+          ))}
           {h !== null && (
             <g>
               <line class="sm-line__cross" x1={x(h)} x2={x(h)} y1={pad.t} y2={pad.t + ih} />
@@ -500,6 +526,13 @@ export function LineChart({
               <i class="sm-swatch sm-line__key" aria-hidden="true" /> {label}{' '}
               <b class="g-num">{fmt(values[h])}</b>
             </span>
+            {oddAt(h) && (
+              <span class="sm-tip__odd">
+                {oddAt(h)!.times
+                  ? t('Unusual: {n} times a usual day', { n: oddAt(h)!.times!.toFixed(1) })
+                  : t('Unusual for this period')}
+              </span>
+            )}
             {previous.length === values.length && (
               <span>
                 <i class="sm-swatch sm-line__key sm-line__key--prev" aria-hidden="true" />{' '}

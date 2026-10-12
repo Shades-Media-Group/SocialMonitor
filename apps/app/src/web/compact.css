@@ -4108,3 +4108,19 @@ a.sm-person[href]:hover .sm-person__name {
   gap: 6px;
   align-items: center;
 }
+
+/* An unusual day: a red ring on the line, with how many times a usual day it was. */
+.sm-line__spike circle {
+  fill: var(--c-card, #fff);
+  stroke: var(--sm-c-complaint, #c4314b);
+  stroke-width: 2;
+}
+.sm-line__spike text {
+  fill: var(--sm-c-complaint, #c4314b);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.sm-tip__odd {
+  color: var(--sm-c-complaint, #c4314b);
+  font-weight: 600;
+}

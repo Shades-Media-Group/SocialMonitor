@@ -531,6 +531,8 @@ export const ro: Dict = {
     'Words you watch': 'Cuvintele urmărite',
     Word: 'Cuvânt',
     Mentions: 'Mențiuni',
+    'Unusual: {n} times a usual day': 'Neobișnuit: de {n} ori o zi obișnuită',
+    'Unusual for this period': 'Neobișnuit pentru această perioadă',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

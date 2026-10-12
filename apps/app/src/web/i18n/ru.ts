@@ -529,6 +529,8 @@ export const ru: Dict = {
     'Words you watch': 'Отслеживаемые слова',
     Word: 'Слово',
     Mentions: 'Упоминания',
+    'Unusual: {n} times a usual day': 'Необычно: в {n} раза больше обычного дня',
+    'Unusual for this period': 'Необычно для этого периода',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',
