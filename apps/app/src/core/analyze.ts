@@ -101,7 +101,14 @@ function viaClaudeCode(prompt: string, input: string, image?: string): Promise<s
           return reject(new Error(`Claude Code failed: ${err.message.split('\n')[0]}`))
         try {
           const d = JSON.parse(stdout) as { result?: string; is_error?: boolean }
-          if (d.is_error) return reject(new Error(`Claude Code: ${d.result}`))
+          if (d.is_error)
+            return reject(
+              new Error(
+                /authenticat|oauth|log ?in|credential/i.test(d.result ?? '')
+                  ? 'Claude Code is signed out: run claude in a terminal, type /login, then update again.'
+                  : `Claude Code: ${d.result}`,
+              ),
+            )
           resolve(d.result ?? '')
         } catch {
           reject(new Error('Claude Code answered something that is not JSON.'))
@@ -110,6 +117,24 @@ function viaClaudeCode(prompt: string, input: string, image?: string): Promise<s
     )
     child.stdin?.end(input)
   })
+}
+
+/** Claude Code first; when it fails and an Anthropic API key is set, the API instead. */
+async function viaClaude(prompt: string, input: string, imagePath?: string): Promise<string> {
+  try {
+    return await viaClaudeCode(prompt, input, imagePath)
+  } catch (e) {
+    if (!process.env.ANTHROPIC_API_KEY) throw e
+    let image: { data: string; type: string } | undefined
+    if (imagePath) {
+      const { readFileSync } = await import('node:fs')
+      image = {
+        data: readFileSync(imagePath).toString('base64'),
+        type: imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg',
+      }
+    }
+    return viaApi(prompt, input, image)
+  }
 }
 
 async function viaApi(
@@ -154,7 +179,7 @@ export async function draftReply(
 Write one reply to the comment below, in the comment's own language: warm, short (at most 3 sentences), specific, no hashtags, no promises the brand cannot keep. If it is a complaint, apologise once and say how to get help. Output only the reply.`
   const text =
     engine === 'claude'
-      ? await viaClaudeCode(prompt, clip(comment, 800))
+      ? await viaClaude(prompt, clip(comment, 800))
       : await viaApi(prompt, clip(comment, 800))
   return text.trim().slice(0, 1200)
 }
@@ -172,7 +197,7 @@ export async function translate(engine: Engine, text: string, lang = 'en') {
   const prompt = `Translate this social media comment into natural ${LANGUAGE[lang] ?? 'English'}. Keep emoji. Output only the translation.`
   const out =
     engine === 'claude'
-      ? await viaClaudeCode(prompt, clip(text, 1500))
+      ? await viaClaude(prompt, clip(text, 1500))
       : await viaApi(prompt, clip(text, 1500))
   return out.trim().slice(0, 2000)
 }
@@ -211,8 +236,7 @@ export async function sortComments(
   for (let i = 0; i < comments.length; i += 60) {
     const batch = comments.slice(i, i + 60)
     const input = batch.map((c, j) => `${j + 1}|${clip(c.text, 500)}`).join('\n')
-    const text =
-      engine === 'claude' ? await viaClaudeCode(prompt, input) : await viaApi(prompt, input)
+    const text = engine === 'claude' ? await viaClaude(prompt, input) : await viaApi(prompt, input)
     for (const [j, v] of parseVerdicts(text)) {
       const c = batch[j - 1]
       if (c) out.set(c.id, v)
@@ -231,8 +255,7 @@ export async function describePost(
 ): Promise<string> {
   const input = `Caption: ${clip(caption, 1200) || '(none)'}${topComments.length ? `\nTop comments: ${topComments.map((c) => clip(c, 140)).join(' / ')}` : ''}`
   let text: string
-  if (engine === 'claude')
-    text = await viaClaudeCode(DESCRIBE(brand), input, imagePath ?? undefined)
+  if (engine === 'claude') text = await viaClaude(DESCRIBE(brand), input, imagePath ?? undefined)
   else {
     let image: { data: string; type: string } | undefined
     if (imagePath) {

@@ -149,9 +149,14 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   }
   await closeBrowser()
 
-  // The AI step: describe new posts, sort new comments.
+  // The AI step: describe new posts and sort every comment still unsorted on these brands,
+  // including ones an earlier update could not sort.
   try {
-    await aiStep(db, touched, log)
+    const brands = new Set(touched.map((t) => t.brandId))
+    const posts = new Map(touched.map((t) => [t.postId, t]))
+    for (const p of pendingPosts(db))
+      if (brands.has(p.brandId) && !posts.has(p.postId)) posts.set(p.postId, p)
+    await aiStep(db, [...posts.values()], log)
   } catch (e) {
     problems.push((e as Error).message)
   }
@@ -233,14 +238,18 @@ async function aiStep(
   }
 }
 
-/** Sorts every unsorted comment and describes every post without a description. Returns how many comments it sorted. */
-export async function sortPending(db: DB) {
-  const rows = db
+/** Posts with no description yet, or with comments nobody has sorted. */
+const pendingPosts = (db: DB) =>
+  db
     .prepare(
-      `SELECT DISTINCT p.id AS postId, b.name AS brand FROM posts p JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id
+      `SELECT DISTINCT p.id AS postId, b.name AS brand, b.id AS brandId FROM posts p JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id
        WHERE p.description IS NULL OR EXISTS (SELECT 1 FROM comments c WHERE c.post_id = p.id AND c.label IS NULL AND lower(c.author) != lower(pr.handle))`,
     )
-    .all() as { postId: number; brand: string }[]
+    .all() as { postId: number; brand: string; brandId: number }[]
+
+/** Sorts every unsorted comment and describes every post without a description. Returns how many comments it sorted. */
+export async function sortPending(db: DB) {
+  const rows = pendingPosts(db)
   const before = (
     db.prepare('SELECT count(*) AS n FROM comments WHERE label IS NULL').get() as { n: number }
   ).n
