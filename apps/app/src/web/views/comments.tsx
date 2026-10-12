@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
-import type { BrandRow, CommentRow } from '../api.ts'
+import type { BrandRow, CommentRow, PostRow } from '../api.ts'
 import { api } from '../api.ts'
-import { Empty, NetworkMark, Segmented, ago, count } from '../ui.tsx'
+import {
+  Empty,
+  Icon,
+  Menu,
+  NETWORK_NAME,
+  NetworkMark,
+  Segmented,
+  ago,
+  count,
+  when,
+} from '../ui.tsx'
 import { lang, t } from '../i18n.ts'
 import { JsonPanel } from '../json.tsx'
 import { LabelPill } from '../labels.tsx'
@@ -29,10 +39,13 @@ export function CommentList({
   comments,
   brands,
   onChange,
+  wide = false,
 }: {
   comments: CommentRow[]
   brands: BrandRow[]
   onChange?: () => void
+  /** Room to spare: actions show as buttons instead of a menu. */
+  wide?: boolean
 }) {
   const handles = new Map<number, string[]>(
     brands.map((b) => [b.id, b.profiles.map((p) => p.handle.toLowerCase())]),
@@ -119,45 +132,103 @@ export function CommentList({
                 />
               )}
               <span class="sm-c__links">
-                {edit &&
-                  c.needs_reply === 1 &&
-                  (c.reply_status === 'open' ? (
-                    <>
-                      <button class="sm-textbtn" type="button" onClick={() => mark(c, 'done')}>
-                        {t('Answered')}
-                      </button>
-                      <button class="sm-textbtn" type="button" onClick={() => mark(c, 'ignored')}>
-                        {t('Skip')}
-                      </button>
-                    </>
-                  ) : (
-                    <button class="sm-textbtn" type="button" onClick={() => mark(c, 'open')}>
-                      {c.reply_status === 'done' ? t('Answered') : t('Skipped')} · {t('undo')}
+                {edit && c.needs_reply === 1 && c.reply_status === 'open' && (
+                  <button
+                    class="g-btn g-btn--sm sm-btn-answered"
+                    type="button"
+                    onClick={() => mark(c, 'done')}
+                  >
+                    {t('Answered')}
+                  </button>
+                )}
+                {c.reply_status !== 'open' && c.needs_reply === 1 && (
+                  <span class={`sm-badge ${c.reply_status === 'done' ? 'sm-badge--green' : ''}`}>
+                    {c.reply_status === 'done' ? t('Answered') : t('Skipped')}
+                  </span>
+                )}
+                {wide ? (
+                  [
+                    ...(!(lang === 'en' && c.translation) && !extra[c.id]
+                      ? [
+                          {
+                            label: t('Translate'),
+                            onSelect: () => ask(c, 'translation'),
+                            disabled: busy === c.id,
+                          },
+                        ]
+                      : []),
+                    ...(edit
+                      ? [
+                          {
+                            label: t('Draft a reply'),
+                            onSelect: () => ask(c, 'draft'),
+                            disabled: busy === c.id,
+                          },
+                        ]
+                      : []),
+                    ...(edit && c.needs_reply === 1 && c.reply_status === 'open'
+                      ? [{ label: t('Skip'), onSelect: () => mark(c, 'ignored') }]
+                      : []),
+                    ...(edit && c.needs_reply === 1 && c.reply_status !== 'open'
+                      ? [{ label: t('undo'), onSelect: () => mark(c, 'open') }]
+                      : []),
+                    {
+                      label: t('Open the post'),
+                      onSelect: () => open(c.post_url, '_blank', 'noreferrer'),
+                    },
+                    {
+                      label: t('Copy the text'),
+                      onSelect: () => navigator.clipboard?.writeText(c.text),
+                    },
+                  ].map((it) => (
+                    <button
+                      class="g-btn g-btn--ghost g-btn--sm"
+                      type="button"
+                      disabled={it.disabled}
+                      onClick={it.onSelect}
+                    >
+                      {it.label}
                     </button>
-                  ))}
-                {!(lang === 'en' && c.translation) && !extra[c.id] && (
-                  <button
-                    class="sm-textbtn"
-                    type="button"
-                    disabled={busy === c.id}
-                    onClick={() => ask(c, 'translation')}
-                  >
-                    {t('Translate')}
-                  </button>
+                  ))
+                ) : (
+                  <Menu
+                    label={t('More actions')}
+                    items={[
+                      ...(!(lang === 'en' && c.translation) && !extra[c.id]
+                        ? [
+                            {
+                              label: t('Translate'),
+                              onSelect: () => ask(c, 'translation'),
+                              disabled: busy === c.id,
+                            },
+                          ]
+                        : []),
+                      ...(edit
+                        ? [
+                            {
+                              label: t('Draft a reply'),
+                              onSelect: () => ask(c, 'draft'),
+                              disabled: busy === c.id,
+                            },
+                          ]
+                        : []),
+                      ...(edit && c.needs_reply === 1 && c.reply_status === 'open'
+                        ? [{ label: t('Skip'), onSelect: () => mark(c, 'ignored') }]
+                        : []),
+                      ...(edit && c.needs_reply === 1 && c.reply_status !== 'open'
+                        ? [{ label: t('undo'), onSelect: () => mark(c, 'open') }]
+                        : []),
+                      {
+                        label: t('Open the post'),
+                        onSelect: () => open(c.post_url, '_blank', 'noreferrer'),
+                      },
+                      {
+                        label: t('Copy the text'),
+                        onSelect: () => navigator.clipboard?.writeText(c.text),
+                      },
+                    ]}
+                  />
                 )}
-                {edit && (
-                  <button
-                    class="sm-textbtn"
-                    type="button"
-                    disabled={busy === c.id}
-                    onClick={() => ask(c, 'draft')}
-                  >
-                    {t('Draft a reply')}
-                  </button>
-                )}
-                <a class="sm-textbtn" href={c.post_url} target="_blank" rel="noreferrer">
-                  {t('Open the post')}
-                </a>
               </span>
             </footer>
           )}
@@ -346,16 +417,241 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
           note={t('Edit label, reply_status, sentiment or category, then save.')}
         />
       ) : rows === null ? null : rows.length ? (
-        <section class="sm-box">
-          <header class="sm-box__head">
-            <h2>{count(rows.length, 'comment')}</h2>
-          </header>
-          <CommentList comments={rows} brands={brands} onChange={() => setTick((x) => x + 1)} />
-        </section>
+        <Inbox rows={rows} brands={brands} onChange={() => setTick((x) => x + 1)} />
       ) : (
         <Empty title={t('No comments match.')}>
           {t('Change the filters, or press Update to read new ones.')}
         </Empty>
+      )}
+    </div>
+  )
+}
+
+/**
+ * The comments as an inbox: a list on the left, the chosen comment on the right with its post,
+ * its replies and everything you can do with it. Up and down arrows move through the list.
+ */
+function Inbox({
+  rows,
+  brands,
+  onChange,
+}: {
+  rows: CommentRow[]
+  brands: BrandRow[]
+  onChange: () => void
+}) {
+  const roots = rows.filter(
+    (c) => !c.parent_ext_id || !rows.some((r) => r.ext_id === c.parent_ext_id),
+  )
+  const [sel, setSel] = useState<number | null>(roots[0]?.id ?? null)
+  const [posts, setPosts] = useState<Map<number, PostRow>>(new Map())
+  const current = roots.find((c) => c.id === sel) ?? roots[0]
+  const brand = brands.find((b) => b.id === current?.brand_id)
+  const handles = brand?.profiles.map((p) => p.handle.toLowerCase()) ?? []
+  const own = (c: CommentRow) => handles.includes(c.author.toLowerCase())
+
+  useEffect(() => {
+    if (!brand) return
+    api
+      .get<PostRow[]>(`/api/posts?brand=${brand.id}&limit=500`)
+      .then((list) => setPosts(new Map(list.map((p) => [p.id, p]))))
+      .catch(() => {})
+  }, [brand?.id])
+
+  const step = (e: KeyboardEvent) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+    e.preventDefault()
+    const i = roots.findIndex((c) => c.id === current?.id)
+    const next =
+      roots[Math.min(roots.length - 1, Math.max(0, i + (e.key === 'ArrowDown' ? 1 : -1)))]
+    if (next) {
+      setSel(next.id)
+      document.getElementById(`sm-row-${next.id}`)?.scrollIntoView({ block: 'nearest' })
+    }
+  }
+
+  const post = current ? posts.get(current.post_id) : undefined
+  return (
+    <div class="sm-inbox">
+      <section class="sm-box sm-inbox__list">
+        <header class="sm-box__head">
+          <h2>{count(roots.length, 'comment')}</h2>
+          <span class="sm-box__meta">{t('↑ ↓ to move')}</span>
+        </header>
+        <ul role="listbox" tabIndex={0} aria-label={t('Comments')} onKeyDown={step}>
+          {roots.map((c) => {
+            const replies = rows.filter((r) => r.parent_ext_id === c.ext_id)
+            const answered = replies.some(own)
+            return (
+              <li
+                id={`sm-row-${c.id}`}
+                role="option"
+                aria-selected={c.id === current?.id}
+                class="sm-inbox__row"
+                onClick={() => setSel(c.id)}
+              >
+                <span class={`sm-c__face sm-face--${hue(c.author)}`} aria-hidden="true">
+                  {initials(c.author)}
+                </span>
+                <span class="sm-inbox__main">
+                  <span class="sm-inbox__top">
+                    <b>{c.author}</b>
+                    <NetworkMark network={c.network} size={12} />
+                    <span class="sm-inbox__when">{ago(c.posted_at)}</span>
+                  </span>
+                  <span class="sm-inbox__text">{c.text}</span>
+                  <span class="sm-inbox__tags">
+                    {c.label && <LabelPill label={c.label} />}
+                    {c.sentiment === 'negative' && (
+                      <span class="sm-badge sm-badge--red">{t('Negative')}</span>
+                    )}
+                    {c.sentiment === 'positive' && (
+                      <span class="sm-badge sm-badge--green">{t('Positive')}</span>
+                    )}
+                    {c.needs_reply === 1 && c.reply_status === 'open' && !answered && (
+                      <span class="sm-badge sm-badge--amber">{t('To answer')}</span>
+                    )}
+                    {(answered || c.reply_status === 'done') && (
+                      <span class="sm-badge sm-badge--blue">{t('Answered')}</span>
+                    )}
+                    {replies.length > 0 && (
+                      <span class="sm-inbox__n">{count(replies.length, 'comment')}</span>
+                    )}
+                  </span>
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+
+      {current && (
+        <section class="sm-box sm-inbox__detail">
+          <header class="sm-box__head">
+            <h2>{current.author}</h2>
+            <a
+              class="g-btn g-btn--ghost g-btn--sm"
+              href={current.post_url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Icon name="external" size={14} /> {t('Open the post')}
+            </a>
+          </header>
+          {post && (
+            <a class="sm-inbox__post" href={post.url} target="_blank" rel="noreferrer">
+              {post.thumb_url ? (
+                <img src={post.thumb_url} alt="" />
+              ) : (
+                <span class="sm-postcell__blank" />
+              )}
+              <span>
+                <span class="sm-inbox__postmeta">
+                  <NetworkMark network={post.network} size={12} /> {when(post.posted_at)} ·{' '}
+                  {count(post.likes, 'like')} · {count(post.comments_count, 'comment')}
+                </span>
+                <span class="sm-inbox__caption">{post.description ?? post.caption}</span>
+              </span>
+            </a>
+          )}
+          <CommentList
+            wide
+            comments={rows.filter((r) => r.id === current.id || r.parent_ext_id === current.ext_id)}
+            brands={brands}
+            onChange={onChange}
+          />
+          {(() => {
+            const more = rows.filter(
+              (r) => r.author.toLowerCase() === current.author.toLowerCase() && r.id !== current.id,
+            )
+            return more.length ? (
+              <div class="sm-inbox__more">
+                <h3 class="sm-box__sub">{t('More from {name}', { name: current.author })}</h3>
+                <ul>
+                  {more.map((m) => (
+                    <li>
+                      <button type="button" class="sm-inbox__morebtn" onClick={() => setSel(m.id)}>
+                        <span class="sm-inbox__when">{ago(m.posted_at)}</span>
+                        <span>{m.text}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null
+          })()}
+        </section>
+      )}
+
+      {current && (
+        <aside class="sm-inbox__details" aria-label={t('Details')}>
+          <h3 class="sm-attr__title">{t('Person')}</h3>
+          <dl class="sm-attr">
+            <dt>{t('Name')}</dt>
+            <dd>{current.author}</dd>
+            <dt>{t('Network')}</dt>
+            <dd>
+              <span class="sm-net-name">
+                <NetworkMark network={current.network} size={12} /> {NETWORK_NAME[current.network]}
+              </span>
+            </dd>
+            <dt>{t('Comments')}</dt>
+            <dd class="g-num">
+              {rows.filter((r) => r.author.toLowerCase() === current.author.toLowerCase()).length}
+            </dd>
+          </dl>
+          <h3 class="sm-attr__title">{t('This comment')}</h3>
+          <dl class="sm-attr">
+            <dt>{t('Written')}</dt>
+            <dd>{when(current.posted_at)}</dd>
+            <dt>{t('Likes')}</dt>
+            <dd class="g-num">{current.likes ?? 0}</dd>
+            <dt>{t('Type')}</dt>
+            <dd>{current.label ? <LabelPill label={current.label} /> : '–'}</dd>
+            <dt>{t('Rating')}</dt>
+            <dd>
+              {current.sentiment === 'negative' ? (
+                <span class="sm-badge sm-badge--red">{t('Negative')}</span>
+              ) : current.sentiment === 'positive' ? (
+                <span class="sm-badge sm-badge--green">{t('Positive')}</span>
+              ) : current.sentiment === 'neutral' ? (
+                <span class="sm-badge">{t('Neutral')}</span>
+              ) : (
+                t('Not rated yet')
+              )}
+            </dd>
+            <dt>{t('Kind')}</dt>
+            <dd>{brandCategories(brand).find((k) => k.key === current.category)?.name ?? '–'}</dd>
+            <dt>{t('Answer')}</dt>
+            <dd>
+              {current.reply_status === 'done' ||
+              rows.some((r) => r.parent_ext_id === current.ext_id && own(r)) ? (
+                <span class="sm-badge sm-badge--blue">{t('Answered')}</span>
+              ) : current.needs_reply === 1 && current.reply_status === 'open' ? (
+                <span class="sm-badge sm-badge--amber">{t('To answer')}</span>
+              ) : current.reply_status === 'ignored' ? (
+                t('Skipped')
+              ) : (
+                t('Not needed')
+              )}
+            </dd>
+          </dl>
+          {post && (
+            <>
+              <h3 class="sm-attr__title">{t('Post')}</h3>
+              <dl class="sm-attr">
+                <dt>{t('Published')}</dt>
+                <dd>{when(post.posted_at)}</dd>
+                <dt>{t('Likes')}</dt>
+                <dd class="g-num">{post.likes ?? '–'}</dd>
+                <dt>{t('Comments')}</dt>
+                <dd class="g-num">{post.comments_count ?? '–'}</dd>
+                <dt>{t('Views')}</dt>
+                <dd class="g-num">{post.views ?? '–'}</dd>
+              </dl>
+            </>
+          )}
+        </aside>
       )}
     </div>
   )

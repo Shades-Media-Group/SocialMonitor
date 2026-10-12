@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import type { AppState, BrandView, Tab } from './app.tsx'
 import { TABS } from './app.tsx'
 import type { BrandRow, Network } from './api.ts'
-import { Head, Icon, NETWORK_NAME, NetworkMark } from './ui.tsx'
+import { Head, Icon, Menu, NETWORK_NAME, NetworkMark } from './ui.tsx'
 import { t } from './i18n.ts'
 import { Overview } from './views/overview.tsx'
 import { Comments } from './views/comments.tsx'
@@ -109,24 +109,28 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
               </select>
             )}
             <span class="sm-pagehead__spacer" />
-            {tab === 'overview' && (
-              <>
-                <a
-                  class="g-btn g-btn--ghost g-btn--sm"
-                  href={`/api/brands/${brand.id}/report.pdf?${exportQuery}`}
-                  download
-                >
-                  <Icon name="download" size={16} /> PDF
-                </a>
-                <a
-                  class="g-btn g-btn--ghost g-btn--sm"
-                  href={`/api/brands/${brand.id}/export.xlsx?${exportQuery}`}
-                  download
-                >
-                  <Icon name="download" size={16} /> Excel
-                </a>
-              </>
-            )}
+            <Menu
+              label={t('Export')}
+              items={[
+                {
+                  label: t('PDF report'),
+                  onSelect: () =>
+                    (location.href = `/api/brands/${brand.id}/report.pdf?${exportQuery}`),
+                },
+                {
+                  label: t('Excel workbook'),
+                  onSelect: () =>
+                    (location.href = `/api/brands/${brand.id}/export.xlsx?${exportQuery}`),
+                },
+                {
+                  label: t('Comments as CSV'),
+                  onSelect: () =>
+                    (location.href = `/api/comments.csv?brand=${brand.id}${view.network ? `&network=${view.network}` : ''}`),
+                },
+              ]}
+            >
+              <Icon name="download" size={14} /> {t('Export')} <Icon name="chevronDown" size={14} />
+            </Menu>
           </>
         )}
       </Head>

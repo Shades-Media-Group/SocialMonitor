@@ -301,3 +301,123 @@ export function EngagementChart({ posts }: { posts: PostPoint[] }) {
     </figure>
   )
 }
+
+/** A small trend line for a figure: one series, no axes, the area under it softly filled. */
+export function Sparkline({ values, tone }: { values: number[]; tone: string }) {
+  const w = 96
+  const h = 28
+  if (values.length < 2) return null
+  const max = Math.max(1, ...values)
+  const pts = values.map(
+    (v, i) => [(i / (values.length - 1)) * w, h - 2 - (v / max) * (h - 4)] as const,
+  )
+  const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('')
+  return (
+    <svg
+      class={`sm-spark sm-tone--${tone}`}
+      viewBox={`0 0 ${w} ${h}`}
+      width={w}
+      height={h}
+      aria-hidden="true"
+    >
+      <path class="sm-spark__area" d={`${line}L${w} ${h}L0 ${h}Z`} />
+      <path class="sm-spark__line" d={line} />
+    </svg>
+  )
+}
+
+/** Parts of a whole as a ring, with the total in the middle and a legend beside it. */
+export function Donut({
+  parts,
+  total,
+  caption,
+}: {
+  parts: { key: string; name: string; n: number }[]
+  total: string
+  caption: string
+}) {
+  const sum = parts.reduce((n, p) => n + p.n, 0)
+  const r = 52
+  const c = 2 * Math.PI * r
+  let at = 0
+  return (
+    <div class="sm-donut">
+      <svg viewBox="0 0 132 132" width="132" height="132" role="img" aria-label={caption}>
+        <circle class="sm-donut__track" cx="66" cy="66" r={r} />
+        {sum > 0 &&
+          parts
+            .filter((p) => p.n)
+            .map((p) => {
+              const len = (p.n / sum) * c
+              const seg = (
+                <circle
+                  class={`sm-donut__seg sm-c-${p.key}`}
+                  cx="66"
+                  cy="66"
+                  r={r}
+                  stroke-dasharray={`${Math.max(0, len - 2)} ${c}`}
+                  stroke-dashoffset={-at}
+                />
+              )
+              at += len
+              return seg
+            })}
+        <text class="sm-donut__total" x="66" y="64" text-anchor="middle">
+          {total}
+        </text>
+        <text class="sm-donut__cap" x="66" y="82" text-anchor="middle">
+          {caption}
+        </text>
+      </svg>
+      <ul class="sm-donut__legend">
+        {parts.map((p) => (
+          <li>
+            <i class={`sm-swatch sm-c-${p.key}`} aria-hidden="true" />
+            <span>{p.name}</span>
+            <b class="g-num">{fmt(p.n)}</b>
+            <span class="sm-donut__pct g-num">
+              {sum ? `${Math.round((p.n / sum) * 100)}%` : '–'}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/** When people comment: weekdays down, hours across, darker blue for more comments. */
+export function Heatmap({
+  grid,
+  days,
+  caption,
+}: {
+  grid: number[][]
+  days: string[]
+  caption: string
+}) {
+  const max = Math.max(1, ...grid.flat())
+  // Monday first, as calendars in most of the dashboard's languages are.
+  const order = [1, 2, 3, 4, 5, 6, 0]
+  return (
+    <div class="sm-heat" role="img" aria-label={caption}>
+      {order.map((d) => (
+        <div class="sm-heat__row">
+          <span class="sm-heat__day">{days[d]}</span>
+          {grid[d]!.map((n, h) => (
+            <span
+              class="sm-heat__cell"
+              style={{ '--a': n ? 0.12 + (n / max) * 0.88 : 0 }}
+              title={`${days[d]} ${String(h).padStart(2, '0')}:00 · ${n}`}
+            />
+          ))}
+        </div>
+      ))}
+      <div class="sm-heat__row sm-heat__hours" aria-hidden="true">
+        <span class="sm-heat__day" />
+        {Array.from({ length: 24 }, (_, h) => (
+          <span class="sm-heat__hour">{h % 6 === 0 ? `${h}` : ''}</span>
+        ))}
+      </div>
+    </div>
+  )
+}

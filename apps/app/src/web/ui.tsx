@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact'
-import { useEffect, useRef } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import type { IconName } from 'shades-gradient'
 import { renderIcon } from 'shades-gradient'
 import { MARK, WORDMARK } from './brand.ts'
@@ -29,6 +29,15 @@ export function Logo() {
     </span>
   )
 }
+
+/** The mark alone, for tight spots like the icon rail. */
+export const Mark = ({ size = 24 }: { size?: number }) => (
+  <svg viewBox="0 0 96 96" width={size} height={size} aria-hidden="true" class="sm-mark">
+    {MARK.map((d, i) => (
+      <path d={d} fill={MARK_FILLS[i]} />
+    ))}
+  </svg>
+)
 
 export const Icon = ({ name, size = 18 }: { name: IconName; size?: number }) => (
   <span
@@ -237,5 +246,105 @@ export function Chips<T extends string>({
         )
       })}
     </div>
+  )
+}
+
+export interface MenuItem {
+  label: string
+  onSelect: () => void
+  /** Shown in red: deletes or blocks something. */
+  danger?: boolean
+  disabled?: boolean
+}
+
+/**
+ * A dropdown menu: a button that opens a short list of actions under it. Escape, a click
+ * outside or choosing an item closes it; arrow keys move between items. Fixed position, so a
+ * card's overflow never clips it.
+ */
+export function Menu({
+  label,
+  items,
+  children,
+  align = 'end',
+}: {
+  label: string
+  items: MenuItem[]
+  children?: ComponentChildren
+  align?: 'start' | 'end'
+}) {
+  const btn = useRef<HTMLButtonElement>(null)
+  const list = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ top: number; left?: number; right?: number } | null>(null)
+  useEffect(() => {
+    if (!pos) return
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent && e.key !== 'Escape') return
+      if (
+        e.type === 'pointerdown' &&
+        (list.current?.contains(e.target as Node) || btn.current?.contains(e.target as Node))
+      )
+        return
+      setPos(null)
+      if (e instanceof KeyboardEvent) btn.current?.focus()
+    }
+    addEventListener('pointerdown', close)
+    addEventListener('keydown', close)
+    addEventListener('scroll', () => setPos(null), { once: true, capture: true })
+    list.current?.querySelector('button')?.focus()
+    return () => {
+      removeEventListener('pointerdown', close)
+      removeEventListener('keydown', close)
+    }
+  }, [pos])
+  const open = () => {
+    const r = btn.current!.getBoundingClientRect()
+    setPos(
+      align === 'end'
+        ? { top: r.bottom + 4, right: innerWidth - r.right }
+        : { top: r.bottom + 4, left: r.left },
+    )
+  }
+  const move = (e: KeyboardEvent) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+    e.preventDefault()
+    const all = [
+      ...(list.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []),
+    ]
+    const i = all.indexOf(document.activeElement as HTMLButtonElement)
+    all[(i + (e.key === 'ArrowDown' ? 1 : all.length - 1)) % all.length]?.focus()
+  }
+  return (
+    <>
+      <button
+        ref={btn}
+        type="button"
+        class={children ? 'sm-menu__trigger' : 'sm-menu__trigger sm-menu__trigger--icon'}
+        aria-haspopup="menu"
+        aria-expanded={!!pos}
+        aria-label={children ? undefined : label}
+        onClick={() => (pos ? setPos(null) : open())}
+      >
+        {children ?? <Icon name="more" size={16} />}
+      </button>
+      {pos && (
+        <div ref={list} class="sm-menu" role="menu" aria-label={label} style={pos} onKeyDown={move}>
+          {items.map((it) => (
+            <button
+              type="button"
+              role="menuitem"
+              class={it.danger ? 'is-danger' : undefined}
+              disabled={it.disabled}
+              onClick={() => {
+                setPos(null)
+                it.onSelect()
+              }}
+            >
+              {it.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
   )
 }

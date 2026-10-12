@@ -3,7 +3,9 @@ import type { ComponentChildren } from 'preact'
 import { t } from './i18n.ts'
 import type { BrandRow, Network, RunRow } from './api.ts'
 import { api } from './api.ts'
-import { Icon, Logo, ago } from './ui.tsx'
+import { Icon, Mark, Menu, ago, fmt } from './ui.tsx'
+import type { IconName } from 'shades-gradient'
+import { Palette } from './palette.tsx'
 import { UpdateSheet } from './update.tsx'
 import { SettingsSheet } from './settings.tsx'
 import type { ViewMode } from './json.tsx'
@@ -24,6 +26,14 @@ export const TABS = [
   ['about', 'About'],
 ] as const
 export type Tab = (typeof TABS)[number][0]
+const TAB_ICON: Record<Tab, IconName> = {
+  overview: 'grid',
+  comments: 'chat',
+  posts: 'image',
+  reports: 'file',
+  schedules: 'schedule',
+  about: 'info',
+}
 
 /** Where the app is: the brand list, a new brand, or one brand's tab. Kept in the URL hash. */
 export type Route =
@@ -123,6 +133,17 @@ function Dashboard({ me }: { me: Me }) {
   const [toast, setToast] = useState<string | null>(null)
   const [mode, setMode] = useState<ViewMode>(readMode)
   const [navOpen, setNavOpen] = useState(false)
+  const [palette, setPalette] = useState(false)
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPalette((v) => !v)
+      }
+    }
+    addEventListener('keydown', key)
+    return () => removeEventListener('keydown', key)
+  }, [])
 
   const reload = useCallback(async () => {
     setBrands(await api.get<BrandRow[]>('/api/brands'))
@@ -210,15 +231,9 @@ function Dashboard({ me }: { me: Me }) {
   // What every page header carries on its right: freshness, the view switch and the one red action.
   const actions = (
     <>
-      <span class="sm-fresh" aria-live="polite">
-        {running ? (
-          <>
-            <span class="sm-live" aria-hidden="true" /> {t('Reading…')}
-          </>
-        ) : (
-          t('Updated {when}', { when: ago(lastRun) })
-        )}
-      </span>
+      <button class="sm-kbd-btn" type="button" onClick={() => setPalette(true)}>
+        <Icon name="search" size={14} /> {t('Search')} <kbd>⌘K</kbd>
+      </button>
       <div class="g-segmented sm-seg sm-mode" role="radiogroup" aria-label={t('View')}>
         {(['visual', 'json'] as const).map((m) => (
           <button
@@ -251,94 +266,162 @@ function Dashboard({ me }: { me: Me }) {
   return (
     <div class={`sm-shell${navOpen ? ' is-nav-open' : ''}`}>
       <aside class="sm-nav" aria-label={t('Navigation')}>
-        <div class="sm-nav__top">
-          <a class="sm-nav__logo" href="#/" aria-label={t('SocialMonitor, all brands')}>
-            <Logo />
+        <div class="sm-rail">
+          <a class="sm-rail__logo" href="#/" aria-label={t('SocialMonitor, all brands')}>
+            <Mark />
           </a>
-          <button
-            class="g-icon-btn sm-nav__close"
-            type="button"
-            aria-label={t('Close menu')}
-            onClick={() => setNavOpen(false)}
-          >
-            <Icon name="close" />
-          </button>
-        </div>
-        <nav class="sm-nav__list" onClick={() => setNavOpen(false)}>
           <a
-            class="sm-nav__item"
+            class="sm-rail__btn"
             href="#/"
             aria-current={route.page === 'home' ? 'page' : undefined}
+            title={t('All brands')}
           >
-            {t('All brands')}
+            <Icon name="home" size={18} />
           </a>
-          <p class="sm-nav__group">{t('Brands')}</p>
-          {brands.map((b) => {
-            const open = brand?.id === b.id
-            const waiting = b.counts.needs_reply ?? 0
-            return (
-              <div class={`sm-nav__brand${open ? ' is-open' : ''}`}>
-                <a
-                  class="sm-nav__item"
-                  href={`#/b/${b.id}/overview`}
-                  aria-current={
-                    open && route.page === 'brand' && route.tab === 'overview' ? 'page' : undefined
-                  }
-                >
-                  <span class="sm-nav__initial" aria-hidden="true">
-                    {b.name.slice(0, 1).toUpperCase()}
-                  </span>
-                  <span class="sm-nav__name">{b.name}</span>
-                  {waiting > 0 && (
-                    <span class="sm-nav__count g-num" title={t('Waiting for an answer')}>
-                      {waiting}
-                    </span>
-                  )}
-                </a>
-                {open && route.page === 'brand' && (
-                  <div class="sm-nav__sub">
-                    {TABS.filter(([k]) => k !== 'schedules' || b.my_role === 'admin').map(
-                      ([k, text]) => (
-                        <a
-                          class="sm-nav__item"
-                          href={`#/b/${b.id}/${k}`}
-                          aria-current={route.tab === k ? 'page' : undefined}
-                        >
-                          {t(text)}
-                        </a>
-                      ),
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-          {me.super && (
-            <a
-              class="sm-nav__item sm-nav__add"
-              href="#/new"
-              aria-current={route.page === 'new' ? 'page' : undefined}
-            >
-              {t('Add a brand')}
-            </a>
-          )}
-        </nav>
-        <div class="sm-nav__foot">
+          <button
+            class="sm-rail__btn"
+            type="button"
+            title={t('Search and jump (⌘K)')}
+            onClick={() => setPalette(true)}
+          >
+            <Icon name="search" size={18} />
+          </button>
           {manages && (
             <a
-              class="sm-nav__item"
+              class="sm-rail__btn"
               href="#/people"
               aria-current={route.page === 'people' ? 'page' : undefined}
+              title={t('People')}
             >
-              {t('People')}
+              <Icon name="group" size={18} />
             </a>
           )}
-          <button class="sm-nav__item" type="button" onClick={() => setSettingsOpen(true)}>
-            {t('Settings')}
+          <span class="sm-rail__spacer" />
+          <button
+            class="sm-rail__btn"
+            type="button"
+            title={t('Settings')}
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Icon name="settings" size={18} />
           </button>
-          <p class="sm-nav__me" title={me.email}>
-            {me.name || me.username || me.email}
-          </p>
+          <div class="sm-rail__me">
+            <Menu
+              label={t('Account')}
+              align="start"
+              items={[
+                { label: me.name || me.email, onSelect: () => setSettingsOpen(true) },
+                { label: t('Settings'), onSelect: () => setSettingsOpen(true) },
+                {
+                  label: t('Sign out'),
+                  onSelect: () =>
+                    api
+                      .post('/api/auth/logout')
+                      .then(() => dispatchEvent(new Event('sm-signed-out'))),
+                },
+              ]}
+            >
+              <span class="sm-nav__avatar" aria-hidden="true">
+                {(me.name || me.email).slice(0, 1).toUpperCase()}
+              </span>
+            </Menu>
+          </div>
+        </div>
+
+        <div class="sm-navpanel">
+          <div class="sm-navpanel__head">
+            <b>{route.page === 'people' ? t('People') : t('Brands')}</b>
+            <button
+              class="sm-navpanel__icon"
+              type="button"
+              aria-label={t('Search and jump (⌘K)')}
+              onClick={() => setPalette(true)}
+            >
+              <Icon name="search" size={15} />
+            </button>
+            {me.super && (
+              <a
+                class="sm-navpanel__icon"
+                href="#/new"
+                aria-label={t('Add a brand')}
+                title={t('Add a brand')}
+              >
+                <Icon name="add" size={15} />
+              </a>
+            )}
+            <button
+              class="sm-navpanel__icon sm-nav__close"
+              type="button"
+              aria-label={t('Close menu')}
+              onClick={() => setNavOpen(false)}
+            >
+              <Icon name="close" size={15} />
+            </button>
+          </div>
+          <nav class="sm-nav__list" onClick={() => setNavOpen(false)}>
+            <a
+              class="sm-nav__item"
+              href="#/"
+              aria-current={route.page === 'home' ? 'page' : undefined}
+            >
+              <Icon name="grid" size={15} />
+              <span class="sm-nav__name">{t('All brands')}</span>
+              <span class="sm-nav__num g-num">{brands.length}</span>
+            </a>
+            <p class="sm-nav__group">{t('Brands')}</p>
+            {brands.map((b) => {
+              const open = brand?.id === b.id
+              const waiting = b.counts.needs_reply ?? 0
+              return (
+                <div class={`sm-nav__brand${open ? ' is-open' : ''}`}>
+                  <a
+                    class="sm-nav__item"
+                    href={`#/b/${b.id}/overview`}
+                    aria-current={
+                      open && route.page === 'brand' && route.tab === 'overview'
+                        ? 'page'
+                        : undefined
+                    }
+                  >
+                    <span class="sm-nav__initial" aria-hidden="true">
+                      {b.name.slice(0, 1).toUpperCase()}
+                    </span>
+                    <span class="sm-nav__name">{b.name}</span>
+                    {waiting > 0 ? (
+                      <span class="sm-nav__count g-num" title={t('Waiting for an answer')}>
+                        {waiting}
+                      </span>
+                    ) : (
+                      <span class="sm-nav__num g-num">{fmt(b.counts.total ?? 0)}</span>
+                    )}
+                  </a>
+                  {open && route.page === 'brand' && (
+                    <div class="sm-nav__sub">
+                      {TABS.filter(([k]) => k !== 'schedules' || b.my_role === 'admin').map(
+                        ([k, text]) => (
+                          <a
+                            class="sm-nav__item"
+                            href={`#/b/${b.id}/${k}`}
+                            aria-current={route.tab === k ? 'page' : undefined}
+                          >
+                            <Icon name={TAB_ICON[k]} size={15} />
+                            <span class="sm-nav__name">{t(text)}</span>
+                            {k === 'comments' && (
+                              <span class="sm-nav__num g-num">{fmt(b.counts.total ?? 0)}</span>
+                            )}
+                          </a>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </nav>
+          <div class="sm-navpanel__foot">
+            <span class="sm-live-dot" aria-hidden="true" data-on={running ? '1' : undefined} />
+            {running ? t('Reading…') : t('Updated {when}', { when: ago(lastRun) })}
+          </div>
         </div>
       </aside>
       <button
@@ -373,6 +456,16 @@ function Dashboard({ me }: { me: Me }) {
         {...state}
       />
       <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} {...state} />
+      {palette && (
+        <Palette
+          {...state}
+          brand={brand}
+          manages={manages}
+          onClose={() => setPalette(false)}
+          openSettings={() => setSettingsOpen(true)}
+          openUpdate={(id) => setUpdate({ open: true, brandId: id })}
+        />
+      )}
       {toast && (
         <div class="g-toast sm-toast" role="status">
           {toast}
