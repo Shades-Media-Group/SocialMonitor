@@ -3,6 +3,7 @@ import type { AppState } from './app.tsx'
 import { api } from './api.ts'
 import { Row, Segmented, Sheet } from './ui.tsx'
 import { JsonPanel } from './json.tsx'
+import { Accounts } from './accounts.tsx'
 
 interface Settings {
   gap_hours: number
@@ -138,7 +139,7 @@ export function SettingsSheet({
         </>
       )}
       <Row
-        label="Accounts"
+        label="Sign in"
         hint={`${
           signed && !signed.busy
             ? `Signed in: ${
@@ -164,6 +165,9 @@ export function SettingsSheet({
         >
           Sign in to networks
         </button>
+      </Row>
+      <Row label="Saved accounts">
+        <Accounts notify={notify} />
       </Row>
       <Row label="Data">
         <div class="sm-inline">

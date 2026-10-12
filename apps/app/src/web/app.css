@@ -1265,6 +1265,55 @@ p {
   color: var(--g-bg);
   font-weight: 600;
 }
+.sm-accounts {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+.sm-accounts__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--g-line);
+}
+.sm-accounts__list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--g-line);
+}
+.sm-accounts__who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 14px;
+}
+.sm-accounts__who span {
+  overflow-wrap: anywhere;
+}
+.sm-accounts__pw {
+  font: 13px/1.5 var(--g-font-code);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.sm-accounts__do {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sm-accounts__form {
+  display: grid;
+  gap: 8px;
+}
+.sm-accounts__form .g-input,
+.sm-accounts__form .g-select {
+  min-height: 40px;
+  border-radius: var(--g-radius-md);
+  font-size: 14px;
+}
 .sm-credit {
   margin: 24px 0 0;
   padding-top: 16px;
