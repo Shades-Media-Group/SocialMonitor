@@ -98,9 +98,15 @@ export const routes: Route[] = [
     return store.addBrand(c.db, name, links ?? [], website ?? null)
   }),
   r('PATCH', '/api/brands/:id', (c) => {
-    const { name, links } = b(c) as { name?: string; links?: string[] }
+    const { name, links, website } = b(c) as {
+      name?: string
+      links?: string[]
+      website?: string | null
+    }
     const brandId = id(c.params.id)
     if (name) store.renameBrand(c.db, brandId, name)
+    if (website !== undefined)
+      c.db.prepare('UPDATE brands SET website = ? WHERE id = ?').run(website || null, brandId)
     for (const link of links ?? []) store.setProfile(c.db, brandId, link)
   }),
   r('DELETE', '/api/brands/:id', (c) => void store.deleteBrand(c.db, id(c.params.id))),

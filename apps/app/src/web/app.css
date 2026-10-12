@@ -103,6 +103,52 @@ body {
   z-index: 4;
   background: var(--g-bg);
 }
+.sm-tabs {
+  align-items: center;
+}
+.sm-tabs__spacer {
+  flex: 1;
+}
+.sm-mode button {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+/* The JSON side of a screen. Monospace, because it is code someone edits. */
+.sm-json {
+  display: grid;
+  gap: 12px;
+}
+.sm-json__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sm-json__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.sm-json__text {
+  width: 100%;
+  min-height: 60vh;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid var(--g-line);
+  border-radius: 12px;
+  background: var(--g-sunken);
+  color: var(--g-text);
+  font: 13px/1.55 var(--g-font-code);
+  tab-size: 2;
+  resize: vertical;
+}
+.sm-json__text:focus-visible {
+  outline: 2px solid var(--g-focus);
+  outline-offset: 2px;
+}
+
 .sm-tab {
   padding: 10px 12px;
   margin-bottom: -1px;

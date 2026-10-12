@@ -4,6 +4,7 @@ import type { RunRow } from '../api.ts'
 import { api } from '../api.ts'
 import { Empty, when } from '../ui.tsx'
 import { renderReport } from '../markdown.tsx'
+import { JsonPanel } from '../json.tsx'
 
 const STATUS: Record<string, string> = {
   ok: 'Done',
@@ -12,7 +13,7 @@ const STATUS: Record<string, string> = {
   running: 'Running',
 }
 
-export function Reports({ running, openUpdate }: AppState) {
+export function Reports({ running, openUpdate, mode }: AppState) {
   const [runs, setRuns] = useState<RunRow[] | null>(null)
   const [open, setOpen] = useState<RunRow | null>(null)
 
@@ -37,6 +38,32 @@ export function Reports({ running, openUpdate }: AppState) {
       </Empty>
     )
 
+  if (mode === 'json')
+    return (
+      <JsonPanel
+        value={
+          open
+            ? {
+                id: open.id,
+                status: open.status,
+                trigger: open.trigger,
+                started_at: open.started_at,
+                finished_at: open.finished_at,
+                scope: JSON.parse(open.scope),
+                stats: open.stats ? JSON.parse(open.stats) : null,
+                report: open.report,
+                log: open.log,
+              }
+            : runs.map((r) => ({
+                id: r.id,
+                status: r.status,
+                trigger: r.trigger,
+                started_at: r.started_at,
+              }))
+        }
+        note="The selected report, as data. Switch to Visual to pick another."
+      />
+    )
   return (
     <div class="sm-split">
       <ul class="sm-runs" aria-label="Updates">

@@ -4,8 +4,9 @@ import type { CommentRow } from '../api.ts'
 import { api } from '../api.ts'
 import { Empty, NETWORK_NAME, NetworkMark, ago, fmt } from '../ui.tsx'
 import { CommentList } from './comments.tsx'
+import { JsonPanel } from '../json.tsx'
 
-export function Overview({ brands, brandId, go, openUpdate, running, reload }: AppState) {
+export function Overview({ brands, brandId, go, openUpdate, running, reload, mode }: AppState) {
   const scope = brandId ? brands.filter((b) => b.id === brandId) : brands
   const [reply, setReply] = useState<CommentRow[]>([])
   useEffect(() => {
@@ -15,6 +16,32 @@ export function Overview({ brands, brandId, go, openUpdate, running, reload }: A
       .catch(() => setReply([]))
   }, [brandId, running, brands])
 
+  if (mode === 'json')
+    return (
+      <JsonPanel
+        value={(brandId ? brands.filter((b) => b.id === brandId) : brands).map((b) => ({
+          id: b.id,
+          name: b.name,
+          comments: b.counts,
+          networks: b.profiles.map((p) => ({
+            network: p.network,
+            handle: p.handle,
+            url: p.url,
+            last_update: p.last_run_at,
+            status: p.last_status,
+            error: p.last_error,
+          })),
+          need_a_reply: reply.map((c) => ({
+            id: c.id,
+            network: c.network,
+            author: c.author,
+            text: c.text,
+            label: c.label,
+            reason: c.reason,
+          })),
+        }))}
+      />
+    )
   if (!brands.length)
     return (
       <Empty title="Add the first brand to watch.">

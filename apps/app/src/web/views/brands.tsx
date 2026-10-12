@@ -3,6 +3,7 @@ import type { AppState } from '../app.tsx'
 import type { BrandRow, Network } from '../api.ts'
 import { api } from '../api.ts'
 import { NETWORK_NAME, Row, ago } from '../ui.tsx'
+import { JsonPanel } from '../json.tsx'
 
 const NETS: Network[] = ['instagram', 'facebook', 'tiktok']
 const PLACEHOLDER: Record<Network, string> = {
@@ -80,12 +81,62 @@ function BrandForm({
   )
 }
 
-export function Brands({ brands, reload, notify }: AppState) {
+export function Brands({ brands, reload, notify, mode }: AppState) {
   const [editing, setEditing] = useState<number | 'new' | null>(brands.length ? null : 'new')
   const [confirm, setConfirm] = useState<number | null>(null)
   const done = () => {
     setEditing(null)
     reload()
+  }
+
+  if (mode === 'json') {
+    const value = brands.map((b) => ({
+      id: b.id,
+      name: b.name,
+      website: b.website,
+      links: Object.fromEntries(
+        NETS.map((n) => [n, b.profiles.find((p) => p.network === n)?.url ?? '']),
+      ),
+    }))
+    const save = async (next: unknown) => {
+      if (!Array.isArray(next)) throw new Error('Expected a list of brands.')
+      let added = 0
+      let saved = 0
+      for (const x of next as typeof value) {
+        if (!x?.name?.trim()) throw new Error('Every brand needs a name.')
+        const links = NETS.map((n) => (x.links?.[n] ?? '').trim()).filter(Boolean)
+        const old = brands.find((b) => b.id === x.id)
+        if (!old) {
+          await api.post('/api/brands', { name: x.name, links, website: x.website ?? null })
+          added++
+          continue
+        }
+        await api.patch(`/api/brands/${old.id}`, {
+          name: x.name,
+          links,
+          website: x.website ?? null,
+        })
+        for (const n of NETS)
+          if (
+            x.links &&
+            n in x.links &&
+            !x.links[n]?.trim() &&
+            old.profiles.some((p) => p.network === n)
+          )
+            await api.del(`/api/brands/${old.id}/profiles/${n}`)
+        saved++
+      }
+      reload()
+      notify('Brands saved.')
+      return `Saved ${saved}, added ${added}. A brand left out of the list is kept: delete it in Visual.`
+    }
+    return (
+      <JsonPanel
+        value={value}
+        onSave={save}
+        note="Edit names and links, or add a brand without an id. Leaving a brand out does not delete it."
+      />
+    )
   }
 
   return (
