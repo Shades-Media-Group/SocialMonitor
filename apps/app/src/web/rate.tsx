@@ -46,7 +46,8 @@ export function Rate({
     })
     onChange?.()
   }
-  const side = (s: 'positive' | 'negative') => (sentiment === s ? save(null, null) : save(s, null))
+  const side = (s: 'positive' | 'negative' | 'neutral') =>
+    sentiment === s ? save(null, null) : save(s, null)
   const options = cats.filter((c) => c.sentiment === sentiment)
 
   return (
@@ -67,7 +68,16 @@ export function Rate({
       >
         Negative
       </button>
-      {sentiment && options.length > 0 && (
+      <button
+        type="button"
+        class="sm-rate__btn sm-rate__btn--neutral"
+        aria-pressed={sentiment === 'neutral'}
+        title="An ordinary comment: counts neither way"
+        onClick={() => side('neutral')}
+      >
+        Neutral
+      </button>
+      {sentiment && sentiment !== 'neutral' && options.length > 0 && (
         <select
           class="g-select sm-rate__cat"
           aria-label="Kind"

@@ -198,7 +198,7 @@ export const setReplyStatus = (db: DB, commentId: number, status: ReplyStatus) =
 export function setSentiment(
   db: DB,
   commentId: number,
-  sentiment: 'positive' | 'negative' | null,
+  sentiment: 'positive' | 'negative' | 'neutral' | null,
   category: string | null,
   by: 'you' | 'ai',
 ) {
@@ -275,8 +275,8 @@ export interface CommentFilter extends PostFilter {
   needsReply?: boolean
   unsorted?: boolean
   search?: string
-  /** 'positive', 'negative', or 'none' for comments nobody has rated. */
-  sentiment?: 'positive' | 'negative' | 'none'
+  /** 'positive', 'negative', 'neutral', or 'none' for comments nobody has rated. */
+  sentiment?: 'positive' | 'negative' | 'neutral' | 'none'
   category?: string
   /** Leave out the brand's own replies (its account's comments). */
   others?: boolean

@@ -226,8 +226,8 @@ export function About({ brand, mode, reload, notify }: BrandView) {
           )}
         </div>
         <p class="sm-quiet">
-          Comments are rated positive or negative, then given one of these kinds, by you or by
-          Claude.
+          Comments are rated positive or negative, then given one of these kinds, or neutral when
+          they count neither way, by you or by Claude.
         </p>
         <div class="sm-kinds-grid">
           {kindList('negative')}

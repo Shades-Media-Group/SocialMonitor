@@ -63,7 +63,8 @@ export interface Comment {
   needs_reply: 0 | 1 | null
   reason: string | null
   reply_status: ReplyStatus
-  sentiment: 'positive' | 'negative' | null
+  /** neutral: an ordinary comment that counts neither way. */
+  sentiment: 'positive' | 'negative' | 'neutral' | null
   category: string | null
   /** Who set the sentiment: a person or Claude. */
   sentiment_by: 'you' | 'ai' | null

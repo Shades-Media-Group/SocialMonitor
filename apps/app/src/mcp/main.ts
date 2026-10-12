@@ -110,7 +110,7 @@ server.registerTool(
       network: network.optional(),
       needs_reply: z.boolean().optional(),
       search: z.string().optional(),
-      sentiment: z.enum(['positive', 'negative', 'none']).optional(),
+      sentiment: z.enum(['positive', 'negative', 'neutral', 'none']).optional(),
       limit: z.number().int().min(1).max(200).default(30),
     },
   },
@@ -298,10 +298,10 @@ server.registerTool(
   'rate',
   {
     description:
-      'Rates comments positive or negative and gives the kind (a key from kinds), as Claude. sentiment null clears it. Use after reading comments; rate only what the text supports.',
+      'Rates comments as Claude: positive or negative with a kind (a key from kinds), or neutral for an ordinary comment that counts neither way. sentiment null clears it. Rate only what the text supports.',
     inputSchema: {
       ids: z.array(z.number().int()).min(1).max(200),
-      sentiment: z.enum(['positive', 'negative']).nullable(),
+      sentiment: z.enum(['positive', 'negative', 'neutral']).nullable(),
       kind: z.string().optional().describe('A key from the kinds tool'),
     },
   },

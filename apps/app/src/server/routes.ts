@@ -136,7 +136,7 @@ export const routes: Route[] = [
       label: label(query.get('label')),
       needsReply: query.get('reply') === '1',
       search: query.get('q') ?? undefined,
-      sentiment: (['positive', 'negative', 'none'] as const).find(
+      sentiment: (['positive', 'negative', 'neutral', 'none'] as const).find(
         (v) => v === query.get('sentiment'),
       ),
       category: query.get('category') ?? undefined,
@@ -163,8 +163,10 @@ export const routes: Route[] = [
       category?: string | null
       by?: string
     }
-    const sentiment = x.sentiment === 'positive' || x.sentiment === 'negative' ? x.sentiment : null
-    if (x.sentiment && !sentiment) throw new Error('sentiment is positive, negative or null.')
+    const sentiment =
+      (['positive', 'negative', 'neutral'] as const).find((v) => v === x.sentiment) ?? null
+    if (x.sentiment && !sentiment)
+      throw new Error('sentiment is positive, negative, neutral or null.')
     const ids = (x.ids ?? []).map(Number).filter((n) => Number.isInteger(n) && n > 0)
     if (!ids.length) throw new Error('Give comment ids.')
     for (const commentId of ids)

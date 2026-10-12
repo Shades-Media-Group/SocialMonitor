@@ -230,6 +230,7 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
           <option value="">Rated or not</option>
           <option value="positive">Positive</option>
           <option value="negative">Negative</option>
+          <option value="neutral">Neutral</option>
           <option value="none">Not rated yet</option>
         </select>
         {(sentiment === 'positive' || sentiment === 'negative') && cats.length > 0 && (

@@ -12,7 +12,11 @@ interface Summary {
   profiles: Profile[]
   counts: Record<string, number>
   week: Record<string, number>
-  sentiment: { sentiment: 'positive' | 'negative'; category: string | null; n: number }[]
+  sentiment: {
+    sentiment: 'positive' | 'negative' | 'neutral'
+    category: string | null
+    n: number
+  }[]
   posts: number
   brand_replies: number
 }
@@ -66,6 +70,7 @@ export function Overview(v: BrandView) {
   const negatives = s.sentiment.filter((x) => x.sentiment === 'negative')
   const positives = s.sentiment.filter((x) => x.sentiment === 'positive')
   const rated = s.sentiment.reduce((n, x) => n + x.n, 0)
+  const neutral = s.sentiment.filter((x) => x.sentiment === 'neutral').reduce((n, x) => n + x.n, 0)
   const name = (key: string | null) => cats.find((k) => k.key === key)?.name ?? 'No kind given'
 
   if (mode === 'json')
@@ -211,7 +216,8 @@ export function Overview(v: BrandView) {
 
           {(rated > 0 || s.brand_replies > 0) && (
             <p class="sm-quiet">
-              {rated > 0 && `${rated} of ${fmt(total)} comments rated. `}
+              {rated > 0 &&
+                `${rated} of ${fmt(total)} comments rated${neutral ? `, ${neutral} of them neutral` : ''}. `}
               {s.brand_replies > 0 &&
                 `${brand.name} answered ${s.brand_replies} ${s.brand_replies === 1 ? 'time' : 'times'} from its own account.`}
             </p>
