@@ -147,6 +147,7 @@ function Dashboard({ me }: { me: Me }) {
   const [running, setRunning] = useState<RunRow | null>(null)
   const [version, setVersion] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
+  const [finished, setFinished] = useState<RunRow | null>(null)
   const [mode, setMode] = useState<ViewMode>(readMode)
   const [navOpen, setNavOpen] = useState(false)
   const [palette, setPalette] = useState(false)
@@ -187,7 +188,7 @@ function Dashboard({ me }: { me: Me }) {
       const live = runs.find((r) => r.status === 'running') ?? null
       if (!alive) return
       setRunning((prev) => {
-        if (prev && !live) setToast(t('Update finished. The report is ready.'))
+        if (prev && !live) setFinished(runs.find((r) => r.id === prev.id) ?? prev)
         return live
       })
       await reload().catch(() => {})
@@ -484,6 +485,12 @@ function Dashboard({ me }: { me: Me }) {
         )}
       </div>
 
+      <RunNotice
+        running={running}
+        finished={finished}
+        brands={brands}
+        onClose={() => setFinished(null)}
+      />
       <UpdateSheet
         open={update.open}
         brandId={update.brandId}
@@ -505,6 +512,112 @@ function Dashboard({ me }: { me: Me }) {
         <div class="g-toast sm-toast" role="status">
           {toast}
         </div>
+      )}
+    </div>
+  )
+}
+
+const NET_NAME: Record<string, string> = {
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+}
+
+/**
+ * The running update, in the corner of every page: what it reads now, a progress bar and Stop.
+ * It follows the run on the server, so leaving a page or reopening the dashboard changes nothing.
+ * When it ends, it links to its report until closed.
+ */
+function RunNotice({
+  running,
+  finished,
+  brands,
+  onClose,
+}: {
+  running: RunRow | null
+  finished: RunRow | null
+  brands: BrandRow[]
+  onClose: () => void
+}) {
+  const [stopping, setStopping] = useState(false)
+  useEffect(() => setStopping(false), [running?.id])
+  if (running) {
+    const p = JSON.parse(running.progress || '{}') as {
+      step?: 'read' | 'sort'
+      brand?: string
+      network?: string
+      profile?: number
+      profiles?: number
+      done?: number
+      total?: number
+    }
+    // Reading counts per profile; the bar moves across profiles, then through each one's posts.
+    const share =
+      p.step === 'sort'
+        ? p.total
+          ? (p.done ?? 0) / p.total
+          : 0
+        : p.profiles
+          ? ((p.profile ?? 1) - 1 + (p.total ? (p.done ?? 0) / p.total : 0)) / p.profiles
+          : 0
+    const text =
+      p.step === 'sort'
+        ? t('Sorting comments with AI: post {done} of {total}', {
+            done: (p.done ?? 0) + 1,
+            total: p.total ?? 0,
+          })
+        : p.brand
+          ? `${p.brand} · ${NET_NAME[p.network ?? ''] ?? ''}${p.total ? ` · ${t('post {done} of {total}', { done: (p.done ?? 0) + 1, total: p.total })}` : ''}`
+          : t('Starting…')
+    return (
+      <div class="sm-run" role="status">
+        <div class="sm-run__head">
+          <b>{p.step === 'sort' ? t('Almost done') : t('Updating')}</b>
+          {p.profiles && p.step !== 'sort' ? (
+            <span class="sm-quiet">
+              {t('account {n} of {total}', { n: p.profile ?? 1, total: p.profiles })}
+            </span>
+          ) : null}
+          <button
+            class="sm-textbtn"
+            type="button"
+            disabled={stopping}
+            onClick={() => {
+              setStopping(true)
+              void api.post(`/api/runs/${running.id}/stop`).catch(() => setStopping(false))
+            }}
+          >
+            {stopping ? t('Stopping…') : t('Stop')}
+          </button>
+        </div>
+        <p class="sm-run__text">{text}</p>
+        <span class="sm-run__bar">
+          <span style={{ width: `${Math.max(3, Math.round(share * 100))}%` }} />
+        </span>
+      </div>
+    )
+  }
+  if (!finished) return null
+  const scope = JSON.parse(finished.scope || '{}') as { brandIds?: number[] }
+  const brandId = scope.brandIds?.find((id) => brands.some((b) => b.id === id))
+  return (
+    <div class="sm-run sm-run--done" role="status">
+      <div class="sm-run__head">
+        <b>
+          {finished.status === 'stopped'
+            ? t('Update stopped')
+            : finished.status === 'error'
+              ? t('Update failed')
+              : t('Update finished')}
+        </b>
+        <button class="g-icon-btn" type="button" aria-label={t('Close')} onClick={onClose}>
+          <Icon name="close" size={14} />
+        </button>
+      </div>
+      {brandId && (
+        <a class="sm-run__link" href={`#/b/${brandId}/reports`} onClick={onClose}>
+          {t('Open the report')}
+        </a>
       )}
     </div>
   )

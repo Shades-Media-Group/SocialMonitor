@@ -4082,9 +4082,6 @@ a.sm-person[href]:hover .sm-person__name {
   font-weight: 600;
   text-align: right;
 }
-.sm-works .sm-box {
-  align-self: start;
-}
 
 /* Words to watch: one row per word, its kind beside it. */
 .sm-watch {
@@ -4212,21 +4209,17 @@ a.sm-person[href]:hover .sm-person__name {
 }
 
 /* In the narrow layouts each figure is named by its icon; the word stays in the tooltip. */
-.sm-postcard2__stats dt .g-icon,
-.sm-postcard2__stats dt svg {
+.sm-postcard2__stats dt .sm-icon {
   display: none;
 }
-.sm-shell .sm-wall--4 .sm-postcard2__stats dt svg,
-.sm-shell .sm-wall--5 .sm-postcard2__stats dt svg,
-.sm-shell .sm-wall--6 .sm-postcard2__stats dt svg,
-.sm-shell .sm-wall--4 .sm-postcard2__stats dt .g-icon,
-.sm-shell .sm-wall--5 .sm-postcard2__stats dt .g-icon,
-.sm-shell .sm-wall--6 .sm-postcard2__stats dt .g-icon {
+.sm-shell .sm-wall--4 .sm-postcard2__stats dt .sm-icon,
+.sm-shell .sm-wall--5 .sm-postcard2__stats dt .sm-icon,
+.sm-shell .sm-wall--6 .sm-postcard2__stats dt .sm-icon {
   display: inline-block;
 }
-.sm-shell .sm-wall--4 .sm-postcard2__stats dt span,
-.sm-shell .sm-wall--5 .sm-postcard2__stats dt span,
-.sm-shell .sm-wall--6 .sm-postcard2__stats dt span {
+.sm-shell .sm-wall--4 .sm-postcard2__word,
+.sm-shell .sm-wall--5 .sm-postcard2__word,
+.sm-shell .sm-wall--6 .sm-postcard2__word {
   display: none;
 }
 
@@ -4445,4 +4438,103 @@ a.sm-person[href]:hover .sm-person__name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sm-works .sm-bars__name small {
+  margin-left: 6px;
+  color: var(--c-text-3);
+}
+
+/* The running update, in the corner of every page, above everything but dialogs. */
+.sm-run {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 45;
+  display: grid;
+  gap: 6px;
+  width: min(340px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid var(--c-line, #e4e6ea);
+  border-radius: 10px;
+  background: var(--c-card, #fff);
+  box-shadow: var(--g-shadow-md);
+}
+.sm-run__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.sm-run__head .sm-textbtn,
+.sm-run__head .g-icon-btn {
+  margin-left: auto;
+}
+.sm-run__text {
+  margin: 0;
+  overflow: hidden;
+  color: var(--c-text-2);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-run__bar {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--blk-2, #eceef2);
+}
+.sm-run__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #3b5bdb;
+  transition: width 0.4s ease;
+}
+.sm-run__link {
+  color: var(--c-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+/* Update sheet: what each account would get. */
+.sm-update__what {
+  margin: -4px 0 6px;
+  font-size: 12px;
+}
+.sm-update__list {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 8px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--blk, #f5f6f8);
+  list-style: none;
+}
+.sm-update__list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--c-card, #fff);
+  font-size: 12.5px;
+}
+.sm-update__who {
+  flex: 1;
+  min-width: 0;
+}
+.sm-update__due {
+  color: #3b5bdb;
+  font-weight: 600;
+}
+
+/* A titled break between the summaries above and the list of posts. */
+.sm-shell .sm-section {
+  margin: 10px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-line, #e4e6ea);
+  font-size: 13.5px;
+  font-weight: 650;
 }

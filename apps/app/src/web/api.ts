@@ -36,6 +36,8 @@ export interface RunRow {
   stats: string | null
   log?: string
   report?: string | null
+  /** JSON: where a running update is (step, brand, network, done, total). */
+  progress?: string | null
 }
 
 import { lang, t } from './i18n.ts'

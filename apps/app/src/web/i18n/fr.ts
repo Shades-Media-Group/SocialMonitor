@@ -585,6 +585,36 @@ export const fr: Dict = {
     'Add as admin': 'Ajouter en admin',
     '{n} more: type to narrow the list.': '{n} de plus : tapez pour affiner la liste.',
     'No brand matches.': 'Aucune marque ne correspond.',
+    'Best days to post': 'Meilleurs jours pour publier',
+    'Engagement by the day a post went out': 'Engagement selon le jour de publication',
+    'New and due': 'Nouvelles et à revoir',
+    'Only new': 'Nouvelles seulement',
+    'Reads the newest posts again with all their comments, and older posts whose numbers are due. The fullest, and the slowest.':
+      'Relit les publications les plus récentes avec tous leurs commentaires, et les plus anciennes dont les chiffres sont à revoir. La plus complète et la plus lente.',
+    'Reads posts not seen before, plus older posts whose likes, shares and views are due for a fresh look.':
+      'Lit les publications jamais vues, plus les anciennes dont les j’aime, partages et vues sont à revoir.',
+    'Reads only posts not seen before. The lightest.':
+      'Lit seulement les publications jamais vues. La plus légère.',
+    'Read {when}': 'Lu {when}',
+    '{n} due for fresh numbers': '{n} à revoir',
+    'new posts per profile, newest first':
+      'nouvelles publications par profil, les plus récentes d’abord',
+    'Update started. Follow it in the corner; you can keep working.':
+      'Mise à jour lancée. Suivez-la dans le coin ; vous pouvez continuer.',
+    'Sorting comments with AI: post {done} of {total}':
+      'Tri des commentaires par l’IA : publication {done} sur {total}',
+    'post {done} of {total}': 'publication {done} sur {total}',
+    'Almost done': 'Presque fini',
+    Updating: 'Mise à jour',
+    'account {n} of {total}': 'compte {n} sur {total}',
+    'Stopping…': 'Arrêt…',
+    Stop: 'Arrêter',
+    'Update stopped': 'Mise à jour arrêtée',
+    'Update failed': 'La mise à jour a échoué',
+    'Update finished': 'Mise à jour terminée',
+    'Open the report': 'Ouvrir le rapport',
+    'Read new posts and {n} due from {profiles}':
+      'Lire les nouvelles publications et {n} à revoir sur {profiles}',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

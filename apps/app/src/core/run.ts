@@ -80,8 +80,15 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   const problems: string[] = []
   const skipped: string[] = []
   let page: Page | null = null
+  const stopped = () => store.stopAsked(db, runId)
+  // Every profile this update reads, for "2 of 5" in the progress notice.
+  const all = scope.brandIds.flatMap((id) =>
+    store.listProfiles(db, id).filter((p) => scope.networks.includes(p.network)),
+  )
+  let at = 0
 
   for (const brandId of scope.brandIds) {
+    if (stopped()) break
     const brand = store.getBrand(db, brandId)
     if (!brand) continue
     const profiles = store
@@ -91,6 +98,19 @@ async function execute(db: DB, runId: number, scope: RunScope) {
     for (const p of profiles.sort(
       (a, b) => NETWORKS.indexOf(a.network) - NETWORKS.indexOf(b.network),
     )) {
+      if (stopped()) break
+      at++
+      const progress = (done = 0, total = 0) =>
+        store.setProgress(db, runId, {
+          step: 'read',
+          brand: brand.name,
+          network: p.network,
+          profile: at,
+          profiles: all.length,
+          done,
+          total,
+        })
+      progress()
       const waitUntil = gapUntil(db, p)
       const readComments = !waitUntil
       if (waitUntil) {
@@ -120,6 +140,8 @@ async function execute(db: DB, runId: number, scope: RunScope) {
           maxComments: MAX_COMMENTS,
           usedSession: false,
           log,
+          step: progress,
+          stopped,
         }
         const posts = await collectors[p.network].collect(page, p, opt)
         if (p.network === 'tiktok')
@@ -156,7 +178,10 @@ async function execute(db: DB, runId: number, scope: RunScope) {
     const posts = new Map(touched.map((t) => [t.postId, t]))
     for (const p of pendingPosts(db))
       if (brands.has(p.brandId) && !posts.has(p.postId)) posts.set(p.postId, p)
-    await aiStep(db, [...posts.values()], log)
+    if (!stopped())
+      await aiStep(db, [...posts.values()], log, (done, total) =>
+        store.setProgress(db, runId, { step: 'sort', done, total }),
+      )
   } catch (e) {
     problems.push((e as Error).message)
   }
@@ -187,7 +212,14 @@ async function execute(db: DB, runId: number, scope: RunScope) {
     problems,
     skipped,
   )
-  const status = problems.length ? (touched.length ? 'partial' : 'error') : 'ok'
+  const status = stopped()
+    ? 'stopped'
+    : problems.length
+      ? touched.length
+        ? 'partial'
+        : 'error'
+      : 'ok'
+  if (status === 'stopped') log('Stopped on request; what was read so far is kept.')
   store.finishRun(db, runId, status, stats, text)
   log('Done.')
 }
@@ -197,13 +229,15 @@ async function aiStep(
   db: DB,
   touched: { postId: number; brand: string }[],
   log: (line: string) => void,
+  step?: (done: number, total: number) => void,
 ) {
   const engine = pickEngine(getSettings(db))
   if (!engine)
     throw new Error(
       'Comments were kept but not sorted: install Claude Code, or set ANTHROPIC_API_KEY in .env.',
     )
-  for (const { postId, brand } of touched) {
+  for (const [i, { postId, brand }] of touched.entries()) {
+    step?.(i, touched.length)
     const post = store.getPost(db, postId)!
     const unsorted = store.listComments(db, { postId, unsorted: true, others: true, limit: 2000 })
     try {

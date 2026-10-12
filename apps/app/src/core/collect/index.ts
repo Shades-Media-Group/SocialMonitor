@@ -18,6 +18,10 @@ export interface CollectOptions {
   /** Set by the collector when it read through the signed-in session: only then does the gap start. */
   usedSession: boolean
   log: (line: string) => void
+  /** Called as each post is read: how many of how many. */
+  step?: (done: number, total: number) => void
+  /** True once someone pressed Stop: the collector ends after the post it is on. */
+  stopped?: () => boolean
 }
 
 /**

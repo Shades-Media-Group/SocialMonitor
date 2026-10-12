@@ -166,7 +166,7 @@ export function PostCard({ p, onOpen }: { p: PostRow; onOpen: (p: PostRow) => vo
             <div title={t(label)}>
               <dt>
                 <Icon name={icon} size={12} />
-                <span>{t(label)}</span>
+                <span class="sm-postcard2__word">{t(label)}</span>
               </dt>
               <dd class="g-num">{short(v)}</dd>
             </div>

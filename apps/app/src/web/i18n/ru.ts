@@ -583,6 +583,35 @@ export const ru: Dict = {
     'Add as admin': 'Добавить как администратора',
     '{n} more: type to narrow the list.': 'Ещё {n}: введите текст, чтобы сузить список.',
     'No brand matches.': 'Нет подходящих брендов.',
+    'Best days to post': 'Лучшие дни для постов',
+    'Engagement by the day a post went out': 'Вовлечённость по дню публикации',
+    'New and due': 'Новые и пора обновить',
+    'Only new': 'Только новые',
+    'Reads the newest posts again with all their comments, and older posts whose numbers are due. The fullest, and the slowest.':
+      'Заново читает самые новые посты со всеми комментариями и более старые, чьи цифры пора обновить. Полнее всего и дольше всего.',
+    'Reads posts not seen before, plus older posts whose likes, shares and views are due for a fresh look.':
+      'Читает ещё не виденные посты и более старые, чьи лайки, репосты и просмотры пора обновить.',
+    'Reads only posts not seen before. The lightest.':
+      'Читает только ещё не виденные посты. Легче всего.',
+    'Read {when}': 'Прочитано {when}',
+    '{n} due for fresh numbers': 'Пора обновить: {n}',
+    'new posts per profile, newest first': 'новых постов на профиль, сначала новые',
+    'Update started. Follow it in the corner; you can keep working.':
+      'Обновление запущено. Следите в углу; можно продолжать работу.',
+    'Sorting comments with AI: post {done} of {total}':
+      'Сортировка комментариев ИИ: пост {done} из {total}',
+    'post {done} of {total}': 'пост {done} из {total}',
+    'Almost done': 'Почти готово',
+    Updating: 'Обновление',
+    'account {n} of {total}': 'аккаунт {n} из {total}',
+    'Stopping…': 'Остановка…',
+    Stop: 'Остановить',
+    'Update stopped': 'Обновление остановлено',
+    'Update failed': 'Обновление не удалось',
+    'Update finished': 'Обновление завершено',
+    'Open the report': 'Открыть отчёт',
+    'Read new posts and {n} due from {profiles}':
+      'Прочитать новые посты и {n} к обновлению: {profiles}',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

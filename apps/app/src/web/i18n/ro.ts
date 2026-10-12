@@ -585,6 +585,35 @@ export const ro: Dict = {
     'Add as admin': 'Adaugă ca administrator',
     '{n} more: type to narrow the list.': 'Încă {n}: scrie ca să restrângi lista.',
     'No brand matches.': 'Niciun brand nu se potrivește.',
+    'Best days to post': 'Cele mai bune zile de postare',
+    'Engagement by the day a post went out': 'Interacțiunea după ziua în care a apărut postarea',
+    'New and due': 'Noi și scadente',
+    'Only new': 'Doar noi',
+    'Reads the newest posts again with all their comments, and older posts whose numbers are due. The fullest, and the slowest.':
+      'Citește din nou cele mai noi postări cu toate comentariile, plus postările mai vechi ale căror cifre trebuie reîmprospătate. Cea mai completă și cea mai lentă.',
+    'Reads posts not seen before, plus older posts whose likes, shares and views are due for a fresh look.':
+      'Citește postările nevăzute încă, plus postările mai vechi ale căror aprecieri, distribuiri și vizualizări trebuie reîmprospătate.',
+    'Reads only posts not seen before. The lightest.':
+      'Citește doar postările nevăzute încă. Cea mai ușoară.',
+    'Read {when}': 'Citit {when}',
+    '{n} due for fresh numbers': '{n} de reîmprospătat',
+    'new posts per profile, newest first': 'postări noi pe profil, cele mai noi întâi',
+    'Update started. Follow it in the corner; you can keep working.':
+      'Actualizarea a pornit. Urmărește-o în colț; poți lucra mai departe.',
+    'Sorting comments with AI: post {done} of {total}':
+      'Sortarea comentariilor cu AI: postarea {done} din {total}',
+    'post {done} of {total}': 'postarea {done} din {total}',
+    'Almost done': 'Aproape gata',
+    Updating: 'Actualizare',
+    'account {n} of {total}': 'contul {n} din {total}',
+    'Stopping…': 'Se oprește…',
+    Stop: 'Oprește',
+    'Update stopped': 'Actualizare oprită',
+    'Update failed': 'Actualizarea a eșuat',
+    'Update finished': 'Actualizare terminată',
+    'Open the report': 'Deschide raportul',
+    'Read new posts and {n} due from {profiles}':
+      'Citește postările noi și {n} scadente de la {profiles}',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

@@ -250,6 +250,11 @@ function migrate(db: DatabaseSync) {
   // When a post's comments were last read with their people's photos and attached pictures.
   // Posts read before that was collected stay "unknown" until one update reads them again.
   if (!has('posts', 'people_read_at')) db.exec('ALTER TABLE posts ADD COLUMN people_read_at TEXT')
+  // Where a running update is, step by step, and whether someone asked it to stop.
+  if (!has('runs', 'progress')) {
+    db.exec('ALTER TABLE runs ADD COLUMN progress TEXT')
+    db.exec('ALTER TABLE runs ADD COLUMN stop INTEGER NOT NULL DEFAULT 0')
+  }
   // When a post's numbers were last read, for the re-check tiers.
   if (!has('posts', 'metrics_at')) db.exec('ALTER TABLE posts ADD COLUMN metrics_at TEXT')
   // Who gets the bad-comments report, in which language, and whether it goes out after updates.

@@ -575,6 +575,18 @@ export function startRun(db: DB, trigger: 'manual' | 'schedule' | 'mcp', scope: 
   )!.id
 }
 
+/** Where a running update is, for the notice every open dashboard shows. */
+export function setProgress(db: DB, id: number, progress: Record<string, unknown>) {
+  db.prepare('UPDATE runs SET progress = ? WHERE id = ?').run(JSON.stringify(progress), id)
+  changed()
+}
+
+export const askStop = (db: DB, id: number) =>
+  db.prepare("UPDATE runs SET stop = 1 WHERE id = ? AND status = 'running'").run(id)
+
+export const stopAsked = (db: DB, id: number) =>
+  !!(db.prepare('SELECT stop FROM runs WHERE id = ?').get(id) as { stop: number } | undefined)?.stop
+
 export function logRun(db: DB, id: number, line: string) {
   db.prepare('UPDATE runs SET log = log || ? || char(10) WHERE id = ?').run(
     `${new Date().toISOString().slice(11, 19)} ${line}`,
@@ -586,7 +598,7 @@ export function logRun(db: DB, id: number, line: string) {
 export function finishRun(
   db: DB,
   id: number,
-  status: 'ok' | 'error' | 'partial',
+  status: 'ok' | 'error' | 'partial' | 'stopped',
   stats: unknown,
   report: string,
 ) {
@@ -614,7 +626,7 @@ export interface RunRow {
 export const listRuns = (db: DB, limit = 30) =>
   all<Omit<RunRow, 'log' | 'report'>>(
     db,
-    'SELECT id, trigger, scope, started_at, finished_at, status, stats FROM runs ORDER BY id DESC LIMIT ?',
+    'SELECT id, trigger, scope, started_at, finished_at, status, stats, progress FROM runs ORDER BY id DESC LIMIT ?',
     limit,
   )
 export const getRun = (db: DB, id: number) => one<RunRow>(db, 'SELECT * FROM runs WHERE id = ?', id)

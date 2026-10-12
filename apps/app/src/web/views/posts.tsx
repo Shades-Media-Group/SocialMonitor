@@ -2,10 +2,20 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { PostRow } from '../api.ts'
 import { api } from '../api.ts'
-import { Empty, NETWORK_NAME, NetworkMark, Segmented, count, fmt, short, when } from '../ui.tsx'
+import {
+  Empty,
+  NETWORK_NAME,
+  NetworkMark,
+  Scroller,
+  Segmented,
+  count,
+  fmt,
+  short,
+  when,
+} from '../ui.tsx'
 import type { Network } from '../api.ts'
 import { JsonPanel } from '../json.tsx'
-import { t } from '../i18n.ts'
+import { locale, t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
 import { MoodStrip, PostCard, PostDrawer } from '../social.tsx'
 
@@ -72,7 +82,7 @@ function WhatWorks({ rows }: { rows: PostRow[] }) {
     (k) => k,
   )
     .sort((a, b) => (b.rate ?? 0) - (a.rate ?? 0) || b.posts - a.posts)
-    .slice(0, 12)
+    .slice(0, 40)
   const table = (list: Group[], head: string, mark: boolean) => {
     const max = Math.max(0.0001, ...list.map((g) => g.rate ?? 0))
     return (
@@ -115,26 +125,69 @@ function WhatWorks({ rows }: { rows: PostRow[] }) {
       </table>
     )
   }
+  // Engagement by the weekday a post went out, to pick the next posting day.
+  const DAYS = Array.from({ length: 7 }, (_, d) =>
+    new Date(Date.UTC(2024, 0, 1 + d)).toLocaleDateString(locale, {
+      weekday: 'long',
+      timeZone: 'UTC',
+    }),
+  )
+  const byDay = groups(
+    rows.filter((p) => p.posted_at),
+    (p) => [String((new Date(p.posted_at!).getDay() + 6) % 7)],
+    (k) => DAYS[Number(k)]!,
+  ).sort((a, b) => Number(a.key) - Number(b.key))
+  const maxDay = Math.max(0.0001, ...byDay.map((g) => g.rate ?? 0))
   return (
-    <div class="sm-layout sm-works">
-      <section class="sm-box sm-box--table sm-span-6">
-        <header class="sm-box__head">
-          <h2>{t('What works: formats')}</h2>
-          <span class="sm-box__meta">{t('Averages per post')}</span>
-        </header>
-        <div class="sm-scroll">{table(formats, t('Format'), false)}</div>
-      </section>
-      <section class="sm-box sm-box--table sm-span-6">
-        <header class="sm-box__head">
-          <h2>{t('What works: hashtags')}</h2>
-          <span class="sm-box__meta">{t('Averages per post')}</span>
-        </header>
+    <div class="sm-layout sm-layout--top sm-works">
+      <div class="sm-stack sm-span-6">
+        <section class="sm-box sm-box--table">
+          <header class="sm-box__head">
+            <h2>{t('What works: formats')}</h2>
+            <span class="sm-box__meta">{t('Averages per post')}</span>
+          </header>
+          <div class="sm-scroll">{table(formats, t('Format'), false)}</div>
+        </section>
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{t('Best days to post')}</h2>
+            <span class="sm-box__meta">{t('Engagement by the day a post went out')}</span>
+          </header>
+          <ul class="sm-bars">
+            {byDay.map((g) => (
+              <li>
+                <span class="sm-bars__name">
+                  {g.name}
+                  <small>{count(g.posts, 'post')}</small>
+                </span>
+                <span class="sm-bars__track">
+                  <span
+                    class="sm-bars__fill sm-c-praise"
+                    style={{ width: `${((g.rate ?? 0) / maxDay) * 100}%` }}
+                  />
+                </span>
+                <b class="g-num">{g.rate == null ? '–' : `${(g.rate * 100).toFixed(1)}%`}</b>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+      <Scroller
+        fit="column"
+        class="sm-span-6 sm-box--table"
+        head={
+          <header class="sm-box__head">
+            <h2>{t('What works: hashtags')}</h2>
+            <span class="sm-box__meta">{t('Averages per post')}</span>
+          </header>
+        }
+      >
         {tags.length ? (
-          <div class="sm-scroll">{table(tags, t('Hashtag'), false)}</div>
+          table(tags, t('Hashtag'), false)
         ) : (
           <p class="sm-quiet">{t('No hashtags in these captions.')}</p>
         )}
-      </section>
+      </Scroller>
     </div>
   )
 }
@@ -278,11 +331,14 @@ export function Posts({ brand, network, version, mode, openUpdate, days, brands 
           </div>
         </section>
       ) : (
-        <div class={`sm-wall sm-wall--${cols}`} style={{ '--cols': cols }}>
-          {rows.map((p) => (
-            <PostCard p={p} onOpen={setOpenPost} />
-          ))}
-        </div>
+        <>
+          <h2 class="sm-section">{count(rows.length, 'post')}</h2>
+          <div class={`sm-wall sm-wall--${cols}`} style={{ '--cols': cols }}>
+            {rows.map((p) => (
+              <PostCard p={p} onOpen={setOpenPost} />
+            ))}
+          </div>
+        </>
       )}
       <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />
     </div>

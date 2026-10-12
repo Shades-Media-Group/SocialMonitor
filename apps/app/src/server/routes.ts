@@ -768,6 +768,31 @@ export const routes: Route[] = [
       db.prepare('UPDATE comments SET translation = ? WHERE id = ?').run(translation, commentId)
     return { translation }
   }),
+  // What an update would read: each profile, when it was last read, and how many older posts
+  // are due for fresh numbers.
+  r('GET', '/api/runs/preview', 'user', (c) => {
+    const ids = (c.query.get('brands') ?? '').split(',').map(Number).filter(Boolean)
+    for (const brandId of ids) sees(c, brandId)
+    return ids.flatMap((brandId) =>
+      store.listProfiles(c.db, brandId).map((p) => ({
+        brand_id: brandId,
+        brand: store.getBrand(c.db, brandId)?.name ?? '',
+        network: p.network,
+        handle: p.handle,
+        last_run_at: p.last_run_at,
+        last_status: p.last_status,
+        due: store.duePosts(c.db, p.id).length,
+      })),
+    )
+  }),
+  r(
+    'POST',
+    '/api/runs/:id/stop',
+    (c) => {
+      for (const brandId of runBrands(c.db, id(c.params.id))) runs(c, brandId)
+    },
+    (c) => void store.askStop(c.db, id(c.params.id)),
+  ),
   r('GET', '/api/runs', 'user', (c) => {
     const brand = c.query.get('brand')
     const list = visible(c, store.listRuns(c.db, 60), (r) => runBrands(c.db, r.id))

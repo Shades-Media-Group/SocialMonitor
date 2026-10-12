@@ -48,7 +48,9 @@ async function viaPublic(profile: Profile, opt: CollectOptions): Promise<Collect
   const picked = pick(items, (i) => i.id, opt)
   const posts: CollectedPost[] = []
   let rechecked = 0
-  for (const it of picked) {
+  for (const [i, it] of picked.entries()) {
+    if (opt.stopped?.()) break
+    opt.step?.(i, picked.length)
     const known = opt.known.has(it.id) || opt.due.has(it.id)
     const s = it.statsV2 ?? it.stats ?? {}
     const before = opt.due.get(it.id)
