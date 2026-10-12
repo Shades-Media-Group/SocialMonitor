@@ -178,6 +178,7 @@ export const routes: Route[] = [
       network: net(query.get('network')),
       label: label(query.get('label')),
       needsReply: query.get('reply') === '1',
+      overdue: query.get('overdue') === '1',
       search: query.get('q') ?? undefined,
       limit: 100000,
     })
@@ -261,6 +262,7 @@ export const routes: Route[] = [
       industry?: string | null
       description?: string | null
       notes?: string | null
+      reply_target_hours?: number
     }
     const brandId = id(c.params.id)
     const { links, ...details } = x
@@ -290,6 +292,7 @@ export const routes: Route[] = [
       network: net(query.get('network')),
       label: label(query.get('label')),
       needsReply: query.get('reply') === '1',
+      overdue: query.get('overdue') === '1',
       search: query.get('q') ?? undefined,
       sentiment: (['positive', 'negative', 'neutral', 'none'] as const).find(
         (v) => v === query.get('sentiment'),
@@ -350,7 +353,12 @@ export const routes: Route[] = [
     }
     if (x.reply_status) {
       if (!['open', 'done', 'ignored'].includes(x.reply_status)) throw new Error('Unknown status.')
-      store.setReplyStatus(c.db, id(c.params.id), x.reply_status as 'open' | 'done' | 'ignored')
+      store.setReplyStatus(
+        c.db,
+        id(c.params.id),
+        x.reply_status as 'open' | 'done' | 'ignored',
+        c.user?.id,
+      )
       if (!x.label) return
     }
     const l = label(x.label ?? null)

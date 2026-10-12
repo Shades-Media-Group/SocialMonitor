@@ -153,7 +153,30 @@ export function openDb(file = join(DATA_DIR, 'socialmonitor.db')): DB {
   const db = new DatabaseSync(file)
   db.exec(SCHEMA)
   migrate(db)
+  closeAnswered(db)
   return db
+}
+
+/**
+ * Comments the brand already answered on the network are closed: a reply under them written by
+ * the brand's own account (its handle, or on Facebook its page name) marks them done, with the
+ * time of that reply. Runs after every update and once on start for older data.
+ */
+export function closeAnswered(db: DatabaseSync, postId?: number) {
+  db.prepare(
+    `UPDATE comments AS c SET reply_status = 'done', answered_by = 'brand',
+       answered_at = (
+         SELECT min(r.posted_at) FROM comments r JOIN posts p ON p.id = r.post_id
+           JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id
+         WHERE r.post_id = c.post_id AND r.parent_ext_id = c.ext_id
+           AND (lower(r.author) = lower(pr.handle) OR lower(r.author) = lower(b.name)))
+     WHERE c.reply_status = 'open' AND (? IS NULL OR c.post_id = ?)
+       AND EXISTS (
+         SELECT 1 FROM comments r JOIN posts p ON p.id = r.post_id
+           JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id
+         WHERE r.post_id = c.post_id AND r.parent_ext_id = c.ext_id
+           AND (lower(r.author) = lower(pr.handle) OR lower(r.author) = lower(b.name)))`,
+  ).run(postId ?? null, postId ?? null)
 }
 
 /** Columns added after a table first shipped. Each runs once, on databases that lack it. */
@@ -181,6 +204,21 @@ function migrate(db: DatabaseSync) {
   }
   // An English translation of a comment, made on request and kept.
   if (!has('comments', 'translation')) db.exec('ALTER TABLE comments ADD COLUMN translation TEXT')
+  // How and when a comment was answered: on the network by the brand, or marked by a person.
+  if (!has('comments', 'answered_at')) {
+    db.exec('ALTER TABLE comments ADD COLUMN answered_at TEXT')
+    db.exec('ALTER TABLE comments ADD COLUMN answered_by TEXT')
+    db.exec('ALTER TABLE comments ADD COLUMN done_by INTEGER')
+  }
+  // Who wrote a comment (picture, profile page) and a picture or sticker attached to it.
+  if (!has('comments', 'author_avatar')) {
+    db.exec('ALTER TABLE comments ADD COLUMN author_avatar TEXT')
+    db.exec('ALTER TABLE comments ADD COLUMN author_url TEXT')
+    db.exec('ALTER TABLE comments ADD COLUMN media_url TEXT')
+  }
+  // The brand's reply target in hours: open comments older than it count as overdue.
+  if (!has('brands', 'reply_target_hours'))
+    db.exec('ALTER TABLE brands ADD COLUMN reply_target_hours REAL NOT NULL DEFAULT 24')
   // Each person's own view choices (filters, layouts, period, theme), kept across sign-ins.
   if (!has('users', 'prefs'))
     db.exec("ALTER TABLE users ADD COLUMN prefs TEXT NOT NULL DEFAULT '{}'")

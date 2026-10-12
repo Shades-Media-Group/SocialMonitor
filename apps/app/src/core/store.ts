@@ -1,5 +1,5 @@
 import type { DB } from './db.ts'
-import { now } from './db.ts'
+import { closeAnswered, now } from './db.ts'
 import { changed } from './events.ts'
 import type {
   Brand,
@@ -86,9 +86,16 @@ export function updateBrand(
     industry?: string | null
     description?: string | null
     notes?: string | null
+    reply_target_hours?: number
   },
 ) {
-  for (const [col, v] of Object.entries(f)) {
+  const { reply_target_hours: hours, ...text } = f
+  if (hours !== undefined) {
+    if (!Number.isFinite(hours) || hours <= 0 || hours > 24 * 30)
+      throw new Error('The reply target is between 1 hour and 30 days.')
+    db.prepare('UPDATE brands SET reply_target_hours = ? WHERE id = ?').run(hours, id)
+  }
+  for (const [col, v] of Object.entries(text)) {
     if (v === undefined || !['name', 'website', 'industry', 'description', 'notes'].includes(col))
       continue
     if (col === 'name' && !String(v).trim()) throw new Error('A brand needs a name.')
@@ -176,23 +183,65 @@ export function savePost(
     t,
   )!
   const insert = db.prepare(
-    `INSERT INTO comments (post_id, ext_id, parent_ext_id, author, text, likes, posted_at, fetched_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT (post_id, ext_id) DO UPDATE SET likes = excluded.likes, text = excluded.text`,
+    `INSERT INTO comments (post_id, ext_id, parent_ext_id, author, text, likes, posted_at, fetched_at,
+       author_avatar, author_url, media_url)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (post_id, ext_id) DO UPDATE SET likes = excluded.likes, text = excluded.text,
+       author_avatar = coalesce(excluded.author_avatar, author_avatar),
+       author_url = coalesce(excluded.author_url, author_url),
+       media_url = coalesce(excluded.media_url, media_url)`,
   )
   let newComments = 0
   for (const c of p.comments) {
     const before = db
       .prepare('SELECT 1 FROM comments WHERE post_id = ? AND ext_id = ?')
       .get(post.id, c.ext_id)
-    insert.run(post.id, c.ext_id, c.parent_ext_id, c.author, c.text, c.likes, c.posted_at, t)
+    insert.run(
+      post.id,
+      c.ext_id,
+      c.parent_ext_id,
+      c.author,
+      c.text,
+      c.likes,
+      c.posted_at,
+      t,
+      c.author_avatar ?? null,
+      c.author_url ?? null,
+      c.media_url ?? null,
+    )
     if (!before) newComments++
   }
+  closeAnswered(db, post.id)
   return { post, newComments }
 }
 
-export const setReplyStatus = (db: DB, commentId: number, status: ReplyStatus) =>
-  db.prepare('UPDATE comments SET reply_status = ? WHERE id = ?').run(status, commentId)
+/** Marks a comment answered, skipped or open again, and who did it. */
+export const setReplyStatus = (db: DB, commentId: number, status: ReplyStatus, userId?: number) =>
+  db
+    .prepare(
+      `UPDATE comments SET reply_status = ?, done_by = ?,
+         answered_at = CASE WHEN ? = 'done' THEN coalesce(answered_at, ?) ELSE NULL END,
+         answered_by = CASE WHEN ? = 'done' THEN coalesce(answered_by, 'user') ELSE NULL END
+       WHERE id = ?`,
+    )
+    .run(status, status === 'open' ? null : (userId ?? null), status, now(), status, commentId)
+
+/** A waiting comment older than its brand's reply target, in SQL over c, b. */
+const OVERDUE = `(c.needs_reply = 1 AND c.reply_status = 'open'
+  AND (julianday('now') - julianday(coalesce(c.posted_at, c.fetched_at))) * 24 > b.reply_target_hours)`
+
+/** Open comments that need a reply and are older than the brand's reply target. */
+export function overdueCount(db: DB, brandId: number, network?: Network) {
+  return (
+    db
+      .prepare(
+        `SELECT count(*) AS n FROM comments c JOIN posts p ON p.id = c.post_id
+           JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id
+         WHERE pr.brand_id = ? AND (? IS NULL OR p.network = ?) AND ${OVERDUE}`,
+      )
+      .get(brandId, network ?? null, network ?? null) as { n: number }
+  ).n
+}
 
 /** Sets or clears a comment's sentiment and category. `by`: a person ('you') or Claude ('ai'). */
 export function setSentiment(
@@ -301,6 +350,8 @@ export interface CommentFilter extends PostFilter {
   category?: string
   /** Leave out the brand's own replies (its account's comments). */
   others?: boolean
+  /** Only comments waiting longer than the brand's reply target. */
+  overdue?: boolean
 }
 
 export function listComments(db: DB, f: CommentFilter = {}) {
@@ -324,6 +375,7 @@ export function listComments(db: DB, f: CommentFilter = {}) {
   }
   if (f.needsReply) where.push("c.needs_reply = 1 AND c.reply_status = 'open'")
   if (f.unsorted) where.push('c.label IS NULL')
+  if (f.overdue) where.push(OVERDUE)
   if (f.others) where.push('lower(c.author) != lower(pr.handle)')
   if (f.sentiment === 'none') where.push('c.sentiment IS NULL')
   else if (f.sentiment) {
@@ -338,10 +390,11 @@ export function listComments(db: DB, f: CommentFilter = {}) {
     where.push('c.text LIKE ?')
     args.push(`%${f.search}%`)
   }
-  return all<Comment & { network: Network; post_url: string; brand_id: number }>(
+  return all<Comment & { network: Network; post_url: string; brand_id: number; overdue: 0 | 1 }>(
     db,
-    `SELECT c.*, p.network, p.url AS post_url, pr.brand_id
+    `SELECT c.*, p.network, p.url AS post_url, pr.brand_id, ${OVERDUE} AS overdue
      FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
+       JOIN brands b ON b.id = pr.brand_id
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
      ORDER BY (c.needs_reply = 1 AND c.reply_status = 'open') DESC, c.likes DESC, c.id DESC LIMIT ? OFFSET ?`,
     ...args,

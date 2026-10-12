@@ -17,6 +17,8 @@ export interface Brand {
   industry: string | null
   description: string | null
   notes: string | null
+  /** Hours a comment may wait for an answer before it counts as overdue. */
+  reply_target_hours: number
   created_at: string
 }
 
@@ -69,6 +71,13 @@ export interface Comment {
   /** Who set the sentiment: a person or Claude. */
   sentiment_by: 'you' | 'ai' | null
   translation: string | null
+  /** When the comment was answered, and whether the brand did it on the network or a person marked it. */
+  answered_at: string | null
+  answered_by: 'brand' | 'user' | null
+  /** Saved copies under /media, or null when the network gave none. */
+  author_avatar: string | null
+  author_url: string | null
+  media_url: string | null
 }
 
 export type ReplyStatus = 'open' | 'done' | 'ignored'
@@ -95,6 +104,10 @@ export interface CollectedComment {
   text: string
   likes: number | null
   posted_at: string | null
+  /** The commenter's profile picture and page, and a picture or sticker attached to the comment. */
+  author_avatar?: string | null
+  author_url?: string | null
+  media_url?: string | null
 }
 
 export interface RunScope {

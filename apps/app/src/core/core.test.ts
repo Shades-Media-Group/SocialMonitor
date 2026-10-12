@@ -113,3 +113,46 @@ describe('storage', () => {
     expect(listComments(other)[0]!.label).toBe('complaint')
   })
 })
+
+describe('reply queue', () => {
+  it('closes a comment the brand answered on the network, and flags the late ones', () => {
+    const db = openDb(':memory:')
+    const brand = addBrand(db, 'Test', ['https://www.tiktok.com/@test'])
+    const [profile] = listProfiles(db, brand.id)
+    const comment = (ext_id: string, author: string, parent: string | null, at: string) => ({
+      ext_id,
+      parent_ext_id: parent,
+      author,
+      text: 'hi',
+      likes: 0,
+      posted_at: at,
+    })
+    const post = {
+      ext_id: '1',
+      url: 'u',
+      posted_at: null,
+      kind: 'video',
+      caption: 'c',
+      thumb_url: null,
+      likes: 1,
+      comments_count: 3,
+      shares: 0,
+      views: 9,
+      comments: [
+        comment('a', 'x', null, '2026-01-01T10:00:00Z'),
+        comment('b', 'y', null, '2026-01-01T10:00:00Z'),
+      ],
+    }
+    savePost(db, profile!, post)
+    for (const c of listComments(db)) setVerdict(db, c.id, 'question', true, 'asks')
+    expect(listComments(db, { overdue: true })).toHaveLength(2)
+
+    post.comments.push(comment('r', 'TEST', 'a', '2026-01-01T13:00:00Z'))
+    savePost(db, profile!, post)
+    const a = listComments(db).find((c) => c.ext_id === 'a')!
+    expect(a.reply_status).toBe('done')
+    expect(a.answered_by).toBe('brand')
+    expect(a.answered_at).toBe('2026-01-01T13:00:00Z')
+    expect(listComments(db, { overdue: true }).map((c) => c.ext_id)).toEqual(['b'])
+  })
+})

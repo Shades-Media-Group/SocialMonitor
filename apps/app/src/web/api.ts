@@ -19,7 +19,12 @@ export type PostRow = Post & {
   n_other: number
   waiting: number
 }
-export type CommentRow = Comment & { network: Network; post_url: string; brand_id: number }
+export type CommentRow = Comment & {
+  network: Network
+  post_url: string
+  brand_id: number
+  overdue: 0 | 1
+}
 export interface RunRow {
   id: number
   trigger: string

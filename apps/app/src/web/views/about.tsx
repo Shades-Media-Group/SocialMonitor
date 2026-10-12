@@ -31,6 +31,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
     website: brand.website ?? '',
     description: brand.description ?? '',
     notes: brand.notes ?? '',
+    reply_target_hours: String(brand.reply_target_hours ?? 24),
   })
   const [links, setLinks] = useState(linksOf)
   const [cats, setCats] = useState<Category[]>(() => brandCategories(brand))
@@ -53,6 +54,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
     try {
       await api.patch(`/api/brands/${brand.id}`, {
         ...f,
+        reply_target_hours: Number(f.reply_target_hours) || 24,
         website: f.website || null,
         links: NETS.map((n) => links[n].trim()).filter(Boolean),
       })
@@ -82,6 +84,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
             website: x.website || null,
             description: x.description || null,
             notes: x.notes || null,
+            reply_target_hours: Number(x.reply_target_hours) || undefined,
             links: NETS.map((n) => (x.links?.[n] ?? '').trim()).filter(Boolean),
           })
           if (x.categories)
@@ -204,6 +207,20 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
             )}
           >
             <textarea class="g-input sm-textarea" rows={3} value={f.notes} onInput={set('notes')} />
+          </Row>
+          <Row
+            label={t('Reply target')}
+            hint={t('Hours a comment may wait for an answer. Older ones are marked overdue.')}
+          >
+            <input
+              class="g-input sm-input--short"
+              type="number"
+              min="1"
+              max="720"
+              step="1"
+              value={f.reply_target_hours}
+              onInput={set('reply_target_hours')}
+            />
           </Row>
         </section>
 
