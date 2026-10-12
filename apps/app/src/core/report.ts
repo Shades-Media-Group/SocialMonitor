@@ -49,7 +49,9 @@ export function buildReport(
       )
     const posts = store.listPosts(db, { brandId, limit: 200 }).filter((p) => postIds.includes(p.id))
     lines.push(
-      `${posts.length} posts read, ${fresh.total ?? 0} new comments: ${fresh.complaint ?? 0} complaints, ${fresh.question ?? 0} questions, ${fresh.praise ?? 0} praise. ${fresh.needs_reply ?? 0} need a reply.`,
+      `${posts.length} posts read, ${fresh.total ?? 0} new comments: ${fresh.complaint ?? 0} complaints, ${fresh.question ?? 0} questions, ${fresh.praise ?? 0} praise. ${fresh.needs_reply ?? 0} need a reply.` +
+        // Unsorted comments are not "zero complaints": say how many still wait for the AI.
+        (fresh.unsorted ? ` ${fresh.unsorted} not sorted yet: see Needs you.` : ''),
     )
     if (sorted(all) && sorted(fresh))
       lines.push(
