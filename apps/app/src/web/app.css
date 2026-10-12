@@ -603,7 +603,7 @@ p {
 .sm-c--reply .sm-c__face {
   width: 28px;
   height: 28px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .sm-face--blue {
   background: var(--g-blue-100);
@@ -1225,7 +1225,7 @@ p {
   padding: 20px 16px 8px 28px;
 }
 .sm-sheet__head h2 {
-  font-size: 24px;
+  font-size: 20px;
 }
 .sm-sheet__body {
   flex: 1;
@@ -1343,7 +1343,7 @@ p {
     display: none;
   }
   .sm-brandline__name strong {
-    font-size: 24px;
+    font-size: 28px;
   }
   .sm-split {
     grid-template-columns: 1fr;
