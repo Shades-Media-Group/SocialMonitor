@@ -12,7 +12,11 @@ import type { Account } from '../core/vault.ts'
 import { gaps, queueRun, sortPending } from '../core/run.ts'
 import type { CollectedPost, Range } from '../core/types.ts'
 import {
+  byNetwork,
   compare,
+  heatmap,
+  topAuthors,
+  topWords,
   labelTotals,
   postEngagement,
   reach,
@@ -418,6 +422,11 @@ export const routes: Route[] = [
     }
     const labels = labelTotals(db, s)
     const posts = postEngagement(db, s, 1000)
+    // The window before this one, so each figure can show how it moved.
+    const p = { ...s, previous: true }
+    const pLabels = labelTotals(db, p)
+    const pPosts = postEngagement(db, p, 1000)
+    const brand = store.getBrand(db, s.brandId)
     return {
       timeline: timeline(db, s),
       posts: posts.slice(-30),
@@ -425,6 +434,27 @@ export const routes: Route[] = [
       labels,
       reputation: reputation(labels),
       reach: reach(posts),
+      interactions: posts.reduce(
+        (n, x) => n + (x.likes ?? 0) + (x.comments ?? 0) + (x.shares ?? 0),
+        0,
+      ),
+      previous: s.days
+        ? {
+            labels: pLabels,
+            responses: responses(db, p),
+            reputation: reputation(pLabels),
+            reach: reach(pPosts),
+            posts: pPosts.length,
+            interactions: pPosts.reduce(
+              (n, x) => n + (x.likes ?? 0) + (x.comments ?? 0) + (x.shares ?? 0),
+              0,
+            ),
+          }
+        : null,
+      networks: byNetwork(db, s),
+      heatmap: heatmap(db, s),
+      authors: topAuthors(db, s),
+      words: topWords(db, s, brand?.name ?? ''),
     }
   }),
   r('GET', '/api/compare', 'user', (c) =>

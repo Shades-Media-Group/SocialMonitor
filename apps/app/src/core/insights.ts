@@ -11,24 +11,31 @@ export interface Scope {
   network?: Network
   /** 0 or undefined: all time. */
   days?: number
+  /** The window of the same length just before this one, for comparing. */
+  previous?: boolean
 }
 
-const since = (days?: number) =>
-  days ? new Date(Date.now() - days * 86400_000).toISOString() : null
+const since = (days?: number, previous?: boolean) =>
+  days ? new Date(Date.now() - days * (previous ? 2 : 1) * 86400_000).toISOString() : null
+const until = (s: Scope) =>
+  s.days && s.previous ? new Date(Date.now() - s.days * 86400_000).toISOString() : null
 
 /** Shared WHERE for comments joined to posts (p) and profiles (pr). Customer comments only. */
 function where(s: Scope) {
   return {
     sql: `(? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR p.network = ?)
           AND (? IS NULL OR coalesce(c.posted_at, c.fetched_at) >= ?)
+          AND (? IS NULL OR coalesce(c.posted_at, c.fetched_at) < ?)
           AND lower(c.author) != lower(pr.handle)`,
     args: [
       s.brandId ?? null,
       s.brandId ?? null,
       s.network ?? null,
       s.network ?? null,
-      since(s.days),
-      since(s.days),
+      since(s.days, s.previous),
+      since(s.days, s.previous),
+      until(s),
+      until(s),
     ],
   }
 }
@@ -79,6 +86,7 @@ export function postEngagement(db: DB, s: Scope, limit = 30) {
            coalesce(p.description, p.caption) AS about
          FROM posts p JOIN profiles pr ON pr.id = p.profile_id
          WHERE (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR p.network = ?) AND (? IS NULL OR p.posted_at >= ?)
+           AND (? IS NULL OR p.posted_at < ?)
          ORDER BY p.posted_at DESC LIMIT ?`,
       )
       .all(
@@ -86,8 +94,10 @@ export function postEngagement(db: DB, s: Scope, limit = 30) {
         s.brandId ?? null,
         s.network ?? null,
         s.network ?? null,
-        since(s.days),
-        since(s.days),
+        since(s.days, s.previous),
+        since(s.days, s.previous),
+        until(s),
+        until(s),
         limit,
       ) as {
       id: number
@@ -197,3 +207,103 @@ export function reputation(labels: Record<string, number>) {
 /** Reach: the views the networks report for the posts in scope (TikTok and Instagram videos). */
 export const reach = (posts: { views: number | null }[]) =>
   posts.reduce((n, p) => n + (p.views ?? 0), 0)
+
+const FROM = `FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id`
+
+/** Customer comments per network, split by label. */
+export function byNetwork(db: DB, s: Scope) {
+  const w = where(s)
+  const rows = db
+    .prepare(
+      `SELECT p.network, c.label, count(*) AS n ${FROM} WHERE ${w.sql} GROUP BY p.network, c.label`,
+    )
+    .all(...w.args) as { network: Network; label: string | null; n: number }[]
+  const out = new Map<Network, Record<string, number>>()
+  for (const r of rows) {
+    const d = out.get(r.network) ?? {
+      total: 0,
+      complaint: 0,
+      question: 0,
+      suggestion: 0,
+      praise: 0,
+      other: 0,
+    }
+    const k = (LABELS as readonly string[]).includes(r.label ?? '') ? r.label! : 'other'
+    d[k] = (d[k] ?? 0) + r.n
+    d.total! += r.n
+    out.set(r.network, d)
+  }
+  return [...out]
+    .map(([network, d]) => ({ network, ...d }) as { network: Network } & Record<string, number>)
+    .sort((a, b) => b.total! - a.total!)
+}
+
+/** Comments by weekday (0 Sunday) and hour, in UTC. */
+// ponytail: UTC hours; shift by the viewer's offset if a brand's audience is far from UTC.
+export function heatmap(db: DB, s: Scope) {
+  const w = where(s)
+  const rows = db
+    .prepare(
+      `SELECT CAST(strftime('%w', coalesce(c.posted_at, c.fetched_at)) AS INTEGER) AS d,
+              CAST(strftime('%H', coalesce(c.posted_at, c.fetched_at)) AS INTEGER) AS h, count(*) AS n
+       ${FROM} WHERE ${w.sql} GROUP BY d, h`,
+    )
+    .all(...w.args) as { d: number; h: number; n: number }[]
+  const grid = Array.from({ length: 7 }, () => Array(24).fill(0) as number[])
+  for (const r of rows) grid[r.d]![r.h] = r.n
+  return grid
+}
+
+/** The people who comment most, with how their comments were labelled. */
+export function topAuthors(db: DB, s: Scope, limit = 8) {
+  const w = where(s)
+  return db
+    .prepare(
+      `SELECT c.author, p.network, count(*) AS n,
+              sum(c.label = 'complaint') AS complaints, sum(c.label = 'praise') AS praise,
+              max(coalesce(c.posted_at, c.fetched_at)) AS last
+       ${FROM} WHERE ${w.sql} GROUP BY lower(c.author), p.network ORDER BY n DESC, last DESC LIMIT ?`,
+    )
+    .all(...w.args, limit) as {
+    author: string
+    network: Network
+    n: number
+    complaints: number
+    praise: number
+    last: string
+  }[]
+}
+
+// Words too common to say anything, in the languages comments usually come in.
+const STOP = new Set(
+  `the and for are but not you all any can her was one our out has have this that with what from they will your just like get its it's there their them then than been were when which would about more some very also into only over such http https www com
+şi si sa să la de cu pe in în nu ce un o a ai am are as au din este e ca că mai pentru se ne va vă ve care sunt fost fi daca dacă cum cand când tot toti toți acest aceasta asta ăsta foarte doar
+и в во не что он на я с со как а то все она так его но да ты к у же вы за бы по только ее мне было вот от меня еще нет о из ему теперь когда даже ну вдруг ли если уже или ни быть был него до вас нибудь опять уж вам ведь там потом себя ничего ей может они тут где есть надо ней для мы тебя их чем была сам чтоб без будто чего раз тоже себе под будет ж тогда кто этот того потому этого какой совсем ним здесь этом один почти мой тем чтобы нее сейчас были куда зачем всех никогда можно при наконец два об другой хоть после над больше тот через эти нас про всего них какая много разве три эту моя впрочем хорошо свою этой перед иногда лучше чуть том нельзя такой им более всегда конечно всю между это
+les des une est pas pour que qui dans sur avec par plus vous nous mais ont sont tout bien fait comme`.split(
+    /\s+/,
+  ),
+)
+
+/** The words people use most, without the brand's own name and everyday filler. */
+export function topWords(db: DB, s: Scope, brandName = '', limit = 24) {
+  const w = where(s)
+  const rows = db.prepare(`SELECT c.text ${FROM} WHERE ${w.sql}`).all(...w.args) as {
+    text: string
+  }[]
+  const own = new Set(brandName.toLowerCase().split(/[^\p{L}\p{N}]+/u))
+  const counts = new Map<string, number>()
+  for (const r of rows) {
+    // Each word counts once per comment, so one long comment can't top the list alone.
+    const seen = new Set(
+      (r.text.toLowerCase().match(/[\p{L}][\p{L}\p{N}'’-]{2,}/gu) ?? []).filter(
+        (x) => !STOP.has(x) && !own.has(x),
+      ),
+    )
+    for (const x of seen) counts.set(x, (counts.get(x) ?? 0) + 1)
+  }
+  return [...counts]
+    .filter(([, n]) => n > 1)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([word, n]) => ({ word, n }))
+}
