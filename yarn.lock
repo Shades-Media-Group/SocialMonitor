@@ -433,6 +433,11 @@
   resolved "https://registry.yarnpkg.com/@fontsource-variable/hanken-grotesk/-/hanken-grotesk-5.3.0.tgz#9f4d3ac87244a44a578ce58c9ae8fab44df9357f"
   integrity sha512-DOd0FqL+3cH2dfNy0JtSq9tUfxBz5mLmHMjTU0DOr3E9Zo6wxuatCl53DIPNrSPgCsnuKyM739BTIG5glCLirw==
 
+"@fontsource-variable/inter@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource-variable/inter/-/inter-5.3.0.tgz#351dd1e02dab63a6cf66d57ec36dcfd10c07f07b"
+  integrity sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==
+
 "@fontsource/space-grotesk@^5.3.0":
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/@fontsource/space-grotesk/-/space-grotesk-5.3.0.tgz#248f33358ba78cee84832832f7a79c77a096c7e0"
@@ -2351,9 +2356,9 @@ setprototypeof@~1.2.0:
   resolved "https://registry.yarnpkg.com/setprototypeof/-/setprototypeof-1.2.0.tgz#66c9a24a73f9fc28cbe66b09fed3d33dcaf1b424"
   integrity sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==
 
-"shades-gradient@https://github.com/Shades-Media-Group/gradient/releases/download/v0.4.0/shades-gradient-0.4.0.tgz":
-  version "0.4.0"
-  resolved "https://github.com/Shades-Media-Group/gradient/releases/download/v0.4.0/shades-gradient-0.4.0.tgz#85a241abb6dc985d3daf3e8873633fccc2359d11"
+"shades-gradient@https://github.com/Shades-Media-Group/gradient/releases/download/v0.5.0/shades-gradient-0.5.0.tgz":
+  version "0.5.0"
+  resolved "https://github.com/Shades-Media-Group/gradient/releases/download/v0.5.0/shades-gradient-0.5.0.tgz#22692224c1cc1dc75868ecbb4dedee8ea9865b82"
 
 sharp@0.35.5:
   version "0.35.5"
