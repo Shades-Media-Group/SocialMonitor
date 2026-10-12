@@ -3424,14 +3424,15 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-shell .sm-nav__brand.is-open {
   position: relative;
   margin: 2px 0 6px;
-  padding-left: 8px;
+  padding-left: 0;
 }
+/* The line sits in the panel's margin, so an open brand lines up with the closed ones. */
 .sm-shell .sm-nav__brand.is-open::before {
   content: '';
   position: absolute;
   top: 2px;
   bottom: 2px;
-  left: 0;
+  left: -7px;
   width: 2px;
   border-radius: 2px;
   background: var(--hue, var(--g-blue-600));
