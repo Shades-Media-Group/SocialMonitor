@@ -370,7 +370,8 @@ export function profileStats(db: DB, s: Scope) {
       praise: labels.praise ?? 0,
       likes: sum('likes'),
       likes_avg: posts.length ? Math.round(sum('likes') / posts.length) : null,
-      views: sum('views'),
+      // Photo posts on Facebook and Instagram report no views: null, shown as "–", not 0.
+      views: posts.some((p) => p.views != null) ? sum('views') : null,
       interactions: sum('likes') + sum('comments') + sum('shares'),
       last_post: posts.at(-1)?.day ?? null,
       series: days.map((d) => {
@@ -389,7 +390,7 @@ export interface DayRow {
   praise: number
   posts: number
   likes: number
-  views: number
+  views: number | null
   interactions: number
 }
 

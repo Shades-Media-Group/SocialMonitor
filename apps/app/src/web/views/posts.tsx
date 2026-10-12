@@ -23,7 +23,7 @@ interface Group {
   posts: number
   likes: number
   comments: number
-  views: number
+  views: number | null
   /** Likes, comments and shares per view, when views are known. */
   rate: number | null
 }
@@ -47,7 +47,7 @@ function groups(rows: PostRow[], keys: (p: PostRow) => string[], name: (k: strin
       posts: ps.length,
       likes: Math.round(sum((p) => p.likes) / ps.length),
       comments: Math.round(sum((p) => p.comments_count) / ps.length),
-      views: Math.round(sum((p) => p.views) / ps.length),
+      views: seen.length ? Math.round(sum((p) => p.views) / ps.length) : null,
       rate: views ? acts / views : null,
     }
   })

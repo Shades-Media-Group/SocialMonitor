@@ -38,7 +38,7 @@ export interface ProfileStat {
   praise: number
   likes: number
   likes_avg: number | null
-  views: number
+  views: number | null
   interactions: number
   last_post: string | null
   series: number[]

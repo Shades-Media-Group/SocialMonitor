@@ -443,7 +443,9 @@ function Dashboard({ me }: { me: Me }) {
           </nav>
           <div class="sm-navpanel__foot">
             <span class="sm-live-dot" aria-hidden="true" data-on={running ? '1' : undefined} />
-            {running ? t('Reading…') : t('Updated {when}', { when: ago(lastRun) })}
+            <span class="sm-navpanel__status">
+              {running ? t('Reading…') : t('Updated {when}', { when: ago(lastRun) })}
+            </span>
             <button
               class="sm-navpanel__out"
               type="button"

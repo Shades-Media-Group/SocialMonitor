@@ -571,6 +571,8 @@ export const ro: Dict = {
     'This address cannot receive TikTok sign-ins.':
       'Această adresă nu poate primi conectări TikTok.',
     'This TikTok sign-in expired. Try again.': 'Conectarea TikTok a expirat. Încearcă din nou.',
+    '{n} in the period before': '{n} în perioada anterioară',
+    'Nothing in the period before': 'Nimic în perioada anterioară',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

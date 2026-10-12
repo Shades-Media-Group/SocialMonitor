@@ -48,7 +48,11 @@ const addDays = (day: string, n: number) => {
   return iso(d)
 }
 const monthStart = (day: string) => `${day.slice(0, 7)}-01`
-const today = () => iso(new Date())
+/** Today on this computer's calendar, not in UTC. */
+const today = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 function presets(): [string, string, string][] {
   const now = today()
@@ -270,6 +274,12 @@ export function Calendar({ brand, brands, network, version, mode }: BrandView) {
 
   const monthList: string[] = []
   for (let m = monthStart(from); m <= to; m = monthStart(addDays(m, 32))) monthList.push(m)
+  // Months before anything happened are left out, so the view opens on activity.
+  while (
+    monthList.length > 1 &&
+    !rows.some((r) => r.day.startsWith(monthList[0]!.slice(0, 7)) && v(r) > 0)
+  )
+    monthList.shift()
   const maxDay = Math.max(1, ...rows.map(v))
   const weekdays = Array.from({ length: 7 }, (_, i) =>
     fmtDay(addDays('2024-01-01', i), { weekday: 'narrow' }),
@@ -333,7 +343,11 @@ export function Calendar({ brand, brands, network, version, mode }: BrandView) {
             <span class="g-num">{fmt(total)}</span>
             <Change v={pct(total, totalBefore)} />
           </dd>
-          <dd class="sm-kpi__sub">{t('Against the period before')}</dd>
+          <dd class="sm-kpi__sub">
+            {totalBefore
+              ? t('{n} in the period before', { n: fmt(totalBefore) })
+              : t('Nothing in the period before')}
+          </dd>
         </div>
         <div class="sm-kpi">
           <dt>{t('Per day')}</dt>

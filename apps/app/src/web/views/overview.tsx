@@ -337,7 +337,9 @@ export function Overview(v: BrandView) {
             )
           })}
           <div class="sm-ga__card sm-ga__card--static">
-            <span class="sm-ga__label">{t('Waiting for an answer')}</span>
+            <span class="sm-ga__label" title={t('Waiting for an answer')}>
+              {t('To answer')}
+            </span>
             <span class={`sm-ga__value g-num${waiting ? ' sm-hot' : ''}`}>{fmt(waiting)}</span>
             <span class="sm-ga__sub">
               {r?.rate == null ? '' : t('{n}% answered', { n: Math.round(r.rate * 100) })}

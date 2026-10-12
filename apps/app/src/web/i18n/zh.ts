@@ -547,6 +547,8 @@ export const zh: Dict = {
     'Not connected.': '未连接。',
     'This address cannot receive TikTok sign-ins.': '这个地址无法接收 TikTok 登录。',
     'This TikTok sign-in expired. Try again.': '这次 TikTok 登录已过期，请重试。',
+    '{n} in the period before': '上一时段 {n}',
+    'Nothing in the period before': '上一时段没有',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

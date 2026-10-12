@@ -569,6 +569,8 @@ export const ru: Dict = {
     'This address cannot receive TikTok sign-ins.':
       'Этот адрес не может принимать входы через TikTok.',
     'This TikTok sign-in expired. Try again.': 'Вход через TikTok истёк. Попробуйте снова.',
+    '{n} in the period before': '{n} за прошлый период',
+    'Nothing in the period before': 'За прошлый период ничего',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

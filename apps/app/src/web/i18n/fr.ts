@@ -571,6 +571,8 @@ export const fr: Dict = {
     'This address cannot receive TikTok sign-ins.':
       'Cette adresse ne peut pas recevoir de connexions TikTok.',
     'This TikTok sign-in expired. Try again.': 'Cette connexion TikTok a expiré. Réessayez.',
+    '{n} in the period before': '{n} sur la période précédente',
+    'Nothing in the period before': 'Rien sur la période précédente',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

@@ -2871,8 +2871,8 @@ body:has(.sm-shell) {
   box-shadow: none;
 }
 .sm-shell .sm-b--own .sm-b__bubble {
-  background: #2a2d33;
-  color: #f4f5f7;
+  background: var(--bubble-own);
+  color: var(--bubble-own-ink);
 }
 .sm-b__who {
   display: flex;
@@ -3080,12 +3080,12 @@ a.sm-b__avatar:hover {
   background: var(--c-card);
 }
 .sm-shell .sm-body .sm-b--own .sm-b__bubble {
-  background: #2a2d33;
-  color: #f4f5f7;
+  background: var(--bubble-own);
+  color: var(--bubble-own-ink);
   box-shadow: none;
 }
 .sm-shell .sm-body .sm-b--own .sm-b__bubble .sm-b__text--none {
-  color: #b9bec8;
+  color: var(--bubble-own-quiet);
 }
 .sm-shell .sm-body .sm-acct__stats {
   border: 0;
@@ -3797,7 +3797,6 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-shell .sm-body .sm-box--list,
 .sm-shell .sm-body .sm-scrollbox,
 .sm-shell .sm-modal .sm-thread {
-  --list-bg: #f9fafb;
   background: var(--list-bg);
 }
 .sm-shell .sm-body .sm-box--list .sm-box__head {
@@ -3816,7 +3815,7 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-shell .sm-b--ask .sm-b__bubble {
   padding: 7px 14px 10px;
   border-radius: 4px 18px 18px 18px;
-  background: #e9ecf0;
+  background: var(--bubble);
   box-shadow: none;
 }
 .sm-shell .sm-b__who {
@@ -3831,7 +3830,7 @@ a.sm-person[href]:hover .sm-person__name {
 }
 .sm-shell .sm-b--own .sm-b__who,
 .sm-shell .sm-b--own .sm-b__name {
-  color: #c9cdd4;
+  color: var(--bubble-own-quiet);
 }
 .sm-shell .sm-b--own .sm-b__name {
   color: #fff;
@@ -3859,9 +3858,9 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-word--neutral,
 .sm-word--spam,
 .sm-word--done {
-  --tone: #3c414a;
-  background: #e3e6eb;
-  color: #3c414a;
+  --tone: var(--chip-ink);
+  background: var(--chip);
+  color: var(--chip-ink);
 }
 .sm-b__note {
   display: inline-flex;
@@ -3930,7 +3929,7 @@ a.sm-person[href]:hover .sm-person__name {
 }
 .sm-cal__n--post {
   border-radius: 4px;
-  background: #2a2d33;
+  background: var(--bubble-own);
   color: #fff;
   box-shadow: none;
 }
@@ -3985,7 +3984,7 @@ a.sm-person[href]:hover .sm-person__name {
 }
 .sm-shell .sm-postcard2__img {
   aspect-ratio: 4 / 5;
-  background: #e3e6eb;
+  background: var(--chip);
 }
 .sm-shell .sm-postcard2__img img {
   object-fit: contain;
@@ -4216,7 +4215,7 @@ a.sm-person[href]:hover .sm-person__name {
   gap: 8px;
 }
 .sm-shell .sm-postcard2 .sm-mood-strip--empty {
-  background: #dfe2e7;
+  background: var(--chip);
 }
 
 /* In the narrow layouts each figure is named by its icon; the word stays in the tooltip. */
@@ -4224,12 +4223,15 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-postcard2__stats dt svg {
   display: none;
 }
+.sm-shell .sm-wall--4 .sm-postcard2__stats dt svg,
 .sm-shell .sm-wall--5 .sm-postcard2__stats dt svg,
 .sm-shell .sm-wall--6 .sm-postcard2__stats dt svg,
+.sm-shell .sm-wall--4 .sm-postcard2__stats dt .g-icon,
 .sm-shell .sm-wall--5 .sm-postcard2__stats dt .g-icon,
 .sm-shell .sm-wall--6 .sm-postcard2__stats dt .g-icon {
   display: inline-block;
 }
+.sm-shell .sm-wall--4 .sm-postcard2__stats dt span,
 .sm-shell .sm-wall--5 .sm-postcard2__stats dt span,
 .sm-shell .sm-wall--6 .sm-postcard2__stats dt span {
   display: none;
@@ -4274,4 +4276,121 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-navpanel__out:hover {
   background: var(--c-hover);
   color: var(--c-text);
+}
+
+/* Colours of comments and chips, light and dark. */
+:root {
+  --list-bg: #f9fafb;
+  --bubble: #e9ecf0;
+  --bubble-own: #2a2d33;
+  --bubble-own-ink: #f4f5f7;
+  --bubble-own-quiet: #c9cdd4;
+  --chip: #e3e6eb;
+  --chip-ink: #3c414a;
+}
+[data-theme='dark'] {
+  --list-bg: #141518;
+  --bubble: #25272c;
+  --bubble-own: #3b3f47;
+  --bubble-own-ink: #f4f5f7;
+  --bubble-own-quiet: #b3b8c1;
+  --chip: #2c2f35;
+  --chip-ink: #cfd3da;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --list-bg: #141518;
+    --bubble: #25272c;
+    --bubble-own: #3b3f47;
+    --bubble-own-ink: #f4f5f7;
+    --bubble-own-quiet: #b3b8c1;
+    --chip: #2c2f35;
+    --chip-ink: #cfd3da;
+  }
+}
+
+/* Schedules: one quiet row per schedule, its actions on the right. */
+.sm-shell .sm-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--blk, #f5f6f8);
+  list-style: none;
+}
+.sm-shell .sm-brand-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--c-card, #fff);
+}
+.sm-brand-row__main {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.sm-brand-row__main h2 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 650;
+}
+.sm-brand-row__main p {
+  margin: 0;
+  font-size: 12px;
+}
+.sm-brand-row__actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* The donut's segments are strokes only; tone classes that also set a fill must not paint them. */
+.sm-shell .sm-donut__seg {
+  fill: none;
+}
+/* Bar names wrap to a second line rather than being cut. */
+.sm-shell .sm-bars__name {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+/* On a phone the page header keeps the brand name whole and drops the field of work. */
+@media (max-width: 560px) {
+  .sm-shell .sm-pagehead__sub {
+    display: none;
+  }
+  .sm-shell .sm-pagehead h1 {
+    overflow: visible;
+    white-space: normal;
+  }
+}
+
+/* Block fills for every page of the shell, not only a brand's pages. */
+.sm-shell {
+  --blk: #f5f6f8;
+  --blk-2: #eceef2;
+}
+[data-theme='dark'] .sm-shell {
+  --blk: #18191c;
+  --blk-2: #212328;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .sm-shell {
+    --blk: #18191c;
+    --blk-2: #212328;
+  }
+}
+.sm-navpanel__status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
