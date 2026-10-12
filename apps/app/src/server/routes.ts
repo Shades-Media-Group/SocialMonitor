@@ -7,6 +7,8 @@ import { TEMPLATES, validCategories } from '../core/categories.ts'
 import type { Dump } from '../core/transfer.ts'
 import { openSignInWindow, signInStatus } from '../core/collect/browser.ts'
 import { readSettings, writeSettings } from '../core/settings.ts'
+import { deleteAccount, listAccounts, revealPassword, saveAccount } from '../core/vault.ts'
+import type { Account } from '../core/vault.ts'
 import { gaps, queueRun, sortPending } from '../core/run.ts'
 import type { CollectedPost, Range } from '../core/types.ts'
 
@@ -15,6 +17,8 @@ interface Ctx {
   params: Record<string, string>
   query: URLSearchParams
   body: unknown
+  /** The request came from this computer, not through the tunnel. */
+  local: boolean
 }
 interface Route {
   method: string
@@ -82,7 +86,24 @@ export const routes: Route[] = [
   r('POST', '/api/import', (c) => importAll(c.db, c.body as Dump)),
   r('GET', '/api/browser/status', async () => signInStatus()),
   r('GET', '/api/gaps', ({ db }) => gaps(db)),
-  r('POST', '/api/browser/sign-in', async () => {
+  // Accounts: kept encrypted for the person's own reference. Passwords leave the server only on
+  // this computer, one at a time, on an explicit Reveal.
+  r('GET', '/api/accounts', ({ db }) => listAccounts(db)),
+  r('POST', '/api/accounts', (c) => saveAccount(c.db, b(c) as Partial<Account>)),
+  r('DELETE', '/api/accounts/:key', (c) => void deleteAccount(c.db, c.params.key!)),
+  r('POST', '/api/accounts/:key/reveal', (c) => {
+    if (!c.local) throw new Error('Passwords are shown only on the computer SocialMonitor runs on.')
+    return { password: revealPassword(c.db, c.params.key!) }
+  }),
+  r('GET', '/api/remote', (c) => ({
+    local: c.local,
+    host: process.env.SOCIALMONITOR_PUBLIC_HOST || null,
+  })),
+  r('POST', '/api/browser/sign-in', async (c) => {
+    if (!c.local)
+      throw new Error(
+        'Signing in opens a window on the computer SocialMonitor runs on; do it there.',
+      )
     await openSignInWindow()
   }),
 

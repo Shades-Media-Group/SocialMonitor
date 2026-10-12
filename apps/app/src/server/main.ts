@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
 import { routes } from './routes.ts'
 import { seedFromFile } from './seed.ts'
+import { isLocal, publicHost, refuseRemote } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
 import { startScheduler } from '../core/schedule.ts'
 import { changed, onChange } from '../core/events.ts'
@@ -84,8 +85,16 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${HOST}`)
   // Browsers on other sites can't drive the API: only same-origin requests and tools without an Origin pass.
   const origin = req.headers.origin
-  if (origin && !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin))
+  const tunnel = publicHost()
+  if (
+    origin &&
+    !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin) &&
+    origin !== `https://${tunnel}`
+  )
     return send(res, 403, { error: 'Forbidden origin.' })
+  // Through a tunnel, only requests Cloudflare Access let in get anything at all.
+  const refusal = await refuseRemote(req)
+  if (refusal) return send(res, 403, { error: refusal })
   // Live updates: open dashboards keep one event stream and refetch when told something changed.
   if (url.pathname === '/api/events') {
     res.writeHead(200, {
@@ -116,6 +125,7 @@ const server = createServer(async (req, res) => {
         params: m.groups ?? {},
         query: url.searchParams,
         body: req.method === 'GET' ? {} : await body(req),
+        local: isLocal(req),
       })
       if (req.method !== 'GET') changed()
       if (data && typeof data === 'object' && '__download' in data) {
