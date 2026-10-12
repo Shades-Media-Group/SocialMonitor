@@ -384,6 +384,8 @@ describe('post history and re-check tiers', () => {
     })
     const { post: p } = savePost(db, profile!, post('fresh', 3, 5))
     savePost(db, profile!, post('fresh', 3, 5))
+    // Reads are minutes apart in real use; date the first row back so the next is distinct.
+    db.prepare('UPDATE post_metrics SET at = ?').run(day(1))
     savePost(db, profile!, post('fresh', 3, 9))
     expect(postMetrics(db, p.id).map((m) => m.likes)).toEqual([5, 9])
 
