@@ -622,6 +622,14 @@ export const ro: Dict = {
     'Automatic updates': 'Actualizări automate',
     'New posts and fresh numbers, read by themselves. More choices on Schedules.':
       'Postări noi și cifre proaspete, citite singure. Mai multe opțiuni în Programări.',
+    Growing: 'În creștere',
+    'Likes, comments and shares gained in the last 7 days':
+      'Aprecieri, comentarii și distribuiri câștigate în ultimele 7 zile',
+    '7 days': '7 zile',
+    views: 'vizualizări',
+    'Its history builds up with each update that reads it again.':
+      'Istoricul se adună la fiecare actualizare care o citește din nou.',
+    '{n} in {days}': '{n} în {days}',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

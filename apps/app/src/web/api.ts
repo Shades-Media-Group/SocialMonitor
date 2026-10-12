@@ -19,6 +19,9 @@ export type PostRow = Post & {
   n_praise: number
   n_other: number
   waiting: number
+  /** Likes, comments and shares gained in the last 7 days, and views; null without history. */
+  grew_7d: number | null
+  views_7d: number | null
 }
 export type CommentRow = Comment & {
   network: Network

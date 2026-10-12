@@ -289,10 +289,14 @@ export const routes: Route[] = [
     store.listPosts(db, {
       brandId: query.get('brand') ? id(query.get('brand')!) : undefined,
       network: net(query.get('network')),
-      sort: query.get('sort') === 'top' ? 'top' : 'new',
+      sort: (['top', 'growth'] as const).find((v) => v === query.get('sort')) ?? 'new',
       limit: Number(query.get('limit') ?? 50),
       offset: Number(query.get('offset') ?? 0),
     }),
+  ),
+  // A post's numbers over time, for its evolution chart.
+  r('GET', '/api/post-metrics', scoped, ({ db, query }) =>
+    store.postMetrics(db, id(query.get('post')!)),
   ),
   r('GET', '/api/comments', scoped, ({ db, query }) =>
     store.listComments(db, {

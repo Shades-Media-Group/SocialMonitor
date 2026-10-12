@@ -12,6 +12,7 @@ import { NETWORKS } from './types.ts'
 import { collectors } from './collect/index.ts'
 import { Challenge, closeBrowser, openBrowser, pause } from './collect/browser.ts'
 import { describePost, pickEngine, sortComments } from './analyze.ts'
+import type { Kind } from './analyze.ts'
 import { getSettings } from './settings.ts'
 import { buildReport } from './report.ts'
 
@@ -244,18 +245,27 @@ async function aiStep(
       if (unsorted.length) {
         log(`Sorting ${unsorted.length} comments on ${post.url}`)
         const b = db
-          .prepare('SELECT industry, description FROM brands WHERE name = ?')
-          .get(brand) as { industry: string | null; description: string | null } | undefined
+          .prepare('SELECT industry, description, categories FROM brands WHERE name = ?')
+          .get(brand) as
+          { industry: string | null; description: string | null; categories: string } | undefined
         const about = [b?.industry, b?.description].filter(Boolean).join('; ')
+        const kinds = JSON.parse(b?.categories || '[]') as Kind[]
         const verdicts = await sortComments(
           engine,
           brand,
           post.caption,
           unsorted.map((c) => ({ id: c.id, text: c.text })),
           about,
+          kinds,
         )
-        for (const [id, v] of verdicts)
+        for (const [id, v] of verdicts) {
           store.setVerdict(db, id, v.label, v.needsReply, v.reason, v.urgency, v.emotion)
+          // The brand's kind, unless a person already rated this comment.
+          const kind = kinds.find((k) => k.key === v.category)
+          const byPerson = unsorted.find((c) => c.id === id)?.sentiment_by === 'you'
+          if (!byPerson)
+            store.setSentiment(db, id, kind ? kind.sentiment : 'neutral', kind?.key ?? null, 'ai')
+        }
       }
       if (!post.description) {
         const top = store.listComments(db, { postId, others: true, limit: 5 }).map((c) => c.text)

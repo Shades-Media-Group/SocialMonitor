@@ -595,6 +595,13 @@ export const zh: Dict = {
     'Automatic updates': '自动更新',
     'New posts and fresh numbers, read by themselves. More choices on Schedules.':
       '自动读取新帖和最新数据。更多选项在“计划”中。',
+    Growing: '增长中',
+    'Likes, comments and shares gained in the last 7 days': '最近 7 天新增的点赞、评论和分享',
+    '7 days': '7 天',
+    views: '次播放',
+    'Its history builds up with each update that reads it again.':
+      '每次更新重新读取它时，历史就会累积。',
+    '{n} in {days}': '{days}内 {n}',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

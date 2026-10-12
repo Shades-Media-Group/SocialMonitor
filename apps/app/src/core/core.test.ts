@@ -60,6 +60,11 @@ describe('AI answers', () => {
       reason: 'no internet for a week|again',
     })
     expect(v.get(2)).toEqual({ label: 'praise', needsReply: false, reason: 'thanks' })
+    const k = parseVerdicts(
+      '1|complaint|1|1|frustrated|slow-internet|drops every evening\n2|praise|0|0|happy|-|thanks',
+    )
+    expect(k.get(1)).toMatchObject({ category: 'slow-internet', reason: 'drops every evening' })
+    expect(k.get(2)?.category).toBeUndefined()
   })
 })
 

@@ -4545,3 +4545,25 @@ a.sm-person[href]:hover .sm-person__name {
   align-items: center;
   gap: 8px;
 }
+
+.sm-grew small {
+  display: block;
+  color: var(--c-text-3);
+  font-size: 11px;
+}
+.sm-evo {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0 12px;
+}
+.sm-evo__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.sm-evo__none {
+  margin: 0 0 10px;
+  font-size: 12px;
+}

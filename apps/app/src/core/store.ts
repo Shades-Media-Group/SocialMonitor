@@ -364,11 +364,13 @@ export function setVerdict(
 export interface PostFilter {
   brandId?: number
   network?: Network
-  /** 'top': most likes + comments + shares first. Default: newest first. */
-  sort?: 'new' | 'top'
+  /** 'top': most likes + comments + shares first; 'growth': most gained in 7 days. Default: newest. */
+  sort?: 'new' | 'top' | 'growth'
   limit?: number
   offset?: number
 }
+
+const WEEK_AGO = "strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-7 days')"
 
 export function listPosts(db: DB, f: PostFilter = {}) {
   const where: string[] = []
@@ -393,6 +395,9 @@ export function listPosts(db: DB, f: PostFilter = {}) {
       n_praise: number
       n_other: number
       waiting: number
+      /** Likes, comments and shares it gained in the last 7 days, and views; null with no history. */
+      grew_7d: number | null
+      views_7d: number | null
     }
   >(
     db,
@@ -406,10 +411,19 @@ export function listPosts(db: DB, f: PostFilter = {}) {
        (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND lower(c.author) != lower(pr.handle) AND c.label = 'praise') AS n_praise,
        (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND lower(c.author) != lower(pr.handle)
           AND (c.label IS NULL OR c.label NOT IN ('complaint', 'question', 'suggestion', 'praise'))) AS n_other,
-       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND c.needs_reply = 1 AND c.reply_status = 'open') AS waiting
+       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND c.needs_reply = 1 AND c.reply_status = 'open') AS waiting,
+       -- Growth over 7 days: now against the last reading a week ago, or the first one since.
+       coalesce(p.likes, 0) + coalesce(p.comments_count, 0) + coalesce(p.shares, 0) - coalesce(
+         (SELECT coalesce(m.likes, 0) + coalesce(m.comments, 0) + coalesce(m.shares, 0) FROM post_metrics m
+            WHERE m.post_id = p.id AND m.at <= ${WEEK_AGO} ORDER BY m.at DESC LIMIT 1),
+         (SELECT coalesce(m.likes, 0) + coalesce(m.comments, 0) + coalesce(m.shares, 0) FROM post_metrics m
+            WHERE m.post_id = p.id ORDER BY m.at LIMIT 1)) AS grew_7d,
+       p.views - coalesce(
+         (SELECT m.views FROM post_metrics m WHERE m.post_id = p.id AND m.at <= ${WEEK_AGO} ORDER BY m.at DESC LIMIT 1),
+         (SELECT m.views FROM post_metrics m WHERE m.post_id = p.id ORDER BY m.at LIMIT 1)) AS views_7d
      FROM posts p JOIN profiles pr ON pr.id = p.profile_id
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-     ORDER BY ${f.sort === 'top' ? 'coalesce(p.likes,0) + 3 * coalesce(p.comments_count,0) + 5 * coalesce(p.shares,0) DESC,' : ''} p.posted_at DESC, p.id DESC LIMIT ? OFFSET ?`,
+     ORDER BY ${f.sort === 'top' ? 'coalesce(p.likes,0) + 3 * coalesce(p.comments_count,0) + 5 * coalesce(p.shares,0) DESC,' : f.sort === 'growth' ? 'grew_7d IS NULL, grew_7d DESC, views_7d DESC,' : ''} p.posted_at DESC, p.id DESC LIMIT ? OFFSET ?`,
     ...args,
     f.limit ?? 50,
     f.offset ?? 0,

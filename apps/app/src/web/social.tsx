@@ -2,7 +2,7 @@ import type { IconName } from 'shades-gradient'
 import { useEffect, useState } from 'preact/hooks'
 import type { BrandRow, CommentRow, Network, PostRow } from './api.ts'
 import { api } from './api.ts'
-import { Sparkline } from './charts.tsx'
+import { LineChart, Sparkline } from './charts.tsx'
 import { t } from './i18n.ts'
 import { LabelPill } from './labels.tsx'
 import {
@@ -10,6 +10,7 @@ import {
   Modal,
   NETWORK_NAME,
   NetworkMark,
+  Segmented,
   Sheet,
   ago,
   count,
@@ -235,6 +236,7 @@ export function PostDrawer({
             <p class="sm-viewer__caption">
               <b>@{post.handle}</b> {post.caption ?? post.description}
             </p>
+            <PostEvolution post={post} />
             {rows === null ? null : rows.length ? (
               <div class="sm-ig">
                 <CommentList
@@ -469,5 +471,70 @@ export function CommentDrawer({
         />
       </div>
     </Sheet>
+  )
+}
+
+type Metric = 'likes' | 'comments' | 'shares' | 'views'
+
+/**
+ * How a post's numbers moved since SocialMonitor first read it: one figure at a time, with what
+ * it gained. The history grows with every update that reads the post again.
+ */
+function PostEvolution({ post }: { post: PostRow }) {
+  const [rows, setRows] = useState<
+    | {
+        at: string
+        likes: number | null
+        comments: number | null
+        shares: number | null
+        views: number | null
+      }[]
+    | null
+  >(null)
+  const [metric, setMetric] = useState<Metric>(post.views != null ? 'views' : 'likes')
+  useEffect(() => {
+    setRows(null)
+    api
+      .get<NonNullable<typeof rows>>(`/api/post-metrics?post=${post.id}`)
+      .then(setRows)
+      .catch(() => setRows([]))
+  }, [post.id])
+  if (!rows) return null
+  if (rows.length < 2)
+    return (
+      <p class="sm-quiet sm-evo__none">
+        {t('Its history builds up with each update that reads it again.')}
+      </p>
+    )
+  const values = rows.map((r) => r[metric] ?? 0)
+  const gained = values.at(-1)! - values[0]!
+  const days = Math.max(
+    1,
+    Math.round((Date.parse(rows.at(-1)!.at) - Date.parse(rows[0]!.at)) / 86400_000),
+  )
+  const NAMES: [Metric, string][] = [
+    ['likes', t('Likes')],
+    ['comments', t('Comments')],
+    ['shares', t('Shares')],
+    ['views', t('Views')],
+  ]
+  return (
+    <section class="sm-evo">
+      <header class="sm-evo__head">
+        <Segmented label={t('Show')} value={metric} onChange={setMetric} options={NAMES} />
+        <span class="sm-quiet g-num">
+          {t('{n} in {days}', {
+            n: `${gained >= 0 ? '+' : ''}${fmt(gained)}`,
+            days: count(days, 'day'),
+          })}
+        </span>
+      </header>
+      <LineChart
+        days={rows.map((r) => r.at.slice(0, 10))}
+        values={values}
+        previous={[]}
+        label={NAMES.find(([k]) => k === metric)![1]}
+      />
+    </section>
   )
 }

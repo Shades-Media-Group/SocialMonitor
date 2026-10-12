@@ -21,6 +21,8 @@ export interface Verdict {
   /** 0 can wait, 1 answer soon, 2 urgent (outage, money lost, safety, a threat to leave or go public). */
   urgency?: 0 | 1 | 2
   emotion?: Emotion
+  /** One of the brand's own kinds (its key), when the comment is clearly positive or negative. */
+  category?: string
 }
 
 /** How the person feels, from most to least upset. */
@@ -38,13 +40,20 @@ export const EMOTIONS = [
 ] as const
 export type Emotion = (typeof EMOTIONS)[number]
 
-const SORT = (brand: string, post: string, about = '') =>
+export interface Kind {
+  key: string
+  name: string
+  sentiment: 'positive' | 'negative'
+}
+
+const SORT = (brand: string, post: string, about = '', kinds: Kind[] = []) =>
   `Brand: ${brand}${about ? ` (${about})` : ''}. Post: ${post || '(no caption)'}
-Sort each comment line "n|text". Reply with one line per comment, "n|label|r|u|e|why":
+Sort each comment line "n|text". Reply with one line per comment, "n|label|r|u|e|k|why":
 label is one of ${LABELS.join(', ')}; complaint = unhappy with the product, service, price or support.
 r is 1 if the brand should answer (complaints, questions, unhappy or confused customers), else 0.
 u is urgency: 2 = outage, money lost, safety, or a threat to leave or go public; 1 = should be answered today; 0 = can wait.
 e is the feeling, one of ${EMOTIONS.join(', ')}.
+k is the brand's kind of comment when it is clearly negative or positive, one of: ${kinds.map((k) => `${k.key} (${k.sentiment}: ${k.name})`).join(', ') || 'none'}; else -.
 why: at most 8 words, in English. Output only these lines.`
 
 const DESCRIBE = (brand: string) =>
@@ -213,11 +222,15 @@ export function parseVerdicts(text: string): Map<number, Verdict> {
     const u = rest[0]?.trim()
     const e = rest[1]?.trim().toLowerCase() as Emotion
     const full = rest.length >= 3 && /^[012]$/.test(u ?? '') && EMOTIONS.includes(e)
+    // The brand's kind comes next when given: a key such as "slow-internet", or "-".
+    const k = rest[2]?.trim()
+    const withKind = full && rest.length >= 4 && /^(-|[a-z0-9][a-z0-9-]{0,40})$/.test(k ?? '')
     out.set(i, {
       label: l,
       needsReply: r?.trim() === '1',
-      reason: (full ? rest.slice(2) : rest).join('|').trim().slice(0, 120),
+      reason: (full ? rest.slice(withKind ? 3 : 2) : rest).join('|').trim().slice(0, 120),
       ...(full ? { urgency: Number(u) as 0 | 1 | 2, emotion: e } : {}),
+      ...(withKind && k !== '-' ? { category: k } : {}),
     })
   }
   return out
@@ -230,9 +243,10 @@ export async function sortComments(
   caption: string,
   comments: { id: number; text: string }[],
   about = '',
+  kinds: Kind[] = [],
 ): Promise<Map<number, Verdict>> {
   const out = new Map<number, Verdict>()
-  const prompt = SORT(brand, clip(caption, 300), clip(about, 240))
+  const prompt = SORT(brand, clip(caption, 300), clip(about, 240), kinds)
   for (let i = 0; i < comments.length; i += 60) {
     const batch = comments.slice(i, i + 60)
     const input = batch.map((c, j) => `${j + 1}|${clip(c.text, 500)}`).join('\n')

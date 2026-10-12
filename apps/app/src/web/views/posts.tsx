@@ -195,7 +195,7 @@ function WhatWorks({ rows }: { rows: PostRow[] }) {
 /** The posts: a table to compare them, or a contact sheet of the real pictures. */
 export function Posts({ brand, network, version, mode, openUpdate, days, brands }: BrandView) {
   const [all, setAll] = useState<PostRow[] | null>(null)
-  const [sort, setSort] = usePref<'new' | 'top'>('posts.sort', 'new')
+  const [sort, setSort] = usePref<'new' | 'top' | 'growth'>('posts.sort', 'new')
   const [look, setLook] = usePref<'table' | 'grid'>('posts.look.v2', 'table')
   const [cols, setCols] = usePref<'2' | '3' | '4' | '5' | '6'>('posts.cols', '4')
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
@@ -252,6 +252,7 @@ export function Posts({ brand, network, version, mode, openUpdate, days, brands 
           options={[
             ['new', t('Newest')],
             ['top', t('Most engaging')],
+            ['growth', t('Growing')],
           ]}
         />
         <span class="sm-toolbar__end">
@@ -295,6 +296,12 @@ export function Posts({ brand, network, version, mode, openUpdate, days, brands 
                   <th class="sm-num">{t('Comments')}</th>
                   <th class="sm-num">{t('Shares')}</th>
                   <th class="sm-num">{t('Views')}</th>
+                  <th
+                    class="sm-num"
+                    title={t('Likes, comments and shares gained in the last 7 days')}
+                  >
+                    {t('7 days')}
+                  </th>
                   <th class="sm-num">{t('To look at')}</th>
                   <th>{t('What people say')}</th>
                 </tr>
@@ -320,6 +327,14 @@ export function Posts({ brand, network, version, mode, openUpdate, days, brands 
                     <td class="sm-num g-num">{fmt(p.comments_count)}</td>
                     <td class="sm-num g-num">{fmt(p.shares)}</td>
                     <td class="sm-num g-num">{fmt(p.views)}</td>
+                    <td class="sm-num g-num sm-grew">
+                      {p.grew_7d == null ? '–' : `${p.grew_7d > 0 ? '+' : ''}${fmt(p.grew_7d)}`}
+                      {p.views_7d ? (
+                        <small>
+                          +{short(p.views_7d)} {t('views')}
+                        </small>
+                      ) : null}
+                    </td>
                     <td class={`sm-num g-num${p.flagged ? ' sm-hot' : ''}`}>{fmt(p.flagged)}</td>
                     <td>
                       <MoodStrip p={p} />

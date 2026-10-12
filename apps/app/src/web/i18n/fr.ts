@@ -623,6 +623,14 @@ export const fr: Dict = {
     'Automatic updates': 'Mises à jour automatiques',
     'New posts and fresh numbers, read by themselves. More choices on Schedules.':
       'Nouvelles publications et chiffres frais, lus tout seuls. Plus de choix dans Programmations.',
+    Growing: 'En hausse',
+    'Likes, comments and shares gained in the last 7 days':
+      'J’aime, commentaires et partages gagnés ces 7 derniers jours',
+    '7 days': '7 jours',
+    views: 'vues',
+    'Its history builds up with each update that reads it again.':
+      'Son historique se construit à chaque mise à jour qui la relit.',
+    '{n} in {days}': '{n} en {days}',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

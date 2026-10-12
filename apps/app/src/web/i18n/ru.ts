@@ -620,6 +620,14 @@ export const ru: Dict = {
     'Automatic updates': 'Автоматические обновления',
     'New posts and fresh numbers, read by themselves. More choices on Schedules.':
       'Новые посты и свежие цифры читаются сами. Больше вариантов — в Расписаниях.',
+    Growing: 'Растут',
+    'Likes, comments and shares gained in the last 7 days':
+      'Лайки, комментарии и репосты за последние 7 дней',
+    '7 days': '7 дней',
+    views: 'просмотров',
+    'Its history builds up with each update that reads it again.':
+      'История копится с каждым обновлением, которое снова его читает.',
+    '{n} in {days}': '{n} за {days}',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',
