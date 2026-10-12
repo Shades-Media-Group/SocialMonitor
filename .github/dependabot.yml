@@ -1,18 +1,26 @@
 version: 2
+# Once a month, every minor and patch update arrives as one pull request per
+# ecosystem, so updates stay current without a stream of review emails.
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
-      dev-dependencies:
-        dependency-type: development
-    open-pull-requests-limit: 5
+      dependencies:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 3
     ignore:
       # Held back on purpose: typescript-eslint supports TypeScript below 6.1.
       - dependency-name: typescript
-        update-types: [version-update:semver-major, version-update:semver-minor]
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      # Preact 11 changes its JSX types and breaks the shared UI kit; upgrade by hand.
+      - dependency-name: preact
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns: ['*']

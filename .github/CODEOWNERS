@@ -1,1 +1,8 @@
 * @CristianBrinza
+
+# Dependency and workflow updates come from Dependabot and are checked by CI.
+# These paths have no code owner, so those pull requests ask no one for review.
+package.json
+**/package.json
+yarn.lock
+.github/workflows/
