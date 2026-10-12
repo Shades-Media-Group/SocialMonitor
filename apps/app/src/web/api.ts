@@ -28,6 +28,9 @@ export type CommentRow = Comment & {
   post_url: string
   brand_id: number
   overdue: 0 | 1
+  /** The post the comment is under: its picture and what it is about. */
+  post_thumb: string | null
+  post_about: string | null
 }
 export interface RunRow {
   id: number

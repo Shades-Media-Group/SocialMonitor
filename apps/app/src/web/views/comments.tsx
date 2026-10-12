@@ -184,12 +184,15 @@ export function CommentList({
   brands,
   onChange,
   wide = false,
+  showPost = false,
 }: {
   comments: CommentRow[]
   brands: BrandRow[]
   onChange?: () => void
   /** Room to spare: actions show as buttons instead of a menu. */
   wide?: boolean
+  /** Shows the post each comment is under, on its right, for context. */
+  showPost?: boolean
 }) {
   const handles = new Map<number, string[]>(
     brands.map((b) => [b.id, b.profiles.map((p) => p.handle.toLowerCase())]),
@@ -273,7 +276,9 @@ export function CommentList({
       { label: t('Copy the text'), onSelect: () => navigator.clipboard?.writeText(c.text) },
     ]
     return (
-      <article class={`sm-b sm-b--${mood(c, !!own)}${reply ? ' sm-b--reply' : ''}`}>
+      <article
+        class={`sm-b sm-b--${mood(c, !!own)}${reply ? ' sm-b--reply' : showPost ? ' sm-b--post' : ''}`}
+      >
         <Face
           class={`sm-b__avatar sm-face--${own ? 'own' : hue(c.author)}`}
           {...profile}
@@ -377,6 +382,24 @@ export function CommentList({
             </footer>
           )}
         </div>
+        {showPost && !reply && (
+          <a
+            class="sm-b__post"
+            href={c.post_url}
+            target="_blank"
+            rel="noreferrer"
+            title={c.post_about ?? t('Open the post')}
+          >
+            {c.post_thumb ? (
+              <img src={c.post_thumb} alt="" loading="lazy" />
+            ) : (
+              <span class="sm-b__postmark">
+                <NetworkMark network={c.network} size={16} />
+              </span>
+            )}
+            <span class="sm-b__postabout">{c.post_about || t('Open the post')}</span>
+          </a>
+        )}
       </article>
     )
   }
@@ -633,7 +656,12 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
               </header>
             }
           >
-            <CommentList comments={rows} brands={brands} onChange={() => setTick((x) => x + 1)} />
+            <CommentList
+              comments={rows}
+              brands={brands}
+              showPost
+              onChange={() => setTick((x) => x + 1)}
+            />
           </Scroller>
         )
       ) : (

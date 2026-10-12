@@ -266,6 +266,7 @@ export function Home({
                 <CommentList
                   comments={comments}
                   brands={brands}
+                  showPost
                   onChange={() => setTick((x) => x + 1)}
                 />
               </Scroller>

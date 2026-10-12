@@ -346,6 +346,15 @@ export function setTrackers(db: DB, brandId: number, list: unknown): Tracker[] {
 export const setDescription = (db: DB, postId: number, description: string) =>
   db.prepare('UPDATE posts SET description = ? WHERE id = ?').run(description, postId)
 
+/**
+ * The AI sort's version. Raise it when the sort learns to read more (the thread, pictures,
+ * the post), and every comment sorted by an older version is sorted again on the next update.
+ */
+export const SORT_VERSION = 2
+
+/** A comment the AI has not read yet, or read with an older version of the sort. */
+export const STALE = `(c.label IS NULL OR coalesce(c.sort_v, 0) < ${SORT_VERSION})`
+
 export function setVerdict(
   db: DB,
   commentId: number,
@@ -357,8 +366,16 @@ export function setVerdict(
 ) {
   db.prepare(
     `UPDATE comments SET label = ?, needs_reply = ?, reason = ?,
-       urgency = coalesce(?, urgency), emotion = coalesce(?, emotion) WHERE id = ?`,
-  ).run(label, needsReply ? 1 : 0, reason, urgency ?? null, emotion ?? null, commentId)
+       urgency = coalesce(?, urgency), emotion = coalesce(?, emotion), sort_v = ? WHERE id = ?`,
+  ).run(
+    label,
+    needsReply ? 1 : 0,
+    reason,
+    urgency ?? null,
+    emotion ?? null,
+    SORT_VERSION,
+    commentId,
+  )
 }
 
 export interface PostFilter {
@@ -437,6 +454,8 @@ export interface CommentFilter extends PostFilter {
   label?: Label
   needsReply?: boolean
   unsorted?: boolean
+  /** Not sorted yet, or sorted by an older version of the AI sort. */
+  stale?: boolean
   search?: string
   /** 'positive', 'negative', 'neutral', or 'none' for comments nobody has rated. */
   sentiment?: 'positive' | 'negative' | 'neutral' | 'none'
@@ -479,6 +498,7 @@ export function listComments(db: DB, f: CommentFilter = {}) {
   }
   if (f.needsReply) where.push("c.needs_reply = 1 AND c.reply_status = 'open'")
   if (f.unsorted) where.push('c.label IS NULL')
+  if (f.stale) where.push(STALE)
   if (f.overdue) where.push(OVERDUE)
   if (f.bad) where.push("(c.sentiment = 'negative' OR c.label = 'complaint')")
   if (f.from) {
@@ -508,8 +528,16 @@ export function listComments(db: DB, f: CommentFilter = {}) {
     where.push('c.text LIKE ?')
     args.push(`%${f.search}%`)
   }
-  type Row = Comment & { network: Network; post_url: string; brand_id: number; overdue: 0 | 1 }
-  const SELECT = `SELECT c.*, p.network, p.url AS post_url, pr.brand_id, ${OVERDUE} AS overdue
+  type Row = Comment & {
+    network: Network
+    post_url: string
+    brand_id: number
+    overdue: 0 | 1
+    post_thumb: string | null
+    post_about: string | null
+  }
+  const SELECT = `SELECT c.*, p.network, p.url AS post_url, pr.brand_id, ${OVERDUE} AS overdue,
+       p.thumb_url AS post_thumb, coalesce(p.description, p.caption) AS post_about
      FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
        JOIN brands b ON b.id = pr.brand_id`
   const rows = all<Row>(

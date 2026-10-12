@@ -530,7 +530,12 @@ export function Overview(v: BrandView) {
           }
         >
           {stream.length ? (
-            <CommentList comments={stream} brands={brands} onChange={() => setTick((x) => x + 1)} />
+            <CommentList
+              comments={stream}
+              brands={brands}
+              showPost
+              onChange={() => setTick((x) => x + 1)}
+            />
           ) : (
             <p class="sm-quiet">{t('Comments appear here after the first update.')}</p>
           )}

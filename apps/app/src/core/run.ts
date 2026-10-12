@@ -240,8 +240,16 @@ async function aiStep(
   for (const [i, { postId, brand }] of touched.entries()) {
     step?.(i, touched.length)
     const post = store.getPost(db, postId)!
-    const unsorted = store.listComments(db, { postId, unsorted: true, others: true, limit: 2000 })
+    const unsorted = store.listComments(db, { postId, stale: true, others: true, limit: 2000 })
     try {
+      // What the post shows comes first, so comments are read against it.
+      let shows = post.description
+      if (!shows) {
+        const top = store.listComments(db, { postId, others: true, limit: 5 }).map((c) => c.text)
+        const image = post.thumb_url?.startsWith('/media/') ? join(DATA_DIR, post.thumb_url) : null
+        shows = await describePost(engine, brand, post.caption, top, image)
+        store.setDescription(db, postId, shows)
+      }
       if (unsorted.length) {
         log(`Sorting ${unsorted.length} comments on ${post.url}`)
         const b = db
@@ -253,7 +261,7 @@ async function aiStep(
         const verdicts = await sortComments(
           engine,
           brand,
-          post.caption,
+          `${post.caption}${shows ? ` (What the post shows: ${shows})` : ''}`,
           unsorted.map((c) => ({ id: c.id, text: c.text, ...conversation(db, post, c) })),
           about,
           kinds,
@@ -266,15 +274,6 @@ async function aiStep(
           if (!byPerson)
             store.setSentiment(db, id, kind ? kind.sentiment : 'neutral', kind?.key ?? null, 'ai')
         }
-      }
-      if (!post.description) {
-        const top = store.listComments(db, { postId, others: true, limit: 5 }).map((c) => c.text)
-        const image = post.thumb_url?.startsWith('/media/') ? join(DATA_DIR, post.thumb_url) : null
-        store.setDescription(
-          db,
-          postId,
-          await describePost(engine, brand, post.caption, top, image),
-        )
       }
     } catch (e) {
       throw new Error(`AI: ${(e as Error).message}`, { cause: e })
@@ -317,24 +316,22 @@ function conversation(db: DB, post: { id: number; profile_id: number }, c: Comme
   }
 }
 
-/** Posts with no description yet, or with comments nobody has sorted. */
+/** Posts with no description yet, or with comments the current sort has not read. */
 const pendingPosts = (db: DB) =>
   db
     .prepare(
       `SELECT DISTINCT p.id AS postId, b.name AS brand, b.id AS brandId FROM posts p JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id
-       WHERE p.description IS NULL OR EXISTS (SELECT 1 FROM comments c WHERE c.post_id = p.id AND c.label IS NULL AND lower(c.author) != lower(pr.handle))`,
+       WHERE p.description IS NULL OR EXISTS (SELECT 1 FROM comments c WHERE c.post_id = p.id AND ${store.STALE} AND lower(c.author) != lower(pr.handle))`,
     )
     .all() as { postId: number; brand: string; brandId: number }[]
 
-/** Sorts every unsorted comment and describes every post without a description. Returns how many comments it sorted. */
+/** Sorts every comment the current sort has not read and describes every post without a description. Returns how many comments it sorted. */
 export async function sortPending(db: DB) {
   const rows = pendingPosts(db)
-  const before = (
-    db.prepare('SELECT count(*) AS n FROM comments WHERE label IS NULL').get() as { n: number }
-  ).n
+  const left = () =>
+    (db.prepare(`SELECT count(*) AS n FROM comments c WHERE ${store.STALE}`).get() as { n: number })
+      .n
+  const before = left()
   await aiStep(db, rows, () => {})
-  const after = (
-    db.prepare('SELECT count(*) AS n FROM comments WHERE label IS NULL').get() as { n: number }
-  ).n
-  return before - after
+  return before - left()
 }

@@ -242,6 +242,8 @@ function migrate(db: DatabaseSync) {
     db.exec('ALTER TABLE comments ADD COLUMN author_url TEXT')
     db.exec('ALTER TABLE comments ADD COLUMN media_url TEXT')
   }
+  // Which version of the AI sort read a comment: older ones are read again with today's context.
+  if (!has('comments', 'sort_v')) db.exec('ALTER TABLE comments ADD COLUMN sort_v INTEGER')
   // How urgent a comment is (0–2) and how the person feels, from the AI sort.
   if (!has('comments', 'urgency')) {
     db.exec('ALTER TABLE comments ADD COLUMN urgency INTEGER')
