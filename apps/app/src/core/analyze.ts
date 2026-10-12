@@ -20,8 +20,8 @@ export interface Verdict {
   reason: string
 }
 
-const SORT = (brand: string, post: string) =>
-  `Brand: ${brand}. Post: ${post || '(no caption)'}
+const SORT = (brand: string, post: string, about = '') =>
+  `Brand: ${brand}${about ? ` (${about})` : ''}. Post: ${post || '(no caption)'}
 Sort each comment line "n|text". Reply with one line per comment, "n|label|r|why":
 label is one of ${LABELS.join(', ')}; complaint = unhappy with the product, service, price or support.
 r is 1 if the brand should answer (complaints, questions, unhappy or confused customers), else 0.
@@ -145,9 +145,10 @@ export async function sortComments(
   brand: string,
   caption: string,
   comments: { id: number; text: string }[],
+  about = '',
 ): Promise<Map<number, Verdict>> {
   const out = new Map<number, Verdict>()
-  const prompt = SORT(brand, clip(caption, 300))
+  const prompt = SORT(brand, clip(caption, 300), clip(about, 240))
   for (let i = 0; i < comments.length; i += 60) {
     const batch = comments.slice(i, i + 60)
     const input = batch.map((c, j) => `${j + 1}|${clip(c.text, 500)}`).join('\n')

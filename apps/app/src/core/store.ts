@@ -1,5 +1,6 @@
 import type { DB } from './db.ts'
 import { now } from './db.ts'
+import { changed } from './events.ts'
 import type {
   Brand,
   CollectedPost,
@@ -79,12 +80,22 @@ export const removeProfile = (db: DB, brandId: number, network: Network) =>
 export function updateBrand(
   db: DB,
   id: number,
-  f: { name?: string; website?: string | null; industry?: string | null; description?: string | null; notes?: string | null },
+  f: {
+    name?: string
+    website?: string | null
+    industry?: string | null
+    description?: string | null
+    notes?: string | null
+  },
 ) {
   for (const [col, v] of Object.entries(f)) {
-    if (v === undefined || !['name', 'website', 'industry', 'description', 'notes'].includes(col)) continue
+    if (v === undefined || !['name', 'website', 'industry', 'description', 'notes'].includes(col))
+      continue
     if (col === 'name' && !String(v).trim()) throw new Error('A brand needs a name.')
-    db.prepare(`UPDATE brands SET ${col} = ? WHERE id = ?`).run(v === null ? null : String(v).trim().slice(0, 4000) || null, id)
+    db.prepare(`UPDATE brands SET ${col} = ? WHERE id = ?`).run(
+      v === null ? null : String(v).trim().slice(0, 4000) || null,
+      id,
+    )
   }
 }
 
@@ -267,6 +278,8 @@ export interface CommentFilter extends PostFilter {
   /** 'positive', 'negative', or 'none' for comments nobody has rated. */
   sentiment?: 'positive' | 'negative' | 'none'
   category?: string
+  /** Leave out the brand's own replies (its account's comments). */
+  others?: boolean
 }
 
 export function listComments(db: DB, f: CommentFilter = {}) {
@@ -290,6 +303,7 @@ export function listComments(db: DB, f: CommentFilter = {}) {
   }
   if (f.needsReply) where.push("c.needs_reply = 1 AND c.reply_status = 'open'")
   if (f.unsorted) where.push('c.label IS NULL')
+  if (f.others) where.push('lower(c.author) != lower(pr.handle)')
   if (f.sentiment === 'none') where.push('c.sentiment IS NULL')
   else if (f.sentiment) {
     where.push('c.sentiment = ?')
@@ -337,6 +351,7 @@ export function labelCounts(db: DB, brandId?: number, since?: string, network?: 
     `SELECT c.label, count(*) AS n, sum(CASE WHEN c.needs_reply = 1 AND c.reply_status = 'open' THEN 1 ELSE 0 END) AS replies
      FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
      WHERE (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR c.fetched_at >= ?) AND (? IS NULL OR p.network = ?)
+       AND lower(c.author) != lower(pr.handle)
      GROUP BY c.label`,
     brandId ?? null,
     brandId ?? null,
@@ -367,10 +382,13 @@ export function startRun(db: DB, trigger: 'manual' | 'schedule' | 'mcp', scope: 
   )!.id
 }
 
-export const logRun = (db: DB, id: number, line: string) =>
-  db
-    .prepare('UPDATE runs SET log = log || ? || char(10) WHERE id = ?')
-    .run(`${new Date().toISOString().slice(11, 19)} ${line}`, id)
+export function logRun(db: DB, id: number, line: string) {
+  db.prepare('UPDATE runs SET log = log || ? || char(10) WHERE id = ?').run(
+    `${new Date().toISOString().slice(11, 19)} ${line}`,
+    id,
+  )
+  changed()
+}
 
 export function finishRun(
   db: DB,
@@ -386,6 +404,7 @@ export function finishRun(
     report,
     id,
   )
+  changed()
 }
 
 export interface RunRow {

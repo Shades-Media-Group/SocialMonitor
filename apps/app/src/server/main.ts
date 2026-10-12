@@ -8,6 +8,7 @@ import { routes } from './routes.ts'
 import { seedFromFile } from './seed.ts'
 import { closeStaleRuns } from '../core/store.ts'
 import { startScheduler } from '../core/schedule.ts'
+import { changed, onChange } from '../core/events.ts'
 
 // Keys and options live in .env at the repository root, never in the code.
 try {
@@ -85,6 +86,22 @@ const server = createServer(async (req, res) => {
   const origin = req.headers.origin
   if (origin && !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin))
     return send(res, 403, { error: 'Forbidden origin.' })
+  // Live updates: open dashboards keep one event stream and refetch when told something changed.
+  if (url.pathname === '/api/events') {
+    res.writeHead(200, {
+      'content-type': 'text/event-stream',
+      'cache-control': 'no-store',
+      connection: 'keep-alive',
+    })
+    res.write('retry: 3000\n\n')
+    const off = onChange((event) => res.write(`data: ${event}\n\n`))
+    const ping = setInterval(() => res.write(': ping\n\n'), 25000)
+    req.on('close', () => {
+      off()
+      clearInterval(ping)
+    })
+    return
+  }
   if (!url.pathname.startsWith('/api/')) {
     if (url.pathname.startsWith('/media/')) return serveMedia(res, url.pathname)
     return serveStatic(res, url.pathname)
@@ -100,6 +117,7 @@ const server = createServer(async (req, res) => {
         query: url.searchParams,
         body: req.method === 'GET' ? {} : await body(req),
       })
+      if (req.method !== 'GET') changed()
       if (data && typeof data === 'object' && '__download' in data) {
         const d = data as { __download: string; data: unknown; type?: string }
         res.writeHead(200, {

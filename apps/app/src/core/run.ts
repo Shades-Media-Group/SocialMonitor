@@ -189,20 +189,25 @@ async function aiStep(
     )
   for (const { postId, brand } of touched) {
     const post = store.getPost(db, postId)!
-    const unsorted = store.listComments(db, { postId, unsorted: true, limit: 2000 })
+    const unsorted = store.listComments(db, { postId, unsorted: true, others: true, limit: 2000 })
     try {
       if (unsorted.length) {
         log(`Sorting ${unsorted.length} comments on ${post.url}`)
+        const b = db
+          .prepare('SELECT industry, description FROM brands WHERE name = ?')
+          .get(brand) as { industry: string | null; description: string | null } | undefined
+        const about = [b?.industry, b?.description].filter(Boolean).join('; ')
         const verdicts = await sortComments(
           engine,
           brand,
           post.caption,
           unsorted.map((c) => ({ id: c.id, text: c.text })),
+          about,
         )
         for (const [id, v] of verdicts) store.setVerdict(db, id, v.label, v.needsReply, v.reason)
       }
       if (!post.description) {
-        const top = store.listComments(db, { postId, limit: 5 }).map((c) => c.text)
+        const top = store.listComments(db, { postId, others: true, limit: 5 }).map((c) => c.text)
         const image = post.thumb_url?.startsWith('/media/') ? join(DATA_DIR, post.thumb_url) : null
         store.setDescription(
           db,
@@ -221,7 +226,7 @@ export async function sortPending(db: DB) {
   const rows = db
     .prepare(
       `SELECT DISTINCT p.id AS postId, b.name AS brand FROM posts p JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id
-       WHERE p.description IS NULL OR EXISTS (SELECT 1 FROM comments c WHERE c.post_id = p.id AND c.label IS NULL)`,
+       WHERE p.description IS NULL OR EXISTS (SELECT 1 FROM comments c WHERE c.post_id = p.id AND c.label IS NULL AND lower(c.author) != lower(pr.handle))`,
     )
     .all() as { postId: number; brand: string }[]
   const before = (

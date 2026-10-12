@@ -99,15 +99,17 @@ export const routes: Route[] = [
     return store.addBrand(c.db, name, links ?? [], website ?? null)
   }),
   r('PATCH', '/api/brands/:id', (c) => {
-    const { name, links, website } = b(c) as {
+    const x = b(c) as {
       name?: string
       links?: string[]
       website?: string | null
+      industry?: string | null
+      description?: string | null
+      notes?: string | null
     }
     const brandId = id(c.params.id)
-    if (name) store.renameBrand(c.db, brandId, name)
-    if (website !== undefined)
-      c.db.prepare('UPDATE brands SET website = ? WHERE id = ?').run(website || null, brandId)
+    const { links, ...details } = x
+    store.updateBrand(c.db, brandId, details)
     for (const link of links ?? []) store.setProfile(c.db, brandId, link)
   }),
   r('DELETE', '/api/brands/:id', (c) => void store.deleteBrand(c.db, id(c.params.id))),
@@ -121,6 +123,7 @@ export const routes: Route[] = [
     store.listPosts(db, {
       brandId: query.get('brand') ? id(query.get('brand')!) : undefined,
       network: net(query.get('network')),
+      sort: query.get('sort') === 'top' ? 'top' : 'new',
       limit: Number(query.get('limit') ?? 50),
       offset: Number(query.get('offset') ?? 0),
     }),
@@ -137,6 +140,7 @@ export const routes: Route[] = [
         (v) => v === query.get('sentiment'),
       ),
       category: query.get('category') ?? undefined,
+      others: query.get('others') === '1',
       limit: Number(query.get('limit') ?? 100),
       offset: Number(query.get('offset') ?? 0),
     }),
@@ -221,7 +225,44 @@ export const routes: Route[] = [
     return { posts, new_comments: comments }
   }),
   r('POST', '/api/sort', async ({ db }) => ({ sorted: await sortPending(db) })),
-  r('GET', '/api/runs', ({ db }) => store.listRuns(db)),
+  // One brand at a glance, optionally for one network: what the brand page's overview reads.
+  r('GET', '/api/brands/:id/summary', ({ db, params, query }) => {
+    const brandId = id(params.id)
+    const brand = store.getBrand(db, brandId)
+    if (!brand) throw new Error('No such brand.')
+    const network = net(query.get('network'))
+    const week = new Date(Date.now() - 7 * 86400_000).toISOString()
+    return {
+      brand,
+      profiles: store.listProfiles(db, brandId),
+      counts: store.labelCounts(db, brandId, undefined, network),
+      week: store.labelCounts(db, brandId, week, network),
+      sentiment: store.sentimentCounts(db, brandId, network),
+      posts: (
+        db
+          .prepare(
+            'SELECT count(*) AS n FROM posts p JOIN profiles pr ON pr.id = p.profile_id WHERE pr.brand_id = ? AND (? IS NULL OR p.network = ?)',
+          )
+          .get(brandId, network ?? null, network ?? null) as { n: number }
+      ).n,
+      brand_replies: (
+        db
+          .prepare(
+            `SELECT count(*) AS n FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id WHERE pr.brand_id = ? AND c.author = pr.handle AND (? IS NULL OR p.network = ?)`,
+          )
+          .get(brandId, network ?? null, network ?? null) as { n: number }
+      ).n,
+    }
+  }),
+  r('GET', '/api/runs', ({ db, query }) => {
+    const brand = query.get('brand')
+    const runs = store.listRuns(db, 60)
+    return brand
+      ? runs.filter((r) =>
+          (JSON.parse(r.scope) as { brandIds?: number[] }).brandIds?.includes(Number(brand)),
+        )
+      : runs
+  }),
   r('POST', '/api/runs', (c) => {
     const x = b(c) as { brandIds?: number[]; networks?: string[]; range?: Range; limit?: number }
     const runId = queueRun(
