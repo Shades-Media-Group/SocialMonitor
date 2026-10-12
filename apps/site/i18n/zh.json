@@ -153,6 +153,7 @@
     "appPosts": "<strong>帖子和评论</strong>：来自你添加的公开主页，通过你电脑上的浏览器配置文件读取。其中包括评论者的名字和言论。",
     "appStore": "<strong>存储位置</strong>：<code>data/</code> 文件夹中的数据库，只在你的电脑上。",
     "appClaude": "<strong>为了描述帖子和分类评论，</strong>它们的文字和每条帖子的封面图会通过你配置的 Claude Code 或 Anthropic API 密钥发送给 Claude。这一步适用 <a data-link='anthropic'>Anthropic 的隐私政策</a>。",
+    "appMail": "<strong>登录邮件：</strong>如果你设置了邮件，它只会通过你配置的邮件服务器，向你邀请的人发送一个验证码或一个链接。",
     "appReports": "<strong>报告和导出文件</strong>由你保存，你放在哪里，它们就在哪里。",
     "dutiesTitle": "你的责任",
     "duties": "评论属于个人数据。如果你为某个组织运行 SocialMonitor，该组织就是这些数据的控制者。只关注你有理由关注的主页，数据保留时间不要超过所需（Settings → Keep data for），并遵守各网络的条款。删除一个品牌，即可删除它的所有帖子和评论。",

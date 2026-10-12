@@ -153,6 +153,7 @@
     "appPosts": "<strong>Gönderiler ve yorumlar</strong>: eklediğiniz herkese açık profillerden, bilgisayarınızdaki bir tarayıcı profiliyle okunur. Yorum yapanların adlarını ve sözlerini içerir.",
     "appStore": "<strong>Saklama:</strong> hepsi yalnızca bilgisayarınızda, <code>data/</code> klasöründeki bir veritabanında tutulur.",
     "appClaude": "<strong>Gönderileri açıklamak ve yorumları sınıflamak için</strong> metinleri ve her gönderinin kapak görseli, yapılandırdığınız Claude Code ya da Anthropic API anahtarı üzerinden Claude'a gönderilir. Bu adımı <a data-link='anthropic'>Anthropic'in gizlilik politikası</a> kapsar.",
+    "appMail": "<strong>Giriş e-postaları,</strong> e-postayı kurarsanız, davet ettiğiniz kişilere yalnızca bir kod ya da bağlantı taşır ve sizin ayarladığınız posta sunucusundan gider.",
     "appReports": "<strong>Raporlar ve dışa aktarımlar</strong> sizin kaydettiğiniz dosyalardır; onları nereye koyarsanız oraya giderler.",
     "dutiesTitle": "Sorumluluklarınız",
     "duties": "Yorumlar kişisel veridir. SocialMonitor'ı bir kuruluş için çalıştırıyorsanız, bu verilerin sorumlusu o kuruluştur. Yalnızca takip etmek için bir nedeniniz olan profilleri izleyin, verileri gerektiğinden uzun tutmayın (Settings → Keep data for) ve ağların koşullarına uyun. Bir markayı silmek, tüm gönderilerini ve yorumlarını siler.",

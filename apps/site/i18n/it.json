@@ -153,6 +153,7 @@
     "appPosts": "<strong>Post e commenti</strong> dai profili pubblici che aggiungi, letti tramite un profilo del browser sul tuo computer. Includono i nomi e le parole di chi commenta.",
     "appStore": "<strong>Li conserva</strong> in un database nella cartella <code>data/</code>, solo sul tuo computer.",
     "appClaude": "<strong>Per descrivere i post e ordinare i commenti,</strong> il loro testo e l’immagine di copertina di ogni post vengono inviati a Claude tramite il Claude Code o la chiave API Anthropic che configuri. <a data-link='anthropic'>L’informativa sulla privacy di Anthropic</a> copre questo passaggio.",
+    "appMail": "<strong>Le email di accesso,</strong> se configuri l'email, portano solo un codice o un link alle persone che inviti, attraverso il server di posta che configuri.",
     "appReports": "<strong>Report ed esportazioni</strong> sono file che salvi tu; vanno dove li metti.",
     "dutiesTitle": "Le tue responsabilità",
     "duties": "I commenti sono dati personali. Se usi SocialMonitor per un’organizzazione, è lei il titolare di quei dati. Segui solo profili che hai un motivo di seguire, conserva i dati solo per il tempo necessario (Settings → Keep data for) e rispetta i termini dei social. Elimina un brand per eliminare tutti i suoi post e commenti.",

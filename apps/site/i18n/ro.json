@@ -153,6 +153,7 @@
     "appPosts": "<strong>Postări și comentarii</strong> de pe profilurile publice pe care le adaugi, citite printr-un profil de browser de pe calculatorul tău. Acestea includ numele și cuvintele celor care comentează.",
     "appStore": "<strong>Le stochează</strong> într-o bază de date din folderul <code>data/</code>, doar pe calculatorul tău.",
     "appClaude": "<strong>Pentru a descrie postările și a sorta comentariile,</strong> textul lor și imaginea de copertă a fiecărei postări sunt trimise la Claude prin Claude Code sau cheia API Anthropic pe care o configurezi. <a data-link='anthropic'>Politica de confidențialitate Anthropic</a> acoperă acest pas.",
+    "appMail": "<strong>E-mailurile de conectare,</strong> dacă configurezi e-mailul, duc doar un cod sau un link persoanelor pe care le inviți, prin serverul de e-mail pe care îl configurezi.",
     "appReports": "<strong>Rapoartele și exporturile</strong> sunt fișiere pe care le salvezi; ajung oriunde le pui.",
     "dutiesTitle": "Responsabilitățile tale",
     "duties": "Comentariile sunt date personale. Dacă folosești SocialMonitor pentru o organizație, ea este operatorul acestor date. Urmărește doar profiluri pe care ai un motiv să le urmărești, păstrează datele doar cât îți trebuie (Settings → Keep data for) și respectă termenii rețelelor. Șterge un brand ca să-i ștergi toate postările și comentariile.",

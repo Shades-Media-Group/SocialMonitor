@@ -153,6 +153,7 @@
     "appPosts": "<strong>貼文和留言</strong>：來自你新增的公開個人檔案，透過你電腦上的瀏覽器設定檔讀取。其中包括留言者的名字和言論。",
     "appStore": "<strong>儲存位置</strong>：<code>data/</code> 資料夾中的資料庫，只在你的電腦上。",
     "appClaude": "<strong>為了描述貼文和分類留言，</strong>它們的文字和每則貼文的封面圖會透過你設定的 Claude Code 或 Anthropic API 金鑰傳送給 Claude。這一步適用 <a data-link='anthropic'>Anthropic 的隱私權政策</a>。",
+    "appMail": "<strong>登入郵件：</strong>如果你設定了郵件，它只會透過你設定的郵件伺服器，向你邀請的人寄送一組驗證碼或一個連結。",
     "appReports": "<strong>報告和匯出檔</strong>由你儲存，你放在哪裡，它們就在哪裡。",
     "dutiesTitle": "你的責任",
     "duties": "留言屬於個人資料。如果你為某個組織執行 SocialMonitor，該組織就是這些資料的控制者。只關注你有理由關注的個人檔案，資料保留時間不要超過所需（Settings → Keep data for），並遵守各網路的條款。刪除一個品牌，即可刪除它的所有貼文和留言。",
