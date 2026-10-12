@@ -3069,3 +3069,29 @@ body:has(.sm-shell) {
 .sm-ga .sm-layout {
   align-items: start;
 }
+
+/* The open brand as Intercom shows it: plain rows, with one coloured line down its sections. */
+.sm-shell .sm-nav__brand,
+.sm-shell .sm-nav__brand.is-open {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.sm-shell .sm-nav__brand .sm-nav__initial {
+  background: var(--c-ink);
+  color: var(--c-bg);
+}
+.sm-shell .sm-nav__brand.is-open .sm-nav__sub {
+  margin: 1px 0 6px 17px;
+  padding-left: 6px;
+}
+.sm-shell .sm-nav__brand.is-open .sm-nav__sub .sm-nav__item {
+  padding-left: 10px;
+}
+.sm-shell .sm-nav__brand.is-open .sm-nav__sub .sm-nav__item[aria-current='page'],
+.sm-shell .sm-nav__item[aria-current='page'] {
+  background: var(--c-active);
+  box-shadow: none;
+}
