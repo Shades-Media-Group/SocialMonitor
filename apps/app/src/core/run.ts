@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import type { DB } from './db.ts'
 import { DATA_DIR, now } from './db.ts'
 import * as store from './store.ts'
-import type { Network, Profile, RunScope } from './types.ts'
+import type { Comment, Network, Profile, RunScope } from './types.ts'
 import { NETWORKS } from './types.ts'
 import { collectors } from './collect/index.ts'
 import { Challenge, closeBrowser, openBrowser, pause } from './collect/browser.ts'
@@ -254,7 +254,7 @@ async function aiStep(
           engine,
           brand,
           post.caption,
-          unsorted.map((c) => ({ id: c.id, text: c.text })),
+          unsorted.map((c) => ({ id: c.id, text: c.text, ...conversation(db, post, c) })),
           about,
           kinds,
         )
@@ -279,6 +279,37 @@ async function aiStep(
     } catch (e) {
       throw new Error(`AI: ${(e as Error).message}`, { cause: e })
     }
+  }
+}
+
+/**
+ * What surrounds a comment, for the AI to read it as a person would: the comment it answers,
+ * up to three answers under it (the brand's own named as such) and its picture, if saved.
+ */
+function conversation(db: DB, post: { id: number; profile_id: number }, c: Comment) {
+  const handle = (
+    db.prepare('SELECT handle FROM profiles WHERE id = ?').get(post.profile_id) as {
+      handle: string
+    }
+  ).handle.toLowerCase()
+  const who = (author: string) => (author.toLowerCase() === handle ? 'the brand' : `@${author}`)
+  const thread = db
+    .prepare('SELECT ext_id, parent_ext_id, author, text FROM comments WHERE post_id = ?')
+    .all(post.id) as {
+    ext_id: string
+    parent_ext_id: string | null
+    author: string
+    text: string
+  }[]
+  const parent = c.parent_ext_id ? thread.find((x) => x.ext_id === c.parent_ext_id) : undefined
+  const answers = thread.filter((x) => x.parent_ext_id === c.ext_id).slice(0, 3)
+  const parts = [
+    parent && `answers ${who(parent.author)}: "${parent.text.slice(0, 160)}"`,
+    ...answers.map((a) => `${who(a.author)} answered: "${a.text.slice(0, 160)}"`),
+  ].filter(Boolean)
+  return {
+    context: parts.length ? parts.join('; ') : undefined,
+    image: c.media_url?.startsWith('/media/') ? join(DATA_DIR, c.media_url) : undefined,
   }
 }
 

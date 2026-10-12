@@ -48,7 +48,12 @@ export interface Kind {
 
 const SORT = (brand: string, post: string, about = '', kinds: Kind[] = []) =>
   `Brand: ${brand}${about ? ` (${about})` : ''}. Post: ${post || '(no caption)'}
-Sort each comment line "n|text". Reply with one line per comment, "n|label|r|u|e|k|why":
+Sort each comment line "n|text". A line may carry its context after the text: the comment it
+answers, the answers under it (the brand's own included) and a picture the person attached.
+Judge what the person means in that whole context, as a person would: sarcasm and irony, jokes,
+quoting what others say ("many say it's bad") to then show the opposite, rival names, and
+screenshots that carry the real point (a fast speed test is praise, an error screen a complaint).
+Reply with one line per comment, "n|label|r|u|e|k|why":
 label is one of ${LABELS.join(', ')}; complaint = unhappy with the product, service, price or support.
 r is 1 if the brand should answer (complaints, questions, unhappy or confused customers), else 0.
 u is urgency: 2 = outage, money lost, safety, or a threat to leave or go public; 1 = should be answered today; 0 = can wait.
@@ -77,12 +82,21 @@ const MODEL_ALIAS = 'haiku'
 const API_MODEL = process.env.SOCIALMONITOR_MODEL ?? 'claude-haiku-5-5'
 const EMPTY_MCP = join(DATA_DIR, 'cache', 'no-mcp.json')
 
-function viaClaudeCode(prompt: string, input: string, image?: string): Promise<string> {
+/** A picture the AI should look at, with what it is ("Comment 3's picture"). */
+export interface Pic {
+  label: string
+  path: string
+}
+
+function viaClaudeCode(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
   mkdirSync(join(DATA_DIR, 'cache'), { recursive: true })
   writeFileSync(EMPTY_MCP, '{"mcpServers":{}}')
+  const image = pics.length > 0
   const args = [
     '-p',
-    image ? `${prompt}\nThe post's picture is at ${image}; look at it with the Read tool.` : prompt,
+    image
+      ? `${prompt}\n${pics.map((p) => `${p.label} is at ${p.path}; look at it with the Read tool.`).join('\n')}`
+      : prompt,
     '--system-prompt',
     'You label and describe social media content for a brand. Answer only in the requested format.',
     '--model',
@@ -129,34 +143,35 @@ function viaClaudeCode(prompt: string, input: string, image?: string): Promise<s
 }
 
 /** Claude Code first; when it fails and an Anthropic API key is set, the API instead. */
-async function viaClaude(prompt: string, input: string, imagePath?: string): Promise<string> {
+async function viaClaude(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
   try {
-    return await viaClaudeCode(prompt, input, imagePath)
+    return await viaClaudeCode(prompt, input, pics)
   } catch (e) {
     if (!process.env.ANTHROPIC_API_KEY) throw e
-    let image: { data: string; type: string } | undefined
-    if (imagePath) {
-      const { readFileSync } = await import('node:fs')
-      image = {
-        data: readFileSync(imagePath).toString('base64'),
-        type: imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg',
-      }
-    }
-    return viaApi(prompt, input, image)
+    return viaApi(prompt, input, pics)
   }
 }
 
-async function viaApi(
-  prompt: string,
-  input: string,
-  image?: { data: string; type: string },
-): Promise<string> {
+const MEDIA_TYPE: Record<string, string> = {
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+}
+
+async function viaApi(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
   const content: unknown[] = []
-  if (image)
+  const { readFileSync } = await import('node:fs')
+  for (const p of pics) {
+    content.push({ type: 'text', text: `${p.label}:` })
     content.push({
       type: 'image',
-      source: { type: 'base64', media_type: image.type, data: image.data },
+      source: {
+        type: 'base64',
+        media_type: MEDIA_TYPE[p.path.split('.').pop()!] ?? 'image/jpeg',
+        data: readFileSync(p.path).toString('base64'),
+      },
     })
+  }
   content.push({ type: 'text', text: input ? `${prompt}\n\n${input}` : prompt })
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -241,16 +256,28 @@ export async function sortComments(
   engine: Engine,
   brand: string,
   caption: string,
-  comments: { id: number; text: string }[],
+  comments: { id: number; text: string; context?: string; image?: string }[],
   about = '',
   kinds: Kind[] = [],
 ): Promise<Map<number, Verdict>> {
   const out = new Map<number, Verdict>()
   const prompt = SORT(brand, clip(caption, 300), clip(about, 240), kinds)
-  for (let i = 0; i < comments.length; i += 60) {
-    const batch = comments.slice(i, i + 60)
-    const input = batch.map((c, j) => `${j + 1}|${clip(c.text, 500)}`).join('\n')
-    const text = engine === 'claude' ? await viaClaude(prompt, input) : await viaApi(prompt, input)
+  // Batches stay small when pictures come along, so each answer stays quick and cheap.
+  for (let i = 0; i < comments.length;) {
+    const batch: typeof comments = []
+    while (i < comments.length && batch.length < 60 && batch.filter((c) => c.image).length < 6)
+      batch.push(comments[i++]!)
+    const input = batch
+      .map(
+        (c, j) =>
+          `${j + 1}|${clip(c.text, 500) || '(no words)'}${c.context ? ` [${clip(c.context, 600)}]` : ''}${c.image ? ` [has picture ${j + 1}]` : ''}`,
+      )
+      .join('\n')
+    const pics = batch.flatMap((c, j) =>
+      c.image ? [{ label: `Comment ${j + 1}'s picture`, path: c.image }] : [],
+    )
+    const text =
+      engine === 'claude' ? await viaClaude(prompt, input, pics) : await viaApi(prompt, input, pics)
     for (const [j, v] of parseVerdicts(text)) {
       const c = batch[j - 1]
       if (c) out.set(c.id, v)
@@ -268,18 +295,10 @@ export async function describePost(
   imagePath: string | null,
 ): Promise<string> {
   const input = `Caption: ${clip(caption, 1200) || '(none)'}${topComments.length ? `\nTop comments: ${topComments.map((c) => clip(c, 140)).join(' / ')}` : ''}`
-  let text: string
-  if (engine === 'claude') text = await viaClaude(DESCRIBE(brand), input, imagePath ?? undefined)
-  else {
-    let image: { data: string; type: string } | undefined
-    if (imagePath) {
-      const { readFileSync } = await import('node:fs')
-      image = {
-        data: readFileSync(imagePath).toString('base64'),
-        type: imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg',
-      }
-    }
-    text = await viaApi(DESCRIBE(brand), input, image)
-  }
+  const pics = imagePath ? [{ label: "The post's picture", path: imagePath }] : []
+  const text =
+    engine === 'claude'
+      ? await viaClaude(DESCRIBE(brand), input, pics)
+      : await viaApi(DESCRIBE(brand), input, pics)
   return clip(text, 300)
 }
