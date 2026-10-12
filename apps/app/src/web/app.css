@@ -1,0 +1,661 @@
+/*
+ * The SocialMonitor dashboard. Gradient's grammar at desktop-app density:
+ * hairlines between zones, labelled rows, pill controls, one red action.
+ * Type: 12 px meta, 14 px body, 16 px headings, 32 px figures. Weights 400 and 600.
+ */
+
+:root {
+  --sm-red: #f9000a;
+  --sm-rose: #ff8299;
+  --sm-ink: #0a0a0b;
+  --sm-gutter: 32px;
+  --sm-max: 1120px;
+}
+[data-theme='dark'] {
+  --sm-ink: #fdfdfc;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --sm-ink: #fdfdfc;
+  }
+}
+
+html,
+body {
+  background: var(--g-bg);
+  color: var(--g-text);
+}
+body {
+  margin: 0;
+  font-size: 14px;
+}
+
+.sm-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.sm-icon {
+  display: inline-flex;
+}
+
+/* Top bar: logo, brand, freshness, the one red action, the gear. */
+.sm-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px var(--sm-gutter);
+  background: var(--g-bg);
+}
+.sm-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--g-text);
+}
+.sm-brand {
+  width: auto;
+  min-height: 36px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.sm-top__spacer {
+  flex: 1;
+}
+.sm-top__fresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+.sm-live {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--g-accent);
+  animation: sm-pulse 1.4s var(--g-ease-move) infinite;
+}
+@keyframes sm-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sm-live {
+    animation: none;
+  }
+}
+.sm-update {
+  --g-btn-h: 36px;
+}
+
+.sm-tabs {
+  padding: 0 var(--sm-gutter);
+  position: sticky;
+  top: 60px;
+  z-index: 4;
+  background: var(--g-bg);
+}
+.sm-tab {
+  padding: 10px 12px;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--g-text-2);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sm-tab:hover {
+  color: var(--g-text);
+}
+.sm-tab[aria-current='page'] {
+  border-bottom-color: var(--g-text);
+  color: var(--g-text);
+  font-weight: 600;
+}
+
+.sm-main {
+  width: 100%;
+  max-width: calc(var(--sm-max) + 2 * var(--sm-gutter));
+  margin: 0 auto;
+  padding: 32px var(--sm-gutter) 64px;
+  box-sizing: border-box;
+}
+.sm-stack {
+  display: grid;
+  gap: 40px;
+}
+.sm-stack > section {
+  display: grid;
+  gap: 12px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.sm-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.sm-quiet {
+  margin: 0;
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+.sm-note {
+  margin: 0;
+  color: var(--g-danger);
+  font-size: 12px;
+}
+.sm-linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Figures: four numbers on one hairline row, no boxes. */
+.sm-figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--g-line);
+  border-bottom: 1px solid var(--g-line);
+}
+.sm-figures > div {
+  display: grid;
+  gap: 4px;
+  padding: 20px 24px 20px 0;
+}
+.sm-figures > div + div {
+  padding-left: 24px;
+  border-left: 1px solid var(--g-line);
+}
+.sm-figure {
+  font-family: var(--g-font-display);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.sm-figure__label {
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+
+/* Network marks keep their own colours: they are the networks' identity, not decoration. */
+.sm-net {
+  display: inline-flex;
+  align-self: center;
+}
+.sm-net--instagram {
+  color: #e1306c;
+}
+.sm-net--facebook {
+  color: #1877f2;
+}
+.sm-net--tiktok {
+  color: var(--g-text);
+}
+.sm-net-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.sm-post__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+/* Lists sit on hairlines. */
+.sm-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--g-line);
+}
+.sm-list > li {
+  border-bottom: 1px solid var(--g-line);
+}
+
+.sm-comment {
+  display: grid;
+  gap: 6px;
+  padding: 16px 0;
+}
+.sm-comment__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+.sm-comment__author {
+  color: var(--g-text);
+  font-weight: 600;
+  font-size: 14px;
+}
+.sm-comment__text {
+  margin: 0;
+  max-width: 72ch;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sm-comment__reason {
+  margin: 0;
+  color: var(--g-text-2);
+  font-size: 12px;
+}
+.sm-comment__post {
+  justify-self: start;
+  font-size: 12px;
+}
+
+/* Labels are words, coloured only where they mean trouble or the answer people wait for. */
+.sm-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--g-text-2);
+}
+.sm-label--complaint {
+  color: var(--g-danger);
+}
+.sm-label--question {
+  color: var(--g-text);
+}
+
+.sm-post {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 20px;
+  padding: 20px 0;
+}
+.sm-post__thumb {
+  width: 96px;
+  height: 120px;
+  border-radius: 12px;
+  background: var(--g-sunken);
+  object-fit: cover;
+}
+.sm-post__body {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.sm-post__desc {
+  margin: 0;
+  font-weight: 600;
+  max-width: 72ch;
+}
+.sm-post__caption {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--g-text-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sm-post__stats {
+  margin: 0;
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+.sm-flag {
+  color: var(--g-danger);
+  font-weight: 600;
+}
+
+.sm-table th {
+  color: var(--g-text-3);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+.sm-table th,
+.sm-table td {
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid var(--g-line);
+}
+.sm-status {
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+.sm-status--ok {
+  color: var(--g-success);
+}
+.sm-status--error {
+  color: var(--g-danger);
+  font-weight: 600;
+}
+
+/* Toolbars and filters. */
+.sm-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.sm-seg button {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: var(--g-radius-pill);
+  background: transparent;
+  color: var(--g-text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sm-seg button[aria-checked='true'] {
+  background: var(--g-surface);
+  color: var(--g-text);
+  font-weight: 600;
+  box-shadow: var(--g-shadow-sm);
+}
+.sm-select-sm,
+.sm-search {
+  width: auto;
+  min-height: 36px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 13px;
+  border-radius: 8px;
+}
+.sm-search {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+}
+.sm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sm-chip {
+  padding: 6px 14px;
+  border: 1px solid var(--g-line-strong);
+  border-radius: var(--g-radius-pill);
+  background: transparent;
+  color: var(--g-text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sm-chip[aria-pressed='true'] {
+  border-color: var(--g-text);
+  background: var(--g-text);
+  color: var(--g-bg);
+  font-weight: 600;
+}
+
+/* Labelled rows: a short label on the left, one control on the right. */
+.sm-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 10px 0;
+}
+.sm-row__label {
+  padding-top: 8px;
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+.sm-row__control {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+.sm-row__control > .g-input,
+.sm-row__control > .g-select {
+  width: 100%;
+  max-width: 420px;
+  min-height: 36px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.sm-row__hint {
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+.sm-input-num {
+  width: 96px !important;
+}
+.sm-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sm-form {
+  display: grid;
+  gap: 2px;
+  padding: 16px 0;
+}
+.sm-form__actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0 0 112px;
+}
+
+.sm-brand-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 0;
+}
+.sm-brand-row > .sm-form {
+  flex: 1;
+  padding: 0;
+}
+.sm-brand-row__main {
+  display: grid;
+  gap: 4px;
+}
+.sm-brand-row__actions {
+  display: flex;
+  gap: 8px;
+}
+.sm-danger {
+  background: var(--g-danger);
+  color: #fff;
+}
+.g-btn--sm {
+  --g-btn-h: 36px;
+  --g-btn-px: 1rem;
+  font-size: 13px;
+}
+
+/* Empty states: two lines in a dashed, rounded box. */
+.sm-empty {
+  display: grid;
+  gap: 4px;
+  padding: 32px;
+  border: 1px dashed var(--g-line-strong);
+  border-radius: 12px;
+  text-align: center;
+}
+.sm-empty__title {
+  margin: 0;
+  font-weight: 600;
+}
+.sm-empty__body {
+  margin: 0;
+  color: var(--g-text-3);
+  font-size: 13px;
+}
+
+/* Reports: the list of updates on the left, the report on the right. */
+.sm-split {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 32px;
+}
+.sm-runs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--g-line);
+}
+.sm-run {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--g-line);
+  background: none;
+  color: var(--g-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sm-run[aria-current='true'] {
+  background: var(--g-sunken);
+}
+.sm-run__status {
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+.sm-run__status--error {
+  color: var(--g-danger);
+}
+.sm-run__status--running {
+  color: var(--g-accent-text);
+}
+.sm-report__actions {
+  margin-bottom: 12px;
+}
+.sm-report__text,
+.sm-report__log {
+  margin: 0;
+  font-family: var(--g-font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sm-report__log {
+  color: var(--g-text-2);
+  font-size: 13px;
+}
+
+/* The sheet: native dialog, docked right on desktop, a bottom sheet on phones. */
+.sm-sheet {
+  width: min(480px, 100vw);
+  max-width: none;
+  height: 100vh;
+  max-height: none;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: var(--g-surface);
+  color: var(--g-text);
+  box-shadow: var(--g-shadow-lg);
+}
+.sm-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+.sm-sheet::backdrop {
+  background: rgb(10 10 11 / 0.32);
+}
+.sm-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 8px 24px;
+}
+.sm-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 24px 24px;
+}
+.sm-sheet__foot {
+  display: grid;
+  gap: 8px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--g-line);
+}
+.sm-credit {
+  margin: 24px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--g-line);
+  color: var(--g-text-3);
+  font-size: 12px;
+}
+
+.sm-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 20;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --sm-gutter: 16px;
+  }
+  .sm-top {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .sm-top__fresh {
+    display: none;
+  }
+  .sm-tabs {
+    top: 108px;
+  }
+  .sm-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sm-figures > div:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--g-line);
+  }
+  .sm-figures > div:nth-child(4) {
+    border-top: 1px solid var(--g-line);
+  }
+  .sm-split {
+    grid-template-columns: 1fr;
+  }
+  .sm-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .sm-row__label {
+    padding-top: 0;
+  }
+  .sm-form__actions {
+    padding-left: 0;
+  }
+  .sm-brand-row {
+    flex-direction: column;
+  }
+  .sm-sheet {
+    height: auto;
+    max-height: 90vh;
+    margin: auto 0 0;
+    width: 100vw;
+    border-radius: 16px 16px 0 0;
+  }
+}
