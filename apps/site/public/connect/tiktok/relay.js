@@ -4,12 +4,13 @@
 ;(() => {
   const q = new URLSearchParams(location.search)
   const state = q.get('state') || ''
-  let origin = ''
-  try {
-    origin = atob((state.split('.')[1] || '').replace(/-/g, '+').replace(/_/g, '/'))
-  } catch {
-    origin = ''
-  }
+  const origin = (() => {
+    try {
+      return atob((state.split('.')[1] || '').replace(/-/g, '+').replace(/_/g, '/'))
+    } catch {
+      return ''
+    }
+  })()
   const ok =
     /^http:\/\/(127\.0\.0\.1|localhost)(:\d{2,5})?$/.test(origin) ||
     /^https:\/\/([a-z0-9-]+\.)*socialmonitor\.shades\.md$/.test(origin)
