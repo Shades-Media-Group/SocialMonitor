@@ -9,3 +9,4 @@ The guides are written as each part ships. Version 0.1 will cover:
 - **Reports, export and import.**
 - **[The MCP server](mcp.md):** connecting Claude and the tools it offers.
 - **[Remote access](remote-access.md):** a Cloudflare Tunnel with Cloudflare Access in front.
+- **[Running on a server](server.md):** an always-on machine, next to other apps.

@@ -1,6 +1,8 @@
 // Remote access through a Cloudflare Tunnel, protected by Cloudflare Access.
 //
-//   yarn tunnel setup <hostname>   once: creates the tunnel and its DNS record (needs `cloudflared tunnel login` first)
+//   yarn tunnel setup <hostname> [tunnel-name]   once: creates the tunnel (or joins an existing one,
+//                                                 e.g. a server's shared tunnel) and its DNS record.
+//                                                 Needs `cloudflared tunnel login` first.
 //   yarn tunnel                    runs it; the dashboard must be running with `yarn start` on port 4400
 //
 // The tunnel's files live in data/tunnel (git-ignored). The dashboard itself refuses every request
@@ -14,7 +16,6 @@ import { join } from 'node:path'
 const root = new URL('..', import.meta.url).pathname
 const dir = join(root, 'data', 'tunnel')
 const config = join(dir, 'config.yml')
-const NAME = 'socialmonitor'
 const cf = (...args) =>
   execFileSync('cloudflared', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
 
@@ -28,7 +29,7 @@ function setEnv(key, value) {
   writeFileSync(file, [...lines.filter(Boolean), `${key}=${value}`, ''].join('\n'), { mode: 0o600 })
 }
 
-const [cmd, host] = process.argv.slice(2)
+const [cmd, host, NAME = 'socialmonitor'] = process.argv.slice(2)
 
 if (cmd === 'setup') {
   if (!host || !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(host))
@@ -40,6 +41,16 @@ if (cmd === 'setup') {
   mkdirSync(dir, { recursive: true })
   const list = JSON.parse(cf('tunnel', 'list', '--output', 'json'))
   let tunnel = list.find((t) => t.name === NAME)
+  if (tunnel && NAME !== 'socialmonitor') {
+    // Joining a tunnel another app already runs: route the name, and print the rule to add to its config.
+    cf('tunnel', 'route', 'dns', '--overwrite-dns', NAME, host)
+    setEnv('SOCIALMONITOR_PUBLIC_HOST', host)
+    console.log(
+      `https://${host} now points at the tunnel "${NAME}". Add this rule to that tunnel's config, above its last catch-all rule, and restart it:`,
+    )
+    console.log(`  - hostname: ${host}\n    service: http://127.0.0.1:4400`)
+    process.exit(0)
+  }
   if (!tunnel) {
     cf('tunnel', 'create', '--credentials-file', join(dir, 'credentials.json'), NAME)
     tunnel = JSON.parse(cf('tunnel', 'list', '--output', 'json')).find((t) => t.name === NAME)
