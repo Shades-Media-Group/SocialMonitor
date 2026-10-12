@@ -475,6 +475,8 @@ export const zh: Dict = {
     'No comments this day.': '这一天没有评论。',
     'Per row': '每行',
     '{n} per row': '每行 {n} 个',
+    'Reputation per brand': '各品牌声誉',
+    'Reach per brand': '各品牌覆盖',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

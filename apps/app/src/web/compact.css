@@ -4055,3 +4055,22 @@ a.sm-person[href]:hover .sm-person__name {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* All brands: the figures at the top are tabs; the one chosen is what the page shows below. */
+.sm-hometabs {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-bottom: var(--c-gap);
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--blk, #f5f6f8);
+}
+.sm-hometabs .sm-ga__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+@media (max-width: 900px) {
+  .sm-hometabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

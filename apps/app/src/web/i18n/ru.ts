@@ -495,6 +495,8 @@ export const ru: Dict = {
     'No comments this day.': 'В этот день комментариев нет.',
     'Per row': 'В ряд',
     '{n} per row': '{n} в ряд',
+    'Reputation per brand': 'Репутация по брендам',
+    'Reach per brand': 'Охват по брендам',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

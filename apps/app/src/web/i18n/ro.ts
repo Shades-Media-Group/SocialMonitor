@@ -496,6 +496,8 @@ export const ro: Dict = {
     'No comments this day.': 'Niciun comentariu în această zi.',
     'Per row': 'Pe rând',
     '{n} per row': '{n} pe rând',
+    'Reputation per brand': 'Reputația pe brand',
+    'Reach per brand': 'Acoperirea pe brand',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

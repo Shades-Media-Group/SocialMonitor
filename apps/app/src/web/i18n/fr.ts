@@ -497,6 +497,8 @@ export const fr: Dict = {
     'No comments this day.': 'Aucun commentaire ce jour-là.',
     'Per row': 'Par rangée',
     '{n} per row': '{n} par rangée',
+    'Reputation per brand': 'Réputation par marque',
+    'Reach per brand': 'Portée par marque',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',
