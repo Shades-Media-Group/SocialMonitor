@@ -361,3 +361,46 @@ describe('TikTok sign-in hand-back', () => {
       expect(DASHBOARD_ORIGIN.test(bad)).toBe(false)
   })
 })
+
+describe('post history and re-check tiers', () => {
+  it('keeps a row only when numbers change, and re-checks by age', async () => {
+    const { duePosts, postMetrics } = await import('./store.ts')
+    const db = openDb(':memory:')
+    const brand = addBrand(db, 'Test', ['https://www.tiktok.com/@test'])
+    const [profile] = listProfiles(db, brand.id)
+    const day = (n: number) => new Date(Date.now() - n * 86400_000).toISOString()
+    const post = (ext_id: string, age: number, likes: number) => ({
+      ext_id,
+      url: 'u',
+      posted_at: day(age),
+      kind: 'video',
+      caption: '',
+      thumb_url: null,
+      likes,
+      comments_count: 0,
+      shares: 0,
+      views: 10,
+      comments: [],
+    })
+    const { post: p } = savePost(db, profile!, post('fresh', 3, 5))
+    savePost(db, profile!, post('fresh', 3, 5))
+    savePost(db, profile!, post('fresh', 3, 9))
+    expect(postMetrics(db, p.id).map((m) => m.likes)).toEqual([5, 9])
+
+    savePost(db, profile!, post('month', 20, 1))
+    savePost(db, profile!, post('old', 200, 1))
+    const read = (ext: string, ago: number) =>
+      db.prepare('UPDATE posts SET metrics_at = ? WHERE ext_id = ?').run(day(ago), ext)
+    read('month', 2)
+    read('old', 10)
+    expect(duePosts(db, profile!.id).map((d) => d.ext_id)).toEqual(['fresh'])
+    read('month', 8)
+    read('old', 40)
+    expect(
+      duePosts(db, profile!.id)
+        .map((d) => d.ext_id)
+        .sort(),
+    ).toEqual(['fresh', 'month', 'old'])
+    expect(duePosts(db, profile!.id, 1)).toHaveLength(1)
+  })
+})

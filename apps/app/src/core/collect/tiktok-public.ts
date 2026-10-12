@@ -71,7 +71,12 @@ async function get(url: string, referer = 'https://www.tiktok.com/') {
 }
 
 /** The profile's newest posts, up to `limit`, going back page by page. */
-export async function publicPosts(handle: string, limit: number): Promise<Item[]> {
+export async function publicPosts(
+  handle: string,
+  limit: number,
+  /** With it, paging stops as soon as every wanted post was seen. */
+  wanted?: Set<string>,
+): Promise<Item[]> {
   const html = await get(`https://www.tiktok.com/@${encodeURIComponent(handle)}`)
   const m = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/)
   const secUid = m
@@ -86,7 +91,10 @@ export async function publicPosts(handle: string, limit: number): Promise<Item[]
   if (!secUid) throw new Error(`the profile @${handle} did not load`)
   const out: Item[] = []
   let cursor = Date.now()
-  while (out.length < limit) {
+  while (
+    out.length < limit ||
+    (wanted && [...wanted].some((id) => !out.some((i) => i.id === id)) && out.length < 150)
+  ) {
     const d = JSON.parse(
       await get(
         `https://www.tiktok.com/api/creator/item_list/?aid=1988&type=1&count=15&secUid=${encodeURIComponent(secUid)}&cursor=${cursor}`,
@@ -95,6 +103,7 @@ export async function publicPosts(handle: string, limit: number): Promise<Item[]
     ) as { itemList?: Item[]; hasMorePrevious?: boolean }
     const items = d.itemList ?? []
     out.push(...items)
+    if (wanted && [...wanted].every((id) => out.some((i) => i.id === id))) break
     const oldest = Math.min(...items.map((i) => i.createTime ?? Infinity))
     if (!items.length || !d.hasMorePrevious || !Number.isFinite(oldest)) break
     cursor = oldest * 1000 - 1

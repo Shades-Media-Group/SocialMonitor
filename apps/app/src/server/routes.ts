@@ -788,7 +788,7 @@ export const routes: Route[] = [
         {
           brandIds: (x.brandIds ?? []).map(Number).filter(Boolean),
           networks: (x.networks ?? []).map((n) => net(n)).filter((n): n is Network => !!n),
-          range: x.range === 'all' ? 'all' : 'new',
+          range: x.range === 'all' || x.range === 'new' ? x.range : 'due',
           limit: Number(x.limit) || 5,
         },
         'manual',

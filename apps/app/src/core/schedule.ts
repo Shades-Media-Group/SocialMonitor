@@ -38,7 +38,13 @@ export function startScheduler(db: DB) {
       try {
         queueRun(
           db,
-          { brandIds: [s.brand_id], networks: s.networks, range: s.range, limit: 10 },
+          // A schedule for new posts also refreshes the numbers of posts that are due, so they stay light.
+          {
+            brandIds: [s.brand_id],
+            networks: s.networks,
+            range: s.range === 'all' ? 'all' : 'due',
+            limit: 10,
+          },
           'schedule',
         )
       } catch {

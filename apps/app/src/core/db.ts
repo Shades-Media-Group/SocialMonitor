@@ -48,6 +48,17 @@ CREATE TABLE IF NOT EXISTS network_tokens (
   PRIMARY KEY (brand_id, network)
 );
 
+-- Each post's numbers over time: a row whenever a read found them changed.
+CREATE TABLE IF NOT EXISTS post_metrics (
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  at TEXT NOT NULL,
+  likes INTEGER,
+  comments INTEGER,
+  shares INTEGER,
+  views INTEGER,
+  PRIMARY KEY (post_id, at)
+);
+
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY,
   profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -239,6 +250,8 @@ function migrate(db: DatabaseSync) {
   // When a post's comments were last read with their people's photos and attached pictures.
   // Posts read before that was collected stay "unknown" until one update reads them again.
   if (!has('posts', 'people_read_at')) db.exec('ALTER TABLE posts ADD COLUMN people_read_at TEXT')
+  // When a post's numbers were last read, for the re-check tiers.
+  if (!has('posts', 'metrics_at')) db.exec('ALTER TABLE posts ADD COLUMN metrics_at TEXT')
   // Who gets the bad-comments report, in which language, and whether it goes out after updates.
   if (!has('brands', 'alert_emails')) {
     db.exec("ALTER TABLE brands ADD COLUMN alert_emails TEXT NOT NULL DEFAULT '[]'")

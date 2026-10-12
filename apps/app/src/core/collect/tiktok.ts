@@ -1,6 +1,7 @@
 import type { Page } from 'playwright'
 import type { CollectedComment, CollectedPost, Profile } from '../types.ts'
 import type { CollectOptions, Collector } from './index.ts'
+import { pick } from './index.ts'
 import type { Item, RawComment } from './tiktok-public.ts'
 import { publicComments, publicPosts, toComment } from './tiktok-public.ts'
 import { Challenge, capture, findAll, isoFromUnix, num, pause, readScroll } from './browser.ts'
@@ -33,18 +34,32 @@ export const tiktok: Collector = {
 
 /** Posts and comments from TikTok's public pages, as anyone sees them. */
 async function viaPublic(profile: Profile, opt: CollectOptions): Promise<CollectedPost[]> {
-  const items = await publicPosts(profile.handle, opt.range === 'new' ? opt.limit + 30 : opt.limit)
-  const picked = (opt.range === 'new' ? items.filter((i) => !opt.known.has(i.id)) : items).slice(
-    0,
-    opt.limit,
+  // Due posts can be older than the newest page: read back far enough to reach them, at most
+  // ten pages (150 posts), so a re-check stays cheap.
+  const items = await publicPosts(
+    profile.handle,
+    opt.range === 'due' && opt.due.size
+      ? 150
+      : opt.range === 'new' || opt.range === 'due'
+        ? opt.limit + 30
+        : opt.limit,
+    opt.range === 'due' && opt.due.size ? new Set(opt.due.keys()) : undefined,
   )
+  const picked = pick(items, (i) => i.id, opt)
   const posts: CollectedPost[] = []
+  let rechecked = 0
   for (const it of picked) {
-    // Public comments need no session, so the signed-in gap does not apply here.
-    const raw = await publicComments(it.id, opt.maxComments)
+    const known = opt.known.has(it.id) || opt.due.has(it.id)
+    const s = it.statsV2 ?? it.stats ?? {}
+    const before = opt.due.get(it.id)
+    // A re-checked post brings its comments only when it has more than last time.
+    const needComments = !known || opt.range === 'all' || (num(s.commentCount) ?? 0) > (before ?? 0)
+    const raw = needComments ? await publicComments(it.id, opt.maxComments) : new Map()
     posts.push(toPost(profile, it, [...raw.values()].map(toComment)))
-    opt.log(`TikTok: ${it.id} · ${raw.size} comments read`)
+    if (known && opt.range === 'due') rechecked++
+    else opt.log(`TikTok: ${it.id} · ${raw.size} comments read`)
   }
+  if (rechecked) opt.log(`TikTok: fresh numbers for ${rechecked} older posts.`)
   return posts
 }
 
@@ -93,10 +108,7 @@ const viaBrowser = {
     }
 
     const newest = [...items.values()].sort((a, b) => (b.createTime ?? 0) - (a.createTime ?? 0))
-    const picked =
-      opt.range === 'new'
-        ? newest.filter((i) => !opt.known.has(i.id)).slice(0, opt.limit)
-        : newest.slice(0, opt.limit)
+    const picked = pick(newest, (i) => i.id, opt)
     const signedIn = await isSignedIn(page)
     if (signedIn && opt.comments) opt.usedSession = true
     if (!signedIn)

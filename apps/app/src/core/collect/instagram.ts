@@ -1,6 +1,7 @@
 import type { Page } from 'playwright'
 import type { CollectedComment, CollectedPost, Profile } from '../types.ts'
 import type { CollectOptions, Collector } from './index.ts'
+import { pick } from './index.ts'
 import { Challenge, imageIn, isoFromUnix, num, pause } from './browser.ts'
 
 // The id Instagram's own web app sends with its API calls.
@@ -85,10 +86,7 @@ export const instagram: Collector = {
       throw new Challenge('Instagram', `the profile @${profile.handle} did not load`)
 
     const newest = nodes.sort((a, b) => (b.taken_at_timestamp ?? 0) - (a.taken_at_timestamp ?? 0))
-    const picked =
-      opt.range === 'new'
-        ? newest.filter((n) => !opt.known.has(n.id)).slice(0, opt.limit)
-        : newest.slice(0, opt.limit)
+    const picked = pick(newest, (n) => n.id, opt)
     const signedIn = (await page.context().cookies('https://www.instagram.com')).some(
       (c) => c.name === 'sessionid' && c.value,
     )

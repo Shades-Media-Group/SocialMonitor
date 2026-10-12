@@ -190,6 +190,7 @@ export function savePost(
     p.views,
     t,
   )!
+  recordMetrics(db, post, t)
   const insert = db.prepare(
     `INSERT INTO comments (post_id, ext_id, parent_ext_id, author, text, likes, posted_at, fetched_at,
        author_avatar, author_url, media_url)
@@ -224,6 +225,56 @@ export function savePost(
   closeAnswered(db, post.id)
   return { post, newComments }
 }
+
+/** Keeps the post's numbers in its history when they changed since the last row. */
+function recordMetrics(db: DB, post: Post, at: string) {
+  const nums = [post.likes, post.comments_count, post.shares, post.views]
+  if (nums.every((n) => n == null)) return
+  const last = db
+    .prepare(
+      'SELECT likes, comments, shares, views FROM post_metrics WHERE post_id = ? ORDER BY at DESC LIMIT 1',
+    )
+    .get(post.id) as { likes: number; comments: number; shares: number; views: number } | undefined
+  if (!last || [last.likes, last.comments, last.shares, last.views].some((n, i) => n !== nums[i]))
+    db.prepare(
+      'INSERT OR REPLACE INTO post_metrics (post_id, at, likes, comments, shares, views) VALUES (?, ?, ?, ?, ?, ?)',
+    ).run(post.id, at, ...nums)
+  db.prepare('UPDATE posts SET metrics_at = ? WHERE id = ?').run(at, post.id)
+}
+
+/**
+ * Posts whose numbers are due for a fresh read, by age: under a week old, every update; under a
+ * month, weekly; under a year, monthly; older, every three months. The most overdue come first,
+ * at most `cap`, so an update stays light; the rest wait for the next one.
+ */
+export function duePosts(db: DB, profileId: number, cap = 20) {
+  return all<{ ext_id: string; comments_count: number | null; posted_at: string | null }>(
+    db,
+    `SELECT ext_id, comments_count, posted_at FROM posts p,
+       (SELECT julianday('now') - julianday(coalesce(p2.posted_at, p2.fetched_at)) AS age,
+               julianday('now') - julianday(coalesce(p2.metrics_at, '1970-01-01')) AS since, p2.id AS pid
+        FROM posts p2 WHERE p2.profile_id = ?) a
+     WHERE a.pid = p.id
+       AND (a.age < 7 OR (a.age < 30 AND a.since >= 7) OR (a.age < 365 AND a.since >= 30) OR a.since >= 90)
+     ORDER BY a.since DESC LIMIT ?`,
+    profileId,
+    cap,
+  )
+}
+
+/** A post's numbers over time, oldest first. */
+export const postMetrics = (db: DB, postId: number) =>
+  all<{
+    at: string
+    likes: number | null
+    comments: number | null
+    shares: number | null
+    views: number | null
+  }>(
+    db,
+    'SELECT at, likes, comments, shares, views FROM post_metrics WHERE post_id = ? ORDER BY at',
+    postId,
+  )
 
 /** Marks a comment answered, skipped or open again, and who did it. */
 export const setReplyStatus = (db: DB, commentId: number, status: ReplyStatus, userId?: number) =>

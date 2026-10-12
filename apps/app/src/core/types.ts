@@ -6,7 +6,11 @@ export const LABELS = ['praise', 'question', 'complaint', 'suggestion', 'neutral
 export type Label = (typeof LABELS)[number]
 
 /** Which posts an update reads: only posts newer than the last update, or every post it can see. */
-export type Range = 'new' | 'all'
+/**
+ * 'new': only posts not read before. 'due': new posts, plus older posts whose numbers are due
+ * for a fresh read by their age (see duePosts). 'all': the newest posts again, comments too.
+ */
+export type Range = 'new' | 'due' | 'all'
 
 export interface Brand {
   id: number

@@ -112,6 +112,10 @@ async function execute(db: DB, runId: number, scope: RunScope) {
           range: scope.range,
           limit: Math.max(1, Math.min(50, scope.limit)),
           known: store.knownPostIds(db, p.id),
+          due:
+            scope.range === 'due'
+              ? new Map(store.duePosts(db, p.id).map((d) => [d.ext_id, d.comments_count]))
+              : new Map<string, number | null>(),
           comments: readComments,
           maxComments: MAX_COMMENTS,
           usedSession: false,

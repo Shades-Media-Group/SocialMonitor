@@ -1,6 +1,7 @@
 import type { Page } from 'playwright'
 import type { CollectedComment, CollectedPost, Profile } from '../types.ts'
 import type { CollectOptions, Collector } from './index.ts'
+import { pick } from './index.ts'
 import {
   Challenge,
   capture,
@@ -80,9 +81,7 @@ export const facebook: Collector = {
             ?.creation_time ?? 0,
       }))
       .sort((a, b) => b.time - a.time)
-    const picked = (
-      opt.range === 'new' ? list.filter((x) => !opt.known.has(x.s.post_id!)) : list
-    ).slice(0, opt.limit)
+    const picked = pick(list, (x) => x.s.post_id!, opt)
 
     const posts: CollectedPost[] = []
     for (const { s, time } of picked) {
