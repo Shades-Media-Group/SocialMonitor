@@ -5,7 +5,7 @@ import { api } from '../api.ts'
 import { Empty, NETWORK_NAME, NetworkMark, ago, fmt } from '../ui.tsx'
 import { CommentList } from './comments.tsx'
 
-export function Overview({ brands, brandId, go, openUpdate, running }: AppState) {
+export function Overview({ brands, brandId, go, openUpdate, running, reload }: AppState) {
   const scope = brandId ? brands.filter((b) => b.id === brandId) : brands
   const [reply, setReply] = useState<CommentRow[]>([])
   useEffect(() => {
@@ -64,7 +64,7 @@ export function Overview({ brands, brandId, go, openUpdate, running }: AppState)
           )}
         </div>
         {reply.length ? (
-          <CommentList comments={reply} brands={brands} />
+          <CommentList comments={reply} brands={brands} onChange={() => reload()} />
         ) : total ? (
           <p class="sm-quiet">Nothing waiting for an answer.</p>
         ) : (

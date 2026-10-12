@@ -99,7 +99,7 @@ export function App() {
   }
   const go = (t: Tab) => (location.hash = t)
 
-  const scope = brandId ? brands.filter((b) => b.id === brandId) : brands
+  const scope = brandId && brands.length > 1 ? brands.filter((b) => b.id === brandId) : brands
   const lastRun = scope
     .flatMap((b) => b.profiles.map((p) => p.last_run_at))
     .filter(Boolean)
@@ -108,7 +108,7 @@ export function App() {
 
   const state: AppState = {
     brands,
-    brandId,
+    brandId: brands.length > 1 ? brandId : 0,
     reload,
     go,
     openUpdate: () => setUpdateOpen(true),
@@ -120,7 +120,7 @@ export function App() {
     <div class="sm-app">
       <header class="sm-top">
         <Logo />
-        {brands.length > 0 && (
+        {brands.length > 1 && (
           <select
             class="g-select sm-brand"
             value={brandId}
