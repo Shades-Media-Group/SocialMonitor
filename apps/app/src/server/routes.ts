@@ -4,9 +4,9 @@ import type { Label, Network } from '../core/types.ts'
 import { LABELS, NETWORKS } from '../core/types.ts'
 import { exportAll, importAll } from '../core/transfer.ts'
 import type { Dump } from '../core/transfer.ts'
-import { openSignInWindow } from '../core/collect/browser.ts'
+import { openSignInWindow, signInStatus } from '../core/collect/browser.ts'
 import { readSettings, writeSettings } from '../core/settings.ts'
-import { queueRun } from '../core/run.ts'
+import { gaps, queueRun } from '../core/run.ts'
 import type { Range } from '../core/types.ts'
 
 interface Ctx {
@@ -44,7 +44,43 @@ export const routes: Route[] = [
     __download: `socialmonitor-${new Date().toISOString().slice(0, 10)}.json`,
     data: exportAll(db, query.get('brand') ? id(query.get('brand')!) : undefined),
   })),
+  r('GET', '/api/comments.csv', ({ db, query }) => {
+    const rows = store.listComments(db, {
+      brandId: query.get('brand') ? id(query.get('brand')!) : undefined,
+      network: net(query.get('network')),
+      label: label(query.get('label')),
+      needsReply: query.get('reply') === '1',
+      search: query.get('q') ?? undefined,
+      limit: 100000,
+    })
+    const cell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`
+    const head = [
+      'network',
+      'posted_at',
+      'author',
+      'text',
+      'likes',
+      'label',
+      'needs_reply',
+      'reply_status',
+      'reason',
+      'post_url',
+    ]
+    const csv = [
+      head.join(','),
+      ...rows.map((r) =>
+        head.map((h) => cell((r as unknown as Record<string, unknown>)[h])).join(','),
+      ),
+    ].join('\r\n')
+    return {
+      __download: `socialmonitor-comments-${new Date().toISOString().slice(0, 10)}.csv`,
+      type: 'text/csv; charset=utf-8',
+      data: '\ufeff' + csv,
+    }
+  }),
   r('POST', '/api/import', (c) => importAll(c.db, c.body as Dump)),
+  r('GET', '/api/browser/status', async () => signInStatus()),
+  r('GET', '/api/gaps', ({ db }) => gaps(db)),
   r('POST', '/api/browser/sign-in', async () => {
     await openSignInWindow()
   }),
@@ -96,7 +132,17 @@ export const routes: Route[] = [
   ),
 
   r('PATCH', '/api/comments/:id', (c) => {
-    const x = b(c) as { label?: string; needs_reply?: boolean; reason?: string }
+    const x = b(c) as {
+      label?: string
+      needs_reply?: boolean
+      reason?: string
+      reply_status?: string
+    }
+    if (x.reply_status) {
+      if (!['open', 'done', 'ignored'].includes(x.reply_status)) throw new Error('Unknown status.')
+      store.setReplyStatus(c.db, id(c.params.id), x.reply_status as 'open' | 'done' | 'ignored')
+      if (!x.label) return
+    }
     const l = label(x.label ?? null)
     if (!l) throw new Error('Unknown label.')
     store.setVerdict(

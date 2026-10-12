@@ -9,6 +9,7 @@ import type {
   Post,
   Profile,
   Range,
+  ReplyStatus,
   Schedule,
   ScheduleKind,
 } from './types.ts'
@@ -163,6 +164,9 @@ export function savePost(
   return { post, newComments }
 }
 
+export const setReplyStatus = (db: DB, commentId: number, status: ReplyStatus) =>
+  db.prepare('UPDATE comments SET reply_status = ? WHERE id = ?').run(status, commentId)
+
 export const setDescription = (db: DB, postId: number, description: string) =>
   db.prepare('UPDATE posts SET description = ? WHERE id = ?').run(description, postId)
 
@@ -242,7 +246,7 @@ export function listComments(db: DB, f: CommentFilter = {}) {
     where.push('c.label = ?')
     args.push(f.label)
   }
-  if (f.needsReply) where.push('c.needs_reply = 1')
+  if (f.needsReply) where.push("c.needs_reply = 1 AND c.reply_status = 'open'")
   if (f.unsorted) where.push('c.label IS NULL')
   if (f.search) {
     where.push('c.text LIKE ?')
@@ -253,7 +257,7 @@ export function listComments(db: DB, f: CommentFilter = {}) {
     `SELECT c.*, p.network, p.url AS post_url, pr.brand_id
      FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-     ORDER BY c.needs_reply DESC, c.likes DESC, c.id DESC LIMIT ? OFFSET ?`,
+     ORDER BY (c.needs_reply = 1 AND c.reply_status = 'open') DESC, c.likes DESC, c.id DESC LIMIT ? OFFSET ?`,
     ...args,
     f.limit ?? 100,
     f.offset ?? 0,
@@ -264,7 +268,7 @@ export function listComments(db: DB, f: CommentFilter = {}) {
 export function labelCounts(db: DB, brandId?: number, since?: string) {
   const rows = all<{ label: string | null; n: number; replies: number }>(
     db,
-    `SELECT c.label, count(*) AS n, sum(coalesce(c.needs_reply, 0)) AS replies
+    `SELECT c.label, count(*) AS n, sum(CASE WHEN c.needs_reply = 1 AND c.reply_status = 'open' THEN 1 ELSE 0 END) AS replies
      FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
      WHERE (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR c.fetched_at >= ?)
      GROUP BY c.label`,

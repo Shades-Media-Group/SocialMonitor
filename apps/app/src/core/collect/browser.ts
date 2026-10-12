@@ -65,6 +65,29 @@ export async function openSignInWindow() {
   }
 }
 
+const SESSION_COOKIES = {
+  tiktok: ['https://www.tiktok.com', 'sessionid'],
+  instagram: ['https://www.instagram.com', 'sessionid'],
+  facebook: ['https://www.facebook.com', 'c_user'],
+} as const
+
+/** Which networks the profile is signed in to, read from its cookies (never their values). */
+export async function signInStatus(): Promise<
+  Record<keyof typeof SESSION_COOKIES, boolean> & { busy?: boolean }
+> {
+  const opened = !shared
+  const ctx = shared ?? (await openBrowser().catch(() => null))
+  if (!ctx) return { tiktok: false, instagram: false, facebook: false, busy: true }
+  const out = { tiktok: false, instagram: false, facebook: false }
+  for (const [net, [url, name]] of Object.entries(SESSION_COOKIES))
+    out[net as keyof typeof out] = (await ctx.cookies(url)).some(
+      (c) => c.name === name && !!c.value && (c.expires === -1 || c.expires * 1000 > Date.now()),
+    )
+  // Opened only to look: close it again so no Chrome stays running in the background.
+  if (opened) await closeBrowser()
+  return out
+}
+
 /** A human pause: a random wait between `min` and `max` milliseconds. */
 export const pause = (min = 2500, max = 7000) =>
   new Promise((r) => setTimeout(r, min + Math.random() * (max - min)))

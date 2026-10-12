@@ -118,6 +118,9 @@ function migrate(db: DatabaseSync) {
     )
   if (!has('profiles', 'last_session_at'))
     db.exec('ALTER TABLE profiles ADD COLUMN last_session_at TEXT')
+  // Where a comment that needs a reply stands: open until someone answers it on the network or skips it.
+  if (!has('comments', 'reply_status'))
+    db.exec("ALTER TABLE comments ADD COLUMN reply_status TEXT NOT NULL DEFAULT 'open'")
 }
 
 export const now = () => new Date().toISOString()
