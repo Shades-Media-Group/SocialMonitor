@@ -1,3 +1,4 @@
+import type { IconName } from 'shades-gradient'
 import { useEffect, useState } from 'preact/hooks'
 import type { BrandRow, CommentRow, Network, PostRow } from './api.ts'
 import { api } from './api.ts'
@@ -133,11 +134,11 @@ export function MoodStrip({ p }: { p: PostRow }) {
 
 /** A post as the network shows it: the picture, when, what it says, and what it drew. */
 export function PostCard({ p, onOpen }: { p: PostRow; onOpen: (p: PostRow) => void }) {
-  const stats: [string, number | null][] = [
-    ['Likes', p.likes],
-    ['Comments', p.comments_count],
-    ['Shares', p.shares],
-    ['Views', p.views],
+  const stats: [string, IconName, number | null][] = [
+    ['Likes', 'favorite', p.likes],
+    ['Comments', 'chat', p.comments_count],
+    ['Shares', 'share', p.shares],
+    ['Views', 'visibility', p.views],
   ]
   return (
     <article class="sm-postcard2">
@@ -161,9 +162,12 @@ export function PostCard({ p, onOpen }: { p: PostRow; onOpen: (p: PostRow) => vo
           {p.description ?? p.caption ?? t('No caption.')}
         </p>
         <dl class="sm-postcard2__stats">
-          {stats.map(([label, v]) => (
-            <div>
-              <dt>{t(label)}</dt>
+          {stats.map(([label, icon, v]) => (
+            <div title={t(label)}>
+              <dt>
+                <Icon name={icon} size={12} />
+                <span>{t(label)}</span>
+              </dt>
               <dd class="g-num">{short(v)}</dd>
             </div>
           ))}

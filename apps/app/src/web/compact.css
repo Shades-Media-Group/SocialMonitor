@@ -4192,3 +4192,45 @@ a.sm-person[href]:hover .sm-person__name {
   min-width: 140px;
   max-width: 420px;
 }
+
+/* Every picture card has the same rhythm: the date line, a caption slot of exactly three lines,
+   one row of four figures, then the mood bar; so across a row everything lines up. */
+.sm-shell .sm-wall:not(.sm-wall--2) .sm-postcard2__text {
+  height: 4.2em;
+  line-height: 1.4;
+}
+.sm-shell .sm-postcard2__stats,
+.sm-shell .sm-wall--5 .sm-postcard2__stats,
+.sm-shell .sm-wall--6 .sm-postcard2__stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.sm-shell .sm-wall--5 .sm-postcard2__stats dd,
+.sm-shell .sm-wall--6 .sm-postcard2__stats dd {
+  font-size: 12px;
+}
+.sm-shell .sm-wall--5 .sm-postcard2__stats div,
+.sm-shell .sm-wall--6 .sm-postcard2__stats div {
+  padding: 4px 4px;
+}
+.sm-shell .sm-postcard2__body {
+  gap: 8px;
+}
+.sm-shell .sm-postcard2 .sm-mood-strip--empty {
+  background: #dfe2e7;
+}
+
+/* In the narrow layouts each figure is named by its icon; the word stays in the tooltip. */
+.sm-postcard2__stats dt .g-icon,
+.sm-postcard2__stats dt svg {
+  display: none;
+}
+.sm-shell .sm-wall--5 .sm-postcard2__stats dt svg,
+.sm-shell .sm-wall--6 .sm-postcard2__stats dt svg,
+.sm-shell .sm-wall--5 .sm-postcard2__stats dt .g-icon,
+.sm-shell .sm-wall--6 .sm-postcard2__stats dt .g-icon {
+  display: inline-block;
+}
+.sm-shell .sm-wall--5 .sm-postcard2__stats dt span,
+.sm-shell .sm-wall--6 .sm-postcard2__stats dt span {
+  display: none;
+}
