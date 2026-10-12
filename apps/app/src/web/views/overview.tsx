@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { CommentRow, PostRow, Profile } from '../api.ts'
 import { api } from '../api.ts'
-import { NETWORK_NAME, NetworkMark, ago, fmt } from '../ui.tsx'
+import { NETWORK_NAME, NetworkMark, ago, count, fmt } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { MoodBar } from '../labels.tsx'
 import { brandCategories } from '../rate.tsx'
@@ -29,6 +29,7 @@ export function Overview(v: BrandView) {
   const [s, setS] = useState<Summary | null>(null)
   const [reply, setReply] = useState<CommentRow[]>([])
   const [posts, setPosts] = useState<PostRow[]>([])
+  const [latest, setLatest] = useState<CommentRow[]>([])
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
@@ -41,6 +42,15 @@ export function Overview(v: BrandView) {
       .get<CommentRow[]>(`/api/comments?brand=${brand.id}&reply=1&limit=5${n}`)
       .then(setReply)
       .catch(() => setReply([]))
+    // When nothing waits for an answer, the newest threads take the place, ready to rate.
+    api
+      .get<CommentRow[]>(`/api/comments?brand=${brand.id}&limit=12${n}`)
+      .then((rows) =>
+        setLatest(
+          rows.sort((a, b) => (b.posted_at ?? '').localeCompare(a.posted_at ?? '')).slice(0, 8),
+        ),
+      )
+      .catch(() => setLatest([]))
     api
       .get<PostRow[]>(`/api/posts?brand=${brand.id}&limit=6${n}`)
       .then(setPosts)
@@ -118,8 +128,14 @@ export function Overview(v: BrandView) {
           </p>
         ) : (
           <p>
-            <b class={waiting ? 'sm-hot' : undefined}>{fmt(waiting)}</b>{' '}
-            {waiting === 1 ? 'comment waits' : 'comments wait'} for an answer.{' '}
+            {waiting ? (
+              <>
+                <b class="sm-hot">{fmt(waiting)}</b>{' '}
+                {waiting === 1 ? 'comment waits' : 'comments wait'} for an answer.{' '}
+              </>
+            ) : (
+              <>Nothing waits for an answer. </>
+            )}
             {sorted > 0 ? (
               <>
                 {c.complaint ? (
@@ -139,7 +155,7 @@ export function Overview(v: BrandView) {
               </>
             ) : (
               <>
-                <b>{fmt(total)}</b> comments are kept, waiting for the AI to sort them.
+                <b>{fmt(total)}</b> comments are read and wait to be sorted.
               </>
             )}
           </p>
@@ -149,19 +165,19 @@ export function Overview(v: BrandView) {
       <div class="sm-split2">
         <section>
           <div class="sm-section-head">
-            <h2>Answer first</h2>
+            <h2>{reply.length ? 'Answer first' : 'Newest comments'}</h2>
             <a class="g-link" href={`#/b/${brand.id}/comments`}>
               Every comment
             </a>
           </div>
-          {reply.length ? (
-            <CommentList comments={reply} brands={brands} onChange={() => setTick((t) => t + 1)} />
+          {reply.length || latest.length ? (
+            <CommentList
+              comments={reply.length ? reply : latest}
+              brands={brands}
+              onChange={() => setTick((t) => t + 1)}
+            />
           ) : (
-            <p class="sm-quiet sm-pad">
-              {sorted
-                ? 'Nothing waits for an answer.'
-                : 'Once comments are sorted, the ones to answer come here first.'}
-            </p>
+            <p class="sm-quiet sm-pad">Comments appear here after the first update.</p>
           )}
         </section>
 
@@ -211,7 +227,7 @@ export function Overview(v: BrandView) {
               All {fmt(s.posts)} posts
             </a>
           </div>
-          <ul class="sm-strip">
+          <ul class="sm-strip" style={{ '--n': Math.max(posts.length, 4) }}>
             {posts.map((p) => (
               <li>
                 <a href={p.url} target="_blank" rel="noreferrer" class="sm-strip__item">
@@ -223,7 +239,7 @@ export function Overview(v: BrandView) {
                   <span class="sm-strip__meta">
                     <NetworkMark network={p.network} size={13} />
                     <span class="g-num">
-                      {fmt(p.likes)} likes · {fmt(p.comments_count)} comments
+                      {count(p.likes, 'like')} · {count(p.comments_count, 'comment')}
                     </span>
                   </span>
                   <span class="sm-strip__text">{p.description ?? p.caption}</span>
@@ -246,7 +262,7 @@ export function Overview(v: BrandView) {
             <tr>
               <th>Network</th>
               <th>Profile</th>
-              <th>Last update</th>
+              <th class="sm-col-when">Last update</th>
               <th>State</th>
             </tr>
           </thead>
@@ -263,7 +279,9 @@ export function Overview(v: BrandView) {
                     @{p.handle}
                   </a>
                 </td>
-                <td title={p.last_run_at ?? undefined}>{ago(p.last_run_at)}</td>
+                <td class="sm-col-when" title={p.last_run_at ?? undefined}>
+                  {ago(p.last_run_at)}
+                </td>
                 <td>
                   {p.last_status === 'error' ? (
                     <span class="sm-status sm-status--error" title={p.last_error ?? undefined}>

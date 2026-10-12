@@ -477,7 +477,7 @@ p {
 /* The latest posts: a strip of real covers that swipes on a phone. */
 .sm-strip {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr));
   gap: 16px;
   margin: 0;
   padding: 0;
@@ -549,6 +549,7 @@ p {
 /* Network marks keep their own colours: they are the networks' identity. */
 .sm-net {
   display: inline-flex;
+  flex-shrink: 0;
   align-self: center;
 }
 .sm-net--instagram {
@@ -818,6 +819,14 @@ p {
   align-items: center;
   gap: 12px;
 }
+.sm-toolbar > .g-segmented {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sm-toolbar .sm-seg button {
+  white-space: nowrap;
+}
 .sm-toolbar__end {
   margin-left: auto;
 }
@@ -1058,6 +1067,7 @@ p {
 }
 .sm-kinds h3 {
   display: flex;
+  padding-left: 2px;
   align-items: center;
   gap: 8px;
 }
@@ -1107,6 +1117,9 @@ p {
   padding: 16px 0;
   border-top: 1px solid var(--g-line);
   background: var(--g-bg);
+}
+.sm-danger-zone > .g-btn {
+  justify-self: start;
 }
 .sm-danger-zone {
   gap: 10px !important;
@@ -1334,6 +1347,21 @@ p {
   }
   .sm-c--reply {
     margin-left: 24px;
+  }
+  .sm-col-when {
+    display: none;
+  }
+  .sm-toolbar {
+    min-width: 0;
+  }
+  .sm-search {
+    max-width: none;
+  }
+  .sm-toolbar__end {
+    margin-left: 0;
+  }
+  .sm-c__actions {
+    justify-content: flex-start;
   }
   .sm-sheet {
     height: auto;

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { PostRow } from '../api.ts'
 import { api } from '../api.ts'
-import { Empty, NETWORK_NAME, NetworkMark, Segmented, fmt, when } from '../ui.tsx'
+import { Empty, NETWORK_NAME, NetworkMark, Segmented, count, fmt, when } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 
 /** The posts as a contact sheet: the real pictures, newest or most engaging first. */
@@ -82,7 +82,7 @@ export function Posts({ brand, network, version, mode, openUpdate }: BrandView) 
             </div>
             <p class="sm-postcard__text">{p.description ?? p.caption ?? 'No caption.'}</p>
             <p class="sm-postcard__stats g-num">
-              {fmt(p.likes)} likes · {fmt(p.comments_count)} comments
+              {count(p.likes, 'like')} · {count(p.comments_count, 'comment')}
               {p.views != null && ` · ${fmt(p.views)} views`}
             </p>
             {p.stored_comments > 0 && (
@@ -91,7 +91,9 @@ export function Posts({ brand, network, version, mode, openUpdate }: BrandView) 
                 href={`#/b/${brand.id}/comments`}
                 onClick={() => sessionStorage.setItem('sm-post', String(p.id))}
               >
-                Read {fmt(p.stored_comments)} comments
+                {p.comments_count && p.comments_count > p.stored_comments
+                  ? `${fmt(p.stored_comments)} of ${fmt(p.comments_count)} comments saved`
+                  : `Read ${count(p.stored_comments, 'comment')}`}
               </a>
             )}
           </li>

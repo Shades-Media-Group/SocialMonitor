@@ -70,6 +70,10 @@ export function ago(iso: string | null | undefined) {
   return 'just now'
 }
 
+/** "1 like", "3 likes", "no likes" with tabular numbers left to the caller's markup. */
+export const count = (n: number | null | undefined, one: string, many = `${one}s`) =>
+  n == null ? `– ${many}` : `${fmt(n)} ${n === 1 ? one : many}`
+
 export const fmt = (n: number | null | undefined) =>
   n == null ? '–' : new Intl.NumberFormat('en').format(n)
 export const when = (iso: string | null | undefined) =>

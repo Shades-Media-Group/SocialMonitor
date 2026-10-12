@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { BrandRow, CommentRow } from '../api.ts'
 import { api } from '../api.ts'
-import { Empty, NetworkMark, Segmented, ago } from '../ui.tsx'
+import { Empty, NetworkMark, Segmented, ago, count } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { LabelPill } from '../labels.tsx'
 import { Rate, brandCategories } from '../rate.tsx'
@@ -62,7 +62,7 @@ export function CommentList({
             {own && <span class="sm-c__own">Brand reply</span>}
             <NetworkMark network={c.network} size={13} />
             <span>{ago(c.posted_at)}</span>
-            {c.likes ? <span class="g-num">{c.likes} likes</span> : null}
+            {c.likes ? <span class="g-num">{count(c.likes, 'like')}</span> : null}
             {c.label && !own && (
               <LabelPill label={c.label} reply={c.needs_reply === 1 && c.reply_status === 'open'} />
             )}
