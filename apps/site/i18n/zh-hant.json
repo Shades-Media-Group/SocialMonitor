@@ -39,7 +39,9 @@
       "lead": "SocialMonitor 把 Instagram、Facebook 和 TikTok 上的每則貼文和留言保存在你的電腦上。AI 為留言分類，並標出需要回覆的留言。",
       "how": "了解運作方式",
       "github": "在 GitHub 上追蹤",
-      "note": "開發中，尚未發布。現在可以從原始碼執行，免費且開源。"
+      "note": "開發中，尚未發布。現在可以從原始碼執行，免費且開源。",
+      "shotAlt": "SocialMonitor 儀表板：一個品牌 30 天內的留言、它在各個平台上的帳號，以及需要優先回覆的留言。",
+      "shotNote": "以虛構品牌和範例留言展示。"
     },
     "how": {
       "title": "從一個連結，到一份報告。",
@@ -90,7 +92,8 @@
       "claude": {
         "title": "內建 Claude",
         "text": "內建的 MCP 伺服器讓 Claude 在任何對話中查詢你的資料並執行更新。"
-      }
+      },
+      "shotAlt": "等待回覆的留言，每則都有標籤、緊急程度和 AI 給出的理由。"
     },
     "privacy": {
       "title": "你的資料留在你的電腦上。",

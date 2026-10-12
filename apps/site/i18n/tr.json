@@ -39,7 +39,9 @@
       "lead": "SocialMonitor, Instagram, Facebook ve TikTok'taki her gönderiyi ve yorumu bilgisayarınızda saklar. Yapay zekâ yorumları sınıflar ve yanıt bekleyenleri işaretler.",
       "how": "Nasıl çalışır",
       "github": "GitHub'da takip et",
-      "note": "Geliştiriliyor, henüz bir sürüm yok. Bugün kaynak koddan çalışıyor; ücretsiz ve açık kaynak."
+      "note": "Geliştiriliyor, henüz bir sürüm yok. Bugün kaynak koddan çalışıyor; ücretsiz ve açık kaynak.",
+      "shotAlt": "SocialMonitor paneli: bir markanın 30 günlük yorumları, her ağdaki hesapları ve önce yanıtlanması gereken yorumlar.",
+      "shotNote": "Uydurma bir marka ve örnek yorumlarla gösterilmiştir."
     },
     "how": {
       "title": "Bir bağlantıdan bir rapora.",
@@ -90,7 +92,8 @@
       "claude": {
         "title": "Yerleşik Claude",
         "text": "Yerleşik MCP sunucusu, Claude'un verilerinizi sorgulamasını ve herhangi bir sohbetten güncelleme başlatmasını sağlar."
-      }
+      },
+      "shotAlt": "Yanıt bekleyen yorumlar; her birinin etiketi, aciliyeti ve yapay zekânın gerekçesi."
     },
     "privacy": {
       "title": "Verileriniz bilgisayarınızda kalır.",

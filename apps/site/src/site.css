@@ -900,6 +900,43 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
+/* Product shots: the dashboard itself, at full width, in the reader's theme. The features
+   chapter inverts its ground, so its shot takes the opposite theme. */
+.shot {
+  max-width: var(--measure);
+  margin: clamp(48px, 7vw, 88px) auto 0;
+}
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 40px 80px -36px rgba(10, 10, 11, 0.4);
+}
+.shot figcaption {
+  margin-top: 14px;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+.shot--features img {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+@media (prefers-color-scheme: dark) {
+  .shot--features img {
+    box-shadow: 0 0 0 1px rgba(10, 10, 11, 0.12);
+  }
+}
+@media (max-width: 600px) {
+  .shot {
+    max-width: 340px;
+  }
+  .shot img {
+    border-radius: 28px;
+  }
+}
+
 /* Features: one hairline row each, the name beside what it does. */
 .features {
   display: grid;

@@ -32,6 +32,31 @@
           <a class="btn btn--secondary" data-link="repo">{{home.hero.github}}</a>
         </p>
         <p class="cta-note">{{home.hero.note}}</p>
+        <figure class="shot shot--hero">
+          <picture>
+            <source
+              media="(max-width: 600px) and (prefers-color-scheme: dark)"
+              srcset="/shots/overview-phone-dark.webp"
+              width="1170"
+              height="2532"
+            />
+            <source
+              media="(max-width: 600px)"
+              srcset="/shots/overview-phone-light.webp"
+              width="1170"
+              height="2532"
+            />
+            <source media="(prefers-color-scheme: dark)" srcset="/shots/overview-dark.webp" />
+            <img
+              src="/shots/overview-light.webp"
+              alt="{{home.hero.shotAlt}}"
+              width="2400"
+              height="1500"
+              fetchpriority="high"
+            />
+          </picture>
+          <figcaption>{{home.hero.shotNote}}</figcaption>
+        </figure>
       </section>
 
       <section class="chapter how" id="how">
@@ -85,6 +110,30 @@
             ><span>{{home.features.claude.text}}</span>
           </li>
         </ul>
+        <figure class="shot shot--features" data-reveal>
+          <picture>
+            <source
+              media="(max-width: 600px) and (prefers-color-scheme: dark)"
+              srcset="/shots/comments-phone-light.webp"
+              width="1170"
+              height="2532"
+            />
+            <source
+              media="(max-width: 600px)"
+              srcset="/shots/comments-phone-dark.webp"
+              width="1170"
+              height="2532"
+            />
+            <source media="(prefers-color-scheme: dark)" srcset="/shots/comments-light.webp" />
+            <img
+              src="/shots/comments-dark.webp"
+              alt="{{home.features.shotAlt}}"
+              width="2400"
+              height="1500"
+              loading="lazy"
+            />
+          </picture>
+        </figure>
       </section>
 
       <section class="chapter chapter--red" id="privacy">

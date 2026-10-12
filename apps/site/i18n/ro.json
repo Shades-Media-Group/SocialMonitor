@@ -39,7 +39,9 @@
       "lead": "SocialMonitor păstrează fiecare postare și comentariu de pe Instagram, Facebook și TikTok pe calculatorul tău. AI-ul sortează comentariile și le marchează pe cele care cer un răspuns.",
       "how": "Cum funcționează",
       "github": "Urmărește pe GitHub",
-      "note": "În dezvoltare, încă fără o versiune lansată. Rulează deja din codul sursă, gratuit și open source."
+      "note": "În dezvoltare, încă fără o versiune lansată. Rulează deja din codul sursă, gratuit și open source.",
+      "shotAlt": "Panoul SocialMonitor: comentariile unui brand pe 30 de zile, conturile sale de pe fiecare rețea și comentariile la care trebuie răspuns mai întâi.",
+      "shotNote": "Prezentat cu un brand inventat și comentarii de exemplu."
     },
     "how": {
       "title": "De la un link la un raport.",
@@ -90,7 +92,8 @@
       "claude": {
         "title": "Claude, integrat",
         "text": "Un server MCP integrat îi permite lui Claude să interogheze datele tale și să pornească actualizări din orice chat."
-      }
+      },
+      "shotAlt": "Comentarii care așteaptă un răspuns, fiecare cu eticheta sa, cât de urgent este și motivul dat de AI."
     },
     "privacy": {
       "title": "Datele tale rămân pe calculatorul tău.",

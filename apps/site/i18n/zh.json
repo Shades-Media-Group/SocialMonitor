@@ -39,7 +39,9 @@
       "lead": "SocialMonitor 把 Instagram、Facebook 和 TikTok 上的每条帖子和评论保存在你的电脑上。AI 为评论分类，并标出需要回复的评论。",
       "how": "了解工作原理",
       "github": "在 GitHub 上关注",
-      "note": "开发中，尚未发布。现在可以从源代码运行，免费且开源。"
+      "note": "开发中，尚未发布。现在可以从源代码运行，免费且开源。",
+      "shotAlt": "SocialMonitor 仪表板：一个品牌 30 天内的评论、它在各个平台上的账号，以及需要优先回复的评论。",
+      "shotNote": "以虚构品牌和示例评论展示。"
     },
     "how": {
       "title": "从一个链接，到一份报告。",
@@ -90,7 +92,8 @@
       "claude": {
         "title": "内置 Claude",
         "text": "内置的 MCP 服务器让 Claude 在任何对话中查询你的数据并运行更新。"
-      }
+      },
+      "shotAlt": "等待回复的评论，每条都有标签、紧急程度和 AI 给出的理由。"
     },
     "privacy": {
       "title": "你的数据留在你的电脑上。",

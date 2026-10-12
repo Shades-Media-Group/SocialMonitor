@@ -39,7 +39,9 @@
       "lead": "SocialMonitor keeps every post and comment from Instagram, Facebook and TikTok on your computer. AI sorts the comments and flags the ones that need a reply.",
       "how": "How it works",
       "github": "Follow on GitHub",
-      "note": "In development, with no release yet. It runs from source today, free and open source."
+      "note": "In development, with no release yet. It runs from source today, free and open source.",
+      "shotAlt": "The SocialMonitor dashboard: a brand's comments over 30 days, its accounts on each network, and the comments to answer first.",
+      "shotNote": "Shown with a made-up brand and sample comments."
     },
     "how": {
       "title": "From a link to a report.",
@@ -90,7 +92,8 @@
       "claude": {
         "title": "Claude, built in",
         "text": "A built-in MCP server lets Claude query your data and run updates from any chat."
-      }
+      },
+      "shotAlt": "Comments waiting for an answer, each with its label, how urgent it is and the AI's reason."
     },
     "privacy": {
       "title": "Your data stays on your computer.",

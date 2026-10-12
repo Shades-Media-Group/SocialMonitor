@@ -39,7 +39,9 @@
       "lead": "SocialMonitor guarda cada publicación y comentario de Instagram, Facebook y TikTok en tu ordenador. La IA clasifica los comentarios y marca los que necesitan respuesta.",
       "how": "Cómo funciona",
       "github": "Seguir en GitHub",
-      "note": "En desarrollo, aún sin versión publicada. Ya se ejecuta desde el código fuente, gratis y de código abierto."
+      "note": "En desarrollo, aún sin versión publicada. Ya se ejecuta desde el código fuente, gratis y de código abierto.",
+      "shotAlt": "El panel de SocialMonitor: los comentarios de una marca en 30 días, sus cuentas en cada red y los comentarios que hay que responder primero.",
+      "shotNote": "Se muestra con una marca inventada y comentarios de ejemplo."
     },
     "how": {
       "title": "De un enlace a un informe.",
@@ -90,7 +92,8 @@
       "claude": {
         "title": "Claude, integrado",
         "text": "Un servidor MCP integrado permite a Claude consultar tus datos y lanzar actualizaciones desde cualquier chat."
-      }
+      },
+      "shotAlt": "Comentarios que esperan respuesta, cada uno con su etiqueta, su urgencia y el motivo que da la IA."
     },
     "privacy": {
       "title": "Tus datos se quedan en tu ordenador.",
