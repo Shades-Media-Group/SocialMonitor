@@ -103,17 +103,18 @@ server.registerTool(
   'comments',
   {
     description:
-      'Comments as lines "id|network|label|reply|likes|author|text". Filter by brand, label, network, needs_reply or a search word. Newest needing a reply first.',
+      'Comments as lines "id|network|label|reply|sentiment:kind|likes|author|text". The brand\'s own replies are left out. Filter by brand, label, network, needs_reply, sentiment (positive, negative, none) or a search word.',
     inputSchema: {
       brand: z.string().optional(),
       label: label.optional(),
       network: network.optional(),
       needs_reply: z.boolean().optional(),
       search: z.string().optional(),
+      sentiment: z.enum(['positive', 'negative', 'none']).optional(),
       limit: z.number().int().min(1).max(200).default(30),
     },
   },
-  async ({ brand, label, network, needs_reply, search, limit }) => {
+  async ({ brand, label, network, needs_reply, search, sentiment, limit }) => {
     const p = new URLSearchParams({ limit: String(limit) })
     const id = await brandId(brand)
     if (id) p.set('brand', String(id))
@@ -121,6 +122,7 @@ server.registerTool(
     if (network) p.set('network', network)
     if (needs_reply) p.set('reply', '1')
     if (search) p.set('q', search)
+    if (sentiment) p.set('sentiment', sentiment)
     const rows = await call<
       {
         id: number
@@ -131,14 +133,16 @@ server.registerTool(
         author: string
         text: string
         reason: string | null
+        sentiment: string | null
+        category: string | null
       }[]
-    >('GET', `/api/comments?${p}`)
+    >('GET', `/api/comments?${p}&others=1`)
     if (!rows.length) return text('No comments match.')
     return text(
       rows
         .map(
           (c) =>
-            `${c.id}|${c.network}|${c.label ?? 'unsorted'}|${c.needs_reply ? 1 : 0}|${c.likes ?? 0}|${c.author}|${one(c.text, 240)}`,
+            `${c.id}|${c.network}|${c.label ?? 'unsorted'}|${c.needs_reply ? 1 : 0}|${c.sentiment ? `${c.sentiment}:${c.category ?? '-'}` : '-'}|${c.likes ?? 0}|${c.author}|${one(c.text, 240)}`,
         )
         .join('\n'),
     )
@@ -262,6 +266,55 @@ server.registerTool(
       reason: reason ?? 'Set by hand.',
     })
     return text(`Comment ${id}: ${label}${needs_reply ? ', needs a reply' : ''}.`)
+  },
+)
+
+server.registerTool(
+  'kinds',
+  {
+    description:
+      'A brand\'s positive and negative kinds of comment, as lines "key|sentiment|name". Use the keys with rate.',
+    inputSchema: { brand: z.string() },
+  },
+  async ({ brand }) => {
+    const id = await brandId(brand)
+    const b = (await call<(Brand & { categories: string })[]>('GET', '/api/brands')).find(
+      (x) => x.id === id,
+    )!
+    const cats = JSON.parse(b.categories || '[]') as {
+      key: string
+      name: string
+      sentiment: string
+    }[]
+    return text(
+      cats.length
+        ? cats.map((c) => `${c.key}|${c.sentiment}|${c.name}`).join('\n')
+        : 'No kinds set for this brand.',
+    )
+  },
+)
+
+server.registerTool(
+  'rate',
+  {
+    description:
+      'Rates comments positive or negative and gives the kind (a key from kinds), as Claude. sentiment null clears it. Use after reading comments; rate only what the text supports.',
+    inputSchema: {
+      ids: z.array(z.number().int()).min(1).max(200),
+      sentiment: z.enum(['positive', 'negative']).nullable(),
+      kind: z.string().optional().describe('A key from the kinds tool'),
+    },
+  },
+  async ({ ids, sentiment, kind }) => {
+    const r = await call<{ updated: number }>('POST', '/api/comments/sentiment', {
+      ids,
+      sentiment,
+      category: kind ?? null,
+      by: 'ai',
+    })
+    return text(
+      `${r.updated} comments ${sentiment ? `rated ${sentiment}${kind ? ` (${kind})` : ''}` : 'cleared'}.`,
+    )
   },
 )
 
