@@ -13,7 +13,8 @@
     "features": "Features",
     "privacy": "Privacy",
     "faq": "Questions",
-    "cta": "Run it"
+    "cta": "Run it",
+    "terms": "Terms"
   },
   "footer": {
     "tagline": "Watch brands on Instagram, Facebook and TikTok. Every comment stays on your computer, sorted by AI.",
@@ -146,13 +147,14 @@
   "privacy": {
     "title": "Privacy policy | SocialMonitor",
     "description": "Shades Media Group receives nothing. SocialMonitor keeps posts and comments on your computer; only text and cover pictures go to Claude, through your key.",
-    "updated": "Last updated 12 October 2026",
+    "updated": "Last updated 13 October 2026",
     "intro": "SocialMonitor is an app you run on your own computer, made by Shades Media Group. This policy covers the app and this website.",
     "short": "Shades Media Group receives nothing. Everything SocialMonitor collects stays on your computer. The one exception is what it asks Claude to read, which goes to Anthropic through your own account.",
     "appTitle": "What the app collects, and where it goes",
     "appPosts": "<strong>Posts and comments</strong> from the public profiles you add, read through a browser profile on your computer. These include the names and words of the people who comment.",
     "appStore": "<strong>It stores them</strong> in a database in the <code>data/</code> folder, on your computer only.",
     "appClaude": "<strong>To describe posts and sort comments,</strong> their text and each post's cover picture are sent to Claude through the Claude Code or Anthropic API key you configure. <a data-link='anthropic'>Anthropic's privacy policy</a> covers that step.",
+    "appTikTok": "<strong>If you connect a brand's own TikTok account,</strong> TikTok returns you to this website's <code>/connect/tiktok/</code> page with a one-time code. The page passes it straight to SocialMonitor on your computer and keeps nothing. SocialMonitor then reads that account's profile, follower figures and video counts from TikTok, and keeps them and its access token on your computer only.",
     "appMail": "<strong>Sign-in emails,</strong> if you set up email, carry only a code or a link to the people you invite, through the mail server you configure.",
     "appReports": "<strong>Reports and exports</strong> are files you save; they go wherever you put them.",
     "dutiesTitle": "Your responsibilities",
@@ -198,5 +200,25 @@
     "analyticsText": "Anonymous visit counts, to learn what helps. Not in use on this site today.",
     "marketing": "Marketing",
     "marketingText": "Ads and campaign measurement. Not in use on this site today."
+  },
+  "terms": {
+    "title": "Terms of use | SocialMonitor",
+    "description": "SocialMonitor is free, open-source software you run yourself. These terms cover the app, its TikTok connection and this website.",
+    "heading": "Terms of use",
+    "updated": "Last updated 13 October 2026",
+    "intro": "SocialMonitor is free, open-source software made by Shades Media Group S.R.L. You run it on your own computer. These terms cover the app, its optional TikTok connection and this website.",
+    "softwareTitle": "The software",
+    "software": "SocialMonitor is published under the <a data-link='license'>MIT license</a>. You may use, copy and change it at no cost. It is provided as is, without warranty of any kind.",
+    "useTitle": "Using it fairly",
+    "use": "Read only content you are allowed to see, and follow the terms of each network you read. Do not use SocialMonitor to harass, profile or track people, or to collect data for sale.",
+    "tiktokTitle": "Connecting TikTok",
+    "tiktok": "If you connect a brand's TikTok account, SocialMonitor asks TikTok for read-only access: the account's profile, its follower figures and its videos with their counts. It never posts, comments or sends messages. You can disconnect at any time on the brand's About page, or remove the access in TikTok's settings.",
+    "dataTitle": "Your data",
+    "data": "Everything SocialMonitor reads stays on your computer. Shades Media Group runs no server that receives it. The <a href='../privacy/'>privacy policy</a> explains every flow.",
+    "liabilityTitle": "Liability",
+    "liability": "To the extent the law allows, Shades Media Group is not liable for how you use SocialMonitor, or for decisions you make from what it shows.",
+    "changesTitle": "Changes",
+    "changes": "Changes to these terms are published on this page and noted in the <a data-link='changelog'>changelog</a>.",
+    "contactTitle": "Contact"
   }
 }

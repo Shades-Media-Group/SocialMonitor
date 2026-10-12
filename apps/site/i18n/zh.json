@@ -13,7 +13,8 @@
     "features": "功能",
     "privacy": "隐私",
     "faq": "常见问题",
-    "cta": "运行"
+    "cta": "运行",
+    "terms": "条款"
   },
   "footer": {
     "tagline": "在 Instagram、Facebook 和 TikTok 上关注品牌。每条评论都由 AI 分类，并留在你的电脑上。",
@@ -146,13 +147,14 @@
   "privacy": {
     "title": "隐私政策 | SocialMonitor",
     "description": "Shades Media Group 不接收任何数据。SocialMonitor 把帖子和评论保存在你的电脑上；只有文字和封面图会通过你的密钥发送给 Claude。",
-    "updated": "最后更新：2026 年 10 月 12 日",
+    "updated": "最后更新：2026 年 10 月 13 日",
     "intro": "SocialMonitor 是一款在你自己电脑上运行的应用，由 Shades Media Group 制作。本政策适用于该应用和本网站。",
     "short": "Shades Media Group 不接收任何数据。SocialMonitor 收集的一切都留在你的电脑上。唯一的例外是它请 Claude 读取的内容，会通过你自己的账户发送给 Anthropic。",
     "appTitle": "应用收集什么，以及去向",
     "appPosts": "<strong>帖子和评论</strong>：来自你添加的公开主页，通过你电脑上的浏览器配置文件读取。其中包括评论者的名字和言论。",
     "appStore": "<strong>存储位置</strong>：<code>data/</code> 文件夹中的数据库，只在你的电脑上。",
     "appClaude": "<strong>为了描述帖子和分类评论，</strong>它们的文字和每条帖子的封面图会通过你配置的 Claude Code 或 Anthropic API 密钥发送给 Claude。这一步适用 <a data-link='anthropic'>Anthropic 的隐私政策</a>。",
+    "appTikTok": "<strong>如果你连接品牌自己的 TikTok 账号，</strong>TikTok 会带着一次性代码把你送回本网站的 <code>/connect/tiktok/</code> 页面。该页面把代码直接交给你电脑上的 SocialMonitor，自己不保存任何内容。随后 SocialMonitor 从 TikTok 读取该账号的资料、粉丝数据和视频计数，并把它们连同访问令牌只保存在你的电脑上。",
     "appMail": "<strong>登录邮件：</strong>如果你设置了邮件，它只会通过你配置的邮件服务器，向你邀请的人发送一个验证码或一个链接。",
     "appReports": "<strong>报告和导出文件</strong>由你保存，你放在哪里，它们就在哪里。",
     "dutiesTitle": "你的责任",
@@ -198,5 +200,25 @@
     "analyticsText": "匿名统计访问量，了解哪些内容有用。本站目前未使用。",
     "marketing": "营销",
     "marketingText": "广告与活动效果衡量。本站目前未使用。"
+  },
+  "terms": {
+    "title": "使用条款 | SocialMonitor",
+    "description": "SocialMonitor 是你自己运行的免费开源软件。这些条款适用于应用、TikTok 连接和本网站。",
+    "heading": "使用条款",
+    "updated": "最后更新：2026 年 10 月 13 日",
+    "intro": "SocialMonitor 是 Shades Media Group S.R.L. 开发的免费开源软件，在你自己的电脑上运行。这些条款适用于应用、可选的 TikTok 连接和本网站。",
+    "softwareTitle": "软件",
+    "software": "SocialMonitor 以 <a data-link='license'>MIT 许可证</a>发布。你可以免费使用、复制和修改。软件按原样提供，不附带任何形式的担保。",
+    "useTitle": "正当使用",
+    "use": "只读取你有权查看的内容，并遵守所读取的每个平台的条款。不要用 SocialMonitor 骚扰、画像或追踪他人，也不要收集数据用于出售。",
+    "tiktokTitle": "连接 TikTok",
+    "tiktok": "如果你连接品牌的 TikTok 账号，SocialMonitor 会向 TikTok 申请只读权限：账号资料、粉丝数据以及带计数的视频。它从不发布、评论或发送消息。你可以随时在品牌的“关于”页面断开连接，或在 TikTok 设置中撤销授权。",
+    "dataTitle": "你的数据",
+    "data": "SocialMonitor 读取的一切都留在你的电脑上。Shades Media Group 没有任何接收这些数据的服务器。<a href='../privacy/'>隐私政策</a>说明了每一条数据流。",
+    "liabilityTitle": "责任",
+    "liability": "在法律允许的范围内，Shades Media Group 不对你如何使用 SocialMonitor 或你依据其显示内容做出的决定承担责任。",
+    "changesTitle": "变更",
+    "changes": "这些条款的变更会在本页公布，并记录在<a data-link='changelog'>更新日志</a>中。",
+    "contactTitle": "联系方式"
   }
 }

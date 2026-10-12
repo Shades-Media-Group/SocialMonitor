@@ -38,6 +38,7 @@ type Locale = (typeof LOCALES)[number]
 export const PAGES = [
   { id: 'home', path: '' },
   { id: 'privacy', path: 'privacy/' },
+  { id: 'terms', path: 'terms/' },
 ] as const
 type Page = (typeof PAGES)[number]
 
@@ -152,7 +153,7 @@ function structuredData(locale: Locale, page: Page, t: (key: string) => string, 
     isPartOf: { '@id': WEBSITE['@id'] },
   }
   if (page.id !== 'home') {
-    const names = { privacy: 'privacy.heading' }
+    const names = { privacy: 'privacy.heading', terms: 'terms.heading' }
     const breadcrumb = {
       '@type': 'BreadcrumbList',
       '@id': `${url}#breadcrumb`,

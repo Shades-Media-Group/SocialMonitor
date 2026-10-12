@@ -13,7 +13,8 @@
     "features": "Özellikler",
     "privacy": "Gizlilik",
     "faq": "Sorular",
-    "cta": "Çalıştır"
+    "cta": "Çalıştır",
+    "terms": "Koşullar"
   },
   "footer": {
     "tagline": "Instagram, Facebook ve TikTok'ta markaları takip edin. Her yorum, yapay zekâyla sınıflanmış olarak bilgisayarınızda kalır.",
@@ -146,13 +147,14 @@
   "privacy": {
     "title": "Gizlilik politikası | SocialMonitor",
     "description": "Shades Media Group hiçbir şey almaz. SocialMonitor gönderileri ve yorumları bilgisayarınızda tutar; yalnızca metinler ve kapaklar anahtarınızla Claude'a gider.",
-    "updated": "Son güncelleme: 12 Ekim 2026",
+    "updated": "Son güncelleme: 13 Ekim 2026",
     "intro": "SocialMonitor, Shades Media Group'un yaptığı ve kendi bilgisayarınızda çalıştırdığınız bir uygulamadır. Bu politika uygulamayı ve bu web sitesini kapsar.",
     "short": "Shades Media Group hiçbir şey almaz. SocialMonitor'ın topladığı her şey bilgisayarınızda kalır. Tek istisna, Claude'a okuttuğu içeriktir; o da kendi hesabınız üzerinden Anthropic'e gider.",
     "appTitle": "Uygulama neleri toplar ve bunlar nereye gider",
     "appPosts": "<strong>Gönderiler ve yorumlar</strong>: eklediğiniz herkese açık profillerden, bilgisayarınızdaki bir tarayıcı profiliyle okunur. Yorum yapanların adlarını ve sözlerini içerir.",
     "appStore": "<strong>Saklama:</strong> hepsi yalnızca bilgisayarınızda, <code>data/</code> klasöründeki bir veritabanında tutulur.",
     "appClaude": "<strong>Gönderileri açıklamak ve yorumları sınıflamak için</strong> metinleri ve her gönderinin kapak görseli, yapılandırdığınız Claude Code ya da Anthropic API anahtarı üzerinden Claude'a gönderilir. Bu adımı <a data-link='anthropic'>Anthropic'in gizlilik politikası</a> kapsar.",
+    "appTikTok": "<strong>Bir markanın kendi TikTok hesabını bağlarsanız,</strong> TikTok sizi tek kullanımlık bir kodla bu sitenin <code>/connect/tiktok/</code> sayfasına geri gönderir. Sayfa kodu doğrudan bilgisayarınızdaki SocialMonitor'a iletir ve hiçbir şey saklamaz. Ardından SocialMonitor bu hesabın profilini, takipçi sayılarını ve video sayaçlarını TikTok'tan okur; bunları ve erişim belirtecini yalnızca bilgisayarınızda tutar.",
     "appMail": "<strong>Giriş e-postaları,</strong> e-postayı kurarsanız, davet ettiğiniz kişilere yalnızca bir kod ya da bağlantı taşır ve sizin ayarladığınız posta sunucusundan gider.",
     "appReports": "<strong>Raporlar ve dışa aktarımlar</strong> sizin kaydettiğiniz dosyalardır; onları nereye koyarsanız oraya giderler.",
     "dutiesTitle": "Sorumluluklarınız",
@@ -198,5 +200,25 @@
     "analyticsText": "Neyin işe yaradığını görmek için anonim ziyaret sayımı. Şu an bu sitede kullanılmıyor.",
     "marketing": "Pazarlama",
     "marketingText": "Reklam ve kampanya ölçümü. Şu an bu sitede kullanılmıyor."
+  },
+  "terms": {
+    "title": "Kullanım koşulları | SocialMonitor",
+    "description": "SocialMonitor kendiniz çalıştırdığınız ücretsiz, açık kaynaklı bir yazılımdır. Bu koşullar uygulamayı, TikTok bağlantısını ve bu siteyi kapsar.",
+    "heading": "Kullanım koşulları",
+    "updated": "Son güncelleme: 13 Ekim 2026",
+    "intro": "SocialMonitor, Shades Media Group S.R.L. tarafından yapılmış ücretsiz, açık kaynaklı bir yazılımdır. Onu kendi bilgisayarınızda çalıştırırsınız. Bu koşullar uygulamayı, isteğe bağlı TikTok bağlantısını ve bu siteyi kapsar.",
+    "softwareTitle": "Yazılım",
+    "software": "SocialMonitor <a data-link='license'>MIT lisansı</a> ile yayımlanır. Ücretsiz olarak kullanabilir, kopyalayabilir ve değiştirebilirsiniz. Olduğu gibi, hiçbir garanti olmadan sunulur.",
+    "useTitle": "Adil kullanım",
+    "use": "Yalnızca görmeye yetkili olduğunuz içerikleri okuyun ve okuduğunuz her ağın koşullarına uyun. SocialMonitor'ı insanları taciz etmek, profillemek ya da izlemek veya satmak için veri toplamak amacıyla kullanmayın.",
+    "tiktokTitle": "TikTok'u bağlamak",
+    "tiktok": "Bir markanın TikTok hesabını bağlarsanız SocialMonitor, TikTok'tan yalnızca okuma erişimi ister: hesabın profili, takipçi sayıları ve sayaçlarıyla birlikte videoları. Asla paylaşım yapmaz, yorum yazmaz ya da mesaj göndermez. Bağlantıyı istediğiniz zaman markanın Hakkında sayfasından kesebilir veya erişimi TikTok ayarlarından kaldırabilirsiniz.",
+    "dataTitle": "Verileriniz",
+    "data": "SocialMonitor'ın okuduğu her şey bilgisayarınızda kalır. Shades Media Group'un bunları alan bir sunucusu yoktur. <a href='../privacy/'>Gizlilik politikası</a> her akışı açıklar.",
+    "liabilityTitle": "Sorumluluk",
+    "liability": "Yasanın izin verdiği ölçüde Shades Media Group, SocialMonitor'ı nasıl kullandığınızdan veya gösterdiklerine dayanarak verdiğiniz kararlardan sorumlu değildir.",
+    "changesTitle": "Değişiklikler",
+    "changes": "Bu koşullardaki değişiklikler bu sayfada yayımlanır ve <a data-link='changelog'>değişiklik günlüğüne</a> yazılır.",
+    "contactTitle": "İletişim"
   }
 }

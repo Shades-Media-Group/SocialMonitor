@@ -42,7 +42,12 @@ const walk = (dir) =>
     entry.isDirectory() ? walk(join(dir, entry.name)) : [join(dir, entry.name)],
   )
 const files = walk(dist)
-const pages = files.filter((file) => file.endsWith(`${sep}index.html`))
+// Utility pages kept out of search (noindex), such as the TikTok hand-back page, are not checked.
+const pages = files.filter(
+  (file) =>
+    file.endsWith(`${sep}index.html`) &&
+    !/<meta name="robots" content="noindex/.test(readFileSync(file, 'utf8')),
+)
 
 /** Path of a dist file on the site: dist/fr/privacy/index.html → /fr/privacy/. */
 const pathOf = (file) =>

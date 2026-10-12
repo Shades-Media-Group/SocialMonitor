@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="{{@lang}}" data-theme-default="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {{@head}}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <header class="nav">
+      <a class="nav-logo" href="{{@base}}" aria-label="{{nav.homeLabel}}">{{@logo}}</a>
+      <nav aria-label="{{nav.label}}">
+        <a href="{{@base}}">{{nav.home}}</a>
+        <a data-link="repo">GitHub</a>
+      </nav>
+      {{@langs}}
+      <a class="nav-cta" href="{{@base}}#install">{{nav.cta}}</a>
+    </header>
+
+    <main class="legal">
+      <h1>{{terms.heading}}</h1>
+      <p class="legal-date">{{terms.updated}}</p>
+
+      <p>{{terms.intro}}</p>
+
+      <h2>{{terms.softwareTitle}}</h2>
+      <p>{{terms.software}}</p>
+
+      <h2>{{terms.useTitle}}</h2>
+      <p>{{terms.use}}</p>
+
+      <h2>{{terms.tiktokTitle}}</h2>
+      <p>{{terms.tiktok}}</p>
+
+      <h2>{{terms.dataTitle}}</h2>
+      <p>{{terms.data}}</p>
+
+      <h2>{{terms.liabilityTitle}}</h2>
+      <p>{{terms.liability}}</p>
+
+      <h2>{{terms.changesTitle}}</h2>
+      <p>{{terms.changes}}</p>
+
+      <h2>{{terms.contactTitle}}</h2>
+      <p>
+        <a href="mailto:support@shades.md">support@shades.md</a> ·
+        <a data-link="shades">Shades Media Group</a>
+      </p>
+      <p>{{preferred.mention}}</p>
+    </main>
+
+    <footer class="footer footer--slim">
+      <div class="footer-extra">{{@langlist}} {{@preferred}}</div>
+      <div class="footer-base">
+        <p>{{footer.credit}}</p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

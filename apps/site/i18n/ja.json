@@ -13,7 +13,8 @@
     "features": "機能",
     "privacy": "プライバシー",
     "faq": "よくある質問",
-    "cta": "使ってみる"
+    "cta": "使ってみる",
+    "terms": "利用規約"
   },
   "footer": {
     "tagline": "Instagram、Facebook、TikTokでブランドを見守ります。コメントはすべてAIで分類され、あなたのパソコンに残ります。",
@@ -146,13 +147,14 @@
   "privacy": {
     "title": "プライバシーポリシー | SocialMonitor",
     "description": "Shades Media Groupは何も受け取りません。投稿とコメントはパソコンに残り、本文とカバー画像だけがあなたのキーでClaudeに送られます。",
-    "updated": "最終更新日：2026年10月12日",
+    "updated": "最終更新：2026年10月13日",
     "intro": "SocialMonitorは、あなたが自分のパソコンで動かすアプリで、Shades Media Groupが制作しています。このポリシーは、アプリとこのWebサイトに適用されます。",
     "short": "Shades Media Groupは何も受け取りません。SocialMonitorが集めたものは、すべてあなたのパソコンに残ります。唯一の例外はClaudeに読ませる内容で、あなた自身のアカウントを通じてAnthropicに送られます。",
     "appTitle": "アプリが集めるもの、その行き先",
     "appPosts": "<strong>投稿とコメント</strong>：あなたが追加した公開プロフィールから、パソコン上のブラウザのプロファイルで読み込みます。コメントした人の名前と言葉も含まれます。",
     "appStore": "<strong>保存先</strong>は<code>data/</code>フォルダのデータベースで、あなたのパソコンの中だけです。",
     "appClaude": "<strong>投稿の説明とコメントの分類のため、</strong>本文と各投稿のカバー画像を、あなたが設定したClaude CodeまたはAnthropic APIキーを通じてClaudeに送ります。この段階には<a data-link='anthropic'>Anthropicのプライバシーポリシー</a>が適用されます。",
+    "appTikTok": "<strong>ブランド自身のTikTokアカウントを連携すると、</strong>TikTokはワンタイムコード付きでこのサイトの<code>/connect/tiktok/</code>ページに戻します。このページはコードをそのままお使いのコンピューター上のSocialMonitorに渡し、何も保存しません。その後SocialMonitorはTikTokからそのアカウントのプロフィール、フォロワー数、動画の各種カウントを読み取り、アクセストークンとともにお使いのコンピューターにのみ保存します。",
     "appMail": "<strong>サインイン用のメール</strong>は、メールを設定した場合に、招待した人へコードかリンクだけを、あなたが設定したメールサーバー経由で届けます。",
     "appReports": "<strong>レポートとエクスポート</strong>は、あなたが保存するファイルです。置いた場所にだけ存在します。",
     "dutiesTitle": "あなたの責任",
@@ -198,5 +200,25 @@
     "analyticsText": "役立つ内容を知るための匿名の訪問数カウント。現在このサイトでは使用していません。",
     "marketing": "マーケティング",
     "marketingText": "広告とキャンペーンの効果測定。現在このサイトでは使用していません。"
+  },
+  "terms": {
+    "title": "利用規約 | SocialMonitor",
+    "description": "SocialMonitorはご自身で動かす無料のオープンソースソフトウェアです。この規約はアプリ、TikTok連携、このウェブサイトに適用されます。",
+    "heading": "利用規約",
+    "updated": "最終更新：2026年10月13日",
+    "intro": "SocialMonitorはShades Media Group S.R.L.が開発した無料のオープンソースソフトウェアです。ご自身のコンピューターで動かします。この規約はアプリ、任意のTikTok連携、このウェブサイトに適用されます。",
+    "softwareTitle": "ソフトウェア",
+    "software": "SocialMonitorは<a data-link='license'>MITライセンス</a>で公開されています。無料で使用、複製、変更できます。現状のまま提供され、いかなる保証もありません。",
+    "useTitle": "公正な利用",
+    "use": "閲覧が許可されているコンテンツだけを読み、読み取る各ネットワークの規約に従ってください。人への嫌がらせ、プロファイリング、追跡、販売目的のデータ収集にSocialMonitorを使わないでください。",
+    "tiktokTitle": "TikTokとの連携",
+    "tiktok": "ブランドのTikTokアカウントを連携すると、SocialMonitorはTikTokに読み取り専用のアクセスを求めます。対象はアカウントのプロフィール、フォロワー数、各種カウント付きの動画です。投稿、コメント、メッセージ送信は一切行いません。ブランドの「概要」ページからいつでも連携を解除でき、TikTokの設定からアクセスを取り消すこともできます。",
+    "dataTitle": "お客様のデータ",
+    "data": "SocialMonitorが読み取ったものはすべてお使いのコンピューターに残ります。Shades Media Groupはそれを受け取るサーバーを運用していません。<a href='../privacy/'>プライバシーポリシー</a>ですべての流れを説明しています。",
+    "liabilityTitle": "責任",
+    "liability": "法律で認められる範囲で、Shades Media GroupはSocialMonitorの使い方や、その表示に基づいて下した判断について責任を負いません。",
+    "changesTitle": "変更",
+    "changes": "この規約の変更はこのページで公開し、<a data-link='changelog'>変更履歴</a>に記録します。",
+    "contactTitle": "お問い合わせ"
   }
 }

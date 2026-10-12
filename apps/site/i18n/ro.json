@@ -13,7 +13,8 @@
     "features": "Funcții",
     "privacy": "Confidențialitate",
     "faq": "Întrebări",
-    "cta": "Pornește-l"
+    "cta": "Pornește-l",
+    "terms": "Termeni"
   },
   "footer": {
     "tagline": "Urmărește branduri pe Instagram, Facebook și TikTok. Fiecare comentariu rămâne pe calculatorul tău, sortat de AI.",
@@ -146,13 +147,14 @@
   "privacy": {
     "title": "Politica de confidențialitate | SocialMonitor",
     "description": "Shades Media Group nu primește nimic. SocialMonitor păstrează postările și comentariile pe calculatorul tău; doar textul și imaginile de copertă ajung la Claude, prin cheia ta.",
-    "updated": "Ultima actualizare: 12 octombrie 2026",
+    "updated": "Actualizat ultima dată pe 13 octombrie 2026",
     "intro": "SocialMonitor este o aplicație pe care o rulezi pe propriul calculator, creată de Shades Media Group. Această politică acoperă aplicația și acest site.",
     "short": "Shades Media Group nu primește nimic. Tot ce colectează SocialMonitor rămâne pe calculatorul tău. Singura excepție este ce îi cere lui Claude să citească, care ajunge la Anthropic prin propriul tău cont.",
     "appTitle": "Ce colectează aplicația și unde ajunge",
     "appPosts": "<strong>Postări și comentarii</strong> de pe profilurile publice pe care le adaugi, citite printr-un profil de browser de pe calculatorul tău. Acestea includ numele și cuvintele celor care comentează.",
     "appStore": "<strong>Le stochează</strong> într-o bază de date din folderul <code>data/</code>, doar pe calculatorul tău.",
     "appClaude": "<strong>Pentru a descrie postările și a sorta comentariile,</strong> textul lor și imaginea de copertă a fiecărei postări sunt trimise la Claude prin Claude Code sau cheia API Anthropic pe care o configurezi. <a data-link='anthropic'>Politica de confidențialitate Anthropic</a> acoperă acest pas.",
+    "appTikTok": "<strong>Dacă conectezi contul TikTok al unui brand,</strong> TikTok te întoarce pe pagina <code>/connect/tiktok/</code> a acestui site cu un cod de unică folosință. Pagina îl trimite direct către SocialMonitor de pe calculatorul tău și nu păstrează nimic. Apoi SocialMonitor citește de la TikTok profilul contului, cifrele de urmăritori și cifrele videoclipurilor și le păstrează, împreună cu tokenul de acces, doar pe calculatorul tău.",
     "appMail": "<strong>E-mailurile de conectare,</strong> dacă configurezi e-mailul, duc doar un cod sau un link persoanelor pe care le inviți, prin serverul de e-mail pe care îl configurezi.",
     "appReports": "<strong>Rapoartele și exporturile</strong> sunt fișiere pe care le salvezi; ajung oriunde le pui.",
     "dutiesTitle": "Responsabilitățile tale",
@@ -198,5 +200,25 @@
     "analyticsText": "Vizite numărate anonim, ca să aflăm ce ajută. Nefolosit pe acest site în prezent.",
     "marketing": "Marketing",
     "marketingText": "Reclame și măsurarea campaniilor. Nefolosit pe acest site în prezent."
+  },
+  "terms": {
+    "title": "Termeni de utilizare | SocialMonitor",
+    "description": "SocialMonitor este un program gratuit, cu sursă deschisă, pe care îl rulezi singur. Acești termeni acoperă aplicația, conectarea TikTok și acest site.",
+    "heading": "Termeni de utilizare",
+    "updated": "Actualizat ultima dată pe 13 octombrie 2026",
+    "intro": "SocialMonitor este un program gratuit, cu sursă deschisă, creat de Shades Media Group S.R.L. Îl rulezi pe propriul calculator. Acești termeni acoperă aplicația, conectarea opțională la TikTok și acest site.",
+    "softwareTitle": "Programul",
+    "software": "SocialMonitor este publicat sub <a data-link='license'>licența MIT</a>. Îl poți folosi, copia și modifica gratuit. Este oferit așa cum este, fără nicio garanție.",
+    "useTitle": "Folosire corectă",
+    "use": "Citește doar conținut pe care ai dreptul să-l vezi și respectă termenii fiecărei rețele citite. Nu folosi SocialMonitor pentru a hărțui, profila sau urmări oameni, ori pentru a strânge date de vânzare.",
+    "tiktokTitle": "Conectarea TikTok",
+    "tiktok": "Dacă conectezi contul TikTok al unui brand, SocialMonitor cere de la TikTok acces doar pentru citire: profilul contului, cifrele de urmăritori și videoclipurile cu cifrele lor. Nu publică, nu comentează și nu trimite mesaje. Te poți deconecta oricând din pagina Despre a brandului sau poți retrage accesul din setările TikTok.",
+    "dataTitle": "Datele tale",
+    "data": "Tot ce citește SocialMonitor rămâne pe calculatorul tău. Shades Media Group nu are niciun server care să le primească. <a href='../privacy/'>Politica de confidențialitate</a> descrie fiecare flux.",
+    "liabilityTitle": "Răspundere",
+    "liability": "În limita permisă de lege, Shades Media Group nu răspunde pentru felul în care folosești SocialMonitor sau pentru deciziile luate pe baza a ceea ce arată.",
+    "changesTitle": "Modificări",
+    "changes": "Modificările acestor termeni sunt publicate pe această pagină și notate în <a data-link='changelog'>jurnalul de modificări</a>.",
+    "contactTitle": "Contact"
   }
 }

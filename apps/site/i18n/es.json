@@ -13,7 +13,8 @@
     "features": "Funciones",
     "privacy": "Privacidad",
     "faq": "Preguntas",
-    "cta": "Ejecútalo"
+    "cta": "Ejecútalo",
+    "terms": "Condiciones"
   },
   "footer": {
     "tagline": "Sigue marcas en Instagram, Facebook y TikTok. Cada comentario se queda en tu ordenador, clasificado por IA.",
@@ -146,13 +147,14 @@
   "privacy": {
     "title": "Política de privacidad | SocialMonitor",
     "description": "Shades Media Group no recibe nada. SocialMonitor guarda publicaciones y comentarios en tu ordenador; solo los textos y las portadas van a Claude, con tu clave.",
-    "updated": "Última actualización: 12 de octubre de 2026",
+    "updated": "Última actualización: 13 de octubre de 2026",
     "intro": "SocialMonitor es una app que ejecutas en tu propio ordenador, creada por Shades Media Group. Esta política cubre la app y este sitio web.",
     "short": "Shades Media Group no recibe nada. Todo lo que recoge SocialMonitor se queda en tu ordenador. La única excepción es lo que pide leer a Claude, que va a Anthropic a través de tu propia cuenta.",
     "appTitle": "Qué recoge la app y adónde va",
     "appPosts": "<strong>Publicaciones y comentarios</strong> de los perfiles públicos que añades, leídos con un perfil de navegador en tu ordenador. Incluyen los nombres y las palabras de quienes comentan.",
     "appStore": "<strong>Los guarda</strong> en una base de datos en la carpeta <code>data/</code>, solo en tu ordenador.",
     "appClaude": "<strong>Para describir publicaciones y clasificar comentarios,</strong> su texto y la imagen de portada de cada publicación se envían a Claude a través del Claude Code o la clave API de Anthropic que configures. <a data-link='anthropic'>La política de privacidad de Anthropic</a> cubre ese paso.",
+    "appTikTok": "<strong>Si conectas la cuenta de TikTok de una marca,</strong> TikTok te devuelve a la página <code>/connect/tiktok/</code> de este sitio con un código de un solo uso. La página lo pasa directamente a SocialMonitor en tu ordenador y no guarda nada. Después SocialMonitor lee de TikTok el perfil de esa cuenta, sus cifras de seguidores y los contadores de sus vídeos, y los guarda, junto con su token de acceso, solo en tu ordenador.",
     "appMail": "<strong>Los correos de acceso,</strong> si configuras el correo, llevan solo un código o un enlace a las personas que invitas, a través del servidor de correo que configures.",
     "appReports": "<strong>Los informes y las exportaciones</strong> son archivos que guardas tú; van adonde los pongas.",
     "dutiesTitle": "Tus responsabilidades",
@@ -198,5 +200,25 @@
     "analyticsText": "Recuento anónimo de visitas, para saber qué ayuda. No se usa en este sitio hoy.",
     "marketing": "Marketing",
     "marketingText": "Publicidad y medición de campañas. No se usa en este sitio hoy."
+  },
+  "terms": {
+    "title": "Condiciones de uso | SocialMonitor",
+    "description": "SocialMonitor es software libre y gratuito que ejecutas tú mismo. Estas condiciones cubren la aplicación, su conexión con TikTok y este sitio.",
+    "heading": "Condiciones de uso",
+    "updated": "Última actualización: 13 de octubre de 2026",
+    "intro": "SocialMonitor es software libre y gratuito creado por Shades Media Group S.R.L. Lo ejecutas en tu propio ordenador. Estas condiciones cubren la aplicación, su conexión opcional con TikTok y este sitio.",
+    "softwareTitle": "El software",
+    "software": "SocialMonitor se publica bajo la <a data-link='license'>licencia MIT</a>. Puedes usarlo, copiarlo y modificarlo sin coste. Se ofrece tal cual, sin garantía de ningún tipo.",
+    "useTitle": "Un uso justo",
+    "use": "Lee solo contenido que tengas derecho a ver y respeta las condiciones de cada red. No uses SocialMonitor para acosar, perfilar o rastrear a personas, ni para recopilar datos para venderlos.",
+    "tiktokTitle": "Conectar TikTok",
+    "tiktok": "Si conectas la cuenta de TikTok de una marca, SocialMonitor pide a TikTok acceso de solo lectura: el perfil de la cuenta, sus cifras de seguidores y sus vídeos con sus contadores. Nunca publica, comenta ni envía mensajes. Puedes desconectarla cuando quieras en la página Acerca de de la marca o retirar el acceso en los ajustes de TikTok.",
+    "dataTitle": "Tus datos",
+    "data": "Todo lo que lee SocialMonitor se queda en tu ordenador. Shades Media Group no tiene ningún servidor que lo reciba. La <a href='../privacy/'>política de privacidad</a> describe cada flujo.",
+    "liabilityTitle": "Responsabilidad",
+    "liability": "En la medida en que la ley lo permita, Shades Media Group no responde del uso que hagas de SocialMonitor ni de las decisiones que tomes a partir de lo que muestra.",
+    "changesTitle": "Cambios",
+    "changes": "Los cambios de estas condiciones se publican en esta página y se anotan en el <a data-link='changelog'>registro de cambios</a>.",
+    "contactTitle": "Contacto"
   }
 }
