@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+
+# Builds and caches
+dist/
+release/
+coverage/
+*.tsbuildinfo
+.eslintcache
+.vite/
+.wrangler/
+
+# Test output
+test-results/
+playwright-report/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Local tooling
+.claude/settings.local.json
+.claude/worktrees/
+.impeccable/review/
+.impeccable/live/
+graphify-out/
+
+# Product planning and market research stay local
+PLAN.md
+research/
+
+# Website pages, generated from apps/site/templates and apps/site/i18n by apps/site/pages.ts
+apps/site/index.html
+apps/site/privacy/
+apps/site/fr/
+apps/site/ro/
+apps/site/ru/
+apps/site/es/
+apps/site/it/
+apps/site/tr/
+apps/site/hi/
+apps/site/ja/
+apps/site/zh/
+apps/site/zh-hant/
+
+# Local data: each install keeps its own database, browser profile and reports
+data/

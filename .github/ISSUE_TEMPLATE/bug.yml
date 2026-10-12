@@ -1,0 +1,28 @@
+name: Bug report
+description: Something doesn't work.
+title: '[Bug] '
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. Never paste comments or names from your database.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: SocialMonitor version
+      description: Shown at the bottom of the dashboard's Settings.
+      placeholder: 0.1.0
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      options: [Instagram, Facebook, TikTok, Not about a network]
+  - type: input
+    id: environment
+    attributes:
+      label: System
+      placeholder: macOS 26, Node 22.23

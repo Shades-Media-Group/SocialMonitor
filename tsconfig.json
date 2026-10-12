@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "allowImportingTsExtensions": true
+  },
+  "include": ["apps/*/src", "apps/site/vite.config.ts", "apps/site/pages.ts", "*.config.ts"],
+  "exclude": ["**/dist", "**/node_modules"]
+}

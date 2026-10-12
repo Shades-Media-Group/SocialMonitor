@@ -1,0 +1,67 @@
+{
+  "name": "socialmonitor",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Watch brands on Instagram, Facebook and TikTok: every post and comment kept on your computer, sorted into good and bad by AI. A free, open-source local dashboard.",
+  "license": "MIT",
+  "author": "Shades Media Group (https://shades.md)",
+  "homepage": "https://socialmonitor.shades.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shades-Media-Group/SocialMonitor.git"
+  },
+  "bugs": "https://github.com/Shades-Media-Group/SocialMonitor/issues",
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint . --cache",
+    "test": "vitest run",
+    "brand": "node scripts/brand.mjs",
+    "assets": "node scripts/assets.mjs",
+    "dev:site": "yarn --cwd apps/site dev",
+    "build:site": "yarn --cwd apps/site build",
+    "deploy:site": "yarn --cwd apps/site deploy",
+    "verify": "yarn typecheck && yarn lint && yarn test",
+    "format": "prettier --write .",
+    "release": "node scripts/release.mjs"
+  },
+  "packageManager": "yarn@1.22.22",
+  "type": "module",
+  "keywords": [
+    "social-media",
+    "social-listening",
+    "instagram",
+    "facebook",
+    "tiktok",
+    "comments",
+    "sentiment",
+    "dashboard",
+    "mcp"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^10",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "@playwright/test": "^1.64.0",
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^26",
+    "eslint": "^10",
+    "globals": "^17",
+    "opentype.js": "^2",
+    "prettier": "^3",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.4",
+    "vitest": "^5",
+    "wrangler": "^4.149.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/hanken-grotesk": "^5.3.0",
+    "preact": "^10",
+    "shades-gradient": "https://github.com/Shades-Media-Group/gradient/releases/download/v0.4.0/shades-gradient-0.4.0.tgz"
+  }
+}
