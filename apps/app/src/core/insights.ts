@@ -255,13 +255,14 @@ export function heatmap(db: DB, s: Scope) {
 }
 
 /** The people who comment most, with how their comments were labelled. */
-export function topAuthors(db: DB, s: Scope, limit = 8) {
+export function topAuthors(db: DB, s: Scope, limit = 25) {
   const w = where(s)
   return db
     .prepare(
       `SELECT c.author, p.network, count(*) AS n,
               sum(c.label = 'complaint') AS complaints, sum(c.label = 'praise') AS praise,
-              max(coalesce(c.posted_at, c.fetched_at)) AS last
+              max(coalesce(c.posted_at, c.fetched_at)) AS last,
+              max(c.author_avatar) AS avatar, max(c.author_url) AS url
        ${FROM} WHERE ${w.sql} GROUP BY lower(c.author), p.network ORDER BY n DESC, last DESC LIMIT ?`,
     )
     .all(...w.args, limit) as {
@@ -271,6 +272,8 @@ export function topAuthors(db: DB, s: Scope, limit = 8) {
     complaints: number
     praise: number
     last: string
+    avatar: string | null
+    url: string | null
   }[]
 }
 

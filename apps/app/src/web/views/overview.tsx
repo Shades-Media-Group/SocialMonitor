@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { CommentRow, Network, PostRow, Profile } from '../api.ts'
 import { api } from '../api.ts'
-import { Icon, NETWORK_NAME, NetworkMark, ago, fmt, short, when } from '../ui.tsx'
+import { Icon, NETWORK_NAME, NetworkMark, Scroller, ago, fmt, short, when } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { brandCategories } from '../rate.tsx'
 import { Heatmap, LineChart } from '../charts.tsx'
@@ -47,6 +47,8 @@ interface Insights {
     complaints: number
     praise: number
     last: string
+    avatar: string | null
+    url: string | null
   }[]
   words: { word: string; n: number }[]
 }
@@ -346,77 +348,129 @@ export function Overview(v: BrandView) {
         )}
       </section>
 
-      <div class="sm-layout">
-        <section class="sm-box sm-box--table sm-span-7">
-          <header class="sm-box__head">
-            <h2>{t('Accounts')}</h2>
-            <a class="sm-box__link" href={`#/b/${brand.id}/about`}>
-              {t('Edit links')}
-            </a>
-          </header>
-          <table class="sm-dtable">
-            <thead>
-              <tr>
-                <th>{t('Account')}</th>
-                <th class="sm-num">{t('Posts')}</th>
-                <th class="sm-num">{t('Comments')}</th>
-                <th class="sm-num">{t('Likes per post')}</th>
-                <th class="sm-num">{t('Views')}</th>
-                <th class="sm-num">{t('Complaints')}</th>
-                <th>{t('Status')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(ins?.profiles ?? []).map((p) => (
-                <tr>
-                  <td>
-                    <span class="sm-net-name">
-                      <NetworkMark network={p.network} size={14} />
-                      <a href={p.url} target="_blank" rel="noreferrer">
-                        @{p.handle}
-                      </a>
+      <div class="sm-layout sm-layout--top">
+        <div class="sm-stack sm-span-6">
+          <section class="sm-box sm-box--table">
+            <header class="sm-box__head">
+              <h2>{t('Accounts')}</h2>
+              <a class="sm-box__link" href={`#/b/${brand.id}/about`}>
+                {t('Edit links')}
+              </a>
+            </header>
+            <div class="sm-scroll">
+              <table class="sm-dtable">
+                <thead>
+                  <tr>
+                    <th>{t('Account')}</th>
+                    <th class="sm-num">{t('Posts')}</th>
+                    <th class="sm-num">{t('Comments')}</th>
+                    <th class="sm-num">{t('Views')}</th>
+                    <th class="sm-num">{t('Complaints')}</th>
+                    <th>{t('Updated')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(ins?.profiles ?? []).map((p) => (
+                    <tr>
+                      <td>
+                        <span class="sm-net-name">
+                          <NetworkMark network={p.network} size={14} />
+                          <a href={p.url} target="_blank" rel="noreferrer">
+                            @{p.handle}
+                          </a>
+                        </span>
+                      </td>
+                      <td class="sm-num g-num">{fmt(p.posts)}</td>
+                      <td class="sm-num g-num">{fmt(p.comments)}</td>
+                      <td class="sm-num g-num">{short(p.views)}</td>
+                      <td class={`sm-num g-num${p.complaints ? ' sm-hot' : ''}`}>
+                        {fmt(p.complaints)}
+                      </td>
+                      <td class="sm-nowrap">
+                        {p.last_status === 'error' ? (
+                          <span
+                            class="sm-status sm-status--error"
+                            title={p.last_error ?? undefined}
+                          >
+                            {t('Needs you')}
+                          </span>
+                        ) : p.last_status === 'ok' ? (
+                          <span class="sm-status sm-status--ok" title={when(p.last_run_at)}>
+                            {ago(p.last_run_at)}
+                          </span>
+                        ) : (
+                          <span class="sm-status">{t('Not read yet')}</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {live.length === 0 && <p class="sm-quiet">{t('No posts in this period.')}</p>}
+          </section>
+          <div class="sm-pair">
+            <section class="sm-box">
+              <header class="sm-box__head">
+                <h2>{t('What people say')}</h2>
+                <span class="sm-box__meta">{t('{n} sorted', { n: fmt(lSorted) })}</span>
+              </header>
+              <ul class="sm-bars sm-bars--split">
+                {split.map((x) => (
+                  <li>
+                    <span class="sm-bars__name">
+                      <i class={`sm-swatch sm-c-${x.key}`} aria-hidden="true" /> {x.name}
                     </span>
-                  </td>
-                  <td class="sm-num g-num">{fmt(p.posts)}</td>
-                  <td class="sm-num g-num">{fmt(p.comments)}</td>
-                  <td class="sm-num g-num">{p.likes_avg == null ? '–' : fmt(p.likes_avg)}</td>
-                  <td class="sm-num g-num">{short(p.views)}</td>
-                  <td class={`sm-num g-num${p.complaints ? ' sm-hot' : ''}`}>
-                    {fmt(p.complaints)}
-                  </td>
-                  <td class="sm-nowrap">
-                    {p.last_status === 'error' ? (
-                      <span class="sm-word sm-word--complaint" title={p.last_error ?? undefined}>
-                        {t('Needs you')}
-                      </span>
-                    ) : p.last_status === 'ok' ? (
-                      <span class="sm-word">
-                        {t('Updated {when}', { when: ago(p.last_run_at) })}
-                      </span>
-                    ) : (
-                      <span class="sm-word">{t('Not read yet')}</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {live.length === 0 && <p class="sm-quiet">{t('No posts in this period.')}</p>}
-        </section>
+                    <span class="sm-bars__track">
+                      <span
+                        class={`sm-bars__fill sm-c-${x.key}`}
+                        style={{ width: `${Math.max(2, (x.n / Math.max(1, splitTotal)) * 100)}%` }}
+                      />
+                    </span>
+                    <b class="g-num">{x.n}</b>
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <section class="sm-box">
+              <header class="sm-box__head">
+                <h2>{t('Problems people name')}</h2>
+              </header>
+              {negatives.length ? (
+                tally(negatives)
+              ) : (
+                <p class="sm-quiet">
+                  {t('Rate comments negative, or ask Claude to, and their kinds add up here.')}
+                </p>
+              )}
+              {positives.length > 0 && (
+                <>
+                  <h3 class="sm-box__sub">{t('What people like')}</h3>
+                  {tally(positives, true)}
+                </>
+              )}
+            </section>
+          </div>
+        </div>
 
-        <section class="sm-box sm-box--list sm-span-5">
-          <header class="sm-box__head">
-            <h2>{reply.length ? t('Answer first') : t('Newest comments')}</h2>
-            <a class="sm-box__link" href={`#/b/${brand.id}/comments`}>
-              {t('All comments')}
-            </a>
-          </header>
+        <Scroller
+          fit="column"
+          class="sm-span-6"
+          head={
+            <header class="sm-box__head">
+              <h2>{reply.length ? t('Answer first') : t('Newest comments')}</h2>
+              <a class="sm-box__link" href={`#/b/${brand.id}/comments`}>
+                {t('All comments')}
+              </a>
+            </header>
+          }
+        >
           {stream.length ? (
             <CommentList comments={stream} brands={brands} onChange={() => setTick((x) => x + 1)} />
           ) : (
             <p class="sm-quiet">{t('Comments appear here after the first update.')}</p>
           )}
-        </section>
+        </Scroller>
 
         <section class="sm-box sm-box--table sm-span-12">
           <header class="sm-box__head">
@@ -468,94 +522,66 @@ export function Overview(v: BrandView) {
             </table>
           </div>
         </section>
+      </div>
 
-        <section class="sm-box sm-span-4">
-          <header class="sm-box__head">
-            <h2>{t('What people say')}</h2>
-            <span class="sm-box__meta">{t('{n} sorted', { n: fmt(lSorted) })}</span>
-          </header>
-          <ul class="sm-bars sm-bars--split">
-            {split.map((x) => (
-              <li>
-                <span class="sm-bars__name">
-                  <i class={`sm-swatch sm-c-${x.key}`} aria-hidden="true" /> {x.name}
-                </span>
-                <span class="sm-bars__track">
-                  <span
-                    class={`sm-bars__fill sm-c-${x.key}`}
-                    style={{ width: `${Math.max(2, (x.n / Math.max(1, splitTotal)) * 100)}%` }}
-                  />
-                </span>
-                <b class="g-num">{x.n}</b>
-              </li>
-            ))}
-          </ul>
-        </section>
+      <div class="sm-layout sm-layout--top">
+        <div class="sm-stack sm-span-8">
+          <section class="sm-box">
+            <header class="sm-box__head">
+              <h2>{t('When people comment')}</h2>
+              <span class="sm-box__meta">{t('By weekday and hour (UTC)')}</span>
+            </header>
+            {ins && (
+              <Heatmap grid={ins.heatmap} days={weekdays} caption={t('When people comment')} />
+            )}
+          </section>
+          <section class="sm-box">
+            <header class="sm-box__head">
+              <h2>{t('Words people use')}</h2>
+            </header>
+            {ins?.words.length ? (
+              <ul class="sm-bars">
+                {ins.words.slice(0, 8).map((w) => (
+                  <li>
+                    <span class="sm-bars__name">{w.word}</span>
+                    <span class="sm-bars__track">
+                      <span
+                        class="sm-bars__fill sm-bars__fill--ink"
+                        style={{ width: `${(w.n / maxWord) * 100}%` }}
+                      />
+                    </span>
+                    <b class="g-num">{w.n}</b>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="sm-quiet">{t('Words show once a few comments repeat them.')}</p>
+            )}
+          </section>
+        </div>
 
-        <section class="sm-box sm-span-4">
-          <header class="sm-box__head">
-            <h2>{t('Problems people name')}</h2>
-          </header>
-          {negatives.length ? (
-            tally(negatives)
-          ) : (
-            <p class="sm-quiet">
-              {t('Rate comments negative, or ask Claude to, and their kinds add up here.')}
-            </p>
-          )}
-          {positives.length > 0 && (
-            <>
-              <h3 class="sm-box__sub">{t('What people like')}</h3>
-              {tally(positives, true)}
-            </>
-          )}
-        </section>
-
-        <section class="sm-box sm-span-4">
-          <header class="sm-box__head">
-            <h2>{t('Words people use')}</h2>
-          </header>
-          {ins?.words.length ? (
-            <ul class="sm-bars">
-              {ins.words.slice(0, 8).map((w) => (
-                <li>
-                  <span class="sm-bars__name">{w.word}</span>
-                  <span class="sm-bars__track">
-                    <span
-                      class="sm-bars__fill sm-bars__fill--ink"
-                      style={{ width: `${(w.n / maxWord) * 100}%` }}
-                    />
-                  </span>
-                  <b class="g-num">{w.n}</b>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p class="sm-quiet">{t('Words show once a few comments repeat them.')}</p>
-          )}
-        </section>
-
-        <section class="sm-box sm-span-8">
-          <header class="sm-box__head">
-            <h2>{t('When people comment')}</h2>
-            <span class="sm-box__meta">{t('By weekday and hour (UTC)')}</span>
-          </header>
-          {ins && <Heatmap grid={ins.heatmap} days={weekdays} caption={t('When people comment')} />}
-        </section>
-
-        <section class="sm-box sm-box--table sm-span-4">
-          <header class="sm-box__head">
-            <h2>{t('Most active people')}</h2>
-          </header>
+        <Scroller
+          fit="column"
+          class="sm-span-4"
+          head={
+            <header class="sm-box__head">
+              <h2>{t('Most active people')}</h2>
+            </header>
+          }
+        >
           <table class="sm-dtable">
             <tbody>
               {(ins?.authors ?? []).map((a) => (
                 <tr>
                   <td>
-                    <span class="sm-person">
-                      <NetworkMark network={a.network} size={13} />
+                    <a class="sm-person" href={a.url ?? undefined} target="_blank" rel="noreferrer">
+                      {a.avatar ? (
+                        <img class="sm-person__face" src={a.avatar} alt="" loading="lazy" />
+                      ) : (
+                        <NetworkMark network={a.network} size={13} />
+                      )}
                       <span class="sm-person__name">{a.author}</span>
-                    </span>
+                    </a>
                   </td>
                   <td class="sm-num">
                     {a.complaints > 0 && (
@@ -568,7 +594,7 @@ export function Overview(v: BrandView) {
               ))}
             </tbody>
           </table>
-        </section>
+        </Scroller>
       </div>
 
       <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />

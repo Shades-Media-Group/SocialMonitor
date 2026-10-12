@@ -399,9 +399,14 @@ export function Modal({
 export function Scroller({
   head,
   children,
+  fit = 'window',
+  class: cls = '',
 }: {
   head?: ComponentChildren
   children: ComponentChildren
+  /** 'window': reach the window's bottom; 'column': match the height of the row it sits in. */
+  fit?: 'window' | 'column'
+  class?: string
 }) {
   const box = useRef<HTMLElement>(null)
   const list = useRef<HTMLDivElement>(null)
@@ -414,24 +419,24 @@ export function Scroller({
     setEdge((e) => (e.top === top && e.bottom === bottom ? e : { top, bottom }))
   }
   useLayoutEffect(() => {
-    const fit = () => {
+    const size = () => {
       const b = box.current
-      if (!b) return
+      if (!b || fit === 'column') return check()
       const top = b.getBoundingClientRect().top + scrollY
       b.style.height = `${Math.max(360, innerHeight - top - 10)}px`
       check()
     }
-    fit()
-    addEventListener('resize', fit)
+    size()
+    addEventListener('resize', size)
     const watch = new ResizeObserver(check)
     if (list.current?.firstElementChild) watch.observe(list.current.firstElementChild)
     return () => {
-      removeEventListener('resize', fit)
+      removeEventListener('resize', size)
       watch.disconnect()
     }
   }, [])
   return (
-    <section ref={box} class="sm-box sm-box--list sm-scrollbox">
+    <section ref={box} class={`sm-box sm-box--list sm-scrollbox sm-scrollbox--${fit} ${cls}`}>
       {head}
       <div
         class={`sm-scrollbox__fade${edge.top ? ' is-top' : ''}${edge.bottom ? ' is-bottom' : ''}`}

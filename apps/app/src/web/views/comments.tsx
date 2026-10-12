@@ -136,13 +136,13 @@ function Tags({
             {t('To answer')}
           </Chip>
         ) : null}
+        {c.reason && (
+          <span class="sm-b__note" title={t('What the AI understood')}>
+            <b>{t('AI')}</b> {c.reason}
+          </span>
+        )}
         {children}
       </span>
-      {c.reason && (
-        <p class="sm-b__note">
-          <b>{t('AI')}</b> {c.reason}
-        </p>
-      )}
     </div>
   )
 }
@@ -268,6 +268,14 @@ export function CommentList({
                 {own ? (brand?.name ?? c.author) : c.author}
               </Face>
               {own && <span class="sm-b__brand">{t('Brand')}</span>}
+              <span class="sm-b__when" title={when(c.posted_at)}>
+                {ago(c.posted_at)}
+              </span>
+              {c.likes ? (
+                <span class="sm-b__likes g-num">
+                  <Icon name="favorite" size={11} /> {fmt(c.likes)}
+                </span>
+              ) : null}
             </header>
             {text ? (
               <p class="sm-b__text">{text}</p>
@@ -282,14 +290,7 @@ export function CommentList({
               </a>
             )}
           </div>
-          <div class="sm-b__line">
-            <span title={when(c.posted_at)}>{ago(c.posted_at)}</span>
-            {c.likes ? (
-              <span class="sm-b__likes g-num">
-                <Icon name="favorite" size={11} /> {fmt(c.likes)}
-              </span>
-            ) : null}
-          </div>
+
           {!own && (
             <Tags c={c} answered={answeredBy(c)}>
               {!wide && edit && (
