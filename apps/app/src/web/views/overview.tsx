@@ -9,7 +9,8 @@ import { brandCategories } from '../rate.tsx'
 import { Donut, Heatmap, Sparkline, TimelineChart } from '../charts.tsx'
 import type { PostPoint } from '../charts.tsx'
 import { locale, t } from '../i18n.ts'
-import { AccountCard, CommentDrawer, CommentTable, PostCard, PostDrawer } from '../social.tsx'
+import { AccountCard, PostCard, PostDrawer } from '../social.tsx'
+import { CommentList } from './comments.tsx'
 import type { ProfileStat } from '../social.tsx'
 
 interface Insights {
@@ -156,7 +157,6 @@ export function Overview(v: BrandView) {
   const [latest, setLatest] = useState<CommentRow[]>([])
   const [tick, setTick] = useState(0)
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
-  const [openComment, setOpenComment] = useState<CommentRow | null>(null)
 
   useEffect(() => {
     const n = network ? `&network=${network}` : ''
@@ -330,7 +330,6 @@ export function Overview(v: BrandView) {
 
   const since = days ? new Date(Date.now() - days * 86400_000).toISOString() : ''
   const wall = posts.filter((p) => !since || (p.posted_at ?? '') >= since).slice(0, 10)
-  const postMap = new Map(posts.map((p) => [p.id, p]))
   const stream = reply.length ? reply : latest
 
   return (
@@ -462,7 +461,7 @@ export function Overview(v: BrandView) {
           <Donut parts={byLabel} total={fmt(lSorted)} caption={t('sorted')} />
         </section>
 
-        <section class="sm-box sm-span-8 sm-box--table">
+        <section class="sm-box sm-span-8 sm-box--list">
           <header class="sm-box__head">
             <h2>{reply.length ? t('Answer first') : t('Newest comments')}</h2>
             <a class="sm-box__link" href={`#/b/${brand.id}/comments`}>
@@ -470,7 +469,7 @@ export function Overview(v: BrandView) {
             </a>
           </header>
           {stream.length ? (
-            <CommentTable rows={stream} brands={brands} posts={postMap} onOpen={setOpenComment} />
+            <CommentList comments={stream} brands={brands} onChange={() => setTick((x) => x + 1)} />
           ) : (
             <p class="sm-quiet">{t('Comments appear here after the first update.')}</p>
           )}
@@ -565,14 +564,6 @@ export function Overview(v: BrandView) {
       </div>
 
       <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />
-      <CommentDrawer
-        comment={openComment}
-        rows={stream}
-        brands={brands}
-        posts={postMap}
-        onClose={() => setOpenComment(null)}
-        onChange={() => setTick((x) => x + 1)}
-      />
     </div>
   )
 }

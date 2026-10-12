@@ -348,3 +348,41 @@ export function Menu({
     </>
   )
 }
+
+/** A centred pop-up on the native <dialog>: Escape and the backdrop close it. */
+export function Modal({
+  title,
+  onClose,
+  children,
+  wide = false,
+}: {
+  title: string
+  onClose: () => void
+  children: ComponentChildren
+  wide?: boolean
+}) {
+  const ref = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const d = ref.current
+    if (d && !d.open) d.showModal()
+  }, [])
+  return (
+    <dialog
+      ref={ref}
+      class={`sm-modal${wide ? ' sm-modal--wide' : ''}`}
+      aria-label={title}
+      onClose={onClose}
+      onClick={(e) => e.target === ref.current && onClose()}
+    >
+      <button
+        class="g-icon-btn sm-modal__close"
+        type="button"
+        onClick={onClose}
+        aria-label={t('Close')}
+      >
+        <Icon name="close" />
+      </button>
+      {children}
+    </dialog>
+  )
+}

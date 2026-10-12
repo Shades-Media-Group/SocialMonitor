@@ -44,6 +44,7 @@ export function Palette({
     overview: 'grid',
     comments: 'chat',
     posts: 'image',
+    calendar: 'calendar',
     reports: 'file',
     schedules: 'schedule',
     about: 'info',

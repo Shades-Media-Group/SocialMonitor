@@ -10,6 +10,7 @@ import { Posts } from './views/posts.tsx'
 import { Reports } from './views/reports.tsx'
 import { Schedules } from './views/schedules.tsx'
 import { About } from './views/about.tsx'
+import { Calendar } from './views/calendar.tsx'
 
 /** One brand: its name and what it is, its own menu, and a network switch that filters every tab. */
 export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
@@ -56,7 +57,8 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
     ...(view.network ? { network: view.network } : {}),
   })
 
-  const hasFilters = tab === 'overview' || tab === 'posts' || tab === 'comments'
+  const hasFilters =
+    tab === 'overview' || tab === 'posts' || tab === 'comments' || tab === 'calendar'
   const TAB_NAME = Object.fromEntries(TABS) as Record<Tab, string>
 
   return (
@@ -143,6 +145,8 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
           <Posts {...view} />
         ) : tab === 'reports' ? (
           <Reports {...view} />
+        ) : tab === 'calendar' ? (
+          <Calendar {...view} />
         ) : tab === 'schedules' ? (
           <Schedules {...view} />
         ) : (

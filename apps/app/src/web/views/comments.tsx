@@ -2,12 +2,13 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { BrandRow, CommentRow, PostRow } from '../api.ts'
 import { api } from '../api.ts'
-import { Empty, Menu, NetworkMark, Segmented, ago, count } from '../ui.tsx'
+import { Icon, Empty, Menu, NetworkMark, Segmented, ago, count } from '../ui.tsx'
 import { lang, t } from '../i18n.ts'
 import { JsonPanel } from '../json.tsx'
-import { LabelPill } from '../labels.tsx'
+import { LABELS } from '../labels.tsx'
+import type { IconName } from 'shades-gradient'
 import { Rate, brandCategories } from '../rate.tsx'
-import { CommentDrawer, CommentTable } from '../social.tsx'
+import { FeedCard, PostDrawer } from '../social.tsx'
 
 // Initials sit on one of Gradient's ramps, chosen by the author's name: the same person keeps
 // the same colour everywhere, and a thread reads at a glance.
@@ -20,6 +21,59 @@ const initials = (name: string) =>
     .trim()
     .slice(0, 2)
     .toUpperCase() || '?'
+
+/** How a comment reads at a glance: trouble, good news, a question, or nothing in particular. */
+const mood = (c: CommentRow, own: boolean) =>
+  own
+    ? 'own'
+    : c.sentiment === 'negative' || c.label === 'complaint'
+      ? 'bad'
+      : c.sentiment === 'positive' || c.label === 'praise'
+        ? 'good'
+        : c.label === 'question'
+          ? 'ask'
+          : 'plain'
+
+const LABEL_ICON: Record<string, IconName> = {
+  complaint: 'warning',
+  question: 'help',
+  suggestion: 'sparkle',
+  praise: 'favorite',
+  neutral: 'remove',
+  spam: 'error',
+}
+
+/** The small tags that sit on the bubble's lower edge: what kind, how it was rated, the answer. */
+function Tags({ c, answered }: { c: CommentRow; answered: boolean }) {
+  return (
+    <span class="sm-b__tags">
+      {c.label && LABELS[c.label] && (
+        <span class={`sm-tag sm-tag--${c.label}`}>
+          <Icon name={LABEL_ICON[c.label] ?? 'info'} size={11} /> {LABELS[c.label]!.name}
+        </span>
+      )}
+      {c.sentiment === 'negative' && (
+        <span class="sm-tag sm-tag--bad">
+          <Icon name="arrowDown" size={11} /> {t('Negative')}
+        </span>
+      )}
+      {c.sentiment === 'positive' && (
+        <span class="sm-tag sm-tag--good">
+          <Icon name="arrowUp" size={11} /> {t('Positive')}
+        </span>
+      )}
+      {answered ? (
+        <span class="sm-tag sm-tag--done">
+          <Icon name="check" size={11} /> {t('Answered')}
+        </span>
+      ) : c.needs_reply === 1 && c.reply_status === 'open' ? (
+        <span class="sm-tag sm-tag--wait">
+          <Icon name="schedule" size={11} /> {t('To answer')}
+        </span>
+      ) : null}
+    </span>
+  )
+}
 
 /**
  * Comments as threads: a comment, then the replies under it, with the brand's own answers
@@ -73,29 +127,48 @@ export function CommentList({
     onChange?.()
   }
 
+  const answeredBy = (c: CommentRow) =>
+    c.reply_status === 'done' ||
+    comments.some(
+      (r) =>
+        r.parent_ext_id === c.ext_id && handles.get(r.brand_id)?.includes(r.author.toLowerCase()),
+    )
+
   const one = (c: CommentRow, reply = false) => {
     const brand = brands.find((b) => b.id === c.brand_id)
     const own = handles.get(c.brand_id)?.includes(c.author.toLowerCase())
     const edit = brand?.my_role === 'admin'
     return (
-      <article class={`sm-c${reply ? ' sm-c--reply' : ''}${own ? ' sm-c--own' : ''}`}>
-        <span class={`sm-c__face sm-face--${own ? 'own' : hue(c.author)}`} aria-hidden="true">
+      <article class={`sm-b sm-b--${mood(c, !!own)}${reply ? ' sm-b--reply' : ''}`}>
+        <span class={`sm-b__avatar sm-face--${own ? 'own' : hue(c.author)}`} aria-hidden="true">
           {initials(c.author)}
+          <span class="sm-b__net">
+            <NetworkMark network={c.network} size={10} />
+          </span>
         </span>
-        <div class="sm-c__body">
-          <header class="sm-c__meta">
-            <span class="sm-c__author">{own ? `${brand?.name ?? c.author}` : c.author}</span>
-            {own && <span class="sm-c__own">{t('Brand reply')}</span>}
-            <NetworkMark network={c.network} size={13} />
-            <span>{ago(c.posted_at)}</span>
-            {c.likes ? <span class="g-num">{count(c.likes, 'like')}</span> : null}
-            {c.label && !own && (
-              <LabelPill label={c.label} reply={c.needs_reply === 1 && c.reply_status === 'open'} />
-            )}
-          </header>
-          <p class="sm-c__text">{c.text}</p>
+        <div class="sm-c__body sm-b__col">
+          <div class="sm-b__bubble">
+            <header class="sm-b__meta">
+              <b>{own ? `${brand?.name ?? c.author}` : c.author}</b>
+              {own && (
+                <span class="sm-b__own">
+                  <Icon name="success" size={12} /> {t('Brand reply')}
+                </span>
+              )}
+              <span>{ago(c.posted_at)}</span>
+              {c.likes ? (
+                <span class="sm-b__likes g-num">
+                  <Icon name="favorite" size={11} /> {c.likes}
+                </span>
+              ) : null}
+            </header>
+            <p class="sm-b__text">{c.text}</p>
+          </div>
+          {!own && <Tags c={c} answered={answeredBy(c)} />}
           {c.reason && !own && (
-            <p class="sm-c__reason">{t('AI: {reason}', { reason: c.reason })}</p>
+            <p class="sm-b__ai">
+              <Icon name="sparkle" size={12} /> {c.reason}
+            </p>
           )}
           {(extra[c.id] || (lang === 'en' && c.translation)) && (
             <p class={`sm-c__extra${extra[c.id]?.kind === 'draft' ? ' sm-c__extra--draft' : ''}`}>
@@ -131,11 +204,6 @@ export function CommentList({
                   >
                     {t('Answered')}
                   </button>
-                )}
-                {c.reply_status !== 'open' && c.needs_reply === 1 && (
-                  <span class={`sm-badge ${c.reply_status === 'done' ? 'sm-badge--green' : ''}`}>
-                    {c.reply_status === 'done' ? t('Answered') : t('Skipped')}
-                  </span>
                 )}
                 {wide ? (
                   [
@@ -248,7 +316,8 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
   const [category, setCategory] = useState('')
   const [q, setQ] = useState('')
   const [rows, setRows] = useState<CommentRow[] | null>(null)
-  const [open, setOpen] = useState<CommentRow | null>(null)
+  const [openPost, setOpenPost] = useState<PostRow | null>(null)
+  const [look, setLook] = useState<'list' | 'feed'>('list')
   const [posts, setPosts] = useState<Map<number, PostRow>>(new Map())
   useEffect(() => {
     api
@@ -388,6 +457,15 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
           value={q}
           onInput={(e) => setQ((e.target as HTMLInputElement).value)}
         />
+        <Segmented<'list' | 'feed'>
+          label={t('Layout')}
+          value={look}
+          onChange={setLook}
+          options={[
+            ['list', t('Comments')],
+            ['feed', t('By post')],
+          ]}
+        />
         <a class="sm-textbtn sm-toolbar__end" href={`/api/comments.csv?${qs}`} download>
           {t('Download CSV')}
         </a>
@@ -416,26 +494,35 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
           note={t('Edit label, reply_status, sentiment or category, then save.')}
         />
       ) : rows === null ? null : rows.length ? (
-        <section class="sm-box sm-box--table">
-          <header class="sm-box__head">
-            <h2>{count(rows.filter((c) => !c.parent_ext_id).length, 'comment')}</h2>
-            <span class="sm-box__meta">{t('Click a row to read and answer it')}</span>
-          </header>
-          <CommentTable rows={rows} brands={brands} posts={posts} onOpen={setOpen} />
-        </section>
+        look === 'feed' ? (
+          <div class="sm-feed">
+            {[...new Set(rows.map((c) => c.post_id))].map((pid) => {
+              const post = posts.get(pid)
+              return post ? (
+                <FeedCard
+                  post={post}
+                  comments={rows.filter((c) => c.post_id === pid)}
+                  brands={brands}
+                  onOpen={setOpenPost}
+                  onChange={() => setTick((x) => x + 1)}
+                />
+              ) : null
+            })}
+          </div>
+        ) : (
+          <section class="sm-box sm-box--list">
+            <header class="sm-box__head">
+              <h2>{count(rows.filter((c) => !c.parent_ext_id).length, 'comment')}</h2>
+            </header>
+            <CommentList comments={rows} brands={brands} onChange={() => setTick((x) => x + 1)} />
+          </section>
+        )
       ) : (
         <Empty title={t('No comments match.')}>
           {t('Change the filters, or press Update to read new ones.')}
         </Empty>
       )}
-      <CommentDrawer
-        comment={open}
-        rows={rows ?? []}
-        brands={brands}
-        posts={posts}
-        onClose={() => setOpen(null)}
-        onChange={() => setTick((x) => x + 1)}
-      />
+      <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />
     </div>
   )
 }

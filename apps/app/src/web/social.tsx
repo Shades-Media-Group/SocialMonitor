@@ -4,7 +4,18 @@ import { api } from './api.ts'
 import { Sparkline } from './charts.tsx'
 import { t } from './i18n.ts'
 import { LabelPill } from './labels.tsx'
-import { Icon, NETWORK_NAME, NetworkMark, Sheet, ago, count, fmt, short, when } from './ui.tsx'
+import {
+  Icon,
+  Modal,
+  NETWORK_NAME,
+  NetworkMark,
+  Sheet,
+  ago,
+  count,
+  fmt,
+  short,
+  when,
+} from './ui.tsx'
 import { CommentList } from './views/comments.tsx'
 
 /**
@@ -163,7 +174,7 @@ export function PostCard({ p, onOpen }: { p: PostRow; onOpen: (p: PostRow) => vo
   )
 }
 
-/** One post and every comment kept under it, in a drawer. */
+/** One post the way the network shows it: the picture on the left, the caption and comments on the right. */
 export function PostDrawer({
   post,
   brands,
@@ -185,34 +196,147 @@ export function PostDrawer({
   }, [post?.id, tick])
   if (!post) return null
   return (
-    <Sheet open title={`${NETWORK_NAME[post.network]} · ${when(post.posted_at)}`} onClose={onClose}>
-      <div class="sm-drawer">
-        <a class="sm-drawer__post" href={post.url} target="_blank" rel="noreferrer">
-          {post.thumb_url && <img src={post.thumb_url} alt="" />}
-          <span>{post.description ?? post.caption}</span>
+    <Modal wide title={`${NETWORK_NAME[post.network]} · ${when(post.posted_at)}`} onClose={onClose}>
+      <div class="sm-viewer">
+        <a
+          class="sm-viewer__media"
+          href={post.url}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={t('Open the post')}
+        >
+          {post.thumb_url ? <img src={post.thumb_url} alt="" /> : <span />}
         </a>
-        <dl class="sm-attr">
-          <dt>{t('Likes')}</dt>
-          <dd class="g-num">{fmt(post.likes)}</dd>
-          <dt>{t('Comments')}</dt>
-          <dd class="g-num">
-            {fmt(post.comments_count)} ({t('{n} saved', { n: fmt(post.stored_comments) })})
-          </dd>
-          <dt>{t('Shares')}</dt>
-          <dd class="g-num">{fmt(post.shares)}</dd>
-          <dt>{t('Views')}</dt>
-          <dd class="g-num">{fmt(post.views)}</dd>
-          <dt>{t('What people say')}</dt>
-          <dd>
+        <div class="sm-viewer__side">
+          <header class="sm-viewer__head">
+            <span class="sm-viewer__avatar">
+              <NetworkMark network={post.network} size={16} />
+            </span>
+            <span class="sm-viewer__who">
+              <b>@{post.handle}</b>
+              <small>
+                {NETWORK_NAME[post.network]} · {when(post.posted_at)}
+              </small>
+            </span>
+            <a
+              class="g-btn g-btn--ghost g-btn--sm"
+              href={post.url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Icon name="external" size={14} /> {t('Open')}
+            </a>
+          </header>
+          <div class="sm-viewer__scroll">
+            <p class="sm-viewer__caption">
+              <b>@{post.handle}</b> {post.caption ?? post.description}
+            </p>
+            {rows === null ? null : rows.length ? (
+              <div class="sm-ig">
+                <CommentList
+                  comments={rows}
+                  brands={brands}
+                  onChange={() => setTick((x) => x + 1)}
+                />
+              </div>
+            ) : (
+              <p class="sm-quiet">{t('No comments saved for this post.')}</p>
+            )}
+          </div>
+          <footer class="sm-viewer__foot">
+            <span class="sm-postcard2__metrics g-num">
+              <span>
+                <Icon name="favorite" size={15} /> {fmt(post.likes)}
+              </span>
+              <span>
+                <Icon name="chat" size={15} /> {fmt(post.comments_count)}
+              </span>
+              <span>
+                <Icon name="share" size={15} /> {fmt(post.shares)}
+              </span>
+              {post.views != null && (
+                <span>
+                  <Icon name="visibility" size={15} /> {fmt(post.views)}
+                </span>
+              )}
+            </span>
             <MoodStrip p={post} />
-          </dd>
-        </dl>
-        <h3 class="sm-attr__title">{count(rows?.length ?? 0, 'comment')}</h3>
-        {rows && (
-          <CommentList comments={rows} brands={brands} onChange={() => setTick((x) => x + 1)} />
+            <small class="sm-quiet">{t('{n} saved', { n: fmt(post.stored_comments) })}</small>
+          </footer>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+/** A post with its first comments under it, as in a feed; the rest open in the viewer. */
+export function FeedCard({
+  post,
+  comments,
+  brands,
+  onOpen,
+  onChange,
+}: {
+  post: PostRow
+  comments: CommentRow[]
+  brands: BrandRow[]
+  onOpen: (p: PostRow) => void
+  onChange: () => void
+}) {
+  const roots = comments.filter((c) => !c.parent_ext_id)
+  const shown = roots.slice(0, 3)
+  const ids = new Set(shown.map((c) => c.ext_id))
+  return (
+    <article class="sm-feedcard">
+      <header class="sm-viewer__head">
+        <span class="sm-viewer__avatar">
+          <NetworkMark network={post.network} size={15} />
+        </span>
+        <span class="sm-viewer__who">
+          <b>@{post.handle}</b>
+          <small>{when(post.posted_at)}</small>
+        </span>
+        <MoodStrip p={post} />
+      </header>
+      <button
+        type="button"
+        class="sm-feedcard__media"
+        onClick={() => onOpen(post)}
+        aria-label={t('Open the post')}
+      >
+        {post.thumb_url ? <img src={post.thumb_url} alt="" loading="lazy" /> : <span />}
+      </button>
+      <div class="sm-feedcard__body">
+        <span class="sm-postcard2__metrics g-num">
+          <span>
+            <Icon name="favorite" size={15} /> {fmt(post.likes)}
+          </span>
+          <span>
+            <Icon name="chat" size={15} /> {fmt(post.comments_count)}
+          </span>
+          <span>
+            <Icon name="share" size={15} /> {fmt(post.shares)}
+          </span>
+        </span>
+        <p class="sm-viewer__caption sm-feedcard__caption">
+          <b>@{post.handle}</b> {post.description ?? post.caption}
+        </p>
+        <div class="sm-ig sm-ig--feed">
+          <CommentList
+            comments={comments.filter(
+              (c) => ids.has(c.ext_id) || (c.parent_ext_id && ids.has(c.parent_ext_id)),
+            )}
+            brands={brands}
+            onChange={onChange}
+          />
+        </div>
+        {roots.length > shown.length && (
+          <button type="button" class="sm-feedcard__more" onClick={() => onOpen(post)}>
+            {t('View all {n}', { n: count(roots.length, 'comment') })}
+          </button>
         )}
       </div>
-    </Sheet>
+    </article>
   )
 }
 
