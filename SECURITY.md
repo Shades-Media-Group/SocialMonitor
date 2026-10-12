@@ -23,5 +23,7 @@ Include what you found, how to reproduce it, and your SocialMonitor version. You
 - The database, the browser profile used to read the networks, and every report live in the `data/` folder on your computer.
 - Post and comment text is sent to Claude for sorting, through your own Claude Code or Anthropic API key. Nothing goes to Shades Media Group.
 - Keys and the browser profile are never written to logs, exports or reports.
+- Saved account details are encrypted with AES-256-GCM, with the key in the macOS Keychain (elsewhere, a file only your user can read). SocialMonitor never signs in with them, and their passwords are never exported, reported, sent to Claude or revealed outside the computer it runs on.
+- Remote access is opt-in, through a Cloudflare Tunnel. Every request that arrives through it must carry a valid Cloudflare Access token, checked against Cloudflare's signing keys, or it is refused. See [docs/remote-access.md](docs/remote-access.md).
 
 See [PRIVACY.md](PRIVACY.md) for the full policy.

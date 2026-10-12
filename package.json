@@ -31,7 +31,8 @@
     "release": "node scripts/release.mjs",
     "start": "yarn --cwd apps/app start",
     "dev": "yarn --cwd apps/app dev:api & yarn --cwd apps/app dev",
-    "mcp": "yarn --cwd apps/app mcp"
+    "mcp": "yarn --cwd apps/app mcp",
+    "tunnel": "node scripts/tunnel.mjs"
   },
   "packageManager": "yarn@1.22.22",
   "type": "module",

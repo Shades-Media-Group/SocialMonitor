@@ -14,6 +14,8 @@ Shades Media Group receives nothing. Everything SocialMonitor collects stays on 
 - **It stores them** in a database in the `data/` folder, on your computer only.
 - **To describe posts and sort comments,** their text and each post's cover picture are sent to Claude through the Claude Code or Anthropic API key you configure. [Anthropic's privacy policy](https://www.anthropic.com/legal/privacy) covers that step.
 - **Reports and exports** are files you save; they go wherever you put them.
+- **Saved accounts** (usernames, passwords and notes you choose to keep) are encrypted on your computer and never leave it.
+- **Remote access**, if you set it up, passes through your own Cloudflare account and is limited to the people your Cloudflare Access policy allows.
 
 ## Your responsibilities
 
