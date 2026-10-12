@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'preact/hooks'
 import type { AppState, BrandView, Tab } from './app.tsx'
 import { TABS } from './app.tsx'
 import type { BrandRow, Network } from './api.ts'
 import { Head, Icon, Menu, NETWORK_NAME, NetworkMark } from './ui.tsx'
 import { t } from './i18n.ts'
+import { usePref } from './prefs.ts'
 import { Overview } from './views/overview.tsx'
 import { Comments } from './views/comments.tsx'
 import { Posts } from './views/posts.tsx'
@@ -15,35 +15,9 @@ import { Calendar } from './views/calendar.tsx'
 /** One brand: its name and what it is, its own menu, and a network switch that filters every tab. */
 export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
   const { brand, tab } = props
-  const [network, setNetwork] = useState<Network | ''>(() => {
-    try {
-      return (sessionStorage.getItem(`sm-net-${brand.id}`) as Network | '') ?? ''
-    } catch {
-      return ''
-    }
-  })
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(`sm-net-${brand.id}`, network)
-    } catch {
-      /* private mode */
-    }
-  }, [network, brand.id])
-
-  const [days, setDays] = useState<number>(() => {
-    try {
-      return Number(sessionStorage.getItem('sm-days') ?? 30)
-    } catch {
-      return 30
-    }
-  })
-  useEffect(() => {
-    try {
-      sessionStorage.setItem('sm-days', String(days))
-    } catch {
-      /* private mode */
-    }
-  }, [days])
+  // Kept with the account: the network per brand, and one period for every brand.
+  const [network, setNetwork] = usePref<Network | ''>(`net:${brand.id}`, '')
+  const [days, setDays] = usePref<number>('days', 30)
 
   const nets = brand.profiles.map((p) => p.network)
   const view: BrandView = {

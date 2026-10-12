@@ -3,6 +3,7 @@ import type { BrandView } from '../app.tsx'
 import type { PostRow } from '../api.ts'
 import { api } from '../api.ts'
 import { locale, t } from '../i18n.ts'
+import { usePref } from '../prefs.ts'
 import { JsonPanel } from '../json.tsx'
 import { Menu, NetworkMark, Segmented, fmt, short } from '../ui.tsx'
 
@@ -89,8 +90,8 @@ export function Calendar({ brand, network, version, mode }: BrandView) {
   const [range, setRange] = useState<[string, string]>(
     () => presets()[1]!.slice(1) as [string, string],
   )
-  const [look, setLook] = useState<Look>('days')
-  const [measure, setMeasure] = useState<Measure>('comments')
+  const [look, setLook] = usePref<Look>('calendar.look', 'days')
+  const [measure, setMeasure] = usePref<Measure>('calendar.measure', 'comments')
   const [rows, setRows] = useState<DayRow[] | null>(null)
   const [before, setBefore] = useState<DayRow[]>([])
   const [error, setError] = useState<string | null>(null)

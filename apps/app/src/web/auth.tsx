@@ -11,6 +11,7 @@ export interface Me {
   name: string
   super: boolean
   memberships: { brand_id: number; role: 'viewer' | 'admin' }[]
+  prefs?: Record<string, unknown>
 }
 export interface AuthInfo {
   user: Me | null

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks'
 import { t } from './i18n.ts'
+import { getPref, setPref } from './prefs.ts'
 
 /**
  * The JSON side of a screen: exactly the data the screen shows, to copy into a chat with
@@ -132,17 +133,6 @@ export function JsonPanel({
 
 export type ViewMode = 'visual' | 'json'
 
-export const readMode = (): ViewMode => {
-  try {
-    return localStorage.getItem('sm-view') === 'json' ? 'json' : 'visual'
-  } catch {
-    return 'visual'
-  }
-}
-export const saveMode = (m: ViewMode) => {
-  try {
-    localStorage.setItem('sm-view', m)
-  } catch {
-    /* private mode */
-  }
-}
+export const readMode = (): ViewMode =>
+  getPref<string>('mode', 'visual') === 'json' ? 'json' : 'visual'
+export const saveMode = (m: ViewMode) => setPref('mode', m)

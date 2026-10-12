@@ -167,6 +167,9 @@ function migrate(db: DatabaseSync) {
   }
   // An English translation of a comment, made on request and kept.
   if (!has('comments', 'translation')) db.exec('ALTER TABLE comments ADD COLUMN translation TEXT')
+  // Each person's own view choices (filters, layouts, period, theme), kept across sign-ins.
+  if (!has('users', 'prefs'))
+    db.exec("ALTER TABLE users ADD COLUMN prefs TEXT NOT NULL DEFAULT '{}'")
   // The language a person reads the dashboard in, for the emails they get.
   if (!has('users', 'lang')) db.exec("ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'en'")
   // Each brand's own positive and negative categories.

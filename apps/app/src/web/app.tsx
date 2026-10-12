@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
-import { t } from './i18n.ts'
+import type { Lang } from './i18n.ts'
+import { LANGS, lang, setLang, t } from './i18n.ts'
+import { loadPrefs } from './prefs.ts'
 import type { BrandRow, Network, RunRow } from './api.ts'
 import { api } from './api.ts'
 import { Icon, Mark, Menu, ago, fmt } from './ui.tsx'
@@ -119,6 +121,18 @@ export function App() {
     }
   }, [])
   if (!info) return null
+  if (info.user && !link) {
+    loadPrefs(info.user.prefs)
+    // The account's language and theme win over this browser's, so they follow the person.
+    const want = info.user.prefs?.lang as Lang | undefined
+    if (want && want !== lang && LANGS.some(([l]) => l === want)) {
+      setLang(want)
+      return null
+    }
+    const theme = info.user.prefs?.theme as string | undefined
+    if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
+    else if (theme === 'auto') delete document.documentElement.dataset.theme
+  }
   if (!info.user || link)
     return <AuthScreen info={info} onIn={(user) => setInfo({ ...info, user, setup: false })} />
   return <Dashboard me={info.user} />

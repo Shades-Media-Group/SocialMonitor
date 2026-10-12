@@ -37,6 +37,7 @@ const me = (c: Ctx, user: User) => ({
   name: user.name,
   super: !!user.super,
   memberships: auth.memberships(c.db, user.id),
+  prefs: auth.readPrefs(c.db, user.id),
 })
 
 const mask = (email: string) =>
@@ -214,6 +215,7 @@ export const authRoutes = [
       if (!auth.checkPassword(String(x.current ?? ''), row?.pass_hash ?? null))
         throw new HttpError(403, 'Your current password is not right.')
     }
+    if (x.prefs !== undefined) auth.savePrefs(c.db, c.user.id, x.prefs)
     auth.updateUser(c.db, c.user.id, {
       ...(x.name !== undefined ? { name: String(x.name) } : {}),
       ...(x.username !== undefined ? { username: (x.username as string) || null } : {}),

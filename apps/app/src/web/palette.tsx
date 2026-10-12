@@ -5,6 +5,7 @@ import { TABS } from './app.tsx'
 import type { BrandRow } from './api.ts'
 import { LANGS, lang, setLang, t } from './i18n.ts'
 import { Icon } from './ui.tsx'
+import { flushPrefs, setPref } from './prefs.ts'
 
 interface Command {
   group: string
@@ -88,7 +89,10 @@ export function Palette({
       group: t('Language'),
       label: name,
       icon: 'globe' as IconName,
-      run: () => setLang(l),
+      run: () => {
+        setPref('lang', l)
+        void flushPrefs().then(() => setLang(l))
+      },
     })),
   ]
   const words = q.toLowerCase().split(/\s+/).filter(Boolean)

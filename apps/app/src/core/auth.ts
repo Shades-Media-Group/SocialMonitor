@@ -235,6 +235,24 @@ export const endSessions = (db: DB, id: number) =>
 export const deleteUser = (db: DB, id: number) =>
   db.prepare('DELETE FROM users WHERE id = ?').run(id)
 
+/** A person's view choices: merged into what is kept, at most 16 KB, plain values only. */
+export function savePrefs(db: DB, id: number, patch: unknown) {
+  if (!patch || typeof patch !== 'object' || Array.isArray(patch))
+    throw new Error('Preferences are an object.')
+  const row = db.prepare('SELECT prefs FROM users WHERE id = ?').get(id) as
+    { prefs: string } | undefined
+  const next = { ...(JSON.parse(row?.prefs ?? '{}') as object), ...(patch as object) }
+  const text = JSON.stringify(next)
+  if (text.length > 16_384) throw new Error('Too many preferences.')
+  db.prepare('UPDATE users SET prefs = ? WHERE id = ?').run(text, id)
+  return next
+}
+export const readPrefs = (db: DB, id: number) =>
+  JSON.parse(
+    (db.prepare('SELECT prefs FROM users WHERE id = ?').get(id) as { prefs: string } | undefined)
+      ?.prefs ?? '{}',
+  ) as Record<string, unknown>
+
 export const setLang = (db: DB, id: number, lang: string) =>
   db.prepare('UPDATE users SET lang = ? WHERE id = ?').run(lang, id)
 

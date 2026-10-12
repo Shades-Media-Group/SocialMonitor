@@ -4,6 +4,7 @@ import type { BrandRow, CommentRow, PostRow } from '../api.ts'
 import { api } from '../api.ts'
 import { Icon, Empty, Menu, NetworkMark, Segmented, ago, count } from '../ui.tsx'
 import { lang, t } from '../i18n.ts'
+import { usePref } from '../prefs.ts'
 import { JsonPanel } from '../json.tsx'
 import { LABELS } from '../labels.tsx'
 import type { IconName } from 'shades-gradient'
@@ -311,13 +312,13 @@ export function CommentList({
 type Filter = 'all' | 'reply' | 'complaint' | 'question' | 'praise'
 
 export function Comments({ brand, network, version, mode, notify, brands }: BrandView) {
-  const [filter, setFilter] = useState<Filter>('all')
-  const [sentiment, setSentiment] = useState('')
+  const [filter, setFilter] = usePref<Filter>('comments.filter', 'all')
+  const [sentiment, setSentiment] = usePref('comments.sentiment', '')
   const [category, setCategory] = useState('')
   const [q, setQ] = useState('')
   const [rows, setRows] = useState<CommentRow[] | null>(null)
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
-  const [look, setLook] = useState<'list' | 'feed'>('list')
+  const [look, setLook] = usePref<'list' | 'feed'>('comments.look', 'list')
   const [posts, setPosts] = useState<Map<number, PostRow>>(new Map())
   useEffect(() => {
     api

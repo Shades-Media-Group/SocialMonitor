@@ -5,13 +5,14 @@ import { api } from '../api.ts'
 import { Empty, NetworkMark, Segmented, count, fmt, when } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { t } from '../i18n.ts'
+import { usePref } from '../prefs.ts'
 import { MoodStrip, PostCard, PostDrawer } from '../social.tsx'
 
 /** The posts: a table to compare them, or a contact sheet of the real pictures. */
 export function Posts({ brand, network, version, mode, openUpdate, days, brands }: BrandView) {
   const [all, setAll] = useState<PostRow[] | null>(null)
-  const [sort, setSort] = useState<'new' | 'top'>('new')
-  const [look, setLook] = useState<'table' | 'grid'>('grid')
+  const [sort, setSort] = usePref<'new' | 'top'>('posts.sort', 'new')
+  const [look, setLook] = usePref<'table' | 'grid'>('posts.look', 'grid')
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
 
   useEffect(() => {

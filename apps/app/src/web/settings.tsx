@@ -6,6 +6,7 @@ import { JsonPanel } from './json.tsx'
 import { Accounts } from './accounts.tsx'
 import type { Lang } from './i18n.ts'
 import { LANGS, lang, setLang, t } from './i18n.ts'
+import { flushPrefs, setPref } from './prefs.ts'
 
 interface Settings {
   gap_hours: number
@@ -54,6 +55,7 @@ export function SettingsSheet({
     } catch {
       /* private mode */
     }
+    setPref('theme', t)
   }
 
   const save = async (patch: Partial<Settings>) => {
@@ -107,7 +109,12 @@ export function SettingsSheet({
           class="g-select sm-select-sm"
           aria-label={t('Language')}
           value={lang}
-          onChange={(e) => setLang((e.target as HTMLSelectElement).value as Lang)}
+          onChange={async (e) => {
+            const l = (e.target as HTMLSelectElement).value as Lang
+            setPref('lang', l)
+            await flushPrefs()
+            setLang(l)
+          }}
         >
           {LANGS.map(([l, name]) => (
             <option value={l}>{name}</option>
