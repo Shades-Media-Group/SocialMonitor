@@ -12,7 +12,7 @@ Shades Media Group receives nothing. Everything SocialMonitor collects stays on 
 
 - **Posts and comments** from the public profiles you add, read through a browser profile on your computer. These include the names and words of the people who comment.
 - **It stores them** in a database in the `data/` folder, on your computer only.
-- **To describe posts and sort comments,** their text, and frames from videos, are sent to Claude through the Claude Code or Anthropic API key you configure. [Anthropic's privacy policy](https://www.anthropic.com/legal/privacy) covers that step.
+- **To describe posts and sort comments,** their text and each post's cover picture are sent to Claude through the Claude Code or Anthropic API key you configure. [Anthropic's privacy policy](https://www.anthropic.com/legal/privacy) covers that step.
 - **Reports and exports** are files you save; they go wherever you put them.
 
 ## Your responsibilities
