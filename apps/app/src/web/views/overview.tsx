@@ -122,7 +122,13 @@ export function Overview(v: BrandView) {
             {waiting === 1 ? 'comment waits' : 'comments wait'} for an answer.{' '}
             {sorted > 0 ? (
               <>
-                Complaints are <b>{pct(c.complaint ?? 0, sorted)}%</b> of what people said
+                {c.complaint ? (
+                  <>
+                    Complaints are <b>{pct(c.complaint, sorted)}%</b> of what people said
+                  </>
+                ) : (
+                  <>No complaints in what people said</>
+                )}
                 {s.week.total ? (
                   <>
                     , and <b>{fmt(s.week.total)}</b> new comments came in this week.

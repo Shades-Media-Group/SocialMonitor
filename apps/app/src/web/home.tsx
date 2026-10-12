@@ -152,7 +152,7 @@ function NewBrand({ reload, notify }: Pick<AppState, 'reload' | 'notify'>) {
         </Row>
         <Row
           label="Field of work"
-          hint="Telecom, retail, banking… The AI reads it to sort comments better."
+          hint="Retail, banking, hospitality… The AI reads it to sort comments better."
         >
           <input
             class="g-input"

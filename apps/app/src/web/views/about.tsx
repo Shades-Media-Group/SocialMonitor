@@ -151,12 +151,12 @@ export function About({ brand, mode, reload, notify }: BrandView) {
         </Row>
         <Row
           label="Field of work"
-          hint="The AI reads it, so a telecom's “no signal” is understood as a complaint."
+          hint="The AI reads it, so a shop's “out of stock again” is understood as a complaint."
         >
           <input
             class="g-input"
             value={f.industry}
-            placeholder="Telecom, retail, banking…"
+            placeholder="Retail, banking, hospitality…"
             onInput={set('industry')}
           />
         </Row>
