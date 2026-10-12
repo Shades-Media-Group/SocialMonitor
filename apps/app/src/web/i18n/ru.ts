@@ -2,6 +2,19 @@ import type { Dict } from '../i18n.ts'
 
 export const ru: Dict = {
   strings: {
+    'Saved reports and exports': 'Сохранённые отчёты и выгрузки',
+    'Every PDF, Excel and CSV made for this brand, kept to open again':
+      'Каждый PDF, Excel и CSV этого бренда хранится, чтобы открыть его снова',
+    Made: 'Создан',
+    File: 'Файл',
+    By: 'Кто',
+    Size: 'Размер',
+    Download: 'Скачать',
+    'Delete {name}?': 'Удалить {name}?',
+    'Reports you make with Export are kept here.':
+      'Отчёты, созданные через «Экспорт», хранятся здесь.',
+    'Update reports': 'Отчёты об обновлениях',
+    'No such report.': 'Такого отчёта нет.',
     'Period before': 'Прошлый период',
     'What the AI understood': 'Как понял ИИ',
     replied: 'ответил(а)',

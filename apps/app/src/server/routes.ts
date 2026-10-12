@@ -29,6 +29,7 @@ import {
 } from '../core/insights.ts'
 import { workbook } from '../core/xlsx.ts'
 import { brandPdf } from '../core/pdf.ts'
+import { deleteSaved, getSaved, listSaved, readSaved, saveReport } from '../core/saved.ts'
 import { draftReply, pickEngine, translate } from '../core/analyze.ts'
 import { getSettings } from '../core/settings.ts'
 import type { User } from '../core/auth.ts'
@@ -170,7 +171,8 @@ export const routes: Route[] = [
       data: exportAll(db, query.get('brand') ? id(query.get('brand')!) : undefined),
     }),
   ),
-  r('GET', '/api/comments.csv', byBrand, ({ db, query }) => {
+  r('GET', '/api/comments.csv', byBrand, (c) => {
+    const { db, query } = c
     const rows = store.listComments(db, {
       brandId: query.get('brand') ? id(query.get('brand')!) : undefined,
       network: net(query.get('network')),
@@ -198,11 +200,21 @@ export const routes: Route[] = [
         head.map((h) => cell((r as unknown as Record<string, unknown>)[h])).join(','),
       ),
     ].join('\r\n')
-    return {
+    const out = {
       __download: `socialmonitor-comments-${new Date().toISOString().slice(0, 10)}.csv`,
       type: 'text/csv; charset=utf-8',
       data: '\ufeff' + csv,
     }
+    saveReport(db, {
+      brandId: query.get('brand') ? id(query.get('brand')!) : null,
+      kind: 'csv',
+      filename: out.__download,
+      type: out.type,
+      data: out.data,
+      params: Object.fromEntries(query),
+      userId: c.user.id,
+    })
+    return out
   }),
   r('POST', '/api/import', 'super', (c) => importAll(c.db, c.body as Dump)),
   r('GET', '/api/browser/status', 'user', async () => signInStatus()),
@@ -476,10 +488,38 @@ export const routes: Route[] = [
       throw new Error('Choose at most three years.')
     return daily(db, id(params.id), from, to, net(query.get('network')))
   }),
+  // Reports and exports made before, to open again.
+  r('GET', '/api/brands/:id/saved', seeBrand, ({ db, params }) => listSaved(db, id(params.id))),
+  r(
+    'GET',
+    '/api/saved/:id/file',
+    (c) => {
+      const s = getSaved(c.db, id(c.params.id))
+      if (!s) throw new HttpError(404, 'No such report.')
+      if (s.brand_id == null ? !c.user.super : !roleFor(c.db, c.user, s.brand_id))
+        throw new HttpError(403, 'You do not have access to this brand.')
+    },
+    ({ db, params }) => {
+      const s = getSaved(db, id(params.id))!
+      return { __download: s.filename, type: s.type, data: new Uint8Array(readSaved(s)) }
+    },
+  ),
+  r(
+    'DELETE',
+    '/api/saved/:id',
+    (c) => {
+      const s = getSaved(c.db, id(c.params.id))
+      if (!s) throw new HttpError(404, 'No such report.')
+      if (s.brand_id == null ? !c.user.super : roleFor(c.db, c.user, s.brand_id) !== 'admin')
+        throw new HttpError(403, "Only this brand's admins can do that.")
+    },
+    ({ db, params }) => void deleteSaved(db, id(params.id)),
+  ),
   r('GET', '/api/compare', 'user', (c) =>
     compare(c.db, Number(c.query.get('days') ?? 30) || 0, visibleBrands(c.db, c.user)),
   ),
-  r('GET', '/api/brands/:id/export.xlsx', seeBrand, ({ db, params, query }) => {
+  r('GET', '/api/brands/:id/export.xlsx', seeBrand, (c) => {
+    const { db, params, query } = c
     const brand = store.getBrand(db, id(params.id))
     if (!brand) throw new Error('No such brand.')
     const s = {
@@ -495,7 +535,7 @@ export const routes: Route[] = [
       .filter((c) => !since || (c.posted_at ?? '') >= since)
     const posts = postEngagement(db, s, 100000)
     const day = new Date().toISOString().slice(0, 10)
-    return {
+    const out = {
       __download: `${brand.name.replace(/[^\w-]+/g, '-')}-socialmonitor-${day}.xlsx`,
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       data: workbook([
@@ -572,6 +612,16 @@ export const routes: Route[] = [
         },
       ]),
     }
+    saveReport(db, {
+      brandId: brand.id,
+      kind: 'xlsx',
+      filename: out.__download,
+      type: out.type,
+      data: out.data,
+      params: Object.fromEntries(query),
+      userId: c.user.id,
+    })
+    return out
   }),
   r('GET', '/api/brands/:id/report.pdf', seeBrand, async (c) => {
     const { db, params, query } = c
@@ -582,11 +632,21 @@ export const routes: Route[] = [
       `http://127.0.0.1:${process.env.SOCIALMONITOR_API_PORT ?? process.env.PORT ?? 4400}`
     const q = new URLSearchParams()
     for (const k of ['days', 'network']) if (query.get(k)) q.set(k, query.get(k)!)
-    return {
+    const out = {
       __download: `${brand.name.replace(/[^\w-]+/g, '-')}-report-${new Date().toISOString().slice(0, 10)}.pdf`,
       type: 'application/pdf',
       data: await brandPdf(ui, brand.id, q.toString(), signSession(c.user, 120)),
     }
+    saveReport(db, {
+      brandId: brand.id,
+      kind: 'pdf',
+      filename: out.__download,
+      type: out.type,
+      data: out.data,
+      params: Object.fromEntries(query),
+      userId: c.user.id,
+    })
+    return out
   }),
   // AI helpers on one comment. The app never posts: a draft is text to copy.
   r('POST', '/api/comments/:id/draft', adminComment, async ({ db, params }) => {

@@ -2,6 +2,19 @@ import type { Dict } from '../i18n.ts'
 
 export const ro: Dict = {
   strings: {
+    'Saved reports and exports': 'Rapoarte și exporturi salvate',
+    'Every PDF, Excel and CSV made for this brand, kept to open again':
+      'Fiecare PDF, Excel și CSV făcut pentru acest brand, păstrat ca să-l deschizi din nou',
+    Made: 'Creat',
+    File: 'Fișier',
+    By: 'De',
+    Size: 'Mărime',
+    Download: 'Descarcă',
+    'Delete {name}?': 'Ștergi {name}?',
+    'Reports you make with Export are kept here.':
+      'Rapoartele făcute cu Exportă sunt păstrate aici.',
+    'Update reports': 'Rapoarte de actualizare',
+    'No such report.': 'Nu există acest raport.',
     'Period before': 'Perioada anterioară',
     'What the AI understood': 'Ce a înțeles AI-ul',
     replied: 'a răspuns',

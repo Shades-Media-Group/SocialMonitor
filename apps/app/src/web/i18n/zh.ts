@@ -2,6 +2,18 @@ import type { Dict } from '../i18n.ts'
 
 export const zh: Dict = {
   strings: {
+    'Saved reports and exports': '已保存的报告和导出',
+    'Every PDF, Excel and CSV made for this brand, kept to open again':
+      '为该品牌生成的每个 PDF、Excel 和 CSV 都会保存，便于再次打开',
+    Made: '生成时间',
+    File: '文件',
+    By: '生成人',
+    Size: '大小',
+    Download: '下载',
+    'Delete {name}?': '删除 {name}？',
+    'Reports you make with Export are kept here.': '通过导出生成的报告都会保存在这里。',
+    'Update reports': '更新报告',
+    'No such report.': '找不到这份报告。',
     'Period before': '上一时段',
     'What the AI understood': 'AI 的理解',
     replied: '已回复',

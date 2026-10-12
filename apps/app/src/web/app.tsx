@@ -21,8 +21,8 @@ import { People } from './people.tsx'
 
 export const TABS = [
   ['overview', 'Overview'],
-  ['comments', 'Comments'],
   ['posts', 'Posts'],
+  ['comments', 'Comments'],
   ['calendar', 'Calendar'],
   ['reports', 'Reports'],
   ['schedules', 'Schedules'],

@@ -99,6 +99,20 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL
 );
 
+-- Every report and export someone generated, kept as a file under data/reports/ to open again.
+CREATE TABLE IF NOT EXISTS saved_reports (
+  id INTEGER PRIMARY KEY,
+  brand_id INTEGER REFERENCES brands(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  filename TEXT NOT NULL,
+  path TEXT NOT NULL,
+  type TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  params TEXT NOT NULL DEFAULT '{}',
+  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL
+);
+
 -- People who can open the dashboard. A super admin sees and manages everything; everyone else
 -- sees only the brands they are a member of, as a viewer or as that brand's admin.
 CREATE TABLE IF NOT EXISTS users (
