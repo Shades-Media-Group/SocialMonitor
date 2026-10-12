@@ -444,6 +444,16 @@ function Dashboard({ me }: { me: Me }) {
           <div class="sm-navpanel__foot">
             <span class="sm-live-dot" aria-hidden="true" data-on={running ? '1' : undefined} />
             {running ? t('Reading…') : t('Updated {when}', { when: ago(lastRun) })}
+            <button
+              class="sm-navpanel__out"
+              type="button"
+              title={me.name || me.email}
+              onClick={() =>
+                api.post('/api/auth/logout').then(() => dispatchEvent(new Event('sm-signed-out')))
+              }
+            >
+              {t('Sign out')}
+            </button>
           </div>
         </div>
       </aside>
