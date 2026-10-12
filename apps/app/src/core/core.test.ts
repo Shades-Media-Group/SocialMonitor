@@ -14,6 +14,7 @@ import { nextRun } from './schedule.ts'
 import { exportAll, importAll } from './transfer.ts'
 import { watched } from './insights.ts'
 import { badCount, setAlerts } from './alerts.ts'
+import { knownPostIds } from './store.ts'
 import { setTrackers } from './store.ts'
 import type { Schedule } from './types.ts'
 
@@ -259,5 +260,49 @@ describe('negative comments report', () => {
       setVerdict(db, row.id, row.text === 'great' ? 'praise' : 'complaint', false, '')
     expect(badCount(db, brand.id)).toBe(1)
     expect(badCount(db, brand.id, '2999-01-01')).toBe(0)
+  })
+})
+
+describe('posts read before photos were kept', () => {
+  it('are read once more, then skipped', () => {
+    const db = openDb(':memory:')
+    const brand = addBrand(db, 'Test', ['https://www.tiktok.com/@test'])
+    const [profile] = listProfiles(db, brand.id)
+    db.prepare(
+      `INSERT INTO posts (profile_id, network, ext_id, url, kind, caption, comments_count, fetched_at)
+       VALUES (?, 'tiktok', 'old', 'u', 'video', '', 4, '2026-01-01'),
+              (?, 'tiktok', 'quiet', 'u', 'video', '', 0, '2026-01-01')`,
+    ).run(profile!.id, profile!.id)
+    expect([...knownPostIds(db, profile!.id)]).toEqual(['quiet'])
+    savePost(db, profile!, {
+      ext_id: 'old',
+      url: 'u',
+      posted_at: null,
+      kind: 'video',
+      caption: '',
+      thumb_url: null,
+      likes: 0,
+      comments_count: 4,
+      shares: 0,
+      views: 0,
+      comments: [
+        {
+          ext_id: 'a',
+          parent_ext_id: null,
+          author: 'x',
+          text: '',
+          likes: 0,
+          posted_at: null,
+          author_avatar: '/media/tiktok/people/x.jpg',
+          media_url: '/media/tiktok/comments/a.jpg',
+        },
+      ],
+    })
+    expect(knownPostIds(db, profile!.id).has('old')).toBe(true)
+    const [c] = listComments(db)
+    expect([c!.author_avatar, c!.media_url]).toEqual([
+      '/media/tiktok/people/x.jpg',
+      '/media/tiktok/comments/a.jpg',
+    ])
   })
 })

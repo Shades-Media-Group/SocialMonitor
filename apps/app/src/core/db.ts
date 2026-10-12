@@ -221,6 +221,9 @@ function migrate(db: DatabaseSync) {
     db.exec('ALTER TABLE comments ADD COLUMN urgency INTEGER')
     db.exec('ALTER TABLE comments ADD COLUMN emotion TEXT')
   }
+  // When a post's comments were last read with their people's photos and attached pictures.
+  // Posts read before that was collected stay "unknown" until one update reads them again.
+  if (!has('posts', 'people_read_at')) db.exec('ALTER TABLE posts ADD COLUMN people_read_at TEXT')
   // Who gets the bad-comments report, in which language, and whether it goes out after updates.
   if (!has('brands', 'alert_emails')) {
     db.exec("ALTER TABLE brands ADD COLUMN alert_emails TEXT NOT NULL DEFAULT '[]'")

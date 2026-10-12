@@ -143,11 +143,18 @@ export const latestPostId = (db: DB, profileId: number) =>
     profileId,
   )?.ext_id ?? null
 
+/**
+ * Posts an update can skip: those whose comments were already read with photos and pictures,
+ * or that have none. Older posts are read once more so their comments get them too.
+ */
 export const knownPostIds = (db: DB, profileId: number) =>
   new Set(
-    all<{ ext_id: string }>(db, 'SELECT ext_id FROM posts WHERE profile_id = ?', profileId).map(
-      (r) => r.ext_id,
-    ),
+    all<{ ext_id: string }>(
+      db,
+      `SELECT ext_id FROM posts WHERE profile_id = ?
+         AND (people_read_at IS NOT NULL OR coalesce(comments_count, 0) = 0)`,
+      profileId,
+    ).map((r) => r.ext_id),
   )
 
 // Posts and comments
@@ -212,6 +219,8 @@ export function savePost(
     )
     if (!before) newComments++
   }
+  if (p.comments.length)
+    db.prepare('UPDATE posts SET people_read_at = ? WHERE id = ?').run(t, post.id)
   closeAnswered(db, post.id)
   return { post, newComments }
 }
