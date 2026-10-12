@@ -25,18 +25,31 @@ export interface RunRow {
   report?: string | null
 }
 
+import { lang, t } from './i18n.ts'
+
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(path, {
     method,
     headers: body ? { 'content-type': 'application/json' } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
+    // Sign-in requests carry the language, so emails arrive in it.
+    body: body
+      ? JSON.stringify(
+          path.startsWith('/api/auth/') || path.startsWith('/api/users')
+            ? { lang, ...(body as object) }
+            : body,
+        )
+      : undefined,
   })
   const data = await res.json().catch(() => ({ error: `The server answered ${res.status}.` }))
   // The session ended (signed out elsewhere, expired, blocked): back to the sign-in screen.
   if (res.status === 401 && !path.startsWith('/api/auth/'))
     dispatchEvent(new Event('sm-signed-out'))
   if (!res.ok)
-    throw new Error((data as { error?: string }).error ?? `The server answered ${res.status}.`)
+    throw new Error(
+      t((data as { error?: string }).error ?? 'The server answered {status}.', {
+        status: res.status,
+      }),
+    )
   return data as T
 }
 

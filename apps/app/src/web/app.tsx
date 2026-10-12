@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'preact/hooks'
+import type { ComponentChildren } from 'preact'
+import { t } from './i18n.ts'
 import type { BrandRow, Network, RunRow } from './api.ts'
 import { api } from './api.ts'
 import { Icon, Logo, ago } from './ui.tsx'
@@ -71,6 +73,8 @@ export interface AppState {
   mode: ViewMode
   /** The signed-in person. */
   me: Me
+  /** The header's right side: freshness, view switch, Update. Set by the shell. */
+  actions?: ComponentChildren
 }
 
 /** What a brand's tabs receive besides the app state. */
@@ -118,6 +122,7 @@ function Dashboard({ me }: { me: Me }) {
   const [version, setVersion] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
   const [mode, setMode] = useState<ViewMode>(readMode)
+  const [navOpen, setNavOpen] = useState(false)
 
   const reload = useCallback(async () => {
     setBrands(await api.get<BrandRow[]>('/api/brands'))
@@ -145,7 +150,7 @@ function Dashboard({ me }: { me: Me }) {
       const live = runs.find((r) => r.status === 'running') ?? null
       if (!alive) return
       setRunning((prev) => {
-        if (prev && !live) setToast('Update finished. The report is ready.')
+        if (prev && !live) setToast(t('Update finished. The report is ready.'))
         return live
       })
       await reload().catch(() => {})
@@ -191,7 +196,7 @@ function Dashboard({ me }: { me: Me }) {
     version,
     openUpdate: (brandId) =>
       brandId && brands.find((b) => b.id === brandId)?.my_role !== 'admin'
-        ? setToast("Only this brand's admins can run updates.")
+        ? setToast(t("Only this brand's admins can run updates."))
         : setUpdate({ open: true, brandId }),
     notify: setToast,
     mode,
@@ -202,80 +207,164 @@ function Dashboard({ me }: { me: Me }) {
 
   if (route.page === 'print') return loaded && brand ? <PrintReport brand={brand} /> : null
 
-  return (
-    <div class="sm-app">
-      <header class="sm-top">
-        <a class="sm-top__home" href="#/" aria-label="SocialMonitor, all brands">
-          <Logo />
-        </a>
-        {brand && (
-          <nav class="sm-crumb" aria-label="You are here">
-            <a href="#/">Brands</a>
-            <span aria-hidden="true">/</span>
-            <span>{brand.name}</span>
-          </nav>
+  // What every page header carries on its right: freshness, the view switch and the one red action.
+  const actions = (
+    <>
+      <span class="sm-fresh" aria-live="polite">
+        {running ? (
+          <>
+            <span class="sm-live" aria-hidden="true" /> {t('Reading…')}
+          </>
+        ) : (
+          t('Updated {when}', { when: ago(lastRun) })
         )}
-        <span class="sm-top__spacer" />
-        <span class="sm-top__fresh" aria-live="polite">
-          {running ? (
-            <>
-              <span class="sm-live" aria-hidden="true" /> Reading…
-            </>
-          ) : (
-            <>Updated {ago(lastRun)}</>
-          )}
-        </span>
-        <div class="g-segmented sm-seg sm-mode" role="radiogroup" aria-label="View">
-          {(['visual', 'json'] as const).map((m) => (
-            <button
-              type="button"
-              role="radio"
-              aria-checked={mode === m}
-              onClick={() => {
-                setMode(m)
-                saveMode(m)
-              }}
-            >
-              {m === 'visual' ? 'Visual' : 'JSON'}
-            </button>
-          ))}
-        </div>
-        {manages && (
-          <a
-            class="sm-top__link"
-            href="#/people"
-            aria-current={route.page === 'people' ? 'page' : undefined}
-          >
-            People
-          </a>
-        )}
-        {canRun && route.page !== 'people' && (!brand || brand.my_role === 'admin') && (
+      </span>
+      <div class="g-segmented sm-seg sm-mode" role="radiogroup" aria-label={t('View')}>
+        {(['visual', 'json'] as const).map((m) => (
           <button
-            class="g-btn g-btn--primary g-btn--sm"
             type="button"
-            disabled={!brands.length || !!running}
-            onClick={() => setUpdate({ open: true, brandId: brand?.id })}
+            role="radio"
+            aria-checked={mode === m}
+            onClick={() => {
+              setMode(m)
+              saveMode(m)
+            }}
           >
-            Update{brand ? ` ${brand.name}` : ''}
+            {m === 'visual' ? t('Visual') : 'JSON'}
           </button>
-        )}
+        ))}
+      </div>
+      {canRun && route.page !== 'people' && (!brand || brand.my_role === 'admin') && (
         <button
-          class="g-icon-btn"
+          class="g-btn g-btn--primary g-btn--sm"
           type="button"
-          aria-label="Settings"
-          onClick={() => setSettingsOpen(true)}
+          disabled={!brands.length || !!running}
+          onClick={() => setUpdate({ open: true, brandId: brand?.id })}
         >
-          <Icon name="settings" />
+          {t('Update')}
         </button>
-      </header>
-
-      {!loaded ? null : route.page === 'people' && manages ? (
-        <People {...state} />
-      ) : route.page === 'brand' && brand ? (
-        <BrandPage {...state} brand={brand} tab={route.tab} />
-      ) : (
-        <Home {...state} adding={route.page === 'new'} />
       )}
+    </>
+  )
+  const page = { ...state, actions }
+
+  return (
+    <div class={`sm-shell${navOpen ? ' is-nav-open' : ''}`}>
+      <aside class="sm-nav" aria-label={t('Navigation')}>
+        <div class="sm-nav__top">
+          <a class="sm-nav__logo" href="#/" aria-label={t('SocialMonitor, all brands')}>
+            <Logo />
+          </a>
+          <button
+            class="g-icon-btn sm-nav__close"
+            type="button"
+            aria-label={t('Close menu')}
+            onClick={() => setNavOpen(false)}
+          >
+            <Icon name="close" />
+          </button>
+        </div>
+        <nav class="sm-nav__list" onClick={() => setNavOpen(false)}>
+          <a
+            class="sm-nav__item"
+            href="#/"
+            aria-current={route.page === 'home' ? 'page' : undefined}
+          >
+            {t('All brands')}
+          </a>
+          <p class="sm-nav__group">{t('Brands')}</p>
+          {brands.map((b) => {
+            const open = brand?.id === b.id
+            const waiting = b.counts.needs_reply ?? 0
+            return (
+              <div class={`sm-nav__brand${open ? ' is-open' : ''}`}>
+                <a
+                  class="sm-nav__item"
+                  href={`#/b/${b.id}/overview`}
+                  aria-current={
+                    open && route.page === 'brand' && route.tab === 'overview' ? 'page' : undefined
+                  }
+                >
+                  <span class="sm-nav__initial" aria-hidden="true">
+                    {b.name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span class="sm-nav__name">{b.name}</span>
+                  {waiting > 0 && (
+                    <span class="sm-nav__count g-num" title={t('Waiting for an answer')}>
+                      {waiting}
+                    </span>
+                  )}
+                </a>
+                {open && route.page === 'brand' && (
+                  <div class="sm-nav__sub">
+                    {TABS.filter(([k]) => k !== 'schedules' || b.my_role === 'admin').map(
+                      ([k, text]) => (
+                        <a
+                          class="sm-nav__item"
+                          href={`#/b/${b.id}/${k}`}
+                          aria-current={route.tab === k ? 'page' : undefined}
+                        >
+                          {t(text)}
+                        </a>
+                      ),
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          {me.super && (
+            <a
+              class="sm-nav__item sm-nav__add"
+              href="#/new"
+              aria-current={route.page === 'new' ? 'page' : undefined}
+            >
+              {t('Add a brand')}
+            </a>
+          )}
+        </nav>
+        <div class="sm-nav__foot">
+          {manages && (
+            <a
+              class="sm-nav__item"
+              href="#/people"
+              aria-current={route.page === 'people' ? 'page' : undefined}
+            >
+              {t('People')}
+            </a>
+          )}
+          <button class="sm-nav__item" type="button" onClick={() => setSettingsOpen(true)}>
+            {t('Settings')}
+          </button>
+          <p class="sm-nav__me" title={me.email}>
+            {me.name || me.username || me.email}
+          </p>
+        </div>
+      </aside>
+      <button
+        class="sm-nav__scrim"
+        type="button"
+        aria-label={t('Close menu')}
+        onClick={() => setNavOpen(false)}
+      />
+
+      <div class="sm-main">
+        <button
+          class="g-icon-btn sm-nav__open"
+          type="button"
+          aria-label={t('Menu')}
+          onClick={() => setNavOpen(true)}
+        >
+          <Icon name="menu" />
+        </button>
+        {!loaded ? null : route.page === 'people' && manages ? (
+          <People {...page} />
+        ) : route.page === 'brand' && brand ? (
+          <BrandPage {...page} brand={brand} tab={route.tab} />
+        ) : (
+          <Home {...page} adding={route.page === 'new'} />
+        )}
+      </div>
 
       <UpdateSheet
         open={update.open}

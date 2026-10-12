@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks'
 import { api } from './api.ts'
 import { Icon } from './ui.tsx'
+import { t } from './i18n.ts'
 
 interface Account {
   id: string
@@ -42,7 +43,7 @@ export function Accounts({ notify }: { notify: (s: string) => void }) {
     try {
       await api.post('/api/accounts', edit)
       setEdit(null)
-      notify('Account saved, encrypted.')
+      notify(t('Account saved, encrypted.'))
       load()
     } catch (err) {
       setError((err as Error).message)
@@ -71,13 +72,13 @@ export function Accounts({ notify }: { notify: (s: string) => void }) {
                 <span>{a.username}</span>
                 {a.note && <span class="sm-quiet">{a.note}</span>}
                 {shown[a.id] !== undefined && (
-                  <code class="sm-accounts__pw">{shown[a.id] || '(no password)'}</code>
+                  <code class="sm-accounts__pw">{shown[a.id] || t('(no password)')}</code>
                 )}
               </div>
               <div class="sm-accounts__do">
                 {a.has_password && local && (
                   <button class="sm-textbtn" type="button" onClick={() => reveal(a)}>
-                    {shown[a.id] !== undefined ? 'Hide' : 'Reveal'}
+                    {shown[a.id] !== undefined ? t('Hide') : t('Reveal')}
                   </button>
                 )}
                 <button
@@ -85,12 +86,15 @@ export function Accounts({ notify }: { notify: (s: string) => void }) {
                   type="button"
                   onClick={() => setEdit({ ...a, password: '' })}
                 >
-                  Edit
+                  {t('Edit')}
                 </button>
                 <button
                   class="g-icon-btn"
                   type="button"
-                  aria-label={`Delete ${a.network} ${a.username}`}
+                  aria-label={t('Delete {network} {username}', {
+                    network: a.network === 'Other' ? t('Other') : a.network,
+                    username: a.username,
+                  })}
                   onClick={async () => {
                     await api.del(`/api/accounts/${a.id}`)
                     load()
@@ -108,17 +112,17 @@ export function Accounts({ notify }: { notify: (s: string) => void }) {
         <form class="sm-accounts__form" onSubmit={save}>
           <select
             class="g-select"
-            aria-label="Network"
+            aria-label={t('Network')}
             value={edit.network ?? 'TikTok'}
             onChange={(e) => setEdit({ ...edit, network: (e.target as HTMLSelectElement).value })}
           >
             {NETWORKS.map((n) => (
-              <option>{n}</option>
+              <option value={n}>{n === 'Other' ? t('Other') : n}</option>
             ))}
           </select>
           <input
             class="g-input"
-            placeholder="Username or email"
+            placeholder={t('Username or email')}
             autocomplete="off"
             value={edit.username ?? ''}
             onInput={(e) => setEdit({ ...edit, username: (e.target as HTMLInputElement).value })}
@@ -126,28 +130,28 @@ export function Accounts({ notify }: { notify: (s: string) => void }) {
           <input
             class="g-input"
             type="password"
-            placeholder={edit.id ? 'New password (empty keeps the old one)' : 'Password'}
+            placeholder={edit.id ? t('New password (empty keeps the old one)') : t('Password')}
             autocomplete="new-password"
             value={edit.password ?? ''}
             onInput={(e) => setEdit({ ...edit, password: (e.target as HTMLInputElement).value })}
           />
           <input
             class="g-input"
-            placeholder="Note, e.g. spare account for reading"
+            placeholder={t('Note, e.g. spare account for reading')}
             value={edit.note ?? ''}
             onInput={(e) => setEdit({ ...edit, note: (e.target as HTMLInputElement).value })}
           />
           {error && <p class="g-error">{error}</p>}
           <div class="sm-inline">
             <button class="g-btn g-btn--primary g-btn--sm" type="submit">
-              Save account
+              {t('Save account')}
             </button>
             <button
               class="g-btn g-btn--ghost g-btn--sm"
               type="button"
               onClick={() => setEdit(null)}
             >
-              Cancel
+              {t('Cancel')}
             </button>
           </div>
         </form>
@@ -157,13 +161,14 @@ export function Accounts({ notify }: { notify: (s: string) => void }) {
           type="button"
           onClick={() => setEdit({ network: 'TikTok' })}
         >
-          Add an account
+          {t('Add an account')}
         </button>
       )}
       <p class="sm-quiet">
-        Encrypted on this computer, with the key in its Keychain. SocialMonitor never signs in with
-        them, and they never appear in exports, reports, JSON or anything sent to Claude.
-        {!local && ' Passwords can be revealed only on the computer SocialMonitor runs on.'}
+        {t(
+          'Encrypted on this computer, with the key in its Keychain. SocialMonitor never signs in with them, and they never appear in exports, reports, JSON or anything sent to Claude.',
+        )}
+        {!local && ` ${t('Passwords can be revealed only on the computer SocialMonitor runs on.')}`}
       </p>
     </div>
   )

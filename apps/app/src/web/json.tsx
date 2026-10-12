@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
+import { t } from './i18n.ts'
 
 /**
  * The JSON side of a screen: exactly the data the screen shows, to copy into a chat with
@@ -37,8 +38,11 @@ export function JsonPanel({
       // V8 reports a character position; turn it into the line people see.
       const at = Number(/position (\d+)/.exec((e as Error).message)?.[1])
       const line = Number.isFinite(at) ? text.slice(0, at).split('\n').length : null
+      const error = (e as Error).message.replace(/^JSON\.parse: |^Unexpected/, 'unexpected')
       throw new Error(
-        `Not valid JSON${line ? ` on line ${line}` : ''}: ${(e as Error).message.replace(/^JSON\.parse: |^Unexpected/, 'unexpected')}`,
+        line
+          ? t('Not valid JSON on line {line}: {error}', { line, error })
+          : t('Not valid JSON: {error}', { error }),
         { cause: e },
       )
     }
@@ -61,7 +65,7 @@ export function JsonPanel({
 
   const copy = async () => {
     await navigator.clipboard.writeText(text)
-    setStatus('Copied.')
+    setStatus(t('Copied.'))
   }
 
   return (
@@ -69,12 +73,14 @@ export function JsonPanel({
       <div class="sm-json__bar">
         <span class="sm-quiet">
           {note ??
-            (onSave ? 'Edit and save, or copy it into a chat.' : 'Read-only. Copy it into a chat.')}
+            (onSave
+              ? t('Edit and save, or copy it into a chat.')
+              : t('Read-only. Copy it into a chat.'))}
         </span>
         <span class="sm-json__actions">
           {status && <span class="sm-quiet">{status}</span>}
           <button class="g-btn g-btn--ghost g-btn--sm" type="button" onClick={copy}>
-            Copy
+            {t('Copy')}
           </button>
           {onSave && (
             <>
@@ -87,7 +93,7 @@ export function JsonPanel({
                   setBase(pretty)
                 }}
               >
-                Undo changes
+                {t('Undo changes')}
               </button>
               <button
                 class="g-btn g-btn--primary g-btn--sm"
@@ -95,7 +101,7 @@ export function JsonPanel({
                 disabled={!dirty || busy}
                 onClick={save}
               >
-                Save
+                {t('Save')}
               </button>
             </>
           )}

@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { api } from './api.ts'
 import { Logo } from './ui.tsx'
+import { t } from './i18n.ts'
 
 export interface Me {
   id: number
@@ -60,7 +61,9 @@ function Frame({
       <h1>{title}</h1>
       {lead && <p class="sm-auth__lead">{lead}</p>}
       {children}
-      <p class="sm-auth__foot">SocialMonitor. Free and open source. Built by Shades Media Group.</p>
+      <p class="sm-auth__foot">
+        {t('SocialMonitor. Free and open source. Built by Shades Media Group.')}
+      </p>
     </main>
   )
 }
@@ -113,10 +116,10 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   if (link)
     return (
       <Frame
-        title={link.kind === 'invite' ? 'Set up your account' : 'Choose a new password'}
+        title={link.kind === 'invite' ? t('Set up your account') : t('Choose a new password')}
         lead={
           link.kind === 'invite'
-            ? 'Pick a password. You will sign in with it and a code we email you.'
+            ? t('Pick a password. You will sign in with it and a code we email you.')
             : undefined
         }
       >
@@ -137,10 +140,15 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
         >
           {link.kind === 'invite' && (
             <>
-              <Field label="Your name" autocomplete="name" value={f.name} onInput={set('name')} />
               <Field
-                label="Username"
-                hint="Optional. You can sign in with it instead of your email."
+                label={t('Your name')}
+                autocomplete="name"
+                value={f.name}
+                onInput={set('name')}
+              />
+              <Field
+                label={t('Username')}
+                hint={t('Optional. You can sign in with it instead of your email.')}
                 autocomplete="username"
                 value={f.username}
                 onInput={set('username')}
@@ -148,8 +156,8 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             </>
           )}
           <Field
-            label="Password"
-            hint="At least 10 characters."
+            label={t('Password')}
+            hint={t('At least 10 characters.')}
             type="password"
             required
             minLength={10}
@@ -158,7 +166,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             onInput={set('password')}
           />
           {err}
-          {submit('Save password')}
+          {submit(t('Save password'))}
         </form>
       </Frame>
     )
@@ -166,8 +174,8 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   if (info.setup)
     return info.local ? (
       <Frame
-        title="Create the first account"
-        lead="It becomes the super admin: it sees every brand and invites everyone else."
+        title={t('Create the first account')}
+        lead={t('It becomes the super admin: it sees every brand and invites everyone else.')}
       >
         <form
           class="sm-auth__form"
@@ -183,14 +191,14 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
           })}
         >
           <Field
-            label="Your name"
+            label={t('Your name')}
             required
             autocomplete="name"
             value={f.name}
             onInput={set('name')}
           />
           <Field
-            label="Email"
+            label={t('Email')}
             type="email"
             required
             autocomplete="email"
@@ -198,15 +206,15 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             onInput={set('email')}
           />
           <Field
-            label="Username"
-            hint="Optional."
+            label={t('Username')}
+            hint={t('Optional.')}
             autocomplete="username"
             value={f.username}
             onInput={set('username')}
           />
           <Field
-            label="Password"
-            hint="At least 10 characters."
+            label={t('Password')}
+            hint={t('At least 10 characters.')}
             type="password"
             required
             minLength={10}
@@ -215,13 +223,15 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             onInput={set('password')}
           />
           {err}
-          {submit('Create account')}
+          {submit(t('Create account'))}
         </form>
       </Frame>
     ) : (
       <Frame
-        title="Not set up yet"
-        lead="Create the first account on the computer SocialMonitor runs on, then come back here."
+        title={t('Not set up yet')}
+        lead={t(
+          'Create the first account on the computer SocialMonitor runs on, then come back here.',
+        )}
       >
         {null}
       </Frame>
@@ -230,11 +240,13 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   if (step === 'code' && ticket)
     return (
       <Frame
-        title="Check your email"
+        title={t('Check your email')}
         lead={
           ticket.mail
-            ? `We sent a six-digit code to ${ticket.to}. It works for 10 minutes.`
-            : 'Email is not set up, so the code was printed in the console of the computer SocialMonitor runs on.'
+            ? t('We sent a six-digit code to {to}. It works for 10 minutes.', { to: ticket.to })
+            : t(
+                'Email is not set up, so the code was printed in the console of the computer SocialMonitor runs on.',
+              )
         }
       >
         <form
@@ -244,7 +256,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
           })}
         >
           <Field
-            label="Code"
+            label={t('Code')}
             required
             inputMode="numeric"
             autocomplete="one-time-code"
@@ -255,7 +267,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             inputRef={focus}
           />
           {err}
-          {submit('Sign in')}
+          {submit(t('Sign in'))}
           <button
             class="sm-textbtn"
             type="button"
@@ -264,7 +276,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
               setF({ ...f, code: '' })
             }}
           >
-            Start again
+            {t('Start again')}
           </button>
         </form>
       </Frame>
@@ -273,11 +285,13 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   if (step === 'forgot' || step === 'sent')
     return (
       <Frame
-        title="Forgot your password"
+        title={t('Forgot your password')}
         lead={
           step === 'sent'
-            ? 'If that account exists, a link to choose a new password is on its way. It works for 30 minutes.'
-            : 'Give your email or username. We email you a link to choose a new password.'
+            ? t(
+                'If that account exists, a link to choose a new password is on its way. It works for 30 minutes.',
+              )
+            : t('Give your email or username. We email you a link to choose a new password.')
         }
       >
         {step === 'forgot' && (
@@ -289,48 +303,48 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             })}
           >
             <Field
-              label="Email or username"
+              label={t('Email or username')}
               required
               autocomplete="username"
               value={f.login}
               onInput={set('login')}
             />
             {err}
-            {submit('Send link')}
+            {submit(t('Send link'))}
           </form>
         )}
         <button class="sm-textbtn" type="button" onClick={() => setStep('signin')}>
-          Back to sign in
+          {t('Back to sign in')}
         </button>
       </Frame>
     )
 
   return (
-    <Frame title="Sign in">
+    <Frame title={t('Sign in')}>
       <form
         class="sm-auth__form"
         onSubmit={go(async () => {
-          const t = await api.post<{ ticket: string; to: string; mail: boolean }>(
+          const r = await api.post<{ ticket: string; to: string; mail: boolean }>(
             '/api/auth/login',
             {
               login: f.login,
               password: f.password,
             },
           )
-          setTicket(t)
+          setTicket(r)
           setF({ ...f, password: '', code: '' })
           setStep('code')
         })}
       >
         <Field
-          label="Email or username"
+          label={t('Email or username')}
           required
           autocomplete="username"
           value={f.login}
           onInput={set('login')}
         />
         <Field
-          label="Password"
+          label={t('Password')}
           type="password"
           required
           autocomplete="current-password"
@@ -338,9 +352,9 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
           onInput={set('password')}
         />
         {err}
-        {submit('Continue')}
+        {submit(t('Continue'))}
         <button class="sm-textbtn" type="button" onClick={() => setStep('forgot')}>
-          Forgot your password?
+          {t('Forgot your password?')}
         </button>
       </form>
     </Frame>

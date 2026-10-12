@@ -3,6 +3,7 @@ import type { BrandView } from '../app.tsx'
 import type { BrandRow, CommentRow } from '../api.ts'
 import { api } from '../api.ts'
 import { Empty, NetworkMark, Segmented, ago, count } from '../ui.tsx'
+import { lang, t } from '../i18n.ts'
 import { JsonPanel } from '../json.tsx'
 import { LabelPill } from '../labels.tsx'
 import { Rate, brandCategories } from '../rate.tsx'
@@ -43,6 +44,26 @@ export function CommentList({
       children.set(c.parent_ext_id, [...(children.get(c.parent_ext_id) ?? []), c])
   const roots = comments.filter((c) => !c.parent_ext_id || !ids.has(c.parent_ext_id))
 
+  // Translations and drafted replies, shown under the comment they belong to.
+  const [extra, setExtra] = useState<
+    Record<number, { kind: 'translation' | 'draft'; text: string }>
+  >({})
+  const [busy, setBusy] = useState<number | null>(null)
+  const ask = async (c: CommentRow, kind: 'translation' | 'draft') => {
+    setBusy(c.id)
+    try {
+      const r = await api.post<{ translation?: string; draft?: string }>(
+        `/api/comments/${c.id}/${kind === 'translation' ? 'translate' : 'draft'}`,
+        { lang },
+      )
+      setExtra((x) => ({ ...x, [c.id]: { kind, text: (r.translation ?? r.draft)! } }))
+    } catch (e) {
+      setExtra((x) => ({ ...x, [c.id]: { kind, text: (e as Error).message } }))
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const mark = async (c: CommentRow, reply_status: 'done' | 'ignored' | 'open') => {
     await api.patch(`/api/comments/${c.id}`, { reply_status })
     onChange?.()
@@ -60,7 +81,7 @@ export function CommentList({
         <div class="sm-c__body">
           <header class="sm-c__meta">
             <span class="sm-c__author">{own ? `${brand?.name ?? c.author}` : c.author}</span>
-            {own && <span class="sm-c__own">Brand reply</span>}
+            {own && <span class="sm-c__own">{t('Brand reply')}</span>}
             <NetworkMark network={c.network} size={13} />
             <span>{ago(c.posted_at)}</span>
             {c.likes ? <span class="g-num">{count(c.likes, 'like')}</span> : null}
@@ -69,7 +90,24 @@ export function CommentList({
             )}
           </header>
           <p class="sm-c__text">{c.text}</p>
-          {c.reason && !own && <p class="sm-c__reason">AI: {c.reason}</p>}
+          {c.reason && !own && (
+            <p class="sm-c__reason">{t('AI: {reason}', { reason: c.reason })}</p>
+          )}
+          {(extra[c.id] || (lang === 'en' && c.translation)) && (
+            <p class={`sm-c__extra${extra[c.id]?.kind === 'draft' ? ' sm-c__extra--draft' : ''}`}>
+              <b>{extra[c.id]?.kind === 'draft' ? t('Draft reply') : t('Translation')}</b>{' '}
+              {extra[c.id]?.text ?? c.translation}
+              {extra[c.id]?.kind === 'draft' && (
+                <button
+                  class="sm-textbtn"
+                  type="button"
+                  onClick={() => navigator.clipboard?.writeText(extra[c.id]!.text)}
+                >
+                  {t('Copy')}
+                </button>
+              )}
+            </p>
+          )}
           {!own && (
             <footer class="sm-c__actions">
               {edit && (
@@ -86,19 +124,39 @@ export function CommentList({
                   (c.reply_status === 'open' ? (
                     <>
                       <button class="sm-textbtn" type="button" onClick={() => mark(c, 'done')}>
-                        Answered
+                        {t('Answered')}
                       </button>
                       <button class="sm-textbtn" type="button" onClick={() => mark(c, 'ignored')}>
-                        Skip
+                        {t('Skip')}
                       </button>
                     </>
                   ) : (
                     <button class="sm-textbtn" type="button" onClick={() => mark(c, 'open')}>
-                      {c.reply_status === 'done' ? 'Answered' : 'Skipped'} · undo
+                      {c.reply_status === 'done' ? t('Answered') : t('Skipped')} · {t('undo')}
                     </button>
                   ))}
+                {!(lang === 'en' && c.translation) && !extra[c.id] && (
+                  <button
+                    class="sm-textbtn"
+                    type="button"
+                    disabled={busy === c.id}
+                    onClick={() => ask(c, 'translation')}
+                  >
+                    {t('Translate')}
+                  </button>
+                )}
+                {edit && (
+                  <button
+                    class="sm-textbtn"
+                    type="button"
+                    disabled={busy === c.id}
+                    onClick={() => ask(c, 'draft')}
+                  >
+                    {t('Draft a reply')}
+                  </button>
+                )}
                 <a class="sm-textbtn" href={c.post_url} target="_blank" rel="noreferrer">
-                  Open the post
+                  {t('Open the post')}
                 </a>
               </span>
             </footer>
@@ -144,13 +202,13 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
     const p = new URLSearchParams(qs)
     p.set('limit', '300')
     if (postId) p.set('post', postId)
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       api
         .get<CommentRow[]>(`/api/comments?${p}`)
         .then(setRows)
         .catch(() => setRows([]))
     }, 150)
-    return () => clearTimeout(t)
+    return () => clearTimeout(timer)
   }, [qs, postId, version, tick])
 
   const cats = brandCategories(brand).filter((c) => !sentiment || c.sentiment === sentiment)
@@ -202,49 +260,52 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
       }
       if (touched) changed++
     }
-    setTick((t) => t + 1)
-    notify(`${changed} ${changed === 1 ? 'comment' : 'comments'} updated.`)
-    return `Saved ${changed}. Editable: label, needs_reply, reply_status, reason, sentiment, category.`
+    setTick((x) => x + 1)
+    notify(t('{n} updated.', { n: count(changed, 'comment') }))
+    return t(
+      'Saved {n}. Editable: label, needs_reply, reply_status, reason, sentiment, category.',
+      { n: changed },
+    )
   }
 
   return (
     <div class="sm-stack">
       <div class="sm-toolbar">
         <Segmented<Filter>
-          label="Show"
+          label={t('Show')}
           value={filter}
           onChange={setFilter}
           options={[
-            ['all', 'All'],
-            ['reply', 'To answer'],
-            ['complaint', 'Complaints'],
-            ['question', 'Questions'],
-            ['praise', 'Praise'],
+            ['all', t('All')],
+            ['reply', t('To answer')],
+            ['complaint', t('Complaints')],
+            ['question', t('Questions')],
+            ['praise', t('Praise')],
           ]}
         />
         <select
           class="g-select sm-select-sm"
           value={sentiment}
-          aria-label="Positive or negative"
+          aria-label={t('Positive or negative')}
           onChange={(e) => {
             setSentiment((e.target as HTMLSelectElement).value)
             setCategory('')
           }}
         >
-          <option value="">Rated or not</option>
-          <option value="positive">Positive</option>
-          <option value="negative">Negative</option>
-          <option value="neutral">Neutral</option>
-          <option value="none">Not rated yet</option>
+          <option value="">{t('Rated or not')}</option>
+          <option value="positive">{t('Positive')}</option>
+          <option value="negative">{t('Negative')}</option>
+          <option value="neutral">{t('Neutral')}</option>
+          <option value="none">{t('Not rated yet')}</option>
         </select>
         {(sentiment === 'positive' || sentiment === 'negative') && cats.length > 0 && (
           <select
             class="g-select sm-select-sm"
             value={category}
-            aria-label="Kind"
+            aria-label={t('Kind')}
             onChange={(e) => setCategory((e.target as HTMLSelectElement).value)}
           >
-            <option value="">Every kind</option>
+            <option value="">{t('Every kind')}</option>
             {cats.map((c) => (
               <option value={c.key}>{c.name}</option>
             ))}
@@ -253,18 +314,18 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
         <input
           class="g-input sm-search"
           type="search"
-          placeholder="Search the comments"
+          placeholder={t('Search the comments')}
           value={q}
           onInput={(e) => setQ((e.target as HTMLInputElement).value)}
         />
         <a class="sm-textbtn sm-toolbar__end" href={`/api/comments.csv?${qs}`} download>
-          Download CSV
+          {t('Download CSV')}
         </a>
       </div>
 
       {postId && (
         <p class="sm-quiet">
-          Comments under one post.{' '}
+          {t('Comments under one post.')}{' '}
           <button
             class="sm-textbtn"
             type="button"
@@ -273,7 +334,7 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
               setPostId(null)
             }}
           >
-            Show every post
+            {t('Show every post')}
           </button>
         </p>
       )}
@@ -282,13 +343,18 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
         <JsonPanel
           value={compact}
           onSave={saveJson}
-          note="Edit label, reply_status, sentiment or category, then save."
+          note={t('Edit label, reply_status, sentiment or category, then save.')}
         />
       ) : rows === null ? null : rows.length ? (
-        <CommentList comments={rows} brands={brands} onChange={() => setTick((t) => t + 1)} />
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{count(rows.length, 'comment')}</h2>
+          </header>
+          <CommentList comments={rows} brands={brands} onChange={() => setTick((x) => x + 1)} />
+        </section>
       ) : (
-        <Empty title="No comments match.">
-          Change the filters, or press Update to read new ones.
+        <Empty title={t('No comments match.')}>
+          {t('Change the filters, or press Update to read new ones.')}
         </Empty>
       )}
     </div>

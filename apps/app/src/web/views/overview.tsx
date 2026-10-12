@@ -2,13 +2,14 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { CommentRow, PostRow, Profile } from '../api.ts'
 import { api } from '../api.ts'
-import { NETWORK_NAME, NetworkMark, ago, count, fmt } from '../ui.tsx'
+import { NETWORK_NAME, NetworkMark, ago, count, fmt, pctf, short, when } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { MoodBar } from '../labels.tsx'
 import { brandCategories } from '../rate.tsx'
 import { CommentList } from './comments.tsx'
 import { EngagementChart, TimelineChart } from '../charts.tsx'
 import type { PostPoint } from '../charts.tsx'
+import { t } from '../i18n.ts'
 
 interface Insights {
   timeline: ({ day: string } & Record<
@@ -22,6 +23,7 @@ interface Insights {
     rate: number | null
     median_minutes: number | null
   }
+  labels: Record<string, number>
   reputation: number | null
   reach: number
 }
@@ -30,40 +32,29 @@ const duration = (min: number | null) =>
   min == null
     ? '–'
     : min < 60
-      ? `${min} min`
+      ? t('{n} min', { n: min })
       : min < 1440
-        ? `${Math.round(min / 60)} h`
-        : `${Math.round(min / 1440)} days`
+        ? t('{n} h', { n: Math.round(min / 60) })
+        : count(Math.round(min / 1440), 'day')
 
-/** The brand's measures for the period, as a list on hairlines: each a word and its number. */
-function Figures({ ins, days }: { ins: Insights; days: number }) {
-  const r = ins.responses
-  return (
-    <section>
-      <h2>{days ? `Last ${days} days` : 'All time'}</h2>
-      <dl class="sm-facts">
-        <div>
-          <dt>Reputation</dt>
-          <dd class="g-num">{ins.reputation == null ? '–' : `${ins.reputation} / 100`}</dd>
-        </div>
-        <div>
-          <dt>Reach (views)</dt>
-          <dd class="g-num">{fmt(ins.reach)}</dd>
-        </div>
-        <div>
-          <dt>Brand answered</dt>
-          <dd class="g-num">
-            {r.rate == null ? '–' : `${Math.round(r.rate * 100)}% of ${fmt(r.comments)}`}
-          </dd>
-        </div>
-        <div>
-          <dt>Usual time to answer</dt>
-          <dd class="g-num">{duration(r.median_minutes)}</dd>
-        </div>
-      </dl>
-    </section>
-  )
-}
+/** One measure in the strip: what it is, the number, and one line of context. */
+const Kpi = ({
+  label,
+  value,
+  sub,
+  hot,
+}: {
+  label: string
+  value: string
+  sub?: string
+  hot?: boolean
+}) => (
+  <div class="sm-kpi">
+    <dt>{label}</dt>
+    <dd class={`g-num${hot ? ' sm-hot' : ''}`}>{value}</dd>
+    {sub && <dd class="sm-kpi__sub">{sub}</dd>}
+  </div>
+)
 
 interface Summary {
   profiles: Profile[]
@@ -81,9 +72,8 @@ interface Summary {
 const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) * 100) : 0)
 
 /**
- * The brand at a glance. It opens on one sentence that says what needs doing, built from the
- * brand's own numbers, then the comments to answer, the mood, the problems people name, the
- * latest posts and the state of each network.
+ * The brand at a glance: a strip of measures for the period, then panels for the trend, what
+ * people say, the comments to answer, the problems they name, engagement, posts and networks.
  */
 export function Overview(v: BrandView) {
   const { brand, network, version, mode, openUpdate, brands, days } = v
@@ -124,7 +114,7 @@ export function Overview(v: BrandView) {
         setLatest([])
       })
     api
-      .get<PostRow[]>(`/api/posts?brand=${brand.id}&limit=6${n}`)
+      .get<PostRow[]>(`/api/posts?brand=${brand.id}&limit=8${n}`)
       .then(setPosts)
       .catch(() => setPosts([]))
   }, [brand.id, network, version, tick])
@@ -148,7 +138,7 @@ export function Overview(v: BrandView) {
   const positives = s.sentiment.filter((x) => x.sentiment === 'positive')
   const rated = s.sentiment.reduce((n, x) => n + x.n, 0)
   const neutral = s.sentiment.filter((x) => x.sentiment === 'neutral').reduce((n, x) => n + x.n, 0)
-  const name = (key: string | null) => cats.find((k) => k.key === key)?.name ?? 'No kind given'
+  const name = (key: string | null) => cats.find((k) => k.key === key)?.name ?? t('No kind given')
 
   if (mode === 'json')
     return (
@@ -181,8 +171,8 @@ export function Overview(v: BrandView) {
       />
     )
 
-  const tally = (list: typeof negatives) => (
-    <ul class="sm-tally">
+  const tally = (list: typeof negatives, good = false) => (
+    <ul class={`sm-tally${good ? ' sm-tally--good' : ''}`}>
       {list.map((x) => (
         <li>
           <span>{name(x.category)}</span>
@@ -198,220 +188,244 @@ export function Overview(v: BrandView) {
     </ul>
   )
 
+  const L = ins?.labels ?? c
+  const lTotal = L.total ?? 0
+  const lSorted = lTotal - (L.unsorted ?? 0)
+  const r = ins?.responses
+  const period = days ? t('Last {days}', { days: count(days, 'day') }) : t('All time')
+  const hasTrend = !!ins?.timeline.some(
+    (d) => d.complaint + d.question + d.suggestion + d.praise + d.other,
+  )
+
+  if (total === 0)
+    return (
+      <div class="sm-empty sm-empty--page">
+        <p class="sm-empty__title">
+          {network
+            ? t('Nothing read on {network} yet.', { network: NETWORK_NAME[network] })
+            : t('Nothing read yet.')}
+        </p>
+        <p class="sm-empty__body">
+          {t('An update reads the latest posts and every comment under them.')}{' '}
+          <button class="sm-textbtn" type="button" onClick={() => openUpdate(brand.id)}>
+            {t('Run the first update')}
+          </button>
+        </p>
+      </div>
+    )
+
   return (
     <div class="sm-overview">
-      <section class="sm-statement" aria-label="Today">
-        {total === 0 ? (
-          <p>
-            Nothing read yet{network ? ` on ${NETWORK_NAME[network]}` : ''}.{' '}
-            <button class="sm-statement__act" type="button" onClick={() => openUpdate(brand.id)}>
-              Read the latest posts
-            </button>
-          </p>
-        ) : (
-          <p>
-            {waiting ? (
-              <>
-                <b class="sm-hot">{fmt(waiting)}</b>{' '}
-                {waiting === 1 ? 'comment waits' : 'comments wait'} for an answer.{' '}
-              </>
-            ) : (
-              <>Nothing waits for an answer. </>
-            )}
-            {sorted > 0 ? (
-              <>
-                {c.complaint ? (
-                  <>
-                    Complaints are <b>{pct(c.complaint, sorted)}%</b> of what people said
-                  </>
-                ) : (
-                  <>No complaints in what people said</>
-                )}
-                {s.week.total ? (
-                  <>
-                    , and <b>{fmt(s.week.total)}</b> new comments came in this week.
-                  </>
-                ) : (
-                  '.'
-                )}
-              </>
-            ) : (
-              <>
-                <b>{fmt(total)}</b> comments are read and wait to be sorted.
-              </>
-            )}
-          </p>
-        )}
-      </section>
+      <dl class="sm-kpis" aria-label={period}>
+        <Kpi
+          label={t('Comments')}
+          value={fmt(lTotal)}
+          sub={s.week.total ? t('{n} in the last 7 days', { n: fmt(s.week.total) }) : period}
+        />
+        <Kpi
+          label={t('Waiting for an answer')}
+          value={fmt(waiting)}
+          hot={waiting > 0}
+          sub={waiting ? t('Oldest first in Comments') : t('All answered')}
+        />
+        <Kpi
+          label={t('Complaints')}
+          value={lSorted ? pctf(L.complaint ?? 0, lSorted) : '–'}
+          sub={t('{n} comments', { n: fmt(L.complaint ?? 0) })}
+        />
+        <Kpi
+          label={t('Praise')}
+          value={lSorted ? pctf(L.praise ?? 0, lSorted) : '–'}
+          sub={t('{n} comments', { n: fmt(L.praise ?? 0) })}
+        />
+        <Kpi
+          label={t('Reputation')}
+          value={ins?.reputation == null ? '–' : `${ins.reputation}`}
+          sub={t('out of 100; 50 is even')}
+        />
+        <Kpi
+          label={t('Answered by the brand')}
+          value={r?.rate == null ? '–' : `${Math.round(r.rate * 100)}%`}
+          sub={
+            r?.median_minutes == null
+              ? undefined
+              : t('usually within {time}', { time: duration(r.median_minutes) })
+          }
+        />
+        <Kpi label={t('Reach')} value={short(ins?.reach ?? 0)} sub={t('video views')} />
+      </dl>
 
-      <div class="sm-split2">
-        <section>
-          <div class="sm-section-head">
-            <h2>{reply.length ? 'Answer first' : 'Newest comments'}</h2>
-            <a class="g-link" href={`#/b/${brand.id}/comments`}>
-              Every comment
+      <div class="sm-grid2">
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{t('Comments over time')}</h2>
+            <span class="sm-box__meta">{period}</span>
+          </header>
+          {hasTrend ? (
+            <TimelineChart days={ins!.timeline} />
+          ) : (
+            <p class="sm-quiet">{t('No comments in this period.')}</p>
+          )}
+        </section>
+
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{t('What people say')}</h2>
+            <span class="sm-box__meta">{t('{n} sorted', { n: fmt(sorted) })}</span>
+          </header>
+          {sorted ? (
+            <MoodBar counts={c} />
+          ) : (
+            <p class="sm-quiet">{t('The split shows once comments are sorted.')}</p>
+          )}
+          <h3 class="sm-box__sub">{t('Problems people name')}</h3>
+          {negatives.length ? (
+            tally(negatives)
+          ) : (
+            <p class="sm-quiet">
+              {t('Rate comments negative, or ask Claude to, and their kinds add up here.')}
+            </p>
+          )}
+          {positives.length > 0 && (
+            <>
+              <h3 class="sm-box__sub">{t('What people like')}</h3>
+              {tally(positives, true)}
+            </>
+          )}
+          {rated > 0 && (
+            <p class="sm-box__note">
+              {t('{rated} of {total} rated, {neutral} neutral.', {
+                rated,
+                total: fmt(total),
+                neutral,
+              })}
+            </p>
+          )}
+        </section>
+      </div>
+
+      <div class="sm-grid2">
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{reply.length ? t('Answer first') : t('Newest comments')}</h2>
+            <a class="sm-box__link" href={`#/b/${brand.id}/comments`}>
+              {t('All comments')}
             </a>
-          </div>
+          </header>
           {reply.length || latest.length ? (
             <CommentList
               comments={reply.length ? reply : latest}
               brands={brands}
-              onChange={() => setTick((t) => t + 1)}
+              onChange={() => setTick((x) => x + 1)}
             />
           ) : (
-            <p class="sm-quiet sm-pad">Comments appear here after the first update.</p>
+            <p class="sm-quiet">{t('Comments appear here after the first update.')}</p>
           )}
         </section>
 
-        <aside class="sm-side">
-          {ins && <Figures ins={ins} days={days} />}
-          <section>
-            <h2>What people say</h2>
-            {sorted ? (
-              <MoodBar counts={c} />
-            ) : (
-              <p class="sm-quiet">The mood shows once comments are sorted.</p>
-            )}
+        <div class="sm-stack">
+          <section class="sm-box">
+            <header class="sm-box__head">
+              <h2>{t('Networks')}</h2>
+              <a class="sm-box__link" href={`#/b/${brand.id}/about`}>
+                {t('Edit links')}
+              </a>
+            </header>
+            <table class="sm-dtable">
+              <tbody>
+                {s.profiles.map((p) => (
+                  <tr>
+                    <td>
+                      <span class="sm-net-name">
+                        <NetworkMark network={p.network} size={14} />
+                        <a href={p.url} target="_blank" rel="noreferrer">
+                          @{p.handle}
+                        </a>
+                      </span>
+                    </td>
+                    <td class="sm-num" title={p.last_run_at ?? undefined}>
+                      {ago(p.last_run_at)}
+                    </td>
+                    <td class="sm-num">
+                      {p.last_status === 'error' ? (
+                        <span class="sm-status sm-status--error" title={p.last_error ?? undefined}>
+                          {t('Needs you')}
+                        </span>
+                      ) : p.last_status === 'ok' ? (
+                        <span class="sm-status sm-status--ok">{t('Up to date')}</span>
+                      ) : (
+                        <span class="sm-status">{t('Not read yet')}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {s.profiles
+              .filter((p) => p.last_status === 'error')
+              .map((p) => (
+                <p class="sm-note">
+                  {NETWORK_NAME[p.network]}: {p.last_error}
+                </p>
+              ))}
           </section>
 
-          <section>
-            <h2>Problems people name</h2>
-            {negatives.length ? (
-              tally(negatives)
-            ) : (
-              <p class="sm-quiet">
-                Mark comments negative, or ask Claude to, and their kinds add up here.
-              </p>
-            )}
-          </section>
-
-          {positives.length > 0 && (
-            <section class="sm-positive">
-              <h2>What people like</h2>
-              {tally(positives)}
+          {ins && ins.posts.length > 0 && (
+            <section class="sm-box">
+              <header class="sm-box__head">
+                <h2>{t('Likes per post')}</h2>
+                <span class="sm-box__meta">{t('Click a bar to open the post')}</span>
+              </header>
+              <EngagementChart posts={ins.posts} />
             </section>
           )}
-
-          {(rated > 0 || s.brand_replies > 0) && (
-            <p class="sm-quiet">
-              {rated > 0 &&
-                `${rated} of ${fmt(total)} comments rated${neutral ? `, ${neutral} of them neutral` : ''}. `}
-              {s.brand_replies > 0 &&
-                `${brand.name} answered ${s.brand_replies} ${s.brand_replies === 1 ? 'time' : 'times'} from its own account.`}
-            </p>
-          )}
-        </aside>
+        </div>
       </div>
 
-      {ins &&
-        ins.timeline.some((d) => d.complaint + d.question + d.suggestion + d.praise + d.other) && (
-          <section>
-            <div class="sm-section-head">
-              <h2>Comments over time</h2>
-              <span class="sm-quiet">
-                {days ? `Last ${days} days` : 'All time'}, by the day they were written
-              </span>
-            </div>
-            <TimelineChart days={ins.timeline} />
-          </section>
-        )}
-
-      {ins && ins.posts.length > 0 && (
-        <section>
-          <div class="sm-section-head">
-            <h2>Likes per post</h2>
-            <span class="sm-quiet">Hover a bar for comments and views; click to open the post</span>
-          </div>
-          <EngagementChart posts={ins.posts} />
-        </section>
-      )}
-
       {posts.length > 0 && (
-        <section>
-          <div class="sm-section-head">
-            <h2>Latest posts</h2>
-            <a class="g-link" href={`#/b/${brand.id}/posts`}>
-              All {fmt(s.posts)} posts
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{t('Latest posts')}</h2>
+            <a class="sm-box__link" href={`#/b/${brand.id}/posts`}>
+              {t('All {n} posts', { n: fmt(s.posts) })}
             </a>
+          </header>
+          <div class="sm-scroll">
+            <table class="sm-dtable sm-dtable--rows">
+              <thead>
+                <tr>
+                  <th>{t('Post')}</th>
+                  <th>{t('Published')}</th>
+                  <th class="sm-num">{t('Likes')}</th>
+                  <th class="sm-num">{t('Comments')}</th>
+                  <th class="sm-num">{t('Views')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.map((p) => (
+                  <tr>
+                    <td>
+                      <a class="sm-postcell" href={p.url} target="_blank" rel="noreferrer">
+                        {p.thumb_url ? (
+                          <img src={p.thumb_url} alt="" loading="lazy" />
+                        ) : (
+                          <span class="sm-postcell__blank" />
+                        )}
+                        <NetworkMark network={p.network} size={14} />
+                        <span class="sm-postcell__text">{p.description ?? p.caption}</span>
+                      </a>
+                    </td>
+                    <td class="sm-nowrap">{when(p.posted_at)}</td>
+                    <td class="sm-num g-num">{fmt(p.likes)}</td>
+                    <td class="sm-num g-num">{fmt(p.comments_count)}</td>
+                    <td class="sm-num g-num">{fmt(p.views)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <ul class="sm-strip" style={{ '--n': Math.max(posts.length, 4) }}>
-            {posts.map((p) => (
-              <li>
-                <a href={p.url} target="_blank" rel="noreferrer" class="sm-strip__item">
-                  {p.thumb_url ? (
-                    <img src={p.thumb_url} alt="" loading="lazy" />
-                  ) : (
-                    <span class="sm-strip__blank" />
-                  )}
-                  <span class="sm-strip__meta">
-                    <NetworkMark network={p.network} size={13} />
-                    <span class="g-num">
-                      {count(p.likes, 'like')} · {count(p.comments_count, 'comment')}
-                    </span>
-                  </span>
-                  <span class="sm-strip__text">{p.description ?? p.caption}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
         </section>
       )}
-
-      <section>
-        <div class="sm-section-head">
-          <h2>Networks</h2>
-          <a class="g-link" href={`#/b/${brand.id}/about`}>
-            Edit links
-          </a>
-        </div>
-        <table class="g-table sm-table">
-          <thead>
-            <tr>
-              <th>Network</th>
-              <th>Profile</th>
-              <th class="sm-col-when">Last update</th>
-              <th>State</th>
-            </tr>
-          </thead>
-          <tbody>
-            {s.profiles.map((p) => (
-              <tr>
-                <td>
-                  <span class="sm-net-name">
-                    <NetworkMark network={p.network} /> {NETWORK_NAME[p.network]}
-                  </span>
-                </td>
-                <td>
-                  <a class="g-link" href={p.url} target="_blank" rel="noreferrer">
-                    @{p.handle}
-                  </a>
-                </td>
-                <td class="sm-col-when" title={p.last_run_at ?? undefined}>
-                  {ago(p.last_run_at)}
-                </td>
-                <td>
-                  {p.last_status === 'error' ? (
-                    <span class="sm-status sm-status--error" title={p.last_error ?? undefined}>
-                      Needs you
-                    </span>
-                  ) : p.last_status === 'ok' ? (
-                    <span class="sm-status sm-status--ok">Up to date</span>
-                  ) : (
-                    <span class="sm-status">Not read yet</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {s.profiles
-          .filter((p) => p.last_status === 'error')
-          .map((p) => (
-            <p class="sm-note">
-              {NETWORK_NAME[p.network]}: {p.last_error}
-            </p>
-          ))}
-      </section>
     </div>
   )
 }

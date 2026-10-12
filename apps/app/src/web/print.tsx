@@ -6,6 +6,7 @@ import { MoodBar } from './labels.tsx'
 import { EngagementChart, TimelineChart } from './charts.tsx'
 import type { PostPoint } from './charts.tsx'
 import { brandCategories } from './rate.tsx'
+import { locale, t } from './i18n.ts'
 
 interface Insights {
   timeline: ({ day: string } & Record<
@@ -62,14 +63,17 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
   const pct = (k: string) => (sorted ? Math.round(((c[k] ?? 0) / sorted) * 100) : 0)
   const cats = brandCategories(brand)
   const negatives = sum.sentiment.filter((x) => x.sentiment === 'negative')
-  const period = days ? `the last ${days} days` : 'all time'
+  const date = new Date().toLocaleDateString(locale, { dateStyle: 'long' })
+  const total = fmt(c.total ?? 0)
 
   return (
     <article class="sm-print">
       <header class="sm-print__head">
         <Logo />
         <span class="sm-quiet">
-          Report of {new Date().toLocaleDateString('en-GB', { dateStyle: 'long' })}, {period}
+          {days
+            ? t('Report of {date}, the last {days} days', { date, days })
+            : t('Report of {date}, all time', { date })}
           {network ? `, ${NETWORK_NAME[network as keyof typeof NETWORK_NAME]}` : ''}
         </span>
       </header>
@@ -77,62 +81,72 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
       {brand.industry && <p class="sm-head__industry">{brand.industry}</p>}
 
       <p class="sm-print__statement">
-        {fmt(c.total ?? 0)} customer comments in {period}.{' '}
+        {days
+          ? t('{n} customer comments in the last {days} days.', { n: total, days })
+          : t('{n} customer comments in all time.', { n: total })}{' '}
         {sorted
-          ? `Complaints are ${pct('complaint')}%, praise ${pct('praise')}%.`
-          : 'None are sorted yet.'}{' '}
+          ? t('Complaints are {complaint}%, praise {praise}%.', {
+              complaint: pct('complaint'),
+              praise: pct('praise'),
+            })
+          : t('None are sorted yet.')}{' '}
         {ins.responses.rate != null &&
-          `${brand.name} answered ${Math.round(ins.responses.rate * 100)}% of them.`}
+          t('{brand} answered {pct}% of them.', {
+            brand: brand.name,
+            pct: Math.round(ins.responses.rate * 100),
+          })}
       </p>
 
       <dl class="sm-facts sm-facts--row">
         <div>
-          <dt>Reputation</dt>
+          <dt>{t('Reputation')}</dt>
           <dd class="g-num">{ins.reputation == null ? '–' : `${ins.reputation} / 100`}</dd>
         </div>
         <div>
-          <dt>Reach (views)</dt>
+          <dt>{t('Reach (views)')}</dt>
           <dd class="g-num">{fmt(ins.reach)}</dd>
         </div>
         <div>
-          <dt>Posts</dt>
+          <dt>{t('Posts')}</dt>
           <dd class="g-num">{fmt(ins.posts.length)}</dd>
         </div>
         <div>
-          <dt>Usual time to answer</dt>
+          <dt>{t('Usual time to answer')}</dt>
           <dd class="g-num">
-            {ins.responses.median_minutes == null ? '–' : `${ins.responses.median_minutes} min`}
+            {ins.responses.median_minutes == null
+              ? '–'
+              : t('{n} min', { n: ins.responses.median_minutes })}
           </dd>
         </div>
       </dl>
 
       {sorted > 0 && (
         <section>
-          <h2>What people say</h2>
+          <h2>{t('What people say')}</h2>
           <MoodBar counts={c} />
         </section>
       )}
 
       <section>
-        <h2>Comments over time</h2>
+        <h2>{t('Comments over time')}</h2>
         <TimelineChart days={ins.timeline} />
       </section>
 
       {ins.posts.length > 0 && (
         <section>
-          <h2>Likes per post</h2>
+          <h2>{t('Likes per post')}</h2>
           <EngagementChart posts={ins.posts} />
         </section>
       )}
 
       {negatives.length > 0 && (
         <section>
-          <h2>Problems people name</h2>
+          <h2>{t('Problems people name')}</h2>
           <table class="g-table sm-table">
             <tbody>
               {negatives.map((x) => (
                 <tr>
-                  <td>{cats.find((k) => k.key === x.category)?.name ?? 'No kind given'}</td>
+                  <td>{cats.find((k) => k.key === x.category)?.name ?? t('No kind given')}</td>
                   <td class="g-num">{x.n}</td>
                 </tr>
               ))}
@@ -142,7 +156,7 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
       )}
 
       <section>
-        <h2>Waiting for an answer</h2>
+        <h2>{t('Waiting for an answer')}</h2>
         {reply.length ? (
           <ul class="sm-print__list">
             {reply.map((r) => (
@@ -154,20 +168,20 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
             ))}
           </ul>
         ) : (
-          <p class="sm-quiet">Nothing waits for an answer.</p>
+          <p class="sm-quiet">{t('Nothing waits for an answer.')}</p>
         )}
       </section>
 
       {posts.length > 0 && (
         <section>
-          <h2>Latest posts</h2>
+          <h2>{t('Latest posts')}</h2>
           <table class="g-table sm-table">
             <thead>
               <tr>
-                <th>Published</th>
-                <th>Network</th>
-                <th>About</th>
-                <th>Engagement</th>
+                <th>{t('Published')}</th>
+                <th>{t('Network')}</th>
+                <th>{t('Topic')}</th>
+                <th>{t('Engagement')}</th>
               </tr>
             </thead>
             <tbody>
@@ -187,7 +201,7 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
       )}
 
       <footer class="sm-print__foot">
-        SocialMonitor. Free and open source. Built by Shades Media Group.
+        {t('SocialMonitor. Free and open source. Built by Shades Media Group.')}
       </footer>
     </article>
   )

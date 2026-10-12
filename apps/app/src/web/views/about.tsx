@@ -6,6 +6,7 @@ import { Icon, NETWORK_NAME, Row } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import type { Category } from '../rate.tsx'
 import { brandCategories } from '../rate.tsx'
+import { t } from '../i18n.ts'
 
 const NETS: Network[] = ['instagram', 'facebook', 'tiktok']
 const PLACEHOLDER: Record<Network, string> = {
@@ -60,7 +61,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
           await api.del(`/api/brands/${brand.id}/profiles/${n}`)
       await api.put(`/api/brands/${brand.id}/categories`, { categories: cats })
       await reload()
-      notify('Saved.')
+      notify(t('Saved.'))
     } catch (err) {
       setError((err as Error).message)
     }
@@ -70,7 +71,9 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
     return (
       <JsonPanel
         value={{ ...f, links, categories: cats }}
-        note="Everything on this page. Categories: key, name, and sentiment positive or negative."
+        note={t(
+          'Everything on this page. Categories: key, name, and sentiment positive or negative.',
+        )}
         onSave={async (next) => {
           const x = next as typeof f & { links?: Record<Network, string>; categories?: Category[] }
           await api.patch(`/api/brands/${brand.id}`, {
@@ -88,7 +91,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
               }),
             )
           await reload()
-          return 'Saved.'
+          return t('Saved.')
         }}
       />
     )
@@ -97,7 +100,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
     setF({ ...f, [k]: (e.target as HTMLInputElement).value })
   const kindList = (sentiment: 'positive' | 'negative') => (
     <div class={`sm-kinds sm-kinds--${sentiment}`}>
-      <h3>{sentiment === 'negative' ? 'Negative' : 'Positive'}</h3>
+      <h3>{sentiment === 'negative' ? t('Negative') : t('Positive')}</h3>
       <ul>
         {cats.map((c, i) =>
           c.sentiment !== sentiment ? null : (
@@ -105,7 +108,11 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
               <input
                 class="g-input"
                 value={c.name}
-                aria-label={`${sentiment} kind ${i + 1}`}
+                aria-label={
+                  sentiment === 'negative'
+                    ? t('negative kind {n}', { n: i + 1 })
+                    : t('positive kind {n}', { n: i + 1 })
+                }
                 onInput={(e) => {
                   const name = (e.target as HTMLInputElement).value
                   setCats(cats.map((x, j) => (j === i ? { ...x, name } : x)))
@@ -114,7 +121,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
               <button
                 class="g-icon-btn"
                 type="button"
-                aria-label={`Remove ${c.name}`}
+                aria-label={t('Remove {name}', { name: c.name })}
                 onClick={() => setCats(cats.filter((_, j) => j !== i))}
               >
                 <Icon name="close" size={16} />
@@ -132,38 +139,45 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
             ...cats,
             {
               key: `${sentiment}-${Date.now().toString(36)}`,
-              name: `New ${sentiment} kind ${n}`,
+              name:
+                sentiment === 'negative'
+                  ? t('New negative kind {n}', { n })
+                  : t('New positive kind {n}', { n }),
               sentiment,
             },
           ])
         }}
       >
-        Add a kind
+        {t('Add a kind')}
       </button>
     </div>
   )
 
   return (
     <form class="sm-about" onSubmit={save}>
-      {!edit && <p class="sm-quiet">You can read this brand. Its admins can change it.</p>}
+      {!edit && <p class="sm-quiet">{t('You can read this brand. Its admins can change it.')}</p>}
       <fieldset class="sm-fieldset" disabled={!edit}>
-        <section>
-          <h2>The brand</h2>
-          <Row label="Name">
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{t('The brand')}</h2>
+          </header>
+          <Row label={t('Name')}>
             <input class="g-input" required value={f.name} onInput={set('name')} />
           </Row>
           <Row
-            label="Field of work"
-            hint="The AI reads it, so a shop's “out of stock again” is understood as a complaint."
+            label={t('Field of work')}
+            hint={t(
+              "The AI reads it, so a shop's “out of stock again” is understood as a complaint.",
+            )}
           >
             <input
               class="g-input"
               value={f.industry}
-              placeholder="Retail, banking, hospitality…"
+              placeholder={t('Retail, banking, hospitality…')}
               onInput={set('industry')}
             />
           </Row>
-          <Row label="Website">
+          <Row label={t('Website')}>
             <input
               class="g-input"
               type="url"
@@ -173,8 +187,8 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
             />
           </Row>
           <Row
-            label="Description"
-            hint="What it sells and to whom. Two or three sentences are enough."
+            label={t('Description')}
+            hint={t('What it sells and to whom. Two or three sentences are enough.')}
           >
             <textarea
               class="g-input sm-textarea"
@@ -184,15 +198,19 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
             />
           </Row>
           <Row
-            label="Notes"
-            hint="Anything else worth keeping: products, campaigns, people to tell. Only you see it."
+            label={t('Notes')}
+            hint={t(
+              'Anything else worth keeping: products, campaigns, people to tell. Only you see it.',
+            )}
           >
             <textarea class="g-input sm-textarea" rows={3} value={f.notes} onInput={set('notes')} />
           </Row>
         </section>
 
-        <section>
-          <h2>Networks</h2>
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{t('Networks')}</h2>
+          </header>
           {NETS.map((n) => (
             <Row label={NETWORK_NAME[n]}>
               <input
@@ -206,31 +224,32 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
           ))}
         </section>
 
-        <section>
-          <div class="sm-section-head">
-            <h2>Kinds of comments</h2>
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{t('Kinds of comments')}</h2>
             {Object.keys(templates).length > 0 && (
               <label class="sm-inline-label">
-                <span>Start from</span>
+                <span>{t('Start from')}</span>
                 <select
                   class="g-select sm-select-sm"
                   value=""
                   onChange={(e) => {
-                    const t = templates[(e.target as HTMLSelectElement).value]
-                    if (t) setCats(t.categories)
+                    const tpl = templates[(e.target as HTMLSelectElement).value]
+                    if (tpl) setCats(tpl.categories)
                   }}
                 >
-                  <option value="">A template…</option>
-                  {Object.entries(templates).map(([k, t]) => (
-                    <option value={k}>{t.name}</option>
+                  <option value="">{t('A template…')}</option>
+                  {Object.entries(templates).map(([k, tpl]) => (
+                    <option value={k}>{tpl.name}</option>
                   ))}
                 </select>
               </label>
             )}
-          </div>
+          </header>
           <p class="sm-quiet">
-            Comments are rated positive or negative, then given one of these kinds, or neutral when
-            they count neither way, by you or by Claude.
+            {t(
+              'Comments are rated positive or negative, then given one of these kinds, or neutral when they count neither way, by you or by Claude.',
+            )}
           </p>
           <div class="sm-kinds-grid">
             {kindList('negative')}
@@ -242,17 +261,23 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
       {edit && (
         <div class="sm-savebar">
           <button class="g-btn g-btn--primary" type="submit">
-            Save
+            {t('Save')}
           </button>
-          <span class="sm-quiet">Changes apply to new sorting and to Claude right away.</span>
+          <span class="sm-quiet">
+            {t('Changes apply to new sorting and to Claude right away.')}
+          </span>
         </div>
       )}
 
       {me.super && (
-        <section class="sm-danger-zone">
-          <h2>Delete {brand.name}</h2>
+        <section class="sm-box sm-danger-zone">
+          <header class="sm-box__head">
+            <h2>{t('Delete {name}', { name: brand.name })}</h2>
+          </header>
           <p class="sm-quiet">
-            Its posts, comments, reports and schedules go too. Export first if you may need them.
+            {t(
+              'Its posts, comments, reports and schedules go too. Export first if you may need them.',
+            )}
           </p>
           {confirm ? (
             <div class="sm-inline">
@@ -262,18 +287,18 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
                 onClick={async () => {
                   await api.del(`/api/brands/${brand.id}`)
                   await reload()
-                  notify(`${brand.name} and everything kept for it are deleted.`)
+                  notify(t('{name} and everything kept for it are deleted.', { name: brand.name }))
                   location.hash = '#/'
                 }}
               >
-                Delete everything
+                {t('Delete everything')}
               </button>
               <button
                 class="g-btn g-btn--ghost g-btn--sm"
                 type="button"
                 onClick={() => setConfirm(false)}
               >
-                Keep it
+                {t('Keep it')}
               </button>
             </div>
           ) : (
@@ -282,7 +307,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
               type="button"
               onClick={() => setConfirm(true)}
             >
-              Delete brand
+              {t('Delete brand')}
             </button>
           )}
         </section>

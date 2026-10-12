@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { AppState } from './app.tsx'
 import { api } from './api.ts'
-import { Row, Segmented, Sheet } from './ui.tsx'
+import { NETWORK_NAME, Row, Segmented, Sheet, count } from './ui.tsx'
 import { JsonPanel } from './json.tsx'
 import { Accounts } from './accounts.tsx'
+import type { Lang } from './i18n.ts'
+import { LANGS, lang, setLang, t } from './i18n.ts'
 
 interface Settings {
   gap_hours: number
@@ -66,48 +68,68 @@ export function SettingsSheet({
         '/api/import',
         data,
       )
-      notify(`Imported ${r.brands} brands, ${r.posts} posts and ${r.comments} comments.`)
+      notify(
+        t('Imported {brands}, {posts} and {comments}.', {
+          brands: count(r.brands, 'brand'),
+          posts: count(r.posts, 'post'),
+          comments: count(r.comments, 'comment'),
+        }),
+      )
       reload()
     } catch (e) {
-      notify(`Import failed: ${(e as Error).message}`)
+      notify(t('Import failed: {error}', { error: (e as Error).message }))
     }
   }
 
   if (mode === 'json' && s)
     return (
-      <Sheet open={open} title="Settings" onClose={onClose}>
+      <Sheet open={open} title={t('Settings')} onClose={onClose}>
         <JsonPanel
           value={{ theme, gap_hours: s.gap_hours, keep_days: s.keep_days, analyzer: s.analyzer }}
-          note="theme: light, dark or auto. gap_hours: 4 to 48. keep_days: 7 to 3650. analyzer: auto, claude or api."
+          note={t(
+            'theme: light, dark or auto. gap_hours: 4 to 48. keep_days: 7 to 3650. analyzer: auto, claude or api.',
+          )}
           onSave={async (next) => {
             const x = next as Partial<Settings> & { theme?: Theme }
             if (x.theme && ['light', 'dark', 'auto'].includes(x.theme)) chooseTheme(x.theme)
             const r = await api.patch<Settings>('/api/settings', x)
             setS(r)
-            return 'Saved.'
+            return t('Saved.')
           }}
         />
       </Sheet>
     )
 
   return (
-    <Sheet open={open} title="Settings" onClose={onClose}>
-      <Row label="Theme">
+    <Sheet open={open} title={t('Settings')} onClose={onClose}>
+      <Row label={t('Language')}>
+        <select
+          class="g-select sm-select-sm"
+          aria-label={t('Language')}
+          value={lang}
+          onChange={(e) => setLang((e.target as HTMLSelectElement).value as Lang)}
+        >
+          {LANGS.map(([l, name]) => (
+            <option value={l}>{name}</option>
+          ))}
+        </select>
+      </Row>
+      <Row label={t('Theme')}>
         <Segmented
-          label="Theme"
+          label={t('Theme')}
           value={theme}
           onChange={chooseTheme}
           options={[
-            ['light', 'Light'],
-            ['dark', 'Dark'],
-            ['auto', 'Automatic'],
+            ['light', t('Light')],
+            ['dark', t('Dark')],
+            ['auto', t('Automatic')],
           ]}
         />
       </Row>
       <Account me={me} notify={notify} />
       {me.super && s && (
         <>
-          <Row label="Gap" hint="hours between updates that use a signed-in network">
+          <Row label={t('Gap')} hint={t('hours between updates that use a signed-in network')}>
             <input
               class="g-input sm-input-num"
               type="number"
@@ -117,7 +139,7 @@ export function SettingsSheet({
               onChange={(e) => save({ gap_hours: Number((e.target as HTMLInputElement).value) })}
             />
           </Row>
-          <Row label="Keep" hint="days of comments; older ones are deleted">
+          <Row label={t('Keep')} hint={t('days of comments; older ones are deleted')}>
             <input
               class="g-input sm-input-num"
               type="number"
@@ -127,15 +149,15 @@ export function SettingsSheet({
               onChange={(e) => save({ keep_days: Number((e.target as HTMLInputElement).value) })}
             />
           </Row>
-          <Row label="AI" hint={s.analyzer_status}>
+          <Row label={t('AI')} hint={s.analyzer_status}>
             <Segmented
-              label="AI"
+              label={t('AI')}
               value={s.analyzer}
               onChange={(analyzer) => save({ analyzer })}
               options={[
-                ['auto', 'Automatic'],
+                ['auto', t('Automatic')],
                 ['claude', 'Claude Code'],
-                ['api', 'API key'],
+                ['api', t('API key')],
               ]}
             />
           </Row>
@@ -144,20 +166,18 @@ export function SettingsSheet({
       {me.super && (
         <>
           <Row
-            label="Sign in"
+            label={t('Sign in')}
             hint={`${
               signed && !signed.busy
-                ? `Signed in: ${
-                    (['tiktok', 'instagram', 'facebook'] as const)
-                      .filter((n) => signed[n])
-                      .map(
-                        (n) =>
-                          ({ tiktok: 'TikTok', instagram: 'Instagram', facebook: 'Facebook' })[n],
-                      )
-                      .join(', ') || 'none yet'
-                  }. `
+                ? t('Signed in: {networks}.', {
+                    networks:
+                      (['tiktok', 'instagram', 'facebook'] as const)
+                        .filter((n) => signed[n])
+                        .map((n) => NETWORK_NAME[n])
+                        .join(', ') || t('none yet'),
+                  }) + ' '
                 : ''
-            }Opens SocialMonitor's own Chrome window. Sign in by hand; the app never sees passwords.`}
+            }${t("Opens SocialMonitor's own Chrome window. Sign in by hand; the app never sees passwords.")}`}
           >
             <button
               class="g-btn g-btn--sm"
@@ -165,27 +185,27 @@ export function SettingsSheet({
               onClick={() =>
                 api
                   .post('/api/browser/sign-in')
-                  .then(() => notify('Sign in in the window that opened, then close it.'))
+                  .then(() => notify(t('Sign in in the window that opened, then close it.')))
                   .catch((e: Error) => notify(e.message))
               }
             >
-              Sign in to networks
+              {t('Sign in to networks')}
             </button>
           </Row>
-          <Row label="Saved accounts">
+          <Row label={t('Saved accounts')}>
             <Accounts notify={notify} />
           </Row>
-          <Row label="Data">
+          <Row label={t('Data')}>
             <div class="sm-inline">
               <a class="g-btn g-btn--sm" href="/api/export" download>
-                Export everything
+                {t('Export everything')}
               </a>
               <button
                 class="g-btn g-btn--ghost g-btn--sm"
                 type="button"
                 onClick={() => file.current?.click()}
               >
-                Import
+                {t('Import')}
               </button>
               <input
                 ref={file}
@@ -203,14 +223,16 @@ export function SettingsSheet({
         </>
       )}
       <p class="sm-credit">
-        SocialMonitor {s?.version ?? ''}. Free and open source. Built by Shades Media Group.{' '}
+        {t('SocialMonitor {version}. Free and open source. Built by Shades Media Group.', {
+          version: s?.version ?? '',
+        })}{' '}
         <a
           class="g-link"
           href="https://github.com/Shades-Media-Group/SocialMonitor"
           target="_blank"
           rel="noreferrer"
         >
-          Source
+          {t('Source')}
         </a>
       </p>
     </Sheet>
@@ -226,7 +248,10 @@ function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
       .then(() => dispatchEvent(new Event('sm-signed-out')))
       .catch((e: Error) => notify(e.message))
   return (
-    <Row label="You" hint={`${me.email}${me.super ? ', super admin' : ''}`}>
+    <Row
+      label={t('You')}
+      hint={me.super ? t('{email}, super admin', { email: me.email }) : me.email}
+    >
       <div class="sm-account">
         <b>{me.name || me.username || me.email}</b>
         {pw ? (
@@ -237,14 +262,14 @@ function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
               try {
                 await api.patch('/api/auth/me', pw)
                 setPw(null)
-                notify('Password changed. Other devices are signed out.')
+                notify(t('Password changed. Other devices are signed out.'))
               } catch (err) {
                 notify((err as Error).message)
               }
             }}
           >
             <label class="sm-auth__field">
-              <span>Current password</span>
+              <span>{t('Current password')}</span>
               <input
                 class="g-input"
                 type="password"
@@ -255,7 +280,7 @@ function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
               />
             </label>
             <label class="sm-auth__field">
-              <span>New password</span>
+              <span>{t('New password')}</span>
               <input
                 class="g-input"
                 type="password"
@@ -268,31 +293,31 @@ function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
             </label>
             <div class="sm-inline">
               <button class="g-btn g-btn--sm" type="submit">
-                Change password
+                {t('Change password')}
               </button>
               <button
                 class="g-btn g-btn--ghost g-btn--sm"
                 type="button"
                 onClick={() => setPw(null)}
               >
-                Cancel
+                {t('Cancel')}
               </button>
             </div>
           </form>
         ) : (
           <div class="sm-inline">
             <button class="g-btn g-btn--sm" type="button" onClick={out('/api/auth/logout')}>
-              Sign out
+              {t('Sign out')}
             </button>
             <button
               class="g-btn g-btn--ghost g-btn--sm"
               type="button"
               onClick={() => setPw({ current: '', password: '' })}
             >
-              Change password
+              {t('Change password')}
             </button>
             <button class="sm-textbtn" type="button" onClick={out('/api/auth/logout-everywhere')}>
-              Sign out everywhere
+              {t('Sign out everywhere')}
             </button>
           </div>
         )}

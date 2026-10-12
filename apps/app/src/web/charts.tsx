@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { fmt } from './ui.tsx'
+import { locale, t } from './i18n.ts'
 
 /**
  * Charts drawn as plain SVG, in Gradient's ramps (validated for colour-blind separation and
@@ -9,11 +10,11 @@ import { fmt } from './ui.tsx'
  */
 
 export const SERIES = [
-  { key: 'complaint', name: 'Complaints' },
-  { key: 'question', name: 'Questions' },
-  { key: 'suggestion', name: 'Suggestions' },
-  { key: 'praise', name: 'Praise' },
-  { key: 'other', name: 'Other' },
+  { key: 'complaint', name: t('Complaints') },
+  { key: 'question', name: t('Questions') },
+  { key: 'suggestion', name: t('Suggestions') },
+  { key: 'praise', name: t('Praise') },
+  { key: 'other', name: t('Other') },
 ] as const
 
 type Day = { day: string } & Record<(typeof SERIES)[number]['key'], number>
@@ -43,7 +44,7 @@ const niceMax = (n: number) => {
   return Math.ceil(n / p) * p
 }
 const dayLabel = (d: string) =>
-  new Date(`${d}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  new Date(`${d}T12:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
 
 function Legend({ items }: { items: { key: string; name: string }[] }) {
   return (
@@ -80,14 +81,14 @@ export function TimelineChart({ days }: { days: Day[] }) {
         <svg
           viewBox={`0 0 ${W} ${H}`}
           role="img"
-          aria-label="Comments per day, by type"
+          aria-label={t('Comments per day, by type')}
           onMouseLeave={() => setHover(null)}
         >
-          {ticks.map((t) => (
+          {ticks.map((v) => (
             <g>
-              <line class="sm-grid" x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} />
-              <text class="sm-axis" x={PAD.l - 6} y={y(t) + 4} text-anchor="end">
-                {fmt(t)}
+              <line class="sm-grid" x1={PAD.l} x2={W - PAD.r} y1={y(v)} y2={y(v)} />
+              <text class="sm-axis" x={PAD.l - 6} y={y(v) + 4} text-anchor="end">
+                {fmt(v)}
               </text>
             </g>
           ))}
@@ -145,15 +146,15 @@ export function TimelineChart({ days }: { days: Day[] }) {
                 <b class="g-num">{h[s.key]}</b>
               </span>
             ))}
-            {!SERIES.some((s) => h[s.key]) && <span>No comments</span>}
+            {!SERIES.some((s) => h[s.key]) && <span>{t('No comments')}</span>}
           </div>
         )}
       </div>
       <table class="sm-sr">
-        <caption>Comments per day</caption>
+        <caption>{t('Comments per day')}</caption>
         <thead>
           <tr>
-            <th>Day</th>
+            <th>{t('Day')}</th>
             {SERIES.map((s) => (
               <th>{s.name}</th>
             ))}
@@ -204,14 +205,14 @@ export function EngagementChart({ posts }: { posts: PostPoint[] }) {
         <svg
           viewBox={`0 0 ${W} ${H}`}
           role="img"
-          aria-label="Likes per post"
+          aria-label={t('Likes per post')}
           onMouseLeave={() => setHover(null)}
         >
-          {[0, max / 2, max].map((t) => (
+          {[0, max / 2, max].map((v) => (
             <g>
-              <line class="sm-grid" x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} />
-              <text class="sm-axis" x={PAD.l - 6} y={y(t) + 4} text-anchor="end">
-                {fmt(t)}
+              <line class="sm-grid" x1={PAD.l} x2={W - PAD.r} y1={y(v)} y2={y(v)} />
+              <text class="sm-axis" x={PAD.l - 6} y={y(v) + 4} text-anchor="end">
+                {fmt(v)}
               </text>
             </g>
           ))}
@@ -238,7 +239,7 @@ export function EngagementChart({ posts }: { posts: PostPoint[] }) {
                   href={q.url}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label={`Open the post of ${q.day ?? ''}`}
+                  aria-label={t('Open the post of {day}', { day: q.day ?? '' })}
                 >
                   <rect
                     class="sm-hit"
@@ -260,30 +261,30 @@ export function EngagementChart({ posts }: { posts: PostPoint[] }) {
               left: `clamp(120px, ${PAD.l + hover! * slot + slot / 2}px, calc(100% - 120px))`,
             }}
           >
-            <b>{p.day ? dayLabel(p.day) : 'Post'}</b>
+            <b>{p.day ? dayLabel(p.day) : t('Post')}</b>
             <span class="sm-tip__about">{p.about}</span>
             <span>
-              Likes <b class="g-num">{fmt(p.likes)}</b>
+              {t('Likes')} <b class="g-num">{fmt(p.likes)}</b>
             </span>
             <span>
-              Comments <b class="g-num">{fmt(p.comments)}</b>
+              {t('Comments')} <b class="g-num">{fmt(p.comments)}</b>
             </span>
             {p.views != null && (
               <span>
-                Views <b class="g-num">{fmt(p.views)}</b>
+                {t('Views')} <b class="g-num">{fmt(p.views)}</b>
               </span>
             )}
           </div>
         )}
       </div>
       <table class="sm-sr">
-        <caption>Likes per post</caption>
+        <caption>{t('Likes per post')}</caption>
         <thead>
           <tr>
-            <th>Published</th>
-            <th>Likes</th>
-            <th>Comments</th>
-            <th>Views</th>
+            <th>{t('Published')}</th>
+            <th>{t('Likes')}</th>
+            <th>{t('Comments')}</th>
+            <th>{t('Views')}</th>
           </tr>
         </thead>
         <tbody>

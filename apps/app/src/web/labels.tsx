@@ -1,14 +1,16 @@
+import { t } from './i18n.ts'
+
 /**
  * Each AI label is a word on one soft colour, from Gradient 0.5.0's roles and ramps. Colour
  * carries meaning here (trouble, a question waiting, good news), so it is never decoration.
  */
 export const LABELS: Record<string, { name: string; tone: string }> = {
-  complaint: { name: 'Complaint', tone: 'danger' },
-  question: { name: 'Question', tone: 'info' },
-  praise: { name: 'Praise', tone: 'success' },
-  suggestion: { name: 'Suggestion', tone: 'warning' },
-  neutral: { name: 'Neutral', tone: 'neutral' },
-  spam: { name: 'Spam', tone: 'quiet' },
+  complaint: { name: t('Complaint'), tone: 'danger' },
+  question: { name: t('Question'), tone: 'info' },
+  praise: { name: t('Praise'), tone: 'success' },
+  suggestion: { name: t('Suggestion'), tone: 'warning' },
+  neutral: { name: t('Neutral'), tone: 'neutral' },
+  spam: { name: t('Spam'), tone: 'quiet' },
 }
 
 /** The order the mood bar and its legend read in: trouble first. */
@@ -27,7 +29,7 @@ export function LabelPill({ label, reply }: { label: string; reply?: boolean }) 
   return (
     <span class={`sm-pill sm-pill--${l.tone}`}>
       {l.name}
-      {reply ? ' · reply' : ''}
+      {reply ? ` · ${t('reply')}` : ''}
     </span>
   )
 }
@@ -38,7 +40,7 @@ export function MoodBar({ counts }: { counts: Record<string, number> }) {
   const total = parts.reduce((s, p) => s + p.n, 0)
   if (!total) return null
   return (
-    <figure class="sm-mood" aria-label="How comments split">
+    <figure class="sm-mood" aria-label={t('How comments split')}>
       <div class="sm-mood__bar">
         {parts.map((p) => (
           <span

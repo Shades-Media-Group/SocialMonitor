@@ -2,7 +2,8 @@ import { useEffect, useState } from 'preact/hooks'
 import type { AppState, BrandView, Tab } from './app.tsx'
 import { TABS } from './app.tsx'
 import type { BrandRow, Network } from './api.ts'
-import { NetworkMark } from './ui.tsx'
+import { Head, Icon, NETWORK_NAME, NetworkMark } from './ui.tsx'
+import { t } from './i18n.ts'
 import { Overview } from './views/overview.tsx'
 import { Comments } from './views/comments.tsx'
 import { Posts } from './views/posts.tsx'
@@ -55,89 +56,80 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
     ...(view.network ? { network: view.network } : {}),
   })
 
+  const hasFilters =
+    tab === 'overview' || tab === 'posts' || tab === 'comments' || tab === 'reports'
+  const TAB_NAME = Object.fromEntries(TABS) as Record<Tab, string>
+
   return (
     <main class="sm-page">
-      <header class="sm-head">
-        <h1>{brand.name}</h1>
-        <div class="sm-head__lead">
-          {brand.industry && <p class="sm-head__industry">{brand.industry}</p>}
-          {brand.description ? (
-            <p>{brand.description}</p>
-          ) : (
-            <p class="sm-quiet">
-              No description yet. <a href={`#/b/${brand.id}/about`}>Describe the brand</a> so the AI
-              knows what it sells.
-            </p>
-          )}
-          <p class="sm-head__exports">
-            <a
-              class="g-btn g-btn--sm"
-              href={`/api/brands/${brand.id}/report.pdf?${exportQuery}`}
-              download
-            >
-              PDF report
-            </a>
-            <a
-              class="g-btn g-btn--ghost g-btn--sm"
-              href={`/api/brands/${brand.id}/export.xlsx?${exportQuery}`}
-              download
-            >
-              Excel
-            </a>
-          </p>
-        </div>
-      </header>
-
-      <nav class="sm-bar" aria-label={`${brand.name} sections`}>
-        <div class="sm-bar__tabs">
-          {TABS.filter(([t]) => t !== 'schedules' || brand.my_role === 'admin').map(([t, text]) => (
-            <a href={`#/b/${brand.id}/${t}`} aria-current={t === tab ? 'page' : undefined}>
-              {text}
-            </a>
-          ))}
-        </div>
-        {(tab === 'overview' || tab === 'posts') && (
-          <select
-            class="g-select sm-select-sm sm-range"
-            aria-label="Period"
-            value={days}
-            onChange={(e) => setDays(Number((e.target as HTMLSelectElement).value))}
-          >
-            <option value={7}>Last 7 days</option>
-            <option value={30}>Last 30 days</option>
-            <option value={90}>Last 90 days</option>
-            <option value={365}>Last year</option>
-            <option value={0}>All time</option>
-          </select>
-        )}
-        {tab !== 'about' && tab !== 'schedules' && nets.length > 1 && (
-          <div class="sm-netswitch" role="radiogroup" aria-label="Network">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={view.network === ''}
-              onClick={() => setNetwork('')}
-            >
-              All
-            </button>
-            {(['instagram', 'facebook', 'tiktok'] as const)
-              .filter((n) => nets.includes(n))
-              .map((n) => (
+      <Head
+        title={brand.name}
+        sub={tab === 'overview' ? brand.industry || undefined : t(TAB_NAME[tab])}
+        actions={props.actions}
+      >
+        {hasFilters && (
+          <>
+            {nets.length > 1 && (
+              <div class="g-segmented sm-seg" role="radiogroup" aria-label={t('Network')}>
                 <button
                   type="button"
                   role="radio"
-                  aria-checked={view.network === n}
-                  onClick={() => setNetwork(n)}
+                  aria-checked={view.network === ''}
+                  onClick={() => setNetwork('')}
                 >
-                  <NetworkMark network={n} size={15} />
-                  <span>
-                    {{ instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok' }[n]}
-                  </span>
+                  {t('All networks')}
                 </button>
-              ))}
-          </div>
+                {(['instagram', 'facebook', 'tiktok'] as const)
+                  .filter((n) => nets.includes(n))
+                  .map((n) => (
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={view.network === n}
+                      onClick={() => setNetwork(n)}
+                    >
+                      <NetworkMark network={n} size={14} />
+                      <span>{NETWORK_NAME[n]}</span>
+                    </button>
+                  ))}
+              </div>
+            )}
+            {(tab === 'overview' || tab === 'posts') && (
+              <select
+                class="g-select sm-select-sm"
+                aria-label={t('Period')}
+                value={days}
+                onChange={(e) => setDays(Number((e.target as HTMLSelectElement).value))}
+              >
+                <option value={7}>{t('Last 7 days')}</option>
+                <option value={30}>{t('Last 30 days')}</option>
+                <option value={90}>{t('Last 90 days')}</option>
+                <option value={365}>{t('Last 12 months')}</option>
+                <option value={0}>{t('All time')}</option>
+              </select>
+            )}
+            <span class="sm-pagehead__spacer" />
+            {tab === 'overview' && (
+              <>
+                <a
+                  class="g-btn g-btn--ghost g-btn--sm"
+                  href={`/api/brands/${brand.id}/report.pdf?${exportQuery}`}
+                  download
+                >
+                  <Icon name="download" size={16} /> PDF
+                </a>
+                <a
+                  class="g-btn g-btn--ghost g-btn--sm"
+                  href={`/api/brands/${brand.id}/export.xlsx?${exportQuery}`}
+                  download
+                >
+                  <Icon name="download" size={16} /> Excel
+                </a>
+              </>
+            )}
+          </>
         )}
-      </nav>
+      </Head>
 
       <div class="sm-body">
         {tab === 'overview' ? (

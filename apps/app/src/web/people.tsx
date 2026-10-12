@@ -2,7 +2,8 @@ import { useEffect, useState } from 'preact/hooks'
 import type { AppState } from './app.tsx'
 import type { Me } from './auth.tsx'
 import { api } from './api.ts'
-import { Sheet, ago } from './ui.tsx'
+import { Head, Sheet, ago } from './ui.tsx'
+import { t } from './i18n.ts'
 import { JsonPanel } from './json.tsx'
 
 type Role = 'viewer' | 'admin'
@@ -18,14 +19,18 @@ interface Person {
   memberships: { brand_id: number; role: Role }[]
 }
 
-const ROLE_TEXT: Record<Role | '', string> = { '': 'No access', viewer: 'Viewer', admin: 'Admin' }
+const ROLE_TEXT: Record<Role | '', string> = {
+  '': t('No access'),
+  viewer: t('Viewer'),
+  admin: t('Admin'),
+}
 
 /**
  * Who can open the dashboard. Super admins see everyone and every brand; a brand's admins see
  * and invite the people of their own brands. Viewers read; admins edit the brand, rate comments
  * and run updates.
  */
-export function People({ brands, me, notify, mode }: AppState & { me: Me }) {
+export function People({ brands, me, notify, mode, actions }: AppState & { me: Me }) {
   const [people, setPeople] = useState<Person[] | null>(null)
   const [open, setOpen] = useState<Person | null>(null)
   const [form, setForm] = useState({ email: '', name: '', super: false })
@@ -35,7 +40,7 @@ export function People({ brands, me, notify, mode }: AppState & { me: Me }) {
   const mine = me.super
     ? brands
     : brands.filter((b) => me.memberships.some((m) => m.brand_id === b.id && m.role === 'admin'))
-  const name = (id: number) => brands.find((b) => b.id === id)?.name ?? `Brand ${id}`
+  const name = (id: number) => brands.find((b) => b.id === id)?.name ?? t('Brand {id}', { id })
   const load = () => api.get<Person[]>('/api/users').then(setPeople)
   useEffect(() => {
     load().catch((e: Error) => setError(e.message))
@@ -51,7 +56,7 @@ export function People({ brands, me, notify, mode }: AppState & { me: Me }) {
           .filter(([, r]) => r)
           .map(([brand_id, role]) => ({ brand_id: Number(brand_id), role })),
       })
-      notify(`Invitation sent to ${form.email}.`)
+      notify(t('Invitation sent to {email}.', { email: form.email }))
       setForm({ email: '', name: '', super: false })
       setAccess({})
       await load()
@@ -62,41 +67,36 @@ export function People({ brands, me, notify, mode }: AppState & { me: Me }) {
 
   const status = (p: Person) =>
     p.disabled
-      ? 'Blocked'
+      ? t('Blocked')
       : !p.verified_at
-        ? 'Invited'
+        ? t('Invited')
         : p.last_seen_at
-          ? `Seen ${ago(p.last_seen_at)}`
-          : 'Active'
+          ? t('Seen {when}', { when: ago(p.last_seen_at) })
+          : t('Active')
   const what = (p: Person) =>
     p.super
-      ? 'Super admin, every brand'
+      ? t('Super admin, every brand')
       : p.memberships
           .map((m) => `${name(m.brand_id)} (${ROLE_TEXT[m.role].toLowerCase()})`)
-          .join(', ') || 'No brands'
+          .join(', ') || t('No brands')
 
   return (
     <main class="sm-page">
-      <header class="sm-head">
-        <h1>People</h1>
-        <div class="sm-head__lead">
-          <p>
-            Viewers read a brand's dashboard. Admins also edit the brand and its links, rate
-            comments, run updates and invite people.{' '}
-            {me.super && 'Super admins manage every brand and everyone.'}
-          </p>
-        </div>
-      </header>
+      <Head
+        title={t('People')}
+        sub={t('Who can open the dashboard, and which brands they see')}
+        actions={actions}
+      />
 
       {mode === 'json' ? (
         <JsonPanel value={people ?? []} />
       ) : (
         <>
           <section class="sm-section">
-            <h2>Invite someone</h2>
+            <h2>{t('Invite someone')}</h2>
             <form class="sm-form" onSubmit={invite}>
               <label class="sm-row">
-                <span class="sm-row__label">Email</span>
+                <span class="sm-row__label">{t('Email')}</span>
                 <input
                   class="g-input"
                   type="email"
@@ -106,7 +106,7 @@ export function People({ brands, me, notify, mode }: AppState & { me: Me }) {
                 />
               </label>
               <label class="sm-row">
-                <span class="sm-row__label">Name</span>
+                <span class="sm-row__label">{t('Name')}</span>
                 <input
                   class="g-input"
                   value={form.name}
@@ -115,7 +115,7 @@ export function People({ brands, me, notify, mode }: AppState & { me: Me }) {
               </label>
               {me.super && (
                 <label class="sm-row">
-                  <span class="sm-row__label">Super admin</span>
+                  <span class="sm-row__label">{t('Super admin')}</span>
                   <span class="sm-check">
                     <input
                       type="checkbox"
@@ -124,7 +124,7 @@ export function People({ brands, me, notify, mode }: AppState & { me: Me }) {
                         setForm({ ...form, super: (e.target as HTMLInputElement).checked })
                       }
                     />
-                    Sees every brand and manages everyone
+                    {t('Sees every brand and manages everyone')}
                   </span>
                 </label>
               )}
@@ -142,31 +142,31 @@ export function People({ brands, me, notify, mode }: AppState & { me: Me }) {
                         })
                       }
                     >
-                      <option value="">No access</option>
-                      <option value="viewer">Viewer</option>
-                      <option value="admin">Admin</option>
+                      <option value="">{ROLE_TEXT['']}</option>
+                      <option value="viewer">{ROLE_TEXT.viewer}</option>
+                      <option value="admin">{ROLE_TEXT.admin}</option>
                     </select>
                   </label>
                 ))}
               {error && <p class="g-error">{error}</p>}
               <div class="sm-form__actions">
                 <button class="g-btn g-btn--primary g-btn--sm" type="submit">
-                  Send invitation
+                  {t('Send invitation')}
                 </button>
               </div>
             </form>
           </section>
 
           <section class="sm-section">
-            <h2>Everyone</h2>
+            <h2>{t('Everyone')}</h2>
             <table class="g-table sm-table sm-people">
               <thead>
                 <tr>
-                  <th>Person</th>
-                  <th>Access</th>
-                  <th>Status</th>
+                  <th>{t('Person')}</th>
+                  <th>{t('Access')}</th>
+                  <th>{t('Status')}</th>
                   <th>
-                    <span class="sm-sr">Actions</span>
+                    <span class="sm-sr">{t('Actions')}</span>
                   </th>
                 </tr>
               </thead>
@@ -176,13 +176,13 @@ export function People({ brands, me, notify, mode }: AppState & { me: Me }) {
                     <td>
                       <b>{p.name || p.email}</b>
                       {p.name && <span class="sm-quiet"> {p.email}</span>}
-                      {p.id === me.id && <span class="sm-quiet"> (you)</span>}
+                      {p.id === me.id && <span class="sm-quiet"> {t('(you)')}</span>}
                     </td>
                     <td>{what(p)}</td>
                     <td>{status(p)}</td>
                     <td class="sm-people__act">
                       <button class="sm-textbtn" type="button" onClick={() => setOpen(p)}>
-                        Change
+                        {t('Change')}
                       </button>
                     </td>
                   </tr>
@@ -257,10 +257,10 @@ function PersonSheet({
                 api.patch(`/api/users/${person.id}`, {
                   memberships: brands.map((b) => ({ brand_id: b.id, role: roles[b.id] || null })),
                 }),
-              `${label}'s access is saved.`,
+              t("{name}'s access is saved.", { name: label }),
             )}
           >
-            Save access
+            {t('Save access')}
           </button>
         </>
       }
@@ -277,9 +277,9 @@ function PersonSheet({
                 setRoles({ ...roles, [b.id]: (e.target as HTMLSelectElement).value as Role | '' })
               }
             >
-              <option value="">No access</option>
-              <option value="viewer">Viewer</option>
-              <option value="admin">Admin</option>
+              <option value="">{ROLE_TEXT['']}</option>
+              <option value="viewer">{ROLE_TEXT.viewer}</option>
+              <option value="admin">{ROLE_TEXT.admin}</option>
             </select>
           </label>
         ))}
@@ -290,11 +290,11 @@ function PersonSheet({
           onClick={act(
             () => api.post(`/api/users/${person.id}/invite`),
             person.verified_at
-              ? `A reset link went to ${person.email}.`
-              : `The invitation went again to ${person.email}.`,
+              ? t('A reset link went to {email}.', { email: person.email })
+              : t('The invitation went again to {email}.', { email: person.email }),
           )}
         >
-          {person.verified_at ? 'Send a reset link' : 'Send the invitation again'}
+          {person.verified_at ? t('Send a reset link') : t('Send the invitation again')}
         </button>
         {me.super && !self && (
           <>
@@ -304,11 +304,11 @@ function PersonSheet({
               onClick={act(
                 () => api.patch(`/api/users/${person.id}`, { super: !person.super }),
                 person.super
-                  ? `${label} is no longer a super admin.`
-                  : `${label} is now a super admin.`,
+                  ? t('{name} is no longer a super admin.', { name: label })
+                  : t('{name} is now a super admin.', { name: label }),
               )}
             >
-              {person.super ? 'Remove super admin' : 'Make super admin'}
+              {person.super ? t('Remove super admin') : t('Make super admin')}
             </button>
             <button
               class="g-btn g-btn--ghost g-btn--sm"
@@ -316,21 +316,24 @@ function PersonSheet({
               onClick={act(
                 () => api.patch(`/api/users/${person.id}`, { disabled: !person.disabled }),
                 person.disabled
-                  ? `${label} can sign in again.`
-                  : `${label} is blocked and signed out.`,
+                  ? t('{name} can sign in again.', { name: label })
+                  : t('{name} is blocked and signed out.', { name: label }),
               )}
             >
-              {person.disabled ? 'Unblock' : 'Block'}
+              {person.disabled ? t('Unblock') : t('Block')}
             </button>
             <button
               class="g-btn g-btn--ghost g-btn--sm"
               type="button"
               onClick={() =>
-                confirm(`Remove ${label}? They lose access to every brand.`) &&
-                act(() => api.del(`/api/users/${person.id}`), `${label} is removed.`)()
+                confirm(t('Remove {name}? They lose access to every brand.', { name: label })) &&
+                act(
+                  () => api.del(`/api/users/${person.id}`),
+                  t('{name} is removed.', { name: label }),
+                )()
               }
             >
-              Remove
+              {t('Remove')}
             </button>
           </>
         )}

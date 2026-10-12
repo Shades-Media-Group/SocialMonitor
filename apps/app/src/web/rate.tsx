@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks'
 import type { BrandRow, CommentRow } from './api.ts'
 import { api } from './api.ts'
+import { t } from './i18n.ts'
 
 export interface Category {
   key: string
@@ -51,14 +52,14 @@ export function Rate({
   const options = cats.filter((c) => c.sentiment === sentiment)
 
   return (
-    <span class="sm-rate" role="group" aria-label="Rate this comment">
+    <span class="sm-rate" role="group" aria-label={t('Rate this comment')}>
       <button
         type="button"
         class="sm-rate__btn sm-rate__btn--positive"
         aria-pressed={sentiment === 'positive'}
         onClick={() => side('positive')}
       >
-        Positive
+        {t('Positive')}
       </button>
       <button
         type="button"
@@ -66,31 +67,31 @@ export function Rate({
         aria-pressed={sentiment === 'negative'}
         onClick={() => side('negative')}
       >
-        Negative
+        {t('Negative')}
       </button>
       <button
         type="button"
         class="sm-rate__btn sm-rate__btn--neutral"
         aria-pressed={sentiment === 'neutral'}
-        title="An ordinary comment: counts neither way"
+        title={t('An ordinary comment: counts neither way')}
         onClick={() => side('neutral')}
       >
-        Neutral
+        {t('Neutral')}
       </button>
       {sentiment && sentiment !== 'neutral' && options.length > 0 && (
         <select
           class="g-select sm-rate__cat"
-          aria-label="Kind"
+          aria-label={t('Kind')}
           value={category ?? ''}
           onChange={(e) => save(sentiment, (e.target as HTMLSelectElement).value || null)}
         >
-          <option value="">Choose a kind</option>
+          <option value="">{t('Choose a kind')}</option>
           {options.map((o) => (
             <option value={o.key}>{o.name}</option>
           ))}
         </select>
       )}
-      {by === 'ai' && <span class="sm-quiet">by Claude</span>}
+      {by === 'ai' && <span class="sm-quiet">{t('by Claude')}</span>}
     </span>
   )
 }

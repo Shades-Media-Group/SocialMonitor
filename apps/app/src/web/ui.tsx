@@ -4,6 +4,7 @@ import type { IconName } from 'shades-gradient'
 import { renderIcon } from 'shades-gradient'
 import { MARK, WORDMARK } from './brand.ts'
 import type { Network } from './api.ts'
+import { lang, locale, noun, t } from './i18n.ts'
 
 const MARK_FILLS = ['var(--sm-red)', 'var(--sm-rose)', 'var(--sm-ink)']
 
@@ -53,10 +54,10 @@ export const NETWORK_NAME: Record<Network, string> = {
   tiktok: 'TikTok',
 }
 
-const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
 /** "3 hours ago", "yesterday", or "never". */
 export function ago(iso: string | null | undefined) {
-  if (!iso) return 'never'
+  if (!iso) return t('never')
   const s = (new Date(iso).getTime() - Date.now()) / 1000
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
     ['year', 31536000],
@@ -67,24 +68,56 @@ export function ago(iso: string | null | undefined) {
     ['minute', 60],
   ]
   for (const [u, n] of units) if (Math.abs(s) >= n) return rtf.format(Math.round(s / n), u)
-  return 'just now'
+  return t('just now')
 }
 
-/** "1 like", "3 likes", "no likes" with tabular numbers left to the caller's markup. */
-export const count = (n: number | null | undefined, one: string, many = `${one}s`) =>
-  n == null ? `– ${many}` : `${fmt(n)} ${n === 1 ? one : many}`
+/** "1 like", "3 likes" in the chosen language. */
+const SEP = lang === 'zh' ? '' : ' ' // Chinese writes "3条评论", no space
+export const count = (n: number | null | undefined, key: string) =>
+  n == null ? `–${SEP}${noun(5, key)}` : `${fmt(n)}${SEP}${noun(n, key)}`
 
-export const fmt = (n: number | null | undefined) =>
-  n == null ? '–' : new Intl.NumberFormat('en').format(n)
+const nf = new Intl.NumberFormat(locale)
+const compact = new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 })
+export const fmt = (n: number | null | undefined) => (n == null ? '–' : nf.format(n))
+/** 12.4K, for figures where the exact count doesn't matter. */
+export const short = (n: number | null | undefined) =>
+  n == null ? '–' : n < 10000 ? nf.format(n) : compact.format(n)
+export const pctf = (part: number, whole: number) =>
+  whole ? `${Math.round((part / whole) * 100)}%` : '–'
 export const when = (iso: string | null | undefined) =>
   iso
-    ? new Date(iso).toLocaleString('en-GB', {
+    ? new Date(iso).toLocaleString(locale, {
         day: 'numeric',
         month: 'short',
         hour: '2-digit',
         minute: '2-digit',
       })
     : '–'
+
+/**
+ * Every page's header: the title and one line under it on the left, the shell's actions on the
+ * right, and the page's own filters in a row beneath.
+ */
+export const Head = ({
+  title,
+  sub,
+  actions,
+  children,
+}: {
+  title: string
+  sub?: string
+  actions?: ComponentChildren
+  children?: ComponentChildren
+}) => (
+  <header class="sm-pagehead">
+    <div class="sm-pagehead__title">
+      <h1>{title}</h1>
+      {sub && <span class="sm-pagehead__sub">{sub}</span>}
+    </div>
+    <div class="sm-pagehead__actions">{actions}</div>
+    {children && <div class="sm-pagehead__bar">{children}</div>}
+  </header>
+)
 
 /** Two lines: what to do, and what you'll get. */
 export const Empty = ({ title, children }: { title: string; children?: ComponentChildren }) => (
@@ -125,7 +158,7 @@ export function Sheet({
     >
       <header class="sm-sheet__head">
         <h2>{title}</h2>
-        <button class="g-icon-btn" type="button" onClick={onClose} aria-label="Close">
+        <button class="g-icon-btn" type="button" onClick={onClose} aria-label={t('Close')}>
           <Icon name="close" />
         </button>
       </header>

@@ -2,8 +2,9 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { Network, Schedule } from '../api.ts'
 import { api } from '../api.ts'
-import { Chips, Empty, NETWORK_NAME, Row, Segmented, when } from '../ui.tsx'
+import { Chips, Empty, NETWORK_NAME, Row, Segmented, count, when } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
+import { t } from '../i18n.ts'
 
 const NET_OPTIONS: [Network, string][] = [
   ['instagram', 'Instagram'],
@@ -13,8 +14,10 @@ const NET_OPTIONS: [Network, string][] = [
 
 function describe(s: Schedule) {
   const what =
-    s.kind === 'interval' ? `Every ${s.every_hours} hours` : `Daily at ${s.times.join(', ')}`
-  return `${what} · ${s.networks.map((n) => NETWORK_NAME[n]).join(', ')} · ${s.range === 'all' ? 'all posts' : 'new posts'}`
+    s.kind === 'interval'
+      ? t('Every {hours}', { hours: count(s.every_hours, 'hour') })
+      : t('Daily at {times}', { times: s.times.join(', ') })
+  return `${what} · ${s.networks.map((n) => NETWORK_NAME[n]).join(', ')} · ${s.range === 'all' ? t('all posts') : t('new posts')}`
 }
 
 export function Schedules({ brand, brands, notify, mode }: BrandView) {
@@ -39,11 +42,11 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
       next_run_at: s.next_run_at,
     }))
     const save = async (next: unknown) => {
-      if (!Array.isArray(next)) throw new Error('Expected a list of schedules.')
+      if (!Array.isArray(next)) throw new Error(t('Expected a list of schedules.'))
       let n = 0
       for (const x of next as typeof value) {
         const brand = brands.find((b) => b.name === x.brand || b.id === x.brand)
-        if (!brand) throw new Error(`No brand "${x.brand}".`)
+        if (!brand) throw new Error(t('No brand "{brand}".', { brand: String(x.brand) }))
         const body = {
           brand_id: brand.id,
           kind: x.kind,
@@ -58,14 +61,16 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
         n++
       }
       await load()
-      notify('Schedules saved.')
-      return `Saved ${n}. A schedule left out of the list is kept: delete it in Visual.`
+      notify(t('Schedules saved.'))
+      return t('Saved {n}. A schedule left out of the list is kept: delete it in Visual.', { n })
     }
     return (
       <JsonPanel
         value={value}
         onSave={save}
-        note='kind is "interval" (every_hours) or "times" (["09:00"]). Add one without an id. next_run_at is read-only.'
+        note={t(
+          'kind is "interval" (every_hours) or "times" (["09:00"]). Add one without an id. next_run_at is read-only.',
+        )}
       />
     )
   }
@@ -87,7 +92,7 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
       if (form!.id) await api.put(`/api/schedules/${form!.id}`, body)
       else await api.post('/api/schedules', body)
       setForm(null)
-      notify('Schedule saved.')
+      notify(t('Schedule saved.'))
       load()
     } catch (err) {
       setError((err as Error).message)
@@ -97,8 +102,9 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
   return (
     <div class="sm-stack">
       <p class="sm-quiet">
-        Updates are manual unless you add a schedule. Networks you are signed in to wait at least
-        the gap set in Settings between updates, and every start time moves by a few random minutes.
+        {t(
+          'Updates are manual unless you add a schedule. Networks you are signed in to wait at least the gap set in Settings between updates, and every start time moves by a few random minutes.',
+        )}
       </p>
       {scope.length ? (
         <ul class="sm-list">
@@ -107,7 +113,9 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
               <div class="sm-brand-row__main">
                 <h2>{brands.find((b) => b.id === s.brand_id)?.name}</h2>
                 <p class="sm-quiet">{describe(s)}</p>
-                <p class="sm-quiet">{s.enabled ? `Next: ${when(s.next_run_at)}` : 'Paused'}</p>
+                <p class="sm-quiet">
+                  {s.enabled ? t('Next: {when}', { when: when(s.next_run_at) }) : t('Paused')}
+                </p>
               </div>
               <div class="sm-brand-row__actions">
                 <button
@@ -118,14 +126,14 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
                     load()
                   }}
                 >
-                  {s.enabled ? 'Pause' : 'Resume'}
+                  {s.enabled ? t('Pause') : t('Resume')}
                 </button>
                 <button
                   class="g-btn g-btn--ghost g-btn--sm"
                   type="button"
                   onClick={() => setForm(s)}
                 >
-                  Edit
+                  {t('Edit')}
                 </button>
                 <button
                   class="g-btn g-btn--ghost g-btn--sm"
@@ -135,7 +143,7 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
                     load()
                   }}
                 >
-                  Delete
+                  {t('Delete')}
                 </button>
               </div>
             </li>
@@ -143,15 +151,15 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
         </ul>
       ) : (
         !form && (
-          <Empty title="No schedules.">
-            Add one to update a brand every few hours, daily, or at set times.
+          <Empty title={t('No schedules.')}>
+            {t('Add one to update a brand every few hours, daily, or at set times.')}
           </Empty>
         )
       )}
 
       {form ? (
         <form class="sm-form" onSubmit={save}>
-          <Row label="Brand">
+          <Row label={t('Brand')}>
             <select
               class="g-select"
               value={form.brand_id}
@@ -164,19 +172,19 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
               ))}
             </select>
           </Row>
-          <Row label="When">
+          <Row label={t('When')}>
             <Segmented
-              label="When"
+              label={t('When')}
               value={form.kind!}
               onChange={(kind) => setForm({ ...form, kind })}
               options={[
-                ['times', 'At set times'],
-                ['interval', 'Every few hours'],
+                ['times', t('At set times')],
+                ['interval', t('Every few hours')],
               ]}
             />
           </Row>
           {form.kind === 'interval' ? (
-            <Row label="Every" hint="hours">
+            <Row label={t('Every')} hint={t('hours')}>
               <input
                 class="g-input sm-input-num"
                 type="number"
@@ -189,7 +197,7 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
               />
             </Row>
           ) : (
-            <Row label="Times" hint="Separate with commas, e.g. 09:00, 18:30">
+            <Row label={t('Times')} hint={t('Separate with commas, e.g. 09:00, 18:30')}>
               <input
                 class="g-input"
                 value={(form.times ?? []).join(', ')}
@@ -198,43 +206,43 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
                     ...form,
                     times: (e.target as HTMLInputElement).value
                       .split(',')
-                      .map((t) => t.trim())
+                      .map((x) => x.trim())
                       .filter(Boolean),
                   })
                 }
               />
             </Row>
           )}
-          <Row label="Networks">
+          <Row label={t('Networks')}>
             <Chips
-              label="Networks"
+              label={t('Networks')}
               values={form.networks ?? []}
               onChange={(networks) => setForm({ ...form, networks })}
               options={NET_OPTIONS}
             />
           </Row>
-          <Row label="Posts">
+          <Row label={t('Posts')}>
             <Segmented
-              label="Posts"
+              label={t('Posts')}
               value={form.range ?? 'new'}
               onChange={(range) => setForm({ ...form, range })}
               options={[
-                ['new', 'New since last update'],
-                ['all', 'Latest, again'],
+                ['new', t('New since last update')],
+                ['all', t('Latest, again')],
               ]}
             />
           </Row>
           {error && <p class="g-error">{error}</p>}
           <div class="sm-form__actions">
             <button class="g-btn g-btn--primary g-btn--sm" type="submit">
-              Save schedule
+              {t('Save schedule')}
             </button>
             <button
               class="g-btn g-btn--ghost g-btn--sm"
               type="button"
               onClick={() => setForm(null)}
             >
-              Cancel
+              {t('Cancel')}
             </button>
           </div>
         </form>
@@ -242,7 +250,7 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
         brands.length > 0 && (
           <div>
             <button class="g-btn g-btn--sm" type="button" onClick={() => setForm(blank())}>
-              Add a schedule
+              {t('Add a schedule')}
             </button>
           </div>
         )

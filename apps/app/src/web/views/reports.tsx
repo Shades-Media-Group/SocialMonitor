@@ -5,12 +5,13 @@ import { api } from '../api.ts'
 import { Empty, when } from '../ui.tsx'
 import { renderReport } from '../markdown.tsx'
 import { JsonPanel } from '../json.tsx'
+import { t } from '../i18n.ts'
 
 const STATUS: Record<string, string> = {
-  ok: 'Done',
-  partial: 'Done, with gaps',
-  error: 'Failed',
-  running: 'Reading now',
+  ok: t('Done'),
+  partial: t('Done, with gaps'),
+  error: t('Failed'),
+  running: t('Reading now'),
 }
 
 /** Every update of this brand on the left; the report of the chosen one on the right. */
@@ -33,10 +34,10 @@ export function Reports({ brand, version, running, mode, openUpdate }: BrandView
   if (runs === null) return null
   if (!runs.length)
     return (
-      <Empty title="No reports yet.">
-        Every update ends with one: the posts read, the comments to answer, and what changed.{' '}
+      <Empty title={t('No reports yet.')}>
+        {t('Every update ends with one: the posts read, the comments to answer, and what changed.')}{' '}
         <button class="sm-textbtn" type="button" onClick={() => openUpdate(brand.id)}>
-          Update now
+          {t('Update now')}
         </button>
       </Empty>
     )
@@ -59,13 +60,13 @@ export function Reports({ brand, version, running, mode, openUpdate }: BrandView
               }
             : runs.map((r) => ({ id: r.id, status: r.status, started_at: r.started_at }))
         }
-        note="The chosen report as data. Switch to Visual to choose another."
+        note={t('The chosen report as data. Switch to Visual to choose another.')}
       />
     )
 
   return (
     <div class="sm-split">
-      <ul class="sm-runs" aria-label="Updates">
+      <ul class="sm-runs" aria-label={t('Updates')}>
         {runs.map((r) => (
           <li>
             <button
@@ -78,10 +79,10 @@ export function Reports({ brand, version, running, mode, openUpdate }: BrandView
               <span class={`sm-run__status sm-run__status--${r.status}`}>
                 {STATUS[r.status] ?? r.status} ·{' '}
                 {r.trigger === 'schedule'
-                  ? 'on schedule'
+                  ? t('on schedule')
                   : r.trigger === 'mcp'
-                    ? 'by Claude'
-                    : 'by you'}
+                    ? t('by Claude')
+                    : t('by you')}
               </span>
             </button>
           </li>
@@ -100,12 +101,12 @@ export function Reports({ brand, version, running, mode, openUpdate }: BrandView
                 href={`/api/runs/${open.id}/report.md`}
                 download={`socialmonitor-report-${open.id}.md`}
               >
-                Download as Markdown
+                {t('Download as Markdown')}
               </a>
             </p>
           </>
         ) : open ? (
-          <pre class="sm-report__log">{open.log || 'Starting…'}</pre>
+          <pre class="sm-report__log">{open.log || t('Starting…')}</pre>
         ) : null}
       </article>
     </div>
