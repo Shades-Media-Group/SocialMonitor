@@ -309,7 +309,11 @@ function conversation(db: DB, post: { id: number; profile_id: number }, c: Comme
   ].filter(Boolean)
   return {
     context: parts.length ? parts.join('; ') : undefined,
-    image: c.media_url?.startsWith('/media/') ? join(DATA_DIR, c.media_url) : undefined,
+    // Only formats the AI can read (AVIF is shown in the dashboard but not sent).
+    image:
+      c.media_url?.startsWith('/media/') && /\.(jpe?g|png|webp|gif)$/i.test(c.media_url)
+        ? join(DATA_DIR, c.media_url)
+        : undefined,
   }
 }
 

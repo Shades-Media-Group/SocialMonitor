@@ -51,6 +51,7 @@ const TYPES: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
   '.gif': 'image/gif',
+  '.avif': 'image/avif',
   '.woff2': 'font/woff2',
   '.json': 'application/json',
 }

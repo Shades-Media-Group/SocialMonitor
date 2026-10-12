@@ -8,6 +8,7 @@ const EXT: Record<string, string> = {
   'image/png': '.png',
   'image/webp': '.webp',
   'image/gif': '.gif',
+  'image/avif': '.avif',
 }
 
 /**
@@ -31,9 +32,14 @@ export async function saveImage(
   try {
     const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0' }, credentials: 'omit' })
     if (!r.ok) return null
-    const ext = EXT[(r.headers.get('content-type') ?? '').split(';')[0]!.trim()] ?? '.jpg'
+    const data = Buffer.from(await r.arrayBuffer())
+    // Some image servers send AVIF under a JPEG type: the file's own signature decides.
+    const avif = data.subarray(4, 12).toString('latin1').startsWith('ftypavi')
+    const ext = avif
+      ? '.avif'
+      : (EXT[(r.headers.get('content-type') ?? '').split(';')[0]!.trim()] ?? '.jpg')
     mkdirSync(dir, { recursive: true })
-    writeFileSync(join(dir, base + ext), Buffer.from(await r.arrayBuffer()))
+    writeFileSync(join(dir, base + ext), data)
     return local(base + ext)
   } catch {
     return null
