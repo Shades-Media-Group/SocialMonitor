@@ -35,7 +35,7 @@ yarn start    # the dashboard, on 127.0.0.1:4400
 yarn tunnel   # in a second terminal: the tunnel
 ```
 
-Open the address, sign in with the one-time code Access emails you, and the dashboard opens.
+Open the address and pass Cloudflare Access with the code it emails you. Then sign in to SocialMonitor itself: your password and the code it emails you. Access keeps strangers out; SocialMonitor's own roles decide which brands each person sees. See [people and sign-in](people.md).
 
 ## What stays local
 

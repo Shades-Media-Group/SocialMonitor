@@ -19,7 +19,8 @@ Include what you found, how to reproduce it, and your SocialMonitor version. You
 
 ## How SocialMonitor handles your data
 
-- The dashboard listens on `127.0.0.1` only, so other devices on your network can't reach it. It has no login because it is never exposed.
+- The dashboard listens on `127.0.0.1` only, so other devices on your network can't reach it.
+- Everyone signs in with a password (hashed with scrypt) and a one-time code sent by email. Sessions are signed tokens in an HttpOnly, SameSite=Strict cookie and end on password change, block or removal. Each person sees only the brands they belong to; every API route checks the role it needs. See [docs/people.md](docs/people.md).
 - The database, the browser profile used to read the networks, and every report live in the `data/` folder on your computer.
 - Post and comment text is sent to Claude for sorting, through your own Claude Code or Anthropic API key. Nothing goes to Shades Media Group.
 - Keys and the browser profile are never written to logs, exports or reports.

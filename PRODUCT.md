@@ -8,7 +8,7 @@ web
 
 Two surfaces share the Shades design system:
 
-- **The dashboard:** a local web app served by `yarn start` at `http://localhost:4400`. It is never hosted: each user clones the repository and runs it on their own computer. There is no login, because nothing listens beyond the machine.
+- **The dashboard:** a local web app served by `yarn start` at `http://localhost:4400`. It is never hosted: each user clones the repository and runs it on their own computer. Everyone signs in (a password and an emailed code), and each person sees only the brands they belong to, as a viewer or an admin.
 - **The website**, socialmonitor.shades.md: a static site on a Cloudflare Worker, in the eleven Shades languages (English at `/`, French, Romanian, Russian, Spanish, Italian, Turkish, Hindi, Japanese, Simplified and Traditional Chinese). The dashboard is in English for now.
 
 ## Stack

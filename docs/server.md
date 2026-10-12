@@ -42,6 +42,10 @@ openssl rand -hex 32    # once; store the result in the server's secret store
 
 Set it as `SOCIALMONITOR_VAULT_KEY` in the service's environment (a systemd credential, a Windows service variable), not in `.env` inside the repository. Use full-disk encryption on the server too: it holds every account you save.
 
+## Sign-in email and sessions
+
+Set the `SMTP_*` keys and `SOCIALMONITOR_JWT_SECRET` as in [people and sign-in](people.md), in the service's environment rather than in `.env`. Then open the dashboard at the server's own screen once to create the first account.
+
 ## Sign in to the networks
 
 "Sign in to networks" opens a browser window on the server itself, so do it once at the server's screen or over remote desktop. Through the tunnel the button is refused on purpose.
