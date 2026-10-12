@@ -37,8 +37,13 @@ body {
   color: var(--g-text);
 }
 :focus-visible {
-  outline: 2px solid var(--g-focus);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--g-focus);
+}
+/* Controls that carry their own shadow keep the focus ring on top of it. */
+.sm-seg button:focus-visible,
+.sm-run:focus-visible {
+  box-shadow: var(--g-focus);
 }
 * {
   scrollbar-color: var(--g-line-strong) transparent;
@@ -496,7 +501,7 @@ p {
 .sm-strip__blank {
   width: 100%;
   aspect-ratio: 4 / 5;
-  border-radius: 14px;
+  border-radius: var(--g-radius-md);
   background: var(--g-sunken);
   object-fit: cover;
   transition: transform var(--g-dur-move) var(--g-ease-move);
@@ -727,7 +732,7 @@ p {
   min-height: 28px;
   padding-top: 0;
   padding-bottom: 0;
-  border-radius: 8px;
+  border-radius: var(--g-radius-sm);
   font-size: 13px;
 }
 
@@ -845,7 +850,7 @@ p {
   min-height: 36px;
   padding-top: 0;
   padding-bottom: 0;
-  border-radius: 10px;
+  border-radius: var(--g-radius-md);
   font-size: 14px;
 }
 .sm-search {
@@ -872,7 +877,7 @@ p {
   position: relative;
   display: block;
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: var(--g-radius-lg);
   background: var(--g-sunken);
   aspect-ratio: 4 / 5;
 }
@@ -952,7 +957,7 @@ p {
 }
 .sm-run[aria-current='true'] {
   background: var(--g-surface);
-  box-shadow: inset 2px 0 0 var(--g-text);
+  font-weight: 600;
 }
 .sm-run__status {
   color: var(--g-text-3);
@@ -1037,7 +1042,7 @@ p {
   width: 100%;
   max-width: 560px;
   min-height: 40px;
-  border-radius: 10px;
+  border-radius: var(--g-radius-md);
   font-size: 15px;
 }
 .sm-textarea {
@@ -1107,7 +1112,7 @@ p {
 .sm-kinds .g-input {
   flex: 1;
   min-height: 38px;
-  border-radius: 10px;
+  border-radius: var(--g-radius-md);
   font-size: 14px;
 }
 .sm-kinds .g-icon-btn {
@@ -1149,7 +1154,7 @@ p {
   gap: 6px;
   padding: 40px;
   border: 1px dashed var(--g-line-strong);
-  border-radius: 16px;
+  border-radius: var(--g-radius-lg);
   text-align: center;
 }
 .sm-empty__title {
@@ -1185,7 +1190,7 @@ p {
   box-sizing: border-box;
   padding: 18px;
   border: 1px solid var(--g-line);
-  border-radius: 14px;
+  border-radius: var(--g-radius-md);
   background: var(--g-surface);
   color: var(--g-text);
   font: 13px/1.6 var(--g-font-code);
@@ -1389,7 +1394,7 @@ p {
     max-height: 90vh;
     margin: auto 0 0;
     width: 100vw;
-    border-radius: 18px 18px 0 0;
+    border-radius: var(--g-radius-lg) var(--g-radius-lg) 0 0;
   }
   .sm-sheet-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
