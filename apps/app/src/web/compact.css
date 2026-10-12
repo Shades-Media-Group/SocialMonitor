@@ -4074,3 +4074,22 @@ a.sm-person[href]:hover .sm-person__name {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* What works: engagement as a short bar with its figure. */
+.sm-works__rate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+}
+.sm-works__rate .sm-bars__track {
+  flex: 1;
+}
+.sm-works__rate b {
+  min-width: 42px;
+  font-weight: 600;
+  text-align: right;
+}
+.sm-works .sm-box {
+  align-self: start;
+}
