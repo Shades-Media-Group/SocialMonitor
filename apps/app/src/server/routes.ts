@@ -15,6 +15,8 @@ import {
   byNetwork,
   compare,
   heatmap,
+  daily,
+  bestTimes,
   profileStats,
   topAuthors,
   topWords,
@@ -454,10 +456,25 @@ export const routes: Route[] = [
         : null,
       networks: byNetwork(db, s),
       profiles: profileStats(db, s),
+      best_times: bestTimes(db, s),
       heatmap: heatmap(db, s),
       authors: topAuthors(db, s),
       words: topWords(db, s, brand?.name ?? ''),
     }
+  }),
+  r('GET', '/api/brands/:id/daily', seeBrand, ({ db, params, query }) => {
+    const day = (k: string, fallback: string) => {
+      const v = query.get(k) ?? fallback
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) throw new Error('Dates are YYYY-MM-DD.')
+      return v
+    }
+    const today = new Date().toISOString().slice(0, 10)
+    const from = day('from', new Date(Date.now() - 89 * 86400_000).toISOString().slice(0, 10))
+    const to = day('to', today)
+    if (from > to) throw new Error('The start is after the end.')
+    if (Date.parse(to) - Date.parse(from) > 3 * 366 * 86400_000)
+      throw new Error('Choose at most three years.')
+    return daily(db, id(params.id), from, to, net(query.get('network')))
   }),
   r('GET', '/api/compare', 'user', (c) =>
     compare(c.db, Number(c.query.get('days') ?? 30) || 0, visibleBrands(c.db, c.user)),

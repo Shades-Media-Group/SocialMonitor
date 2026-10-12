@@ -349,3 +349,90 @@ export function profileStats(db: DB, s: Scope) {
     }
   })
 }
+
+export interface DayRow {
+  day: string
+  comments: number
+  complaints: number
+  questions: number
+  praise: number
+  posts: number
+  likes: number
+  views: number
+  interactions: number
+}
+
+/** Every day between from and to (inclusive, YYYY-MM-DD), with what happened on it. */
+export function daily(
+  db: DB,
+  brandId: number,
+  from: string,
+  to: string,
+  network?: Network,
+): DayRow[] {
+  const end = `${to}T23:59:59.999Z`
+  const c = db
+    .prepare(
+      `SELECT substr(coalesce(c.posted_at, c.fetched_at), 1, 10) AS day, count(*) AS comments,
+              sum(c.label = 'complaint') AS complaints, sum(c.label = 'question') AS questions,
+              sum(c.label = 'praise') AS praise
+       FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
+       WHERE pr.brand_id = ? AND (? IS NULL OR p.network = ?) AND lower(c.author) != lower(pr.handle)
+         AND coalesce(c.posted_at, c.fetched_at) >= ? AND coalesce(c.posted_at, c.fetched_at) <= ?
+       GROUP BY day`,
+    )
+    .all(brandId, network ?? null, network ?? null, from, end) as unknown as DayRow[]
+  const p = db
+    .prepare(
+      `SELECT substr(p.posted_at, 1, 10) AS day, count(*) AS posts, sum(coalesce(p.likes, 0)) AS likes,
+              sum(coalesce(p.views, 0)) AS views,
+              sum(coalesce(p.likes, 0) + coalesce(p.comments_count, 0) + coalesce(p.shares, 0)) AS interactions
+       FROM posts p JOIN profiles pr ON pr.id = p.profile_id
+       WHERE pr.brand_id = ? AND (? IS NULL OR p.network = ?) AND p.posted_at >= ? AND p.posted_at <= ?
+       GROUP BY day`,
+    )
+    .all(brandId, network ?? null, network ?? null, from, end) as unknown as DayRow[]
+  const byDay = new Map<string, DayRow>()
+  const blank = (day: string): DayRow => ({
+    day,
+    comments: 0,
+    complaints: 0,
+    questions: 0,
+    praise: 0,
+    posts: 0,
+    likes: 0,
+    views: 0,
+    interactions: 0,
+  })
+  for (const r of [...c, ...p]) byDay.set(r.day, { ...(byDay.get(r.day) ?? blank(r.day)), ...r })
+  const out: DayRow[] = []
+  for (
+    let d = new Date(`${from}T12:00:00Z`);
+    d <= new Date(`${to}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1)
+  ) {
+    const day = d.toISOString().slice(0, 10)
+    out.push(byDay.get(day) ?? blank(day))
+  }
+  return out
+}
+
+/** When posts do best: average interactions per post by weekday and hour (UTC) they went out. */
+export function bestTimes(db: DB, s: Scope) {
+  const rows = db
+    .prepare(
+      `SELECT CAST(strftime('%w', p.posted_at) AS INTEGER) AS d, CAST(strftime('%H', p.posted_at) AS INTEGER) AS h,
+              count(*) AS posts,
+              avg(coalesce(p.likes, 0) + coalesce(p.comments_count, 0) + coalesce(p.shares, 0)) AS avg
+       FROM posts p JOIN profiles pr ON pr.id = p.profile_id
+       WHERE (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR p.network = ?) AND p.posted_at IS NOT NULL
+       GROUP BY d, h ORDER BY avg DESC LIMIT 5`,
+    )
+    .all(s.brandId ?? null, s.brandId ?? null, s.network ?? null, s.network ?? null) as {
+    d: number
+    h: number
+    posts: number
+    avg: number
+  }[]
+  return rows.map((r) => ({ ...r, avg: Math.round(r.avg) }))
+}
