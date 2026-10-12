@@ -7,4 +7,4 @@ The guides are written as each part ships. Version 0.1 will cover:
 - **Sorting with Claude:** Claude Code or an API key, and what is sent.
 - **Updates and schedules:** manual updates, every N hours, daily, set times.
 - **Reports, export and import.**
-- **The MCP server:** connecting Claude and the tools it offers.
+- **[The MCP server](mcp.md):** connecting Claude and the tools it offers.
