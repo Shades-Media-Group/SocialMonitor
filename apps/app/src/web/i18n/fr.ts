@@ -2,6 +2,13 @@ import type { Dict } from '../i18n.ts'
 
 export const fr: Dict = {
   strings: {
+    'Last post {when}': 'Dernière publication : {when}',
+    '{n} to answer': '{n} à répondre',
+    '{n} saved': '{n} enregistrés',
+    Comment: 'Commentaire',
+    'Click a row to read and answer it': 'Cliquez sur une ligne pour la lire et y répondre',
+    Accounts: 'Comptes',
+    'Click a post to read its comments': 'Cliquez sur une publication pour lire ses commentaires',
     Search: 'Rechercher',
     'Search and jump (⌘K)': 'Rechercher et aller (⌘K)',
     Account: 'Compte',

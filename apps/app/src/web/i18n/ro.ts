@@ -2,6 +2,13 @@ import type { Dict } from '../i18n.ts'
 
 export const ro: Dict = {
   strings: {
+    'Last post {when}': 'Ultima postare: {when}',
+    '{n} to answer': '{n} de răspuns',
+    '{n} saved': '{n} salvate',
+    Comment: 'Comentariu',
+    'Click a row to read and answer it': 'Apasă pe un rând ca să-l citești și să răspunzi',
+    Accounts: 'Conturi',
+    'Click a post to read its comments': 'Apasă pe o postare ca să-i citești comentariile',
     Search: 'Caută',
     'Search and jump (⌘K)': 'Caută și sari (⌘K)',
     Account: 'Cont',

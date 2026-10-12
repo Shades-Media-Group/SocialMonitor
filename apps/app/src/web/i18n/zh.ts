@@ -2,6 +2,13 @@ import type { Dict } from '../i18n.ts'
 
 export const zh: Dict = {
   strings: {
+    'Last post {when}': '最近发帖：{when}',
+    '{n} to answer': '{n}条待回复',
+    '{n} saved': '已保存{n}条',
+    Comment: '评论',
+    'Click a row to read and answer it': '点击一行即可阅读并回复',
+    Accounts: '账号',
+    'Click a post to read its comments': '点击帖子查看评论',
     Search: '搜索',
     'Search and jump (⌘K)': '搜索并跳转（⌘K）',
     Account: '账号',

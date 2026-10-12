@@ -2,6 +2,13 @@ import type { Dict } from '../i18n.ts'
 
 export const ru: Dict = {
   strings: {
+    'Last post {when}': 'Последняя публикация: {when}',
+    '{n} to answer': 'Ответить: {n}',
+    '{n} saved': 'Сохранено: {n}',
+    Comment: 'Комментарий',
+    'Click a row to read and answer it': 'Нажмите на строку, чтобы прочитать и ответить',
+    Accounts: 'Аккаунты',
+    'Click a post to read its comments': 'Нажмите на публикацию, чтобы прочитать комментарии',
     Search: 'Поиск',
     'Search and jump (⌘K)': 'Поиск и переход (⌘K)',
     Account: 'Аккаунт',

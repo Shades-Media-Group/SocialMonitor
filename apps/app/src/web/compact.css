@@ -1718,3 +1718,311 @@ body:has(.sm-shell) {
 .sm-shell .sm-dtable tbody tr:last-child td {
   border-bottom: 0;
 }
+
+/* ---------------------------------------------------------------- social: sections, accounts, posts wall */
+.sm-sec {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.sm-sec__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.sm-sec__head h2 {
+  margin: 0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+}
+.sm-sec__meta {
+  flex: 1;
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-accounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--c-gap);
+}
+.sm-acct {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-card);
+}
+.sm-acct__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sm-acct__mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--tone-soft);
+}
+.sm-acct__who {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+.sm-acct__who b {
+  font-size: 13.5px;
+}
+.sm-acct__who a {
+  overflow: hidden;
+  color: var(--c-text-2);
+  font-size: 12.5px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-acct__who a:hover {
+  text-decoration: underline;
+}
+.sm-acct__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--c-line-2);
+  border-radius: 8px;
+}
+.sm-acct__stats > div {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  box-shadow:
+    inset -1px 0 0 var(--c-line-2),
+    inset 0 -1px 0 var(--c-line-2);
+}
+.sm-acct__stats dt {
+  color: var(--c-text-3);
+  font-size: 11.5px;
+}
+.sm-acct__stats dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+.sm-acct__stats .sm-hot {
+  color: var(--g-red-600);
+}
+.sm-acct__foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-shell .sm-kpis--six {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+@media (max-width: 1280px) {
+  .sm-shell .sm-kpis--six {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .sm-shell .sm-kpis--six {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The posts wall: each post as the network shows it, with what its comments say. */
+.sm-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: var(--c-gap);
+}
+.sm-postcard2 {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-card);
+}
+.sm-postcard2__img {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: var(--c-hover);
+  cursor: pointer;
+}
+.sm-postcard2__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sm-postcard2__img:hover img {
+  transform: scale(1.03);
+}
+.sm-postcard2__net {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.95);
+}
+.sm-postcard2__waiting {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--g-red-600);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 650;
+}
+.sm-postcard2__body {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 10px 12px 12px;
+}
+.sm-postcard2__when {
+  color: var(--c-text-3);
+  font-size: 11.5px;
+}
+.sm-postcard2__text {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.4;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.sm-postcard2__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: var(--c-text-2);
+  font-size: 12px;
+}
+.sm-postcard2__metrics > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.sm-mood-strip {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+.sm-mood-strip--empty {
+  background: var(--c-line-2);
+}
+.sm-mood-strip > i.sm-c-complaint {
+  background: var(--sm-c-complaint);
+}
+.sm-mood-strip > i.sm-c-question {
+  background: var(--sm-c-question);
+}
+.sm-mood-strip > i.sm-c-suggestion {
+  background: var(--sm-c-suggestion);
+}
+.sm-mood-strip > i.sm-c-praise {
+  background: var(--sm-c-praise);
+}
+.sm-mood-strip > i.sm-c-other {
+  background: var(--sm-c-other);
+}
+
+/* Comments table and drawers. */
+.sm-ctable__row {
+  cursor: pointer;
+}
+.sm-ctable__post {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sm-ctable__post img,
+.sm-ctable__post .sm-postcell__blank {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.sm-ctable__who {
+  max-width: 150px;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-ctable__text {
+  min-width: 200px;
+  max-width: 460px;
+}
+.sm-ctable__text small {
+  display: block;
+  color: var(--c-text-3);
+  font-size: 11.5px;
+}
+.sm-drawer {
+  display: grid;
+  gap: 14px;
+}
+.sm-drawer__post {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 8px;
+  background: var(--c-panel);
+  color: inherit;
+  font-size: 12.5px;
+  text-decoration: none;
+}
+.sm-drawer__post img {
+  flex: none;
+  width: 64px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.sm-shell .sm-sheet {
+  width: min(560px, 100vw);
+  background: var(--c-card);
+}
+.sm-postcard2__img {
+  aspect-ratio: 1 / 1;
+}
+.sm-kpis--six .sm-kpi__foot {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.sm-kpis--six .sm-spark {
+  width: 100%;
+}
+.sm-shell .sm-sheet__head h2 {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}

@@ -2,15 +2,17 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { PostRow } from '../api.ts'
 import { api } from '../api.ts'
-import { Empty, NETWORK_NAME, NetworkMark, Segmented, count, fmt, when } from '../ui.tsx'
+import { Empty, NetworkMark, Segmented, count, fmt, when } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { t } from '../i18n.ts'
+import { MoodStrip, PostCard, PostDrawer } from '../social.tsx'
 
 /** The posts: a table to compare them, or a contact sheet of the real pictures. */
-export function Posts({ brand, network, version, mode, openUpdate, days }: BrandView) {
+export function Posts({ brand, network, version, mode, openUpdate, days, brands }: BrandView) {
   const [all, setAll] = useState<PostRow[] | null>(null)
   const [sort, setSort] = useState<'new' | 'top'>('new')
-  const [look, setLook] = useState<'table' | 'grid'>('table')
+  const [look, setLook] = useState<'table' | 'grid'>('grid')
+  const [openPost, setOpenPost] = useState<PostRow | null>(null)
 
   useEffect(() => {
     api
@@ -54,22 +56,6 @@ export function Posts({ brand, network, version, mode, openUpdate, days }: Brand
       </Empty>
     )
 
-  const saved = (p: PostRow) =>
-    p.stored_comments > 0 && (
-      <a
-        class="sm-textbtn"
-        href={`#/b/${brand.id}/comments`}
-        onClick={() => sessionStorage.setItem('sm-post', String(p.id))}
-      >
-        {p.comments_count && p.comments_count > p.stored_comments
-          ? t('{saved} of {total} saved', {
-              saved: fmt(p.stored_comments),
-              total: fmt(p.comments_count),
-            })
-          : t('Read them')}
-      </a>
-    )
-
   return (
     <div class="sm-stack">
       <div class="sm-toolbar">
@@ -88,8 +74,8 @@ export function Posts({ brand, network, version, mode, openUpdate, days }: Brand
             value={look}
             onChange={setLook}
             options={[
-              ['table', t('Table')],
               ['grid', t('Pictures')],
+              ['table', t('Table')],
             ]}
           />
         </span>
@@ -112,12 +98,12 @@ export function Posts({ brand, network, version, mode, openUpdate, days }: Brand
                   <th class="sm-num">{t('Shares')}</th>
                   <th class="sm-num">{t('Views')}</th>
                   <th class="sm-num">{t('To look at')}</th>
-                  <th>{t('Comments saved')}</th>
+                  <th>{t('What people say')}</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((p) => (
-                  <tr>
+                  <tr class="sm-ctable__row" onClick={() => setOpenPost(p)}>
                     <td>
                       <a class="sm-postcell" href={p.url} target="_blank" rel="noreferrer">
                         {p.thumb_url ? (
@@ -137,7 +123,9 @@ export function Posts({ brand, network, version, mode, openUpdate, days }: Brand
                     <td class="sm-num g-num">{fmt(p.shares)}</td>
                     <td class="sm-num g-num">{fmt(p.views)}</td>
                     <td class={`sm-num g-num${p.flagged ? ' sm-hot' : ''}`}>{fmt(p.flagged)}</td>
-                    <td class="sm-nowrap">{saved(p)}</td>
+                    <td>
+                      <MoodStrip p={p} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -145,35 +133,13 @@ export function Posts({ brand, network, version, mode, openUpdate, days }: Brand
           </div>
         </section>
       ) : (
-        <ul class="sm-sheet-grid">
+        <div class="sm-wall">
           {rows.map((p) => (
-            <li class="sm-postcard">
-              <a
-                class="sm-postcard__img"
-                href={p.url}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={t('Open on {network}', { network: NETWORK_NAME[p.network] })}
-              >
-                {p.thumb_url ? <img src={p.thumb_url} alt="" loading="lazy" /> : <span />}
-              </a>
-              <div class="sm-postcard__meta">
-                <NetworkMark network={p.network} size={13} />
-                <span>{when(p.posted_at)}</span>
-              </div>
-              <p class="sm-postcard__text">{p.description ?? p.caption ?? t('No caption.')}</p>
-              <p class="sm-postcard__stats g-num">
-                {count(p.likes, 'like')} · {count(p.comments_count, 'comment')}
-                {p.flagged > 0 && (
-                  <span class="sm-hot"> · {t('{n} to look at', { n: p.flagged })}</span>
-                )}
-                {p.views != null && ` · ${count(p.views, 'view')}`}
-              </p>
-              {saved(p)}
-            </li>
+            <PostCard p={p} onOpen={setOpenPost} />
           ))}
-        </ul>
+        </div>
       )}
+      <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />
     </div>
   )
 }

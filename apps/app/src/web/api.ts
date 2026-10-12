@@ -11,6 +11,13 @@ export type PostRow = Post & {
   handle: string
   stored_comments: number
   flagged: number
+  /** What people said under it, by type, and how many still wait for an answer. */
+  n_complaint: number
+  n_question: number
+  n_suggestion: number
+  n_praise: number
+  n_other: number
+  waiting: number
 }
 export type CommentRow = Comment & { network: Network; post_url: string; brand_id: number }
 export interface RunRow {
