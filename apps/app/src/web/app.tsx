@@ -10,6 +10,8 @@ import { Posts } from './views/posts.tsx'
 import { Reports } from './views/reports.tsx'
 import { Schedules } from './views/schedules.tsx'
 import { Brands } from './views/brands.tsx'
+import type { ViewMode } from './json.tsx'
+import { readMode, saveMode } from './json.tsx'
 
 const TABS = [
   ['overview', 'Overview'],
@@ -30,6 +32,8 @@ export interface AppState {
   openUpdate: () => void
   running: RunRow | null
   notify: (text: string) => void
+  /** Visual screens, or the same data as JSON to copy or edit. */
+  mode: ViewMode
 }
 
 const readTab = (): Tab => {
@@ -46,6 +50,7 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [running, setRunning] = useState<RunRow | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [mode, setMode] = useState<ViewMode>(readMode)
 
   const reload = useCallback(async () => {
     const list = await api.get<BrandRow[]>('/api/brands')
@@ -114,6 +119,7 @@ export function App() {
     openUpdate: () => setUpdateOpen(true),
     running,
     notify: setToast,
+    mode,
   }
 
   return (
@@ -167,6 +173,22 @@ export function App() {
             {text}
           </a>
         ))}
+        <span class="sm-tabs__spacer" />
+        <div class="g-segmented sm-seg sm-mode" role="radiogroup" aria-label="View">
+          {(['visual', 'json'] as const).map((m) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === m}
+              onClick={() => {
+                setMode(m)
+                saveMode(m)
+              }}
+            >
+              {m === 'visual' ? 'Visual' : 'JSON'}
+            </button>
+          ))}
+        </div>
       </nav>
 
       <main class="sm-main">

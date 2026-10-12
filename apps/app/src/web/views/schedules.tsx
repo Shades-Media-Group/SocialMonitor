@@ -3,6 +3,7 @@ import type { AppState } from '../app.tsx'
 import type { Network, Schedule } from '../api.ts'
 import { api } from '../api.ts'
 import { Chips, Empty, NETWORK_NAME, Row, Segmented, when } from '../ui.tsx'
+import { JsonPanel } from '../json.tsx'
 
 const NET_OPTIONS: [Network, string][] = [
   ['instagram', 'Instagram'],
@@ -16,7 +17,7 @@ function describe(s: Schedule) {
   return `${what} · ${s.networks.map((n) => NETWORK_NAME[n]).join(', ')} · ${s.range === 'all' ? 'all posts' : 'new posts'}`
 }
 
-export function Schedules({ brands, brandId, notify }: AppState) {
+export function Schedules({ brands, brandId, notify, mode }: AppState) {
   const [rows, setRows] = useState<Schedule[]>([])
   const [form, setForm] = useState<Partial<Schedule> | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -24,6 +25,49 @@ export function Schedules({ brands, brandId, notify }: AppState) {
   useEffect(() => void load(), [])
 
   const scope = rows.filter((s) => !brandId || s.brand_id === brandId)
+  if (mode === 'json') {
+    const value = scope.map((s) => ({
+      id: s.id,
+      brand: brands.find((b) => b.id === s.brand_id)?.name ?? s.brand_id,
+      kind: s.kind,
+      every_hours: s.every_hours,
+      times: s.times,
+      networks: s.networks,
+      range: s.range,
+      enabled: !!s.enabled,
+      next_run_at: s.next_run_at,
+    }))
+    const save = async (next: unknown) => {
+      if (!Array.isArray(next)) throw new Error('Expected a list of schedules.')
+      let n = 0
+      for (const x of next as typeof value) {
+        const brand = brands.find((b) => b.name === x.brand || b.id === x.brand)
+        if (!brand) throw new Error(`No brand "${x.brand}".`)
+        const body = {
+          brand_id: brand.id,
+          kind: x.kind,
+          every_hours: x.every_hours,
+          times: x.times,
+          networks: x.networks,
+          range: x.range,
+          enabled: x.enabled,
+        }
+        if (x.id && rows.some((r) => r.id === x.id)) await api.put(`/api/schedules/${x.id}`, body)
+        else await api.post('/api/schedules', body)
+        n++
+      }
+      await load()
+      notify('Schedules saved.')
+      return `Saved ${n}. A schedule left out of the list is kept: delete it in Visual.`
+    }
+    return (
+      <JsonPanel
+        value={value}
+        onSave={save}
+        note='kind is "interval" (every_hours) or "times" (["09:00"]). Add one without an id. next_run_at is read-only.'
+      />
+    )
+  }
   const blank = (): Partial<Schedule> => ({
     brand_id: brandId || brands[0]?.id,
     kind: 'times',

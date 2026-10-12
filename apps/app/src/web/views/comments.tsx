@@ -3,6 +3,7 @@ import type { AppState } from '../app.tsx'
 import type { BrandRow, CommentRow, Network } from '../api.ts'
 import { api } from '../api.ts'
 import { Empty, NetworkMark, Segmented, ago } from '../ui.tsx'
+import { JsonPanel } from '../json.tsx'
 
 const LABEL_NAME: Record<string, string> = {
   complaint: 'Complaint',
@@ -80,7 +81,7 @@ export function CommentList({
 
 type Filter = 'reply' | 'complaint' | 'question' | 'praise' | 'all'
 
-export function Comments({ brands, brandId, running }: AppState) {
+export function Comments({ brands, brandId, running, mode, notify }: AppState) {
   const [filter, setFilter] = useState<Filter>(() =>
     sessionStorage.getItem('sm-post') ? 'all' : 'reply',
   )
@@ -113,6 +114,47 @@ export function Comments({ brands, brandId, running }: AppState) {
   if (filter === 'reply') query.set('reply', '1')
   else if (filter !== 'all') query.set('label', filter)
   if (q.trim()) query.set('q', q.trim())
+
+  const compact = (rows ?? []).map((c) => ({
+    id: c.id,
+    network: c.network,
+    author: c.author,
+    text: c.text,
+    likes: c.likes,
+    posted_at: c.posted_at,
+    label: c.label,
+    needs_reply: c.needs_reply === 1,
+    reply_status: c.reply_status,
+    reason: c.reason,
+    post_url: c.post_url,
+  }))
+  const saveJson = async (next: unknown) => {
+    if (!Array.isArray(next)) throw new Error('Expected a list of comments.')
+    const before = new Map(compact.map((c) => [c.id, c]))
+    let changed = 0
+    for (const n of next as typeof compact) {
+      const o = before.get(n.id)
+      if (!o) continue
+      if (n.label !== o.label || n.needs_reply !== o.needs_reply || n.reason !== o.reason)
+        await api.patch(`/api/comments/${n.id}`, {
+          label: n.label,
+          needs_reply: n.needs_reply,
+          reason: n.reason ?? undefined,
+        })
+      if (n.reply_status !== o.reply_status)
+        await api.patch(`/api/comments/${n.id}`, { reply_status: n.reply_status })
+      if (
+        n.label !== o.label ||
+        n.needs_reply !== o.needs_reply ||
+        n.reason !== o.reason ||
+        n.reply_status !== o.reply_status
+      )
+        changed++
+    }
+    setTick((t) => t + 1)
+    notify(`${changed} ${changed === 1 ? 'comment' : 'comments'} updated.`)
+    return `Saved ${changed} changes. Only label, needs_reply, reply_status and reason are saved.`
+  }
 
   return (
     <div class="sm-stack">
@@ -166,7 +208,13 @@ export function Comments({ brands, brandId, running }: AppState) {
           </button>
         </p>
       )}
-      {rows === null ? null : rows.length ? (
+      {mode === 'json' && rows ? (
+        <JsonPanel
+          value={compact}
+          onSave={saveJson}
+          note="Edit label, needs_reply, reply_status or reason, then save. Other fields are read-only."
+        />
+      ) : rows === null ? null : rows.length ? (
         <CommentList comments={rows} brands={brands} onChange={() => setTick((t) => t + 1)} />
       ) : (
         <Empty title="No comments match.">

@@ -3,8 +3,9 @@ import type { AppState } from '../app.tsx'
 import type { PostRow } from '../api.ts'
 import { api } from '../api.ts'
 import { Empty, NETWORK_NAME, NetworkMark, fmt, when } from '../ui.tsx'
+import { JsonPanel } from '../json.tsx'
 
-export function Posts({ brandId, running, openUpdate }: AppState) {
+export function Posts({ brandId, running, openUpdate, mode }: AppState) {
   const [rows, setRows] = useState<PostRow[] | null>(null)
   useEffect(() => {
     api
@@ -14,6 +15,27 @@ export function Posts({ brandId, running, openUpdate }: AppState) {
   }, [brandId, running])
 
   if (rows === null) return null
+  if (mode === 'json')
+    return (
+      <JsonPanel
+        value={rows.map((p) => ({
+          id: p.id,
+          network: p.network,
+          handle: p.handle,
+          posted_at: p.posted_at,
+          kind: p.kind,
+          about: p.description,
+          caption: p.caption,
+          likes: p.likes,
+          comments: p.comments_count,
+          comments_kept: p.stored_comments,
+          to_look_at: p.flagged,
+          views: p.views,
+          shares: p.shares,
+          url: p.url,
+        }))}
+      />
+    )
   if (!rows.length)
     return (
       <Empty title="No posts yet.">

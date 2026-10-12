@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 import type { AppState } from './app.tsx'
 import { api } from './api.ts'
 import { Row, Segmented, Sheet } from './ui.tsx'
+import { JsonPanel } from './json.tsx'
 
 interface Settings {
   gap_hours: number
@@ -18,6 +19,7 @@ export function SettingsSheet({
   onClose,
   notify,
   reload,
+  mode,
 }: AppState & { open: boolean; onClose: () => void }) {
   const [s, setS] = useState<Settings | null>(null)
   const [theme, setTheme] = useState<Theme>(
@@ -67,6 +69,23 @@ export function SettingsSheet({
       notify(`Import failed: ${(e as Error).message}`)
     }
   }
+
+  if (mode === 'json' && s)
+    return (
+      <Sheet open={open} title="Settings" onClose={onClose}>
+        <JsonPanel
+          value={{ theme, gap_hours: s.gap_hours, keep_days: s.keep_days, analyzer: s.analyzer }}
+          note="theme: light, dark or auto. gap_hours: 4 to 48. keep_days: 7 to 3650. analyzer: auto, claude or api."
+          onSave={async (next) => {
+            const x = next as Partial<Settings> & { theme?: Theme }
+            if (x.theme && ['light', 'dark', 'auto'].includes(x.theme)) chooseTheme(x.theme)
+            const r = await api.patch<Settings>('/api/settings', x)
+            setS(r)
+            return 'Saved.'
+          }}
+        />
+      </Sheet>
+    )
 
   return (
     <Sheet open={open} title="Settings" onClose={onClose}>
