@@ -56,8 +56,7 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
     ...(view.network ? { network: view.network } : {}),
   })
 
-  const hasFilters =
-    tab === 'overview' || tab === 'posts' || tab === 'comments' || tab === 'reports'
+  const hasFilters = tab === 'overview' || tab === 'posts' || tab === 'comments'
   const TAB_NAME = Object.fromEntries(TABS) as Record<Tab, string>
 
   return (

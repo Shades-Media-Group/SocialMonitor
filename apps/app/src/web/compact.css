@@ -1649,3 +1649,73 @@ body:has(.sm-shell) {
 .sm-shell .sm-layout > .sm-stack {
   align-content: start;
 }
+
+/* ---------------------------------------------------------------- reports: run list beside the report */
+.sm-shell .sm-runs {
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-card);
+}
+.sm-shell .sm-run {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-line-2);
+  font-size: 12.5px;
+}
+.sm-shell .sm-run:hover {
+  background: var(--c-hover);
+}
+.sm-shell .sm-run[aria-current='true'] {
+  background: var(--c-active);
+  box-shadow: none;
+}
+.sm-shell .sm-report {
+  border-radius: 10px;
+}
+.sm-shell .sm-report__text h1 {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 650;
+}
+.sm-shell .sm-report__text h2 {
+  font-family: inherit;
+  font-size: 14px;
+}
+.sm-shell .sm-report__text h3 {
+  font-family: inherit;
+  font-size: 13px;
+}
+.sm-shell .sm-report__text {
+  max-width: 80ch;
+  font-size: 13px;
+}
+.sm-shell .sm-empty {
+  padding: 28px 16px;
+  border-color: var(--c-line);
+  border-radius: 10px;
+}
+.sm-shell .sm-empty__title {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+}
+.sm-shell .sm-empty__body {
+  font-size: 12.5px;
+}
+@media (max-width: 600px) {
+  .sm-kpi__foot .sm-spark {
+    display: none;
+  }
+}
+/* A table right under a card's head sits flush with it, and runs to the card's bottom edge. */
+.sm-shell .sm-box > .sm-box__head + .sm-scroll,
+.sm-shell .sm-box > .sm-box__head + .sm-dtable {
+  margin-top: -10px;
+}
+.sm-shell .sm-box:has(> .sm-scroll:last-child),
+.sm-shell .sm-box:has(> .sm-dtable:last-child) {
+  padding-bottom: 0;
+}
+.sm-shell .sm-dtable tbody tr:last-child td {
+  border-bottom: 0;
+}
