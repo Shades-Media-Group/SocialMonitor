@@ -614,6 +614,14 @@ export const ro: Dict = {
     'Open the report': 'Deschide raportul',
     'Read new posts and {n} due from {profiles}':
       'Citește postările noi și {n} scadente de la {profiles}',
+    Off: 'Oprit',
+    'Every 4 hours': 'La fiecare 4 ore',
+    'Every 12 hours': 'La fiecare 12 ore',
+    'Once a day': 'O dată pe zi',
+    'Automatic updates for {brand}': 'Actualizări automate pentru {brand}',
+    'Automatic updates': 'Actualizări automate',
+    'New posts and fresh numbers, read by themselves. More choices on Schedules.':
+      'Postări noi și cifre proaspete, citite singure. Mai multe opțiuni în Programări.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

@@ -612,6 +612,14 @@ export const ru: Dict = {
     'Open the report': 'Открыть отчёт',
     'Read new posts and {n} due from {profiles}':
       'Прочитать новые посты и {n} к обновлению: {profiles}',
+    Off: 'Выключено',
+    'Every 4 hours': 'Каждые 4 часа',
+    'Every 12 hours': 'Каждые 12 часов',
+    'Once a day': 'Раз в день',
+    'Automatic updates for {brand}': 'Автообновления для {brand}',
+    'Automatic updates': 'Автоматические обновления',
+    'New posts and fresh numbers, read by themselves. More choices on Schedules.':
+      'Новые посты и свежие цифры читаются сами. Больше вариантов — в Расписаниях.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

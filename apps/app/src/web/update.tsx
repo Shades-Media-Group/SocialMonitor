@@ -4,6 +4,7 @@ import type { Network } from './api.ts'
 import { api } from './api.ts'
 import { Chips, NetworkMark, Row, Segmented, Sheet, ago, count } from './ui.tsx'
 import { usePref } from './prefs.ts'
+import { AutoUpdate } from './auto-update.tsx'
 import { locale, t } from './i18n.ts'
 
 const NET_OPTIONS: [Network, string][] = [
@@ -191,6 +192,13 @@ export function UpdateSheet({
             ))}
         </ul>
       )}
+      {brands
+        .filter((b) => ids.includes(String(b.id)) && b.my_role === 'admin')
+        .map((b) => (
+          <Row label={brands.length > 1 ? `${t('Automatic')} · ${b.name}` : t('Automatic')}>
+            <AutoUpdate brand={b} />
+          </Row>
+        ))}
       <Row label={t('At most')} hint={t('new posts per profile, newest first')}>
         <input
           class="g-input sm-input-num"

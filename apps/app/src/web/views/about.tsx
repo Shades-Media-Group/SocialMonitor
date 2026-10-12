@@ -4,6 +4,7 @@ import type { Network, Tracker } from '../api.ts'
 import { api } from '../api.ts'
 import { Icon, NETWORK_NAME, NetworkMark, Row, fmt } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
+import { AutoUpdate } from '../auto-update.tsx'
 import type { Category } from '../rate.tsx'
 import { brandCategories } from '../rate.tsx'
 import { t } from '../i18n.ts'
@@ -248,6 +249,16 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
             </Row>
           ))}
           <TikTokConnect brand={brand} edit={edit} notify={notify} />
+          {edit && (
+            <Row
+              label={t('Automatic updates')}
+              hint={t(
+                'New posts and fresh numbers, read by themselves. More choices on Schedules.',
+              )}
+            >
+              <AutoUpdate brand={brand} />
+            </Row>
+          )}
         </section>
 
         <section class="sm-box">

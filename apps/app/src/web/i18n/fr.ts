@@ -615,6 +615,14 @@ export const fr: Dict = {
     'Open the report': 'Ouvrir le rapport',
     'Read new posts and {n} due from {profiles}':
       'Lire les nouvelles publications et {n} à revoir sur {profiles}',
+    Off: 'Désactivé',
+    'Every 4 hours': 'Toutes les 4 heures',
+    'Every 12 hours': 'Toutes les 12 heures',
+    'Once a day': 'Une fois par jour',
+    'Automatic updates for {brand}': 'Mises à jour automatiques pour {brand}',
+    'Automatic updates': 'Mises à jour automatiques',
+    'New posts and fresh numbers, read by themselves. More choices on Schedules.':
+      'Nouvelles publications et chiffres frais, lus tout seuls. Plus de choix dans Programmations.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',
