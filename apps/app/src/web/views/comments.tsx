@@ -21,6 +21,7 @@ import {
 import { lang, t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
 import { JsonPanel } from '../json.tsx'
+import { BadReport } from '../bad-report.tsx'
 import { LABELS } from '../labels.tsx'
 import { Rate, brandCategories } from '../rate.tsx'
 import { CommentDrawer, CommentTable, FeedCard, PostDrawer } from '../social.tsx'
@@ -396,7 +397,7 @@ export function CommentList({
 
 type Filter = 'all' | 'reply' | 'urgent' | 'complaint' | 'question' | 'praise'
 
-export function Comments({ brand, network, version, mode, notify, brands }: BrandView) {
+export function Comments({ brand, network, version, mode, notify, brands, reload }: BrandView) {
   const [filter, setFilter] = usePref<Filter>('comments.filter', 'all')
   const [sentiment, setSentiment] = usePref('comments.sentiment', '')
   const [category, setCategory] = useState('')
@@ -419,6 +420,7 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
   }, [brand.id, version])
   const [postId, setPostId] = useState(() => sessionStorage.getItem('sm-post'))
   const [tick, setTick] = useState(0)
+  const [badOpen, setBadOpen] = useState(false)
 
   const query = new URLSearchParams({ brand: String(brand.id) })
   if (network) query.set('network', network)
@@ -561,9 +563,14 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
             ['table', t('Table')],
           ]}
         />
-        <a class="sm-textbtn sm-toolbar__end" href={`/api/comments.csv?${qs}`} download>
-          {t('Download CSV')}
-        </a>
+        <span class="sm-toolbar__end">
+          <button class="g-btn g-btn--sm" type="button" onClick={() => setBadOpen(true)}>
+            <Icon name="warning" size={14} /> {t('Negative comments report')}
+          </button>
+          <a class="sm-textbtn" href={`/api/comments.csv?${qs}`} download>
+            {t('Download CSV')}
+          </a>
+        </span>
       </div>
 
       {postId && (
@@ -628,6 +635,14 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
           {t('Change the filters, or press Update to read new ones.')}
         </Empty>
       )}
+      <BadReport
+        brand={brand}
+        network={network}
+        open={badOpen}
+        onClose={() => setBadOpen(false)}
+        notify={notify}
+        reload={reload}
+      />
       <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />
       <CommentDrawer
         comment={openComment}

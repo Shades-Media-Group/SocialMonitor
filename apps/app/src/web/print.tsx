@@ -383,3 +383,103 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
     </div>
   )
 }
+
+/**
+ * The negative comments on paper: every comment rated negative or sorted as a complaint, in
+ * groups by kind, largest group first, each as the bubbles the dashboard shows. From the last
+ * days, or only those an update just read (`since`).
+ */
+export function PrintBad({ brand }: { brand: BrandRow }) {
+  const q = new URLSearchParams(location.hash.split('?')[1] ?? '')
+  const days = Number(q.get('days') ?? 0)
+  const since = q.get('since')
+  const network = (q.get('network') ?? '') as Network | ''
+  const [rows, setRows] = useState<CommentRow[] | null>(null)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = 'light'
+    const p = new URLSearchParams({ brand: String(brand.id), bad: '1', others: '1', limit: '2000' })
+    if (network) p.set('network', network)
+    if (since) p.set('since', since)
+    else if (days) p.set('from', new Date(Date.now() - days * 86400_000).toISOString())
+    api
+      .get<CommentRow[]>(`/api/comments?${p}`)
+      .then(setRows)
+      .catch(() => setRows([]))
+  }, [brand.id])
+  useEffect(() => {
+    if (rows)
+      requestAnimationFrame(() => requestAnimationFrame(() => (document.body.dataset.ready = '1')))
+  }, [rows])
+  if (!rows) return null
+
+  const names = new Map(brandCategories(brand).map((c) => [c.key, c.name]))
+  const groups = new Map<string, CommentRow[]>()
+  for (const c of rows) {
+    const k = c.category && names.has(c.category) ? names.get(c.category)! : t('Without a kind')
+    groups.set(k, [...(groups.get(k) ?? []), c])
+  }
+  const list = [...groups].sort((a, b) => b[1].length - a[1].length)
+  const max = Math.max(1, ...list.map(([, cs]) => cs.length))
+  const period = since
+    ? t('New since {when}', { when: when(since) })
+    : days
+      ? t('Last {n} days', { n: days })
+      : t('All time')
+
+  return (
+    <div class="sm-shell sm-shell--print">
+      <article class="sm-pr sm-body">
+        <header class="sm-pr__band">
+          <Logo />
+          <div class="sm-pr__title">
+            <h1>
+              {brand.name} · {t('Negative comments')}
+            </h1>
+            <p>
+              {period} · {network ? NETWORK_NAME[network] : t('All networks')}
+            </p>
+          </div>
+          <p class="sm-pr__date">{new Date().toLocaleDateString(locale, { dateStyle: 'long' })}</p>
+        </header>
+
+        <section class="sm-pr__block">
+          <h2>
+            {fmt(rows.length)} {t('negative comments, by kind')}
+          </h2>
+          {list.length ? (
+            <ul class="sm-bars">
+              {list.map(([name, cs]) => (
+                <li>
+                  <span class="sm-bars__name">{name}</span>
+                  <span class="sm-bars__track">
+                    <span
+                      class="sm-bars__fill sm-c-complaint"
+                      style={{ width: `${(cs.length / max) * 100}%` }}
+                    />
+                  </span>
+                  <b class="g-num">{cs.length}</b>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="sm-quiet">{t('No negative comments in this period.')}</p>
+          )}
+        </section>
+
+        {list.map(([name, cs]) => (
+          <section class="sm-pr__block sm-pr__comments">
+            <h2>
+              {name} <span class="sm-quiet">· {fmt(cs.length)}</span>
+            </h2>
+            <CommentList comments={cs} brands={[brand]} />
+          </section>
+        ))}
+
+        <footer class="sm-pr__foot">
+          {t('SocialMonitor. Free and open source. Built by Shades Media Group.')}
+        </footer>
+      </article>
+    </div>
+  )
+}

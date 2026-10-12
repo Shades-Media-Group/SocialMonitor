@@ -221,6 +221,13 @@ function migrate(db: DatabaseSync) {
     db.exec('ALTER TABLE comments ADD COLUMN urgency INTEGER')
     db.exec('ALTER TABLE comments ADD COLUMN emotion TEXT')
   }
+  // Who gets the bad-comments report, in which language, and whether it goes out after updates.
+  if (!has('brands', 'alert_emails')) {
+    db.exec("ALTER TABLE brands ADD COLUMN alert_emails TEXT NOT NULL DEFAULT '[]'")
+    db.exec('ALTER TABLE brands ADD COLUMN alert_auto INTEGER NOT NULL DEFAULT 0')
+    db.exec("ALTER TABLE brands ADD COLUMN alert_lang TEXT NOT NULL DEFAULT 'en'")
+    db.exec('ALTER TABLE brands ADD COLUMN alert_sent_at TEXT')
+  }
   // Words the brand watches for in comments: its products, other brands, topics.
   if (!has('brands', 'trackers'))
     db.exec("ALTER TABLE brands ADD COLUMN trackers TEXT NOT NULL DEFAULT '[]'")

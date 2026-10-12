@@ -5,6 +5,11 @@ import { SESSION_COOKIE } from './auth.ts'
  * A brand's report as a PDF: the dashboard's own print page, rendered by a headless browser.
  * The page sets data-ready on <body> once its data is in, so the PDF never captures a half-load.
  */
+/** Where the dashboard's pages are served, for the headless browser to open. */
+export const uiOrigin = () =>
+  process.env.SOCIALMONITOR_UI ??
+  `http://127.0.0.1:${process.env.SOCIALMONITOR_API_PORT ?? process.env.PORT ?? 4400}`
+
 /** `session` is a short-lived token for the person asking, so the page loads only what they may see. */
 export async function brandPdf(uiOrigin: string, brandId: number, query: string, session: string) {
   const browser = await chromium.launch()

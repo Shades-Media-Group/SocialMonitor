@@ -21,6 +21,11 @@ export interface Brand {
   reply_target_hours: number
   /** JSON: Tracker[] */
   trackers: string
+  /** The bad-comments report: JSON list of addresses, sent after updates when 1, in this language. */
+  alert_emails: string
+  alert_auto: 0 | 1
+  alert_lang: string
+  alert_sent_at: string | null
   created_at: string
 }
 

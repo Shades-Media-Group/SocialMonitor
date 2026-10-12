@@ -19,9 +19,16 @@ let transport: Transporter | null = null
 
 export const mailReady = () => !!process.env.SMTP_HOST?.trim()
 
-export async function sendMail(to: string, subject: string, text: string, lang = 'en') {
+export async function sendMail(
+  to: string,
+  subject: string,
+  text: string,
+  lang = 'en',
+  attachments: { filename: string; content: Buffer }[] = [],
+) {
   if (!mailReady()) {
-    console.log(`\n[mail not set up] To: ${to}\nSubject: ${subject}\n\n${text}\n`)
+    const files = attachments.map((a) => `\n[attached] ${a.filename}`).join('')
+    console.log(`\n[mail not set up] To: ${to}\nSubject: ${subject}\n\n${text}${files}\n`)
     return
   }
   const port = Number(process.env.SMTP_PORT ?? 465)
@@ -37,5 +44,6 @@ export async function sendMail(to: string, subject: string, text: string, lang =
     to,
     subject,
     text: `${text}\n\n${mailText(lang, 'credit')}`,
+    attachments,
   })
 }

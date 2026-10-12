@@ -29,7 +29,8 @@ import {
   timeline,
 } from '../core/insights.ts'
 import { workbook } from '../core/xlsx.ts'
-import { brandPdf } from '../core/pdf.ts'
+import { brandPdf, uiOrigin } from '../core/pdf.ts'
+import { badPdf, sendBad, setAlerts } from '../core/alerts.ts'
 import { deleteSaved, getSaved, listSaved, readSaved, saveReport } from '../core/saved.ts'
 import { draftReply, pickEngine, translate } from '../core/analyze.ts'
 import { getSettings } from '../core/settings.ts'
@@ -296,6 +297,9 @@ export const routes: Route[] = [
       overdue: query.get('overdue') === '1',
       day: query.get('day') ?? undefined,
       urgent: query.get('urgent') === '1',
+      bad: query.get('bad') === '1',
+      from: query.get('from') ?? undefined,
+      readSince: query.get('since') ?? undefined,
       search: query.get('q') ?? undefined,
       sentiment: (['positive', 'negative', 'neutral', 'none'] as const).find(
         (v) => v === query.get('sentiment'),
@@ -638,13 +642,32 @@ export const routes: Route[] = [
     })
     return out
   }),
+  r('PUT', '/api/brands/:id/alerts', adminBrand, (c) => {
+    const x = b(c) as { emails?: unknown; auto?: unknown }
+    return setAlerts(c.db, id(c.params.id), x.emails, x.auto, c.user.lang)
+  }),
+  r('GET', '/api/brands/:id/bad.pdf', seeBrand, async (c) => {
+    const out = await badPdf(
+      c.db,
+      id(c.params.id),
+      { days: Number(c.query.get('days')) || undefined, network: net(c.query.get('network')) },
+      c.user,
+    )
+    return { __download: out.filename, type: 'application/pdf', data: out.data }
+  }),
+  r('POST', '/api/brands/:id/bad/send', adminBrand, async (c) => ({
+    sent: await sendBad(
+      c.db,
+      id(c.params.id),
+      { days: Number((b(c) as { days?: number }).days) || undefined },
+      c.user,
+    ),
+  })),
   r('GET', '/api/brands/:id/report.pdf', seeBrand, async (c) => {
     const { db, params, query } = c
     const brand = store.getBrand(db, id(params.id))
     if (!brand) throw new Error('No such brand.')
-    const ui =
-      process.env.SOCIALMONITOR_UI ??
-      `http://127.0.0.1:${process.env.SOCIALMONITOR_API_PORT ?? process.env.PORT ?? 4400}`
+    const ui = uiOrigin()
     const q = new URLSearchParams()
     for (const k of ['days', 'network']) if (query.get(k)) q.set(k, query.get(k)!)
     const out = {

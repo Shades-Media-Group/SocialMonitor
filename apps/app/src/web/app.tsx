@@ -14,7 +14,7 @@ import type { ViewMode } from './json.tsx'
 import { readMode, saveMode } from './json.tsx'
 import { Home } from './home.tsx'
 import { BrandPage } from './brand-page.tsx'
-import { PrintReport } from './print.tsx'
+import { PrintBad, PrintReport } from './print.tsx'
 import type { AuthInfo, Me } from './auth.tsx'
 import { AuthScreen, linkFromHash } from './auth.tsx'
 import { People } from './people.tsx'
@@ -242,7 +242,14 @@ function Dashboard({ me }: { me: Me }) {
   const canRun = me.super || me.memberships.some((m) => m.role === 'admin')
   const manages = canRun
 
-  if (route.page === 'print') return loaded && brand ? <PrintReport brand={brand} /> : null
+  if (route.page === 'print')
+    return loaded && brand ? (
+      location.hash.includes('kind=bad') ? (
+        <PrintBad brand={brand} />
+      ) : (
+        <PrintReport brand={brand} />
+      )
+    ) : null
 
   // What every page header carries on its right: freshness, the view switch and the one red action.
   const actions = (

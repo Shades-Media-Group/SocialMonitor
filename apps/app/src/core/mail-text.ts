@@ -14,6 +14,8 @@ type Key =
   | 'accessSubject'
   | 'accessBody'
   | 'everyBrand'
+  | 'badSubject'
+  | 'badBody'
   | 'credit'
 
 const TEXT: Record<MailLang, Record<Key, string>> = {
@@ -31,6 +33,9 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     accessSubject: 'You have new access in SocialMonitor',
     accessBody: '{from} gave you access to {brands}. Sign in to see it.',
     everyBrand: 'every brand',
+    badSubject: '{brand}: {n} negative comments',
+    badBody:
+      'The attached PDF lists {n} negative comments about {brand}, grouped by kind.\n\nOpen SocialMonitor to answer them.',
     credit: 'SocialMonitor. Free and open source. Built by Shades Media Group.',
   },
   ro: {
@@ -48,6 +53,9 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     accessSubject: 'Ai acces nou în SocialMonitor',
     accessBody: '{from} ți-a dat acces la {brands}. Conectează-te ca să vezi.',
     everyBrand: 'toate brandurile',
+    badSubject: '{brand}: {n} comentarii negative',
+    badBody:
+      'PDF-ul atașat cuprinde {n} comentarii negative despre {brand}, grupate pe tipuri.\n\nDeschide SocialMonitor ca să le răspunzi.',
     credit: 'SocialMonitor. Gratuit și open source. Creat de Shades Media Group.',
   },
   ru: {
@@ -65,6 +73,9 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     accessSubject: 'У вас новый доступ в SocialMonitor',
     accessBody: '{from} открыл(а) вам доступ к: {brands}. Войдите, чтобы посмотреть.',
     everyBrand: 'все бренды',
+    badSubject: '{brand}: негативных комментариев: {n}',
+    badBody:
+      'В приложенном PDF {n} негативных комментариев о {brand}, сгруппированных по видам.\n\nОткройте SocialMonitor, чтобы ответить.',
     credit: 'SocialMonitor. Бесплатно и с открытым кодом. Создано Shades Media Group.',
   },
   fr: {
@@ -82,6 +93,9 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     accessSubject: 'Nouvel accès sur SocialMonitor',
     accessBody: '{from} vous a donné accès à {brands}. Connectez-vous pour le voir.',
     everyBrand: 'toutes les marques',
+    badSubject: '{brand} : {n} commentaires négatifs',
+    badBody:
+      'Le PDF joint liste {n} commentaires négatifs sur {brand}, classés par type.\n\nOuvrez SocialMonitor pour y répondre.',
     credit: 'SocialMonitor. Gratuit et open source. Créé par Shades Media Group.',
   },
   zh: {
@@ -98,6 +112,9 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     accessSubject: '你在 SocialMonitor 有了新的访问权限',
     accessBody: '{from} 已为你开通 {brands} 的访问权限。登录即可查看。',
     everyBrand: '所有品牌',
+    badSubject: '{brand}：{n} 条负面评论',
+    badBody:
+      '附件 PDF 列出了关于 {brand} 的 {n} 条负面评论，按类型分组。\n\n打开 SocialMonitor 回复它们。',
     credit: 'SocialMonitor。免费、开源。由 Shades Media Group 打造。',
   },
 }

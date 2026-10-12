@@ -375,6 +375,11 @@ export interface CommentFilter extends PostFilter {
   day?: string
   /** Only waiting comments the AI marked urgent. */
   urgent?: boolean
+  /** Only negative comments: rated negative or sorted as complaints. */
+  bad?: boolean
+  /** Only comments written since, or read since (new in an update), ISO times. */
+  from?: string
+  readSince?: string
 }
 
 export function listComments(db: DB, f: CommentFilter = {}) {
@@ -399,6 +404,15 @@ export function listComments(db: DB, f: CommentFilter = {}) {
   if (f.needsReply) where.push("c.needs_reply = 1 AND c.reply_status = 'open'")
   if (f.unsorted) where.push('c.label IS NULL')
   if (f.overdue) where.push(OVERDUE)
+  if (f.bad) where.push("(c.sentiment = 'negative' OR c.label = 'complaint')")
+  if (f.from) {
+    where.push('coalesce(c.posted_at, c.fetched_at) >= ?')
+    args.push(f.from)
+  }
+  if (f.readSince) {
+    where.push('c.fetched_at >= ?')
+    args.push(f.readSince)
+  }
   if (f.urgent) where.push("c.needs_reply = 1 AND c.reply_status = 'open' AND c.urgency = 2")
   if (f.day && /^\d{4}-\d{2}-\d{2}$/.test(f.day)) {
     where.push('substr(coalesce(c.posted_at, c.fetched_at), 1, 10) = ?')

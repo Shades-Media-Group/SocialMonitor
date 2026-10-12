@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { autoSendBad } from './alerts.ts'
 import type { Page } from 'playwright'
 import { join } from 'node:path'
 import type { DB } from './db.ts'
@@ -100,7 +101,7 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   const log = (line: string) => store.logRun(db, runId, line)
   const since = now()
   const settings = getSettings(db)
-  const touched: { postId: number; brand: string }[] = []
+  const touched: { postId: number; brand: string; brandId: number }[] = []
   const problems: string[] = []
   const skipped: string[] = []
   let page: Page | null = null
@@ -149,7 +150,7 @@ async function execute(db: DB, runId: number, scope: RunScope) {
             c.media_url = await saveImage(p.network, 'comments', c.ext_id, c.media_url)
           }
           const { post, newComments } = store.savePost(db, p, cp)
-          touched.push({ postId: post.id, brand: brand.name })
+          touched.push({ postId: post.id, brand: brand.name, brandId: brand.id })
           if (newComments) log(`  ${newComments} new comments on ${post.url}`)
         }
         store.markProfile(db, p.id, 'ok', null, opt.usedSession)
@@ -171,6 +172,14 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   } catch (e) {
     problems.push((e as Error).message)
   }
+
+  // The bad-comments report, to brands that asked for it after each update.
+  await autoSendBad(
+    db,
+    touched.map((t) => t.brandId),
+    since,
+    log,
+  )
 
   // Retention: comments older than the setting are deleted after every update.
   const cutoff = new Date(Date.now() - settings.keep_days * 86400_000).toISOString()

@@ -13,6 +13,7 @@ import { parseVerdicts } from './analyze.ts'
 import { nextRun } from './schedule.ts'
 import { exportAll, importAll } from './transfer.ts'
 import { watched } from './insights.ts'
+import { badCount, setAlerts } from './alerts.ts'
 import { setTrackers } from './store.ts'
 import type { Schedule } from './types.ts'
 
@@ -222,5 +223,41 @@ describe('words to watch', () => {
       { term: 'VoLTE', kind: 'topic', n: 1, before: null, complaints: 0, praise: 0 },
       { term: 'Интернет', kind: 'topic', n: 1, before: null, complaints: 1, praise: 0 },
     ])
+  })
+})
+
+describe('negative comments report', () => {
+  it('keeps valid distinct addresses and counts only negative customer comments', () => {
+    const db = openDb(':memory:')
+    const brand = addBrand(db, 'Test', ['https://www.tiktok.com/@test'])
+    expect(
+      setAlerts(db, brand.id, ['A@x.com', 'a@x.com', 'nope', 'b@y.org', ' '], 1, 'ro'),
+    ).toEqual({ emails: ['a@x.com', 'b@y.org'], auto: true })
+    const [profile] = listProfiles(db, brand.id)
+    const c = (ext_id: string, author: string, text: string) => ({
+      ext_id,
+      parent_ext_id: null,
+      author,
+      text,
+      likes: 0,
+      posted_at: null,
+    })
+    savePost(db, profile!, {
+      ext_id: '1',
+      url: 'u',
+      posted_at: null,
+      kind: 'video',
+      caption: 'c',
+      thumb_url: null,
+      likes: 0,
+      comments_count: 3,
+      shares: 0,
+      views: 0,
+      comments: [c('a', 'x', 'bad'), c('b', 'y', 'great'), c('r', 'test', 'sorry')],
+    })
+    for (const row of listComments(db))
+      setVerdict(db, row.id, row.text === 'great' ? 'praise' : 'complaint', false, '')
+    expect(badCount(db, brand.id)).toBe(1)
+    expect(badCount(db, brand.id, '2999-01-01')).toBe(0)
   })
 })
