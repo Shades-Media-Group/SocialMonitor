@@ -11,6 +11,7 @@ import { seedFromFile } from './seed.ts'
 import { isLocal, publicHost, refuseRemote } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
 import { startScheduler } from '../core/schedule.ts'
+import { fillTikTok } from '../core/fill.ts'
 import { changed, onChange } from '../core/events.ts'
 
 // Keys and options live in .env at the repository root, never in the code.
@@ -38,6 +39,8 @@ const db = openDb()
 seedFromFile(db)
 closeStaleRuns(db)
 startScheduler(db)
+// Photos and stickers for older TikTok comments, from public pages, a few seconds after start.
+setTimeout(() => void fillTikTok(db, (l) => console.log(l)).catch(() => {}), 5000)
 
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -47,6 +50,7 @@ const TYPES: Record<string, string> = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.gif': 'image/gif',
   '.woff2': 'font/woff2',
   '.json': 'application/json',
 }

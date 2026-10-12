@@ -30,6 +30,8 @@ interface RawComment {
   user?: { unique_id?: string; nickname?: string; avatar_thumb?: unknown }
   image_list?: unknown
   sticker?: unknown
+  /** Stickers come here, not in `sticker`. */
+  cmt_sticker_struct?: unknown
 }
 
 async function checkWall(page: Page) {
@@ -120,6 +122,21 @@ async function isSignedIn(page: Page) {
   return cookies.some((c) => c.name === 'sessionid' && c.value)
 }
 
+/** A picture or sticker attached to a comment, if any. */
+export const tiktokMedia = (c: {
+  image_list?: unknown
+  sticker?: unknown
+  cmt_sticker_struct?: unknown
+}) =>
+  imageIn(
+    {
+      i: c.image_list,
+      s: c.sticker,
+      c: (c.cmt_sticker_struct as { static_url?: unknown })?.static_url ?? c.cmt_sticker_struct,
+    },
+    /url/,
+  )
+
 async function readComments(
   page: Page,
   url: string,
@@ -154,7 +171,7 @@ async function readComments(
       posted_at: isoFromUnix(c.create_time),
       author_avatar: imageIn(c.user?.avatar_thumb, /url/),
       author_url: c.user?.unique_id ? `https://www.tiktok.com/@${c.user.unique_id}` : null,
-      media_url: imageIn({ image_list: c.image_list, sticker: c.sticker }, /url/),
+      media_url: tiktokMedia(c),
     })
   }
   return [...seen.values()]

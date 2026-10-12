@@ -1,5 +1,6 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { autoSendBad } from './alerts.ts'
+import { saveImage } from './media.ts'
+import { fillTikTok } from './fill.ts'
 import type { Page } from 'playwright'
 import { join } from 'node:path'
 import type { DB } from './db.ts'
@@ -68,33 +69,6 @@ export function gaps(db: DB) {
       until: gapUntil(db, p),
     }))
     .filter((g) => g.until)
-}
-
-/**
- * Keeps a local copy of a picture so it still shows after the network's signed link expires.
- * Pictures come from the networks' public image servers with no cookies, so fetching them never
- * touches the signed-in account. A file that is already saved is not fetched again.
- */
-async function saveImage(
-  network: Network,
-  folder: string,
-  id: string,
-  url: string | null | undefined,
-): Promise<string | null> {
-  if (!url || url.startsWith('/media/')) return url ?? null
-  const dir = join(DATA_DIR, 'media', network, folder)
-  const file = `${id.replace(/[^\w.-]/g, '_').slice(0, 80)}.jpg`
-  const local = `/media/${network}/${folder ? `${folder}/` : ''}${file}`
-  if (existsSync(join(dir, file))) return local
-  try {
-    const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0' }, credentials: 'omit' })
-    if (!r.ok) return null
-    mkdirSync(dir, { recursive: true })
-    writeFileSync(join(dir, file), Buffer.from(await r.arrayBuffer()))
-    return local
-  } catch {
-    return null
-  }
 }
 
 async function execute(db: DB, runId: number, scope: RunScope) {
@@ -172,6 +146,9 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   } catch (e) {
     problems.push((e as Error).message)
   }
+
+  // Photos and stickers for TikTok comments read before they were kept, from public pages.
+  await fillTikTok(db, log).catch((e) => log(`Could not fill photos: ${(e as Error).message}`))
 
   // The bad-comments report, to brands that asked for it after each update.
   await autoSendBad(
