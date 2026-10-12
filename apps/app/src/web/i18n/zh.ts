@@ -471,6 +471,8 @@ export const zh: Dict = {
     'Sent a sticker or a picture': '发送了贴纸或图片',
     'Picture in the comment': '评论中的图片',
     'Open {name} on {network}': '在 {network} 上打开 {name}',
+    'Loading…': '加载中…',
+    'No comments this day.': '这一天没有评论。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

@@ -493,6 +493,8 @@ export const fr: Dict = {
     'Sent a sticker or a picture': 'A envoyé un sticker ou une image',
     'Picture in the comment': 'Image du commentaire',
     'Open {name} on {network}': 'Ouvrir {name} sur {network}',
+    'Loading…': 'Chargement…',
+    'No comments this day.': 'Aucun commentaire ce jour-là.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

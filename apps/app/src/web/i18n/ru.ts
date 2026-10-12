@@ -491,6 +491,8 @@ export const ru: Dict = {
     'Sent a sticker or a picture': 'Отправил стикер или картинку',
     'Picture in the comment': 'Картинка в комментарии',
     'Open {name} on {network}': 'Открыть {name} в {network}',
+    'Loading…': 'Загрузка…',
+    'No comments this day.': 'В этот день комментариев нет.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

@@ -1,13 +1,14 @@
 import type { ComponentChildren } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
-import type { PostRow } from '../api.ts'
+import type { CommentRow, PostRow } from '../api.ts'
 import { api } from '../api.ts'
 import { locale, t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
 import { JsonPanel } from '../json.tsx'
 import { Icon, Menu, NetworkMark, Segmented, count, fmt, short } from '../ui.tsx'
 import { MoodStrip, PostDrawer } from '../social.tsx'
+import { CommentList } from './comments.tsx'
 
 /**
  * The calendar: every day, week or month of a period, shaded darker the more happened, with the
@@ -163,7 +164,20 @@ export function Calendar({ brand, brands, network, version, mode }: BrandView) {
   const [picked, setPicked] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<DOMRect | null>(null)
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
+  const [popTab, setPopTab] = usePref<'posts' | 'comments'>('calendar.popTab', 'posts')
+  const [dayComments, setDayComments] = useState<CommentRow[] | null>(null)
+  const [dayTick, setDayTick] = useState(0)
   const close = () => setPicked(null)
+  useEffect(() => {
+    if (!picked || popTab !== 'comments') return
+    setDayComments(null)
+    api
+      .get<CommentRow[]>(
+        `/api/comments?brand=${brand.id}&day=${picked}&limit=300${network ? `&network=${network}` : ''}`,
+      )
+      .then(setDayComments)
+      .catch(() => setDayComments([]))
+  }, [picked, popTab, brand.id, network, dayTick])
   const [posts, setPosts] = useState<PostRow[]>([])
 
   const [from, to] = range
@@ -233,10 +247,23 @@ export function Calendar({ brand, brands, network, version, mode }: BrandView) {
           setAnchor((e.currentTarget as HTMLElement).getBoundingClientRect())
           setPicked(picked === day ? null : day)
         }}
-        title={`${fmtDay(day, { weekday: 'long', day: 'numeric', month: 'long' })} · ${name}: ${fmt(n)}`}
+        title={`${fmtDay(day, { weekday: 'long', day: 'numeric', month: 'long' })} · ${name}: ${fmt(n)} · ${count(r.posts, 'post')} · ${count(r.comments, 'comment')}`}
       >
         <span class="sm-cal__date">{Number(day.slice(8))}</span>
-        {n > 0 && <span class="sm-cal__n g-num">{short(n)}</span>}
+        {(r.posts > 0 || r.comments > 0) && (
+          <span class="sm-cal__ns">
+            {r.posts > 0 && (
+              <span class="sm-cal__n sm-cal__n--post g-num" title={t('Posts')}>
+                {short(r.posts)}
+              </span>
+            )}
+            {r.comments > 0 && (
+              <span class="sm-cal__n g-num" title={t('Comments')}>
+                {short(r.comments)}
+              </span>
+            )}
+          </span>
+        )}
       </button>
     )
   }
@@ -402,6 +429,12 @@ export function Calendar({ brand, brands, network, version, mode }: BrandView) {
             })()}
 
           <div class="sm-cal__legend" aria-hidden="true">
+            <span class="sm-cal__key">
+              <span class="sm-cal__n sm-cal__n--post">3</span> {t('Posts')}
+            </span>
+            <span class="sm-cal__key">
+              <span class="sm-cal__n">5</span> {t('Comments')}
+            </span>
             <span>{t('Less')}</span>
             {[0, 0.25, 0.5, 0.75, 1].map((a) => (
               <i style={{ '--a': a }} />
@@ -424,33 +457,67 @@ export function Calendar({ brand, brands, network, version, mode }: BrandView) {
                 </div>
               ))}
             </dl>
-            {pickedPosts.length > 0 ? (
-              <ul class="sm-daypop__posts">
-                {pickedPosts.map((p) => (
-                  <li>
-                    <button type="button" onClick={() => setOpenPost(p)}>
-                      {p.thumb_url ? (
-                        <img src={p.thumb_url} alt="" />
-                      ) : (
-                        <span class="sm-postcell__blank" />
-                      )}
-                      <span class="sm-daypop__post">
-                        <span class="sm-daypop__cap">
-                          {p.description ?? p.caption ?? t('No caption.')}
+            <Segmented
+              value={popTab}
+              onChange={setPopTab}
+              options={[
+                ['posts', `${t('Posts')} · ${fmt(pickedPosts.length)}`],
+                ['comments', `${t('Comments')} · ${fmt(pickedRow.comments)}`],
+              ]}
+              label={t('Show')}
+            />
+            {popTab === 'posts' &&
+              (pickedPosts.length > 0 ? (
+                <ul class="sm-daypop__posts">
+                  {pickedPosts.map((p) => (
+                    <li>
+                      <button type="button" onClick={() => setOpenPost(p)}>
+                        {p.thumb_url ? (
+                          <img src={p.thumb_url} alt="" />
+                        ) : (
+                          <span class="sm-postcell__blank" />
+                        )}
+                        <span class="sm-daypop__post">
+                          <span class="sm-daypop__cap">
+                            <NetworkMark network={p.network} size={11} />{' '}
+                            {p.description ?? p.caption ?? t('No caption.')}
+                          </span>
+                          <dl class="sm-daypop__pstats">
+                            {(
+                              [
+                                ['Likes', p.likes],
+                                ['Comments', p.comments_count],
+                                ['Shares', p.shares],
+                                ['Views', p.views],
+                              ] as const
+                            ).map(([label, v]) => (
+                              <div>
+                                <dt>{t(label)}</dt>
+                                <dd class="g-num">{short(v)}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                          <MoodStrip p={p} />
                         </span>
-                        <small>
-                          <NetworkMark network={p.network} size={11} />
-                          {count(p.stored_comments, 'comment')} · {count(p.likes, 'like')}
-                        </small>
-                        <MoodStrip p={p} />
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p class="sm-daypop__none">{t('No posts this day.')}</p>
-            )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="sm-daypop__none">{t('No posts this day.')}</p>
+              ))}
+            {popTab === 'comments' &&
+              (dayComments === null ? (
+                <p class="sm-daypop__none">{t('Loading…')}</p>
+              ) : dayComments.length ? (
+                <CommentList
+                  comments={dayComments}
+                  brands={brands}
+                  onChange={() => setDayTick((x) => x + 1)}
+                />
+              ) : (
+                <p class="sm-daypop__none">{t('No comments this day.')}</p>
+              ))}
           </DayPop>
         )}
       </div>

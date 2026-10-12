@@ -352,6 +352,8 @@ export interface CommentFilter extends PostFilter {
   others?: boolean
   /** Only comments waiting longer than the brand's reply target. */
   overdue?: boolean
+  /** Only comments written on this day, YYYY-MM-DD (UTC). */
+  day?: string
 }
 
 export function listComments(db: DB, f: CommentFilter = {}) {
@@ -376,6 +378,10 @@ export function listComments(db: DB, f: CommentFilter = {}) {
   if (f.needsReply) where.push("c.needs_reply = 1 AND c.reply_status = 'open'")
   if (f.unsorted) where.push('c.label IS NULL')
   if (f.overdue) where.push(OVERDUE)
+  if (f.day && /^\d{4}-\d{2}-\d{2}$/.test(f.day)) {
+    where.push('substr(coalesce(c.posted_at, c.fetched_at), 1, 10) = ?')
+    args.push(f.day)
+  }
   if (f.others) where.push('lower(c.author) != lower(pr.handle)')
   if (f.sentiment === 'none') where.push('c.sentiment IS NULL')
   else if (f.sentiment) {

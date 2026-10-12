@@ -492,6 +492,8 @@ export const ro: Dict = {
     'Sent a sticker or a picture': 'A trimis un sticker sau o imagine',
     'Picture in the comment': 'Imagine din comentariu',
     'Open {name} on {network}': 'Deschide {name} pe {network}',
+    'Loading…': 'Se încarcă…',
+    'No comments this day.': 'Niciun comentariu în această zi.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',
