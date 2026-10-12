@@ -604,14 +604,6 @@ body:has(.sm-shell) {
     inset -1px 0 0 var(--c-line),
     inset 0 -1px 0 var(--c-line);
 }
-/* The first figure is the featured one: filled, as the LMS does. */
-.sm-shell .sm-kpis > .sm-kpi:first-child {
-  background: var(--g-amber-100);
-}
-.sm-shell .sm-kpis > .sm-kpi:first-child .sm-kpi__sub,
-.sm-shell .sm-kpis > .sm-kpi:first-child dt {
-  color: var(--g-amber-800, #6e5000);
-}
 .sm-shell .sm-kpi dt {
   display: flex;
   align-items: center;
@@ -4390,6 +4382,65 @@ a.sm-person[href]:hover .sm-person__name {
   }
 }
 .sm-navpanel__status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sm-hometabs--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 700px) {
+  .sm-hometabs--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Brand access: the chosen brands with their role, then a search to add more. */
+.sm-access {
+  display: grid;
+  gap: 8px;
+  margin: 6px 0;
+}
+.sm-access__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 12.5px;
+}
+.sm-access__all {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: auto;
+  font-size: 12px;
+}
+.sm-access__list {
+  display: grid;
+  gap: 2px;
+  max-height: 260px;
+  margin: 0;
+  padding: 2px;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--blk, #f5f6f8);
+  list-style: none;
+}
+.sm-access__list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--c-card, #fff);
+  font-size: 13px;
+}
+.sm-access__list li.sm-quiet {
+  background: none;
+}
+.sm-access__name {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

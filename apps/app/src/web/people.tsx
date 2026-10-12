@@ -2,7 +2,9 @@ import { useEffect, useState } from 'preact/hooks'
 import type { AppState } from './app.tsx'
 import type { Me } from './auth.tsx'
 import { api } from './api.ts'
+import type { IconName } from 'shades-gradient'
 import { Head, Icon, Menu, Sheet, ago, count } from './ui.tsx'
+import { usePref } from './prefs.ts'
 import { t } from './i18n.ts'
 import { JsonPanel } from './json.tsx'
 
@@ -30,8 +32,11 @@ const ROLE_TEXT: Record<Role | '', string> = {
  * and invite the people of their own brands. Viewers read; admins edit the brand, rate comments
  * and run updates.
  */
+type Who = 'all' | 'supers' | 'admins' | 'invited'
+
 export function People({ brands, me, notify, mode, actions }: AppState & { me: Me }) {
   const [people, setPeople] = useState<Person[] | null>(null)
+  const [who, setWho] = usePref<Who>('people.who', 'all')
   const [open, setOpen] = useState<Person | null>(null)
   const [form, setForm] = useState({ email: '', name: '', super: false })
   const [access, setAccess] = useState<Record<number, Role | ''>>({})
@@ -97,6 +102,16 @@ export function People({ brands, me, notify, mode, actions }: AppState & { me: M
     admins: list.filter((p) => !p.super && p.memberships.some((m) => m.role === 'admin')).length,
     invited: list.filter((p) => !p.verified_at).length,
   }
+  // The figures at the top are tabs: each shows only the people it counts.
+  const shown = list.filter((p) =>
+    who === 'supers'
+      ? p.super
+      : who === 'admins'
+        ? !p.super && p.memberships.some((m) => m.role === 'admin')
+        : who === 'invited'
+          ? !p.verified_at
+          : true,
+  )
 
   return (
     <main class="sm-page">
@@ -121,57 +136,38 @@ export function People({ brands, me, notify, mode, actions }: AppState & { me: M
         <JsonPanel value={list} />
       ) : (
         <>
-          <dl class="sm-kpis sm-kpis--row">
-            <div class="sm-kpi sm-tone--blue">
-              <dt>
-                <span class="sm-kpi__icon">
-                  <Icon name="group" size={16} />
+          <div
+            class="sm-ga__cards sm-hometabs sm-hometabs--4"
+            role="tablist"
+            aria-label={t('Show')}
+          >
+            {(
+              [
+                ['all', 'group', t('People'), tally.all],
+                ['supers', 'star', t('Super admins'), tally.supers],
+                ['admins', 'person', t('Brand admins'), tally.admins],
+                ['invited', 'mail', t('Invited'), tally.invited],
+              ] as [Who, IconName, string, number][]
+            ).map(([k, icon, label, n]) => (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={who === k}
+                class="sm-ga__card"
+                onClick={() => setWho(k)}
+              >
+                <span class="sm-ga__label">
+                  <Icon name={icon} size={14} /> {label}
                 </span>
-                {t('People')}
-              </dt>
-              <dd class="sm-kpi__value">
-                <span class="g-num">{tally.all}</span>
-              </dd>
-            </div>
-            <div class="sm-kpi sm-tone--violet">
-              <dt>
-                <span class="sm-kpi__icon">
-                  <Icon name="star" size={16} />
-                </span>
-                {t('Super admins')}
-              </dt>
-              <dd class="sm-kpi__value">
-                <span class="g-num">{tally.supers}</span>
-              </dd>
-            </div>
-            <div class="sm-kpi sm-tone--green">
-              <dt>
-                <span class="sm-kpi__icon">
-                  <Icon name="person" size={16} />
-                </span>
-                {t('Brand admins')}
-              </dt>
-              <dd class="sm-kpi__value">
-                <span class="g-num">{tally.admins}</span>
-              </dd>
-            </div>
-            <div class="sm-kpi sm-tone--amber">
-              <dt>
-                <span class="sm-kpi__icon">
-                  <Icon name="mail" size={16} />
-                </span>
-                {t('Invited')}
-              </dt>
-              <dd class="sm-kpi__value">
-                <span class="g-num">{tally.invited}</span>
-              </dd>
-            </div>
-          </dl>
+                <span class="sm-ga__value g-num">{n}</span>
+              </button>
+            ))}
+          </div>
 
           <section class="sm-box sm-box--table">
             <header class="sm-box__head">
               <h2>{t('Everyone')}</h2>
-              <span class="sm-box__meta">{count(list.length, 'person')}</span>
+              <span class="sm-box__meta">{count(shown.length, 'person')}</span>
             </header>
             <div class="sm-scroll">
               <table class="sm-dtable sm-dtable--rows">
@@ -188,7 +184,7 @@ export function People({ brands, me, notify, mode, actions }: AppState & { me: M
                   </tr>
                 </thead>
                 <tbody>
-                  {list.map((p) => (
+                  {shown.map((p) => (
                     <tr>
                       <td>
                         <span class="sm-personcell">
@@ -318,26 +314,7 @@ export function People({ brands, me, notify, mode, actions }: AppState & { me: M
               </span>
             </label>
           )}
-          {!form.super &&
-            mine.map((b) => (
-              <label class="sm-row">
-                <span class="sm-row__label">{b.name}</span>
-                <select
-                  class="g-select sm-select-sm"
-                  value={access[b.id] ?? ''}
-                  onChange={(e) =>
-                    setAccess({
-                      ...access,
-                      [b.id]: (e.target as HTMLSelectElement).value as Role | '',
-                    })
-                  }
-                >
-                  <option value="">{ROLE_TEXT['']}</option>
-                  <option value="viewer">{ROLE_TEXT.viewer}</option>
-                  <option value="admin">{ROLE_TEXT.admin}</option>
-                </select>
-              </label>
-            ))}
+          {!form.super && <AccessPicker brands={mine} value={access} onChange={setAccess} />}
           {error && <p class="g-error">{error}</p>}
           <div class="sm-form__actions">
             <button class="g-btn g-btn--primary g-btn--sm" type="submit">
@@ -427,23 +404,7 @@ function PersonSheet({
       }
     >
       <p class="sm-quiet">{person.email}</p>
-      {!person.super &&
-        brands.map((b) => (
-          <label class="sm-row">
-            <span class="sm-row__label">{b.name}</span>
-            <select
-              class="g-select sm-select-sm"
-              value={roles[b.id]}
-              onChange={(e) =>
-                setRoles({ ...roles, [b.id]: (e.target as HTMLSelectElement).value as Role | '' })
-              }
-            >
-              <option value="">{ROLE_TEXT['']}</option>
-              <option value="viewer">{ROLE_TEXT.viewer}</option>
-              <option value="admin">{ROLE_TEXT.admin}</option>
-            </select>
-          </label>
-        ))}
+      {!person.super && <AccessPicker brands={brands} value={roles} onChange={setRoles} />}
       <div class="sm-sheet__actions">
         <button
           class="g-btn g-btn--sm"
@@ -500,5 +461,113 @@ function PersonSheet({
         )}
       </div>
     </Sheet>
+  )
+}
+
+/**
+ * Brand access that stays usable with hundreds of brands: the brands this person can open, each
+ * with its role, then a search that adds more. Brands left out have no access.
+ */
+function AccessPicker({
+  brands,
+  value,
+  onChange,
+}: {
+  brands: { id: number; name: string }[]
+  value: Record<number, Role | ''>
+  onChange: (v: Record<number, Role | ''>) => void
+}) {
+  const [q, setQ] = useState('')
+  const set = (id: number, role: Role | '') => onChange({ ...value, [id]: role })
+  const chosen = brands.filter((b) => value[b.id])
+  const words = q.toLowerCase().trim()
+  const others = brands.filter((b) => !value[b.id] && b.name.toLowerCase().includes(words))
+  const all = (role: Role | '') =>
+    onChange(Object.fromEntries(brands.map((b) => [b.id, role])) as Record<number, Role | ''>)
+  return (
+    <div class="sm-access">
+      <div class="sm-access__head">
+        <b>{t('Brands they can open')}</b>
+        <span class="sm-quiet">{count(chosen.length, 'brand')}</span>
+        {brands.length > 1 && (
+          <span class="sm-access__all">
+            <button class="sm-textbtn" type="button" onClick={() => all('viewer')}>
+              {t('Every brand as viewer')}
+            </button>
+            <button class="sm-textbtn" type="button" onClick={() => all('admin')}>
+              {t('as admin')}
+            </button>
+            {chosen.length > 0 && (
+              <button class="sm-textbtn" type="button" onClick={() => all('')}>
+                {t('None')}
+              </button>
+            )}
+          </span>
+        )}
+      </div>
+      {chosen.length ? (
+        <ul class="sm-access__list">
+          {chosen.map((b) => (
+            <li>
+              <span class="sm-access__name">{b.name}</span>
+              <span class="g-segmented sm-seg" role="radiogroup" aria-label={b.name}>
+                {(['viewer', 'admin'] as const).map((r) => (
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={value[b.id] === r}
+                    class="g-segmented__item"
+                    onClick={() => set(b.id, r)}
+                  >
+                    {ROLE_TEXT[r]}
+                  </button>
+                ))}
+              </span>
+              <button
+                class="g-icon-btn"
+                type="button"
+                aria-label={t('Remove access to {brand}', { brand: b.name })}
+                onClick={() => set(b.id, '')}
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="sm-quiet">{t('No brands yet. Add one below.')}</p>
+      )}
+      {brands.length > chosen.length && (
+        <>
+          <input
+            class="g-input sm-search"
+            type="search"
+            value={q}
+            placeholder={t('Find a brand to add…')}
+            aria-label={t('Find a brand to add')}
+            onInput={(e) => setQ((e.target as HTMLInputElement).value)}
+          />
+          <ul class="sm-access__list sm-access__list--add">
+            {others.slice(0, 8).map((b) => (
+              <li>
+                <span class="sm-access__name">{b.name}</span>
+                <button class="sm-textbtn" type="button" onClick={() => set(b.id, 'viewer')}>
+                  {t('Add as viewer')}
+                </button>
+                <button class="sm-textbtn" type="button" onClick={() => set(b.id, 'admin')}>
+                  {t('Add as admin')}
+                </button>
+              </li>
+            ))}
+            {others.length > 8 && (
+              <li class="sm-quiet">
+                {t('{n} more: type to narrow the list.', { n: others.length - 8 })}
+              </li>
+            )}
+            {!others.length && <li class="sm-quiet">{t('No brand matches.')}</li>}
+          </ul>
+        </>
+      )}
+    </div>
   )
 }
