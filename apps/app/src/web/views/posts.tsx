@@ -74,7 +74,6 @@ export function Posts({ brand, network, version, mode, openUpdate }: BrandView) 
               aria-label={`Open on ${NETWORK_NAME[p.network]}`}
             >
               {p.thumb_url ? <img src={p.thumb_url} alt="" loading="lazy" /> : <span />}
-              {p.flagged > 0 && <span class="sm-postcard__flag">{p.flagged} to look at</span>}
             </a>
             <div class="sm-postcard__meta">
               <NetworkMark network={p.network} size={13} />
@@ -83,6 +82,7 @@ export function Posts({ brand, network, version, mode, openUpdate }: BrandView) 
             <p class="sm-postcard__text">{p.description ?? p.caption ?? 'No caption.'}</p>
             <p class="sm-postcard__stats g-num">
               {count(p.likes, 'like')} · {count(p.comments_count, 'comment')}
+              {p.flagged > 0 && <span class="sm-hot"> · {p.flagged} to look at</span>}
               {p.views != null && ` · ${fmt(p.views)} views`}
             </p>
             {p.stored_comments > 0 && (

@@ -91,6 +91,9 @@ p {
   display: grid;
   gap: 24px;
 }
+.sm-stack > * {
+  min-width: 0;
+}
 .sm-inline {
   display: flex;
   flex-wrap: wrap;
@@ -1126,6 +1129,9 @@ p {
 }
 .sm-danger-zone > .g-btn {
   justify-self: start;
+}
+.sm-danger-zone > .g-btn--ghost {
+  box-shadow: inset 0 0 0 1px var(--g-line-strong);
 }
 .sm-danger-zone {
   gap: 10px !important;

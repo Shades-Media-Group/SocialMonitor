@@ -1,17 +1,14 @@
-import type { IconName } from 'shades-gradient'
-import { Icon } from './ui.tsx'
-
 /**
- * Each AI label has one colour and one icon, from Gradient 0.5.0's roles and ramps. Colour
+ * Each AI label is a word on one soft colour, from Gradient 0.5.0's roles and ramps. Colour
  * carries meaning here (trouble, a question waiting, good news), so it is never decoration.
  */
-export const LABELS: Record<string, { name: string; icon: IconName; tone: string }> = {
-  complaint: { name: 'Complaint', icon: 'warning', tone: 'danger' },
-  question: { name: 'Question', icon: 'help', tone: 'info' },
-  praise: { name: 'Praise', icon: 'favorite', tone: 'success' },
-  suggestion: { name: 'Suggestion', icon: 'feedback', tone: 'warning' },
-  neutral: { name: 'Neutral', icon: 'chat', tone: 'neutral' },
-  spam: { name: 'Spam', icon: 'remove', tone: 'quiet' },
+export const LABELS: Record<string, { name: string; tone: string }> = {
+  complaint: { name: 'Complaint', tone: 'danger' },
+  question: { name: 'Question', tone: 'info' },
+  praise: { name: 'Praise', tone: 'success' },
+  suggestion: { name: 'Suggestion', tone: 'warning' },
+  neutral: { name: 'Neutral', tone: 'neutral' },
+  spam: { name: 'Spam', tone: 'quiet' },
 }
 
 /** The order the mood bar and its legend read in: trouble first. */
@@ -29,7 +26,6 @@ export function LabelPill({ label, reply }: { label: string; reply?: boolean }) 
   if (!l) return null
   return (
     <span class={`sm-pill sm-pill--${l.tone}`}>
-      <Icon name={l.icon} size={13} />
       {l.name}
       {reply ? ' · reply' : ''}
     </span>

@@ -42,19 +42,29 @@ export function Overview(v: BrandView) {
       .get<Summary>(`/api/brands/${brand.id}/summary${network ? `?network=${network}` : ''}`)
       .then(setS)
       .catch(() => setS(null))
+    // Threads keep their replies: the chosen comments, plus every reply under them.
+    const withReplies = (roots: CommentRow[], all: CommentRow[]) => {
+      const ids = new Set(roots.map((r) => r.ext_id))
+      return [...roots, ...all.filter((c) => c.parent_ext_id && ids.has(c.parent_ext_id))]
+    }
     api
-      .get<CommentRow[]>(`/api/comments?brand=${brand.id}&reply=1&limit=5${n}`)
-      .then(setReply)
-      .catch(() => setReply([]))
-    // When nothing waits for an answer, the newest threads take the place, ready to rate.
-    api
-      .get<CommentRow[]>(`/api/comments?brand=${brand.id}&limit=12${n}`)
-      .then((rows) =>
-        setLatest(
-          rows.sort((a, b) => (b.posted_at ?? '').localeCompare(a.posted_at ?? '')).slice(0, 8),
-        ),
-      )
-      .catch(() => setLatest([]))
+      .get<CommentRow[]>(`/api/comments?brand=${brand.id}&limit=500${n}`)
+      .then((all) => {
+        const roots = all.filter((c) => !c.parent_ext_id)
+        const waiting = roots
+          .filter((c) => c.needs_reply === 1 && c.reply_status === 'open')
+          .slice(0, 5)
+        setReply(withReplies(waiting, all))
+        // When nothing waits for an answer, the newest threads take the place, ready to rate.
+        const newest = roots
+          .sort((a, b) => (b.posted_at ?? '').localeCompare(a.posted_at ?? ''))
+          .slice(0, 5)
+        setLatest(withReplies(newest, all))
+      })
+      .catch(() => {
+        setReply([])
+        setLatest([])
+      })
     api
       .get<PostRow[]>(`/api/posts?brand=${brand.id}&limit=6${n}`)
       .then(setPosts)
