@@ -1,7 +1,7 @@
 import type { DB } from './db.ts'
 import { now } from './db.ts'
 import { saveImage } from './media.ts'
-import { tiktokMedia } from './collect/tiktok.ts'
+import { publicComments, tiktokMedia } from './collect/tiktok-public.ts'
 import { imageIn } from './collect/browser.ts'
 
 /**
@@ -11,60 +11,7 @@ import { imageIn } from './collect/browser.ts'
  * slowly, one post at a time, never touching the signed-in session.
  */
 
-const UA =
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36'
-
-interface Raw {
-  cid: string
-  text?: string
-  user?: { unique_id?: string; avatar_thumb?: unknown }
-  image_list?: unknown
-  sticker?: unknown
-  cmt_sticker_struct?: unknown
-  reply_comment?: Raw[] | null
-  reply_comment_total?: number
-}
-
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms + Math.random() * ms))
 let running = false
-
-async function get(
-  path: string,
-): Promise<{ comments?: Raw[]; has_more?: number; cursor?: number }> {
-  await wait(1500)
-  const r = await fetch(`https://www.tiktok.com${path}`, {
-    headers: { 'user-agent': UA, referer: 'https://www.tiktok.com/' },
-    credentials: 'omit',
-  })
-  if (!r.ok) throw new Error(`TikTok answered ${r.status}`)
-  const text = await r.text()
-  if (!text.trim()) throw new Error('TikTok sent nothing back')
-  return JSON.parse(text)
-}
-
-/** Every comment and reply of a post that the public pages show, up to about 500. */
-async function publicComments(postId: string) {
-  const out = new Map<string, Raw>()
-  const add = (c: Raw) => {
-    out.set(c.cid, c)
-    for (const r of c.reply_comment ?? []) out.set(r.cid, r)
-  }
-  let cursor = 0
-  for (let page = 0; page < 10; page++) {
-    const d = await get(`/api/comment/list/?aid=1988&aweme_id=${postId}&count=50&cursor=${cursor}`)
-    for (const c of d.comments ?? []) add(c)
-    if (!d.has_more || !d.comments?.length) break
-    cursor = d.cursor ?? cursor + 50
-  }
-  for (const c of [...out.values()]) {
-    if ((c.reply_comment_total ?? 0) <= (c.reply_comment?.length ?? 0)) continue
-    const d = await get(
-      `/api/comment/list/reply/?aid=1988&item_id=${postId}&comment_id=${c.cid}&count=50&cursor=0`,
-    )
-    for (const r of d.comments ?? []) out.set(r.cid, r)
-  }
-  return out
-}
 
 export async function fillTikTok(db: DB, log: (line: string) => void = () => {}) {
   if (running) return

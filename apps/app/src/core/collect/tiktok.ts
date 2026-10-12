@@ -1,9 +1,10 @@
 import type { Page } from 'playwright'
 import type { CollectedComment, CollectedPost, Profile } from '../types.ts'
 import type { CollectOptions, Collector } from './index.ts'
+import type { Item, RawComment } from './tiktok-public.ts'
+import { publicComments, publicPosts, toComment } from './tiktok-public.ts'
 import {
   Challenge,
-  imageIn,
   capture,
   findAll,
   isoFromUnix,
@@ -11,28 +12,6 @@ import {
   pause,
   readScroll,
 } from './browser.ts'
-
-interface Item {
-  id: string
-  desc?: string
-  createTime?: number
-  video?: { cover?: string; originCover?: string }
-  imagePost?: unknown
-  stats?: { diggCount?: number; commentCount?: number; shareCount?: number; playCount?: number }
-  statsV2?: { diggCount?: string; commentCount?: string; shareCount?: string; playCount?: string }
-}
-interface RawComment {
-  cid: string
-  text: string
-  create_time?: number
-  digg_count?: number
-  reply_id?: string
-  user?: { unique_id?: string; nickname?: string; avatar_thumb?: unknown }
-  image_list?: unknown
-  sticker?: unknown
-  /** Stickers come here, not in `sticker`. */
-  cmt_sticker_struct?: unknown
-}
 
 async function checkWall(page: Page) {
   if (
@@ -49,6 +28,52 @@ async function checkWall(page: Page) {
  */
 export const tiktok: Collector = {
   network: 'tiktok',
+  /** Public pages first: no account at stake. The browser only when TikTok refuses them. */
+  async collect(page: Page, profile: Profile, opt: CollectOptions) {
+    try {
+      return await viaPublic(profile, opt)
+    } catch (e) {
+      opt.log(`TikTok public pages: ${(e as Error).message}. Reading through the browser instead.`)
+      return viaBrowser.collect(page, profile, opt)
+    }
+  },
+}
+
+/** Posts and comments from TikTok's public pages, as anyone sees them. */
+async function viaPublic(profile: Profile, opt: CollectOptions): Promise<CollectedPost[]> {
+  const items = await publicPosts(profile.handle, opt.range === 'new' ? opt.limit + 30 : opt.limit)
+  const picked = (opt.range === 'new' ? items.filter((i) => !opt.known.has(i.id)) : items).slice(
+    0,
+    opt.limit,
+  )
+  const posts: CollectedPost[] = []
+  for (const it of picked) {
+    // Public comments need no session, so the signed-in gap does not apply here.
+    const raw = await publicComments(it.id, opt.maxComments)
+    posts.push(toPost(profile, it, [...raw.values()].map(toComment)))
+    opt.log(`TikTok: ${it.id} · ${raw.size} comments read`)
+  }
+  return posts
+}
+
+const toPost = (profile: Profile, it: Item, comments: CollectedComment[]): CollectedPost => {
+  const s = it.statsV2 ?? it.stats ?? {}
+  return {
+    ext_id: it.id,
+    url: `https://www.tiktok.com/@${profile.handle}/${it.imagePost ? 'photo' : 'video'}/${it.id}`,
+    posted_at: isoFromUnix(it.createTime),
+    kind: it.imagePost ? 'photo' : 'video',
+    caption: it.desc ?? '',
+    thumb_url: it.video?.cover ?? it.video?.originCover ?? null,
+    likes: num(s.diggCount),
+    comments_count: num(s.commentCount),
+    shares: num(s.shareCount),
+    views: num(s.playCount),
+    comments,
+  }
+}
+
+const viaBrowser = {
   async collect(page: Page, profile: Profile, opt: CollectOptions) {
     const lists = await capture<{ itemList?: Item[] }>(
       page,
@@ -122,21 +147,6 @@ async function isSignedIn(page: Page) {
   return cookies.some((c) => c.name === 'sessionid' && c.value)
 }
 
-/** A picture or sticker attached to a comment, if any. */
-export const tiktokMedia = (c: {
-  image_list?: unknown
-  sticker?: unknown
-  cmt_sticker_struct?: unknown
-}) =>
-  imageIn(
-    {
-      i: c.image_list,
-      s: c.sticker,
-      c: (c.cmt_sticker_struct as { static_url?: unknown })?.static_url ?? c.cmt_sticker_struct,
-    },
-    /url/,
-  )
-
 async function readComments(
   page: Page,
   url: string,
@@ -162,17 +172,7 @@ async function readComments(
     (o) => typeof o.cid === 'string' && typeof o.text === 'string',
   )) {
     if (seen.size >= opt.maxComments) break
-    seen.set(c.cid, {
-      ext_id: c.cid,
-      parent_ext_id: c.reply_id && c.reply_id !== '0' ? c.reply_id : null,
-      author: c.user?.unique_id ?? c.user?.nickname ?? 'unknown',
-      text: c.text,
-      likes: num(c.digg_count),
-      posted_at: isoFromUnix(c.create_time),
-      author_avatar: imageIn(c.user?.avatar_thumb, /url/),
-      author_url: c.user?.unique_id ? `https://www.tiktok.com/@${c.user.unique_id}` : null,
-      media_url: tiktokMedia(c),
-    })
+    seen.set(c.cid, toComment(c))
   }
   return [...seen.values()]
 }
