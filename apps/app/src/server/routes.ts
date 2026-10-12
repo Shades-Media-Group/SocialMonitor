@@ -48,6 +48,8 @@ export interface Ctx {
   cookies: string[]
   /** The request arrived over HTTPS (the tunnel), so cookies are marked Secure. */
   secure: boolean
+  /** Who is asking: Cloudflare's client address through the tunnel, else this computer. */
+  ip: string
 }
 type Signed = Ctx & { user: User }
 /**
@@ -121,6 +123,12 @@ const scoped = (c: Signed) => {
     )
   if (!brand && !post && !c.user.super) throw new HttpError(403, 'Choose a brand.')
 }
+/** The brand in ?brand=; only super admins may leave it out. For routes that filter by brand only. */
+const byBrand = (c: Signed) => {
+  const brand = c.query.get('brand')
+  if (brand) sees(c, id(brand))
+  else if (!c.user.super) throw new HttpError(403, 'Choose a brand.')
+}
 const seeComment = (c: Signed) => sees(c, commentBrand(c.db, id(c.params.id)))
 const adminComment = (c: Signed) => runs(c, commentBrand(c.db, id(c.params.id)))
 const seeRun = (c: Signed) => {
@@ -155,7 +163,7 @@ export const routes: Route[] = [
       data: exportAll(db, query.get('brand') ? id(query.get('brand')!) : undefined),
     }),
   ),
-  r('GET', '/api/comments.csv', scoped, ({ db, query }) => {
+  r('GET', '/api/comments.csv', byBrand, ({ db, query }) => {
     const rows = store.listComments(db, {
       brandId: query.get('brand') ? id(query.get('brand')!) : undefined,
       network: net(query.get('network')),
@@ -191,7 +199,7 @@ export const routes: Route[] = [
   }),
   r('POST', '/api/import', 'super', (c) => importAll(c.db, c.body as Dump)),
   r('GET', '/api/browser/status', 'user', async () => signInStatus()),
-  r('GET', '/api/gaps', 'user', ({ db }) => gaps(db)),
+  r('GET', '/api/gaps', 'user', (c) => visible(c, gaps(c.db), (g) => g.brand_id)),
   // Accounts: kept encrypted for the person's own reference. Passwords leave the server only on
   // this computer, one at a time, on an explicit Reveal.
   r('GET', '/api/accounts', 'super', ({ db }) => listAccounts(db)),
@@ -247,7 +255,7 @@ export const routes: Route[] = [
     store.removeProfile(c.db, id(c.params.id), n)
   }),
 
-  r('GET', '/api/posts', scoped, ({ db, query }) =>
+  r('GET', '/api/posts', byBrand, ({ db, query }) =>
     store.listPosts(db, {
       brandId: query.get('brand') ? id(query.get('brand')!) : undefined,
       network: net(query.get('network')),
@@ -280,7 +288,7 @@ export const routes: Route[] = [
     store.setCategories(c.db, id(c.params.id), list)
     return list
   }),
-  r('GET', '/api/sentiment', scoped, ({ db, query }) =>
+  r('GET', '/api/sentiment', byBrand, ({ db, query }) =>
     store.sentimentCounts(db, query.get('brand') ? id(query.get('brand')!) : undefined),
   ),
   // Sets or clears sentiment on one or many comments. `by` is 'ai' when Claude sets it.

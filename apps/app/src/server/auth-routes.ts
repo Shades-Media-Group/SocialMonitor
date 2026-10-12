@@ -118,10 +118,15 @@ export const authRoutes = [
   r('POST', '/api/auth/login', 'public', async (c) => {
     const login = String(b(c).login ?? '').trim()
     const password = String(b(c).password ?? '')
-    auth.checkRate(login)
     const u = auth.findLogin(c.db, login)
-    if (!u || u.disabled || !u.verified_at || !auth.checkPassword(password, u.pass_hash)) {
-      auth.noteFailure(login)
+    // Counted per account (whichever name was typed) and per address.
+    const account = `login:${u?.email ?? login}`
+    auth.checkRate(account)
+    auth.checkRate(`ip:${c.ip}`, 20)
+    const ok = auth.checkAnyPassword(password, u?.pass_hash)
+    if (!u || !ok || u.disabled || !u.verified_at) {
+      auth.noteFailure(account)
+      auth.noteFailure(`ip:${c.ip}`)
       throw new HttpError(401, 'Wrong email, username or password.')
     }
     const t = auth.issue(c.db, u.id, 'code')
@@ -134,7 +139,17 @@ export const authRoutes = [
   }),
 
   r('POST', '/api/auth/code', 'public', (c) => {
-    const userId = auth.consume(c.db, String(b(c).ticket ?? ''), String(b(c).code ?? ''), 'code')
+    const ticket = String(b(c).ticket ?? '')
+    // Wrong codes count against the account too, so new tickets don't buy new guesses.
+    const owner = auth.ticketOwner(c.db, ticket)
+    if (owner) auth.checkRate(`login:${owner}`)
+    let userId: number
+    try {
+      userId = auth.consume(c.db, ticket, String(b(c).code ?? ''), 'code')
+    } catch (e) {
+      if (owner) auth.noteFailure(`login:${owner}`)
+      throw e
+    }
     const user = auth.getUser(c.db, userId)!
     signIn(c, user)
     return me(c, user)
@@ -164,8 +179,11 @@ export const authRoutes = [
 
   r('POST', '/api/auth/forgot', 'public', async (c) => {
     const login = String(b(c).login ?? '').trim()
-    auth.checkRate(login)
-    auth.noteFailure(login) // counts toward the limit, so this can't be used to spam someone
+    // Its own limit, so asking for links can't lock anyone out of signing in.
+    auth.checkRate(`forgot:${login}`, 3)
+    auth.checkRate(`ip:${c.ip}`, 20)
+    auth.noteFailure(`forgot:${login}`)
+    auth.noteFailure(`ip:${c.ip}`)
     const u = auth.findLogin(c.db, login)
     if (u && !u.disabled && u.verified_at) {
       const t = auth.issue(c.db, u.id, 'reset')
@@ -218,7 +236,19 @@ export const authRoutes = [
     if (wantSuper) auth.updateUser(c.db, user.id, { super: true })
     for (const m of ms) if (m.role) auth.setMembership(c.db, user.id, m.brand_id, m.role)
     if (isNew) await invite(c, user)
-    return auth.listPeople(c.db, c.user).find((p) => p.id === user.id)
+    else
+      await sendMail(
+        user.email,
+        'You have new access in SocialMonitor',
+        `${c.user.name || c.user.email} gave you access to ${
+          ms
+            .filter((m) => m.role)
+            .map((m) => store.getBrand(c.db, m.brand_id)!.name)
+            .join(', ') || 'every brand'
+        }. Sign in to see it.`,
+      )
+    // The same reply whether or not the person already had an account.
+    return { invited: email }
   }),
 
   r('PATCH', '/api/users/:id', manager, (c) => {

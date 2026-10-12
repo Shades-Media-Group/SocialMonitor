@@ -24,6 +24,16 @@ const PORT = Number(process.env.SOCIALMONITOR_API_PORT ?? process.env.PORT ?? 44
 const HOST = '127.0.0.1' // never reachable from other devices directly; remote use goes through the tunnel
 const WEB = fileURLToPath(new URL('../../dist', import.meta.url))
 
+const ORIGINS = new Set(
+  [
+    `http://127.0.0.1:${PORT}`,
+    `http://localhost:${PORT}`,
+    process.env.SOCIALMONITOR_UI,
+    process.env.SOCIALMONITOR_UI?.replace('127.0.0.1', 'localhost'),
+    publicHost() && `https://${publicHost()}`,
+  ].filter((o): o is string => !!o),
+)
+
 const db = openDb()
 seedFromFile(db)
 closeStaleRuns(db)
@@ -77,15 +87,13 @@ function serveStatic(res: ServerResponse, path: string) {
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${HOST}`)
-  // Browsers on other sites can't drive the API: only same-origin requests and tools without an Origin pass.
+  // Only the dashboard itself may drive the API from a browser: its own origin, the dev UI and the
+  // tunnel. Other local ports count as the same site to cookies, so they are refused by name.
   const origin = req.headers.origin
-  const tunnel = publicHost()
-  if (
-    origin &&
-    !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin) &&
-    origin !== `https://${tunnel}`
-  )
-    return send(res, 403, { error: 'Forbidden origin.' })
+  if (origin && !ORIGINS.has(origin)) return send(res, 403, { error: 'Forbidden origin.' })
+  // A form or text/plain POST skips the browser's CORS check; JSON can't be sent cross-site without it.
+  if (req.method === 'POST' && !/^application\/json\b/.test(req.headers['content-type'] ?? ''))
+    return send(res, 415, { error: 'Send JSON.' })
   // Through a tunnel, only requests Cloudflare Access let in get anything at all.
   const refusal = await refuseRemote(req)
   if (refusal) return send(res, 403, { error: refusal })
@@ -128,6 +136,7 @@ const server = createServer(async (req, res) => {
         user,
         cookies: [] as string[],
         secure: !isLocal(req),
+        ip: String(req.headers['cf-connecting-ip'] ?? req.socket.remoteAddress ?? ''),
       }
       if (r.need !== 'public') {
         if (!user) throw new HttpError(401, 'Sign in first.')

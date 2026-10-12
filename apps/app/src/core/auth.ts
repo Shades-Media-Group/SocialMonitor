@@ -336,16 +336,34 @@ export function consume(db: DB, id: string, secret: string, purpose: 'code' | 'i
   return t.user_id
 }
 
-/** Wrong passwords per account: five in fifteen minutes, then a wait. */
+/**
+ * Limits per key over fifteen minutes: wrong passwords and wrong codes per account
+ * ("login:<email>"), per address ("ip:<address>"), and reset emails ("forgot:<login>").
+ */
 const failures = new Map<string, number[]>()
 // ponytail: in-memory, so a restart forgets; move to a table if the server is restarted often under attack.
-export function checkRate(login: string) {
-  const k = login.trim().toLowerCase()
+export function checkRate(key: string, limit = 5) {
+  const k = key.trim().toLowerCase()
   const recent = (failures.get(k) ?? []).filter((t) => Date.now() - t < 15 * 60_000)
   failures.set(k, recent)
-  if (recent.length >= 5) throw new Error('Too many tries. Wait 15 minutes and try again.')
+  if (recent.length >= limit) throw new Error('Too many tries. Wait 15 minutes and try again.')
 }
-export const noteFailure = (login: string) => {
-  const k = login.trim().toLowerCase()
+export const noteFailure = (key: string) => {
+  const k = key.trim().toLowerCase()
   failures.set(k, [...(failures.get(k) ?? []), Date.now()])
 }
+
+/** Checked when the account doesn't exist, so a reply takes as long either way. */
+const DUMMY = hashPassword('not a real password, only for timing')
+export const checkAnyPassword = (password: string, stored: string | null | undefined) =>
+  checkPassword(password, stored ?? DUMMY) && !!stored
+
+/** The account a sign-in code belongs to, to count wrong codes against it. */
+export const ticketOwner = (db: DB, ticket: string) =>
+  (
+    db
+      .prepare(
+        "SELECT u.email FROM tokens t JOIN users u ON u.id = t.user_id WHERE t.id = ? AND t.purpose = 'code'",
+      )
+      .get(String(ticket)) as { email: string } | undefined
+  )?.email
