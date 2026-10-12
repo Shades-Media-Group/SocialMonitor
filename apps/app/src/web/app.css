@@ -262,9 +262,18 @@ h2 {
   color: var(--g-text-2);
   font-size: 12px;
 }
-.sm-comment__post {
-  justify-self: start;
+.sm-comment__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
   font-size: 12px;
+}
+.sm-toolbar__end {
+  margin-left: auto;
+  font-size: 13px;
+}
+.sm-gap {
+  padding: 4px 0 4px 112px;
 }
 
 /* Labels are words, coloured only where they mean trouble or the answer people wait for. */
@@ -543,7 +552,31 @@ h2 {
 .sm-report__actions {
   margin-bottom: 12px;
 }
-.sm-report__text,
+.sm-report__text {
+  max-width: 72ch;
+  line-height: 1.6;
+}
+.sm-report__text h1 {
+  margin: 0 0 16px;
+  font-size: 20px;
+}
+.sm-report__text h2 {
+  margin: 28px 0 8px;
+}
+.sm-report__text h3 {
+  margin: 20px 0 6px;
+  font-size: 14px;
+}
+.sm-report__text p {
+  margin: 0 0 8px;
+}
+.sm-report__text ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.sm-report__text li {
+  margin: 0 0 8px;
+}
 .sm-report__log {
   margin: 0;
   font-family: var(--g-font-body);

@@ -25,9 +25,14 @@ export function UpdateSheet({
   const [limit, setLimit] = useState(5)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [gaps, setGaps] = useState<{ brand_id: number; network: Network; until: string }[]>([])
 
   useEffect(() => {
     if (open) {
+      api
+        .get<typeof gaps>('/api/gaps')
+        .then(setGaps)
+        .catch(() => setGaps([]))
       setIds(brandId ? [String(brandId)] : brands.map((b) => String(b.id)))
       setError(null)
     }
@@ -97,6 +102,15 @@ export function UpdateSheet({
           ]}
         />
       </Row>
+      {gaps
+        .filter((g) => ids.includes(String(g.brand_id)) && networks.includes(g.network))
+        .map((g) => (
+          <p class="sm-quiet sm-gap">
+            {NET_OPTIONS.find(([n]) => n === g.network)![1]}: comments wait until{' '}
+            {new Date(g.until).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })},
+            so this update refreshes its posts and counts only.
+          </p>
+        ))}
       <Row label="At most" hint="posts per profile, newest first">
         <input
           class="g-input sm-input-num"

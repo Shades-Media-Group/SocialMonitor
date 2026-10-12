@@ -24,13 +24,18 @@ export function SettingsSheet({
     () => (document.documentElement.dataset.theme as Theme) || 'light',
   )
   const file = useRef<HTMLInputElement>(null)
+  const [signed, setSigned] = useState<Record<string, boolean> | null>(null)
 
   useEffect(() => {
-    if (open)
-      api
-        .get<Settings>('/api/settings')
-        .then(setS)
-        .catch(() => setS(null))
+    if (!open) return
+    api
+      .get<Settings>('/api/settings')
+      .then(setS)
+      .catch(() => setS(null))
+    api
+      .get<Record<string, boolean>>('/api/browser/status')
+      .then(setSigned)
+      .catch(() => setSigned(null))
   }, [open])
 
   const chooseTheme = (t: Theme) => {
@@ -115,7 +120,18 @@ export function SettingsSheet({
       )}
       <Row
         label="Accounts"
-        hint="Opens SocialMonitor's own Chrome window. Sign in by hand; the app never sees passwords."
+        hint={`${
+          signed && !signed.busy
+            ? `Signed in: ${
+                (['tiktok', 'instagram', 'facebook'] as const)
+                  .filter((n) => signed[n])
+                  .map(
+                    (n) => ({ tiktok: 'TikTok', instagram: 'Instagram', facebook: 'Facebook' })[n],
+                  )
+                  .join(', ') || 'none yet'
+              }. `
+            : ''
+        }Opens SocialMonitor's own Chrome window. Sign in by hand; the app never sees passwords.`}
       >
         <button
           class="g-btn g-btn--sm"

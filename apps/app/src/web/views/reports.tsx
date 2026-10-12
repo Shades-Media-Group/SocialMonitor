@@ -3,6 +3,7 @@ import type { AppState } from '../app.tsx'
 import type { RunRow } from '../api.ts'
 import { api } from '../api.ts'
 import { Empty, when } from '../ui.tsx'
+import { renderReport } from '../markdown.tsx'
 
 const STATUS: Record<string, string> = {
   ok: 'Done',
@@ -68,7 +69,10 @@ export function Reports({ running, openUpdate }: AppState) {
                 Download as Markdown
               </a>
             </div>
-            <pre class="sm-report__text">{open.report}</pre>
+            <div
+              class="sm-report__text"
+              dangerouslySetInnerHTML={{ __html: renderReport(open.report) }}
+            />
           </>
         ) : open ? (
           <pre class="sm-report__log">{open.log || 'Starting…'}</pre>
