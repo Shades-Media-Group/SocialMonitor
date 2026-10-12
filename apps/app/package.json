@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "vite build && node src/server/main.ts",
-    "dev:api": "SOCIALMONITOR_API_PORT=4401 node --watch src/server/main.ts",
+    "dev:api": "SOCIALMONITOR_API_PORT=4401 SOCIALMONITOR_UI=http://127.0.0.1:4400 node --watch src/server/main.ts",
     "serve": "node src/server/main.ts",
     "dev": "vite",
     "build": "vite build",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
+    "fflate": "^0.8.3",
     "playwright": "^1.64.0",
     "zod": "^4.6.6"
   }
