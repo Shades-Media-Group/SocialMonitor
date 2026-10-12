@@ -16,7 +16,7 @@
   --c-active: #ebebeb;
   --c-text: #1a1a1a;
   --c-text-2: #5c5c5c;
-  --c-text-3: #8f8f8f;
+  --c-text-3: #6e6e6e;
   --c-ink: #111111;
   --c-control: 28px;
   --c-row: 36px;
@@ -332,8 +332,7 @@ body:has(.sm-shell) {
   margin: 0 -24px 16px;
   padding: 10px 24px;
   border-bottom: 1px solid var(--c-line);
-  background: color-mix(in srgb, var(--c-bg) 92%, transparent);
-  backdrop-filter: saturate(1.4) blur(8px);
+  background: var(--c-bg);
 }
 .sm-shell .sm-pagehead h1 {
   font-family: inherit;
