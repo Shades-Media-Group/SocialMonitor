@@ -34,9 +34,19 @@ export function buildReport(
     const sorted = (c: Record<string, number>) => (c.total ?? 0) - (c.unsorted ?? 0)
     const pct = (c: Record<string, number>, k: string) =>
       sorted(c) ? Math.round(((c[k] ?? 0) / sorted(c)) * 100) : 0
-    stats[brand.name] = { new: fresh, all }
+    // A spike: at least three new complaints, at twice the brand's usual share or more.
+    const spike =
+      (fresh.complaint ?? 0) >= 3 &&
+      sorted(all) >= 10 &&
+      pct(fresh, 'complaint') >= 2 * Math.max(1, pct(all, 'complaint'))
+    stats[brand.name] = { new: fresh, all, spike }
 
     lines.push(`## ${brand.name}`, '')
+    if (spike)
+      lines.push(
+        `**Complaints spiked:** ${fresh.complaint} new, ${pct(fresh, 'complaint')}% of new comments against ${pct(all, 'complaint')}% usually.`,
+        '',
+      )
     const posts = store.listPosts(db, { brandId, limit: 200 }).filter((p) => postIds.includes(p.id))
     lines.push(
       `${posts.length} posts read, ${fresh.total ?? 0} new comments: ${fresh.complaint ?? 0} complaints, ${fresh.question ?? 0} questions, ${fresh.praise ?? 0} praise. ${fresh.needs_reply ?? 0} need a reply.`,
