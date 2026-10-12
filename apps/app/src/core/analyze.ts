@@ -139,10 +139,17 @@ Write one reply to the comment below, in the comment's own language: warm, short
   return text.trim().slice(0, 1200)
 }
 
-/** The comment in English. */
-export async function translate(engine: Engine, text: string) {
-  const prompt =
-    'Translate this social media comment into natural English. Keep emoji. Output only the translation.'
+const LANGUAGE: Record<string, string> = {
+  en: 'English',
+  ro: 'Romanian',
+  ru: 'Russian',
+  fr: 'French',
+  zh: 'Simplified Chinese',
+}
+
+/** The comment in the reader's language (English unless told otherwise). */
+export async function translate(engine: Engine, text: string, lang = 'en') {
+  const prompt = `Translate this social media comment into natural ${LANGUAGE[lang] ?? 'English'}. Keep emoji. Output only the translation.`
   const out =
     engine === 'claude'
       ? await viaClaudeCode(prompt, clip(text, 1500))

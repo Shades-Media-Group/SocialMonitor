@@ -1,5 +1,6 @@
 import { createTransport } from 'nodemailer'
 import type { Transporter } from 'nodemailer'
+import { mailText } from './mail-text.ts'
 
 /**
  * Email for sign-in codes, invitations and password resets, over any SMTP server. The same
@@ -18,7 +19,7 @@ let transport: Transporter | null = null
 
 export const mailReady = () => !!process.env.SMTP_HOST?.trim()
 
-export async function sendMail(to: string, subject: string, text: string) {
+export async function sendMail(to: string, subject: string, text: string, lang = 'en') {
   if (!mailReady()) {
     console.log(`\n[mail not set up] To: ${to}\nSubject: ${subject}\n\n${text}\n`)
     return
@@ -35,6 +36,6 @@ export async function sendMail(to: string, subject: string, text: string) {
     from: process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim(),
     to,
     subject,
-    text: `${text}\n\nSocialMonitor. Free and open source. Built by Shades Media Group.`,
+    text: `${text}\n\n${mailText(lang, 'credit')}`,
   })
 }

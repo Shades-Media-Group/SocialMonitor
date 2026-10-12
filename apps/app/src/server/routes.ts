@@ -571,7 +571,7 @@ export const routes: Route[] = [
       ),
     }
   }),
-  r('POST', '/api/comments/:id/translate', seeComment, async ({ db, params }) => {
+  r('POST', '/api/comments/:id/translate', seeComment, async ({ db, params, body }) => {
     const engine = pickEngine(getSettings(db))
     if (!engine)
       throw new Error(
@@ -581,9 +581,12 @@ export const routes: Route[] = [
     const c = db.prepare('SELECT text, translation FROM comments WHERE id = ?').get(commentId) as
       { text: string; translation: string | null } | undefined
     if (!c) throw new Error('No such comment.')
-    if (c.translation) return { translation: c.translation }
-    const translation = await translate(engine, c.text)
-    db.prepare('UPDATE comments SET translation = ? WHERE id = ?').run(translation, commentId)
+    // The English translation is kept; other languages are made on request.
+    const lang = String((body as { lang?: string }).lang ?? 'en')
+    if (lang === 'en' && c.translation) return { translation: c.translation }
+    const translation = await translate(engine, c.text, lang)
+    if (lang === 'en')
+      db.prepare('UPDATE comments SET translation = ? WHERE id = ?').run(translation, commentId)
     return { translation }
   }),
   r('GET', '/api/runs', 'user', (c) => {

@@ -1,6 +1,7 @@
 import * as auth from '../core/auth.ts'
 import type { Role, User } from '../core/auth.ts'
 import { mailReady, sendMail } from '../core/mail.ts'
+import { mailLang, mailText } from '../core/mail-text.ts'
 import * as store from '../core/store.ts'
 import { publicHost } from './access.ts'
 import type { Ctx } from './routes.ts'
@@ -11,6 +12,8 @@ import { HttpError, r } from './routes.ts'
  * sent by email; invitations and resets are links that work once.
  */
 const b = (c: Ctx) => c.body as Record<string, unknown>
+/** The dashboard language the request was made in. */
+const langOf = (c: Ctx) => mailLang(b(c).lang)
 
 /** Where links in emails point: the tunnel's address when there is one, else this computer. */
 const base = () => {
@@ -44,13 +47,15 @@ async function invite(c: Ctx & { user: User }, user: User) {
   const t = auth.issue(c.db, user.id, kind)
   const link = `${base()}/#/${kind === 'invite' ? 'invite' : 'reset'}/${t.id}.${t.secret}`
   const from = c.user.name || c.user.email
+  // A new person reads the email in the inviter's language; someone set up, in their own.
+  const lang = kind === 'invite' ? langOf(c) : user.lang
   await sendMail(
     user.email,
-    kind === 'invite' ? `${from} invited you to SocialMonitor` : 'Set a new SocialMonitor password',
-    kind === 'invite'
-      ? `${from} gave you access to SocialMonitor.\n\nChoose your password here:\n${link}\n\nThe link works once, for 72 hours.`
-      : `Choose a new password here:\n${link}\n\nThe link works once, for 30 minutes.`,
+    mailText(lang, kind === 'invite' ? 'inviteSubject' : 'resetSubject', { from }),
+    mailText(lang, kind === 'invite' ? 'inviteBody' : 'resetBody', { from, link }),
+    lang,
   )
+  if (kind === 'invite') auth.setLang(c.db, user.id, lang)
 }
 
 /** Someone who manages people: a super admin, or the admin of at least one brand. */
@@ -111,6 +116,7 @@ export const authRoutes = [
       super: true,
       verified: true,
     })
+    auth.setLang(c.db, user.id, langOf(c))
     signIn(c, user)
     return me(c, user)
   }),
@@ -130,10 +136,13 @@ export const authRoutes = [
       throw new HttpError(401, 'Wrong email, username or password.')
     }
     const t = auth.issue(c.db, u.id, 'code')
+    const lang = langOf(c)
+    auth.setLang(c.db, u.id, lang)
     await sendMail(
       u.email,
-      `Your SocialMonitor code: ${t.secret}`,
-      `Your sign-in code is ${t.secret}. It works for 10 minutes.\n\nIf you did not just sign in, change your password: someone knows it.`,
+      mailText(lang, 'codeSubject', { code: t.secret }),
+      mailText(lang, 'codeBody', { code: t.secret }),
+      lang,
     )
     return { ticket: t.id, to: mask(u.email), mail: mailReady() }
   }),
@@ -187,10 +196,12 @@ export const authRoutes = [
     const u = auth.findLogin(c.db, login)
     if (u && !u.disabled && u.verified_at) {
       const t = auth.issue(c.db, u.id, 'reset')
+      const lang = langOf(c)
       await sendMail(
         u.email,
-        'Set a new SocialMonitor password',
-        `Choose a new password here:\n${base()}/#/reset/${t.id}.${t.secret}\n\nThe link works once, for 30 minutes. If you did not ask for it, ignore this email.`,
+        mailText(lang, 'resetSubject'),
+        mailText(lang, 'forgotBody', { link: `${base()}/#/reset/${t.id}.${t.secret}` }),
+        lang,
       )
     }
     return { ok: true }
@@ -239,13 +250,16 @@ export const authRoutes = [
     else
       await sendMail(
         user.email,
-        'You have new access in SocialMonitor',
-        `${c.user.name || c.user.email} gave you access to ${
-          ms
-            .filter((m) => m.role)
-            .map((m) => store.getBrand(c.db, m.brand_id)!.name)
-            .join(', ') || 'every brand'
-        }. Sign in to see it.`,
+        mailText(user.lang, 'accessSubject'),
+        mailText(user.lang, 'accessBody', {
+          from: c.user.name || c.user.email,
+          brands:
+            ms
+              .filter((m) => m.role)
+              .map((m) => store.getBrand(c.db, m.brand_id)!.name)
+              .join(', ') || mailText(user.lang, 'everyBrand'),
+        }),
+        user.lang,
       )
     // The same reply whether or not the person already had an account.
     return { invited: email }

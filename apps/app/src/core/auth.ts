@@ -30,6 +30,7 @@ export interface User {
   session_version: number
   created_at: string
   last_seen_at: string | null
+  lang: string
 }
 interface UserRow extends User {
   pass_hash: string | null
@@ -136,7 +137,7 @@ export function readCookie(header: string | undefined, name = SESSION_COOKIE) {
 // --- People ------------------------------------------------------------------------------
 
 const COLS =
-  'id, email, username, name, super, verified_at, disabled, session_version, created_at, last_seen_at'
+  'id, email, username, name, super, verified_at, disabled, session_version, created_at, last_seen_at, lang'
 
 export const countUsers = (db: DB) =>
   (db.prepare('SELECT count(*) AS n FROM users').get() as { n: number }).n
@@ -233,6 +234,9 @@ export const endSessions = (db: DB, id: number) =>
 
 export const deleteUser = (db: DB, id: number) =>
   db.prepare('DELETE FROM users WHERE id = ?').run(id)
+
+export const setLang = (db: DB, id: number, lang: string) =>
+  db.prepare('UPDATE users SET lang = ? WHERE id = ?').run(lang, id)
 
 export const touch = (db: DB, id: number) =>
   db.prepare('UPDATE users SET last_seen_at = ? WHERE id = ?').run(now(), id)
