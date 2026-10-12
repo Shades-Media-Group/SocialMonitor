@@ -4259,7 +4259,9 @@ a.sm-person[href]:hover .sm-person__name {
 
 /* Signing out is always one click away, at the foot of the side panel. */
 .sm-navpanel__out {
+  flex: none;
   margin-left: auto;
+  white-space: nowrap;
   padding: 2px 6px;
   border: 0;
   border-radius: 5px;
