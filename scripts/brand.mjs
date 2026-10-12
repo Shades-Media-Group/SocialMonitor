@@ -144,6 +144,7 @@ async function main() {
     await render(files['logomark.svg'], size, join(out, `png/logomark-${size}.png`))
   await render(files['app-icon.svg'], 128, join(out, 'png/app-icon-128.png'))
   await render(files['app-icon.svg'], 512, join(out, 'png/app-icon-512.png'))
+  await render(files['app-icon.svg'], 1024, join(out, 'png/app-icon-1024.png'))
   await browser.close()
 
   console.log(`brand: wrote ${Object.keys(files).length} SVGs and 4 PNGs to assets/brand`)
