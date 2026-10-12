@@ -32,6 +32,16 @@ Run `yarn start` under the server's own process manager, so it starts with the m
 - **macOS:** a launchd agent, or `pm2 start "yarn start" --name socialmonitor`.
 - **Windows:** `pm2` with `pm2-windows-startup`, or a Task Scheduler task at startup.
 
+## Protect the saved accounts
+
+On macOS the encryption key for saved accounts lives in the Keychain. On Windows and Linux it falls back to `data/vault.key`, next to the database, so give the server its own key instead and keep it out of `data/`:
+
+```bash
+openssl rand -hex 32    # once; store the result in the server's secret store
+```
+
+Set it as `SOCIALMONITOR_VAULT_KEY` in the service's environment (a systemd credential, a Windows service variable), not in `.env` inside the repository. Use full-disk encryption on the server too: it holds every account you save.
+
 ## Sign in to the networks
 
 "Sign in to networks" opens a browser window on the server itself, so do it once at the server's screen or over remote desktop. Through the tunnel the button is refused on purpose.

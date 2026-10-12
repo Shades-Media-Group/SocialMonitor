@@ -11,6 +11,7 @@ import { getSetting, setSetting } from './store.ts'
  * networks. The app never logs in with them. They are encrypted with AES-256-GCM; the key lives
  * in the macOS Keychain (or, elsewhere, in data/vault.key readable only by the user). Passwords
  * never appear in exports, reports, JSON views, the MCP server or anything sent to an AI.
+ * On a server, SOCIALMONITOR_VAULT_KEY (64 hex characters) takes the key from the environment.
  */
 export interface Account {
   id: string
@@ -25,6 +26,14 @@ const SERVICE = 'SocialMonitor'
 const KEY_FILE = join(DATA_DIR, 'vault.key')
 
 function key(): Buffer {
+  // A server can supply the key from its own secret store (systemd credentials, a Windows
+  // service's environment, a password manager's CLI), so it never sits beside the database.
+  const fromEnv = process.env.SOCIALMONITOR_VAULT_KEY?.trim()
+  if (fromEnv) {
+    if (!/^[0-9a-f]{64}$/i.test(fromEnv))
+      throw new Error('SOCIALMONITOR_VAULT_KEY must be 64 hex characters.')
+    return Buffer.from(fromEnv, 'hex')
+  }
   if (process.platform === 'darwin') {
     try {
       return Buffer.from(
