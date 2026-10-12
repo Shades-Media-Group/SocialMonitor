@@ -7,7 +7,7 @@ import { SettingsSheet } from './settings.tsx'
 import type { ViewMode } from './json.tsx'
 import { readMode, saveMode } from './json.tsx'
 import { Home } from './home.tsx'
-import { BrandPage } from './brand.tsx'
+import { BrandPage } from './brand-page.tsx'
 
 export const TABS = [
   ['overview', 'Overview'],
