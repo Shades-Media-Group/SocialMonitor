@@ -1,18 +1,23 @@
 import { useEffect, useState } from 'preact/hooks'
-import type { AppState } from '../app.tsx'
+import type { BrandView } from '../app.tsx'
 import type { PostRow } from '../api.ts'
 import { api } from '../api.ts'
-import { Empty, NETWORK_NAME, NetworkMark, fmt, when } from '../ui.tsx'
+import { Empty, NETWORK_NAME, NetworkMark, Segmented, fmt, when } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 
-export function Posts({ brandId, running, openUpdate, mode }: AppState) {
+/** The posts as a contact sheet: the real pictures, newest or most engaging first. */
+export function Posts({ brand, network, version, mode, openUpdate }: BrandView) {
   const [rows, setRows] = useState<PostRow[] | null>(null)
+  const [sort, setSort] = useState<'new' | 'top'>('new')
+
   useEffect(() => {
     api
-      .get<PostRow[]>(`/api/posts?limit=100${brandId ? `&brand=${brandId}` : ''}`)
+      .get<PostRow[]>(
+        `/api/posts?brand=${brand.id}&limit=120&sort=${sort}${network ? `&network=${network}` : ''}`,
+      )
       .then(setRows)
       .catch(() => setRows([]))
-  }, [brandId, running])
+  }, [brand.id, network, version, sort])
 
   if (rows === null) return null
   if (mode === 'json')
@@ -21,7 +26,6 @@ export function Posts({ brandId, running, openUpdate, mode }: AppState) {
         value={rows.map((p) => ({
           id: p.id,
           network: p.network,
-          handle: p.handle,
           posted_at: p.posted_at,
           kind: p.kind,
           about: p.description,
@@ -39,52 +43,60 @@ export function Posts({ brandId, running, openUpdate, mode }: AppState) {
   if (!rows.length)
     return (
       <Empty title="No posts yet.">
-        Press Update to read the newest posts.{' '}
-        <button class="g-link sm-linkbtn" type="button" onClick={openUpdate}>
+        Read the latest posts and their comments.{' '}
+        <button class="sm-textbtn" type="button" onClick={() => openUpdate(brand.id)}>
           Update now
         </button>
       </Empty>
     )
+
   return (
-    <ul class="sm-list">
-      {rows.map((p) => (
-        <li class="sm-post">
-          {p.thumb_url ? (
-            <img class="sm-post__thumb" src={p.thumb_url} alt="" loading="lazy" />
-          ) : (
-            <span class="sm-post__thumb" />
-          )}
-          <div class="sm-post__body">
-            <div class="sm-comment__meta">
-              <NetworkMark network={p.network} />
-              <span class="sm-comment__author">@{p.handle}</span>
+    <div class="sm-stack">
+      <div class="sm-toolbar">
+        <Segmented
+          label="Order"
+          value={sort}
+          onChange={setSort}
+          options={[
+            ['new', 'Newest'],
+            ['top', 'Most engaging'],
+          ]}
+        />
+      </div>
+      <ul class="sm-sheet-grid">
+        {rows.map((p) => (
+          <li class="sm-postcard">
+            <a
+              class="sm-postcard__img"
+              href={p.url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open on ${NETWORK_NAME[p.network]}`}
+            >
+              {p.thumb_url ? <img src={p.thumb_url} alt="" loading="lazy" /> : <span />}
+              {p.flagged > 0 && <span class="sm-postcard__flag">{p.flagged} to look at</span>}
+            </a>
+            <div class="sm-postcard__meta">
+              <NetworkMark network={p.network} size={13} />
               <span>{when(p.posted_at)}</span>
             </div>
-            {p.description && <p class="sm-post__desc">{p.description}</p>}
-            <p class="sm-post__caption">{p.caption || 'No caption.'}</p>
-            <p class="sm-post__stats g-num">
+            <p class="sm-postcard__text">{p.description ?? p.caption ?? 'No caption.'}</p>
+            <p class="sm-postcard__stats g-num">
               {fmt(p.likes)} likes · {fmt(p.comments_count)} comments
               {p.views != null && ` · ${fmt(p.views)} views`}
-              {p.shares != null && ` · ${fmt(p.shares)} shares`}
-              {p.flagged > 0 && <span class="sm-flag"> · {p.flagged} to look at</span>}
             </p>
-            <p class="sm-post__links">
-              {p.stored_comments > 0 && (
-                <a
-                  class="g-link"
-                  href="#comments"
-                  onClick={() => sessionStorage.setItem('sm-post', String(p.id))}
-                >
-                  {fmt(p.stored_comments)} comments kept
-                </a>
-              )}
-              <a class="g-link" href={p.url} target="_blank" rel="noreferrer">
-                Open on {NETWORK_NAME[p.network]}
+            {p.stored_comments > 0 && (
+              <a
+                class="sm-textbtn"
+                href={`#/b/${brand.id}/comments`}
+                onClick={() => sessionStorage.setItem('sm-post', String(p.id))}
+              >
+                Read {fmt(p.stored_comments)} comments
               </a>
-            </p>
-          </div>
-        </li>
-      ))}
-    </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }

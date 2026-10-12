@@ -17,8 +17,7 @@ export function UpdateSheet({
   brands,
   brandId,
   notify,
-  go,
-}: AppState & { open: boolean; onClose: () => void }) {
+}: AppState & { open: boolean; onClose: () => void; brandId?: number }) {
   const [ids, setIds] = useState<string[]>([])
   const [networks, setNetworks] = useState<Network[]>(['instagram', 'facebook', 'tiktok'])
   const [range, setRange] = useState<'new' | 'all'>('new')
@@ -36,7 +35,7 @@ export function UpdateSheet({
       setIds(brandId ? [String(brandId)] : brands.map((b) => String(b.id)))
       setError(null)
     }
-  }, [open])
+  }, [open, brandId])
 
   const start = async () => {
     setBusy(true)
@@ -45,7 +44,7 @@ export function UpdateSheet({
       await api.post('/api/runs', { brandIds: ids.map(Number), networks, range, limit })
       onClose()
       notify('Update started. It reads slowly on purpose, like a person would.')
-      go('reports')
+      if (ids.length === 1) location.hash = `#/b/${ids[0]}/reports`
     } catch (e) {
       setError((e as Error).message)
     } finally {

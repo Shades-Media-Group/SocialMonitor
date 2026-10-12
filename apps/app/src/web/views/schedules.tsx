@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
-import type { AppState } from '../app.tsx'
+import type { BrandView } from '../app.tsx'
 import type { Network, Schedule } from '../api.ts'
 import { api } from '../api.ts'
 import { Chips, Empty, NETWORK_NAME, Row, Segmented, when } from '../ui.tsx'
@@ -17,7 +17,8 @@ function describe(s: Schedule) {
   return `${what} · ${s.networks.map((n) => NETWORK_NAME[n]).join(', ')} · ${s.range === 'all' ? 'all posts' : 'new posts'}`
 }
 
-export function Schedules({ brands, brandId, notify, mode }: AppState) {
+export function Schedules({ brand, brands, notify, mode }: BrandView) {
+  const brandId = brand.id
   const [rows, setRows] = useState<Schedule[]>([])
   const [form, setForm] = useState<Partial<Schedule> | null>(null)
   const [error, setError] = useState<string | null>(null)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
-import type { AppState } from '../app.tsx'
+import type { BrandView } from '../app.tsx'
 import type { RunRow } from '../api.ts'
 import { api } from '../api.ts'
 import { Empty, when } from '../ui.tsx'
@@ -10,29 +10,32 @@ const STATUS: Record<string, string> = {
   ok: 'Done',
   partial: 'Done, with gaps',
   error: 'Failed',
-  running: 'Running',
+  running: 'Reading now',
 }
 
-export function Reports({ running, openUpdate, mode }: AppState) {
+/** Every update of this brand on the left; the report of the chosen one on the right. */
+export function Reports({ brand, version, running, mode, openUpdate }: BrandView) {
   const [runs, setRuns] = useState<RunRow[] | null>(null)
   const [open, setOpen] = useState<RunRow | null>(null)
 
   useEffect(() => {
     api
-      .get<RunRow[]>('/api/runs')
+      .get<RunRow[]>(`/api/runs?brand=${brand.id}`)
       .then((r) => {
         setRuns(r)
-        if (r[0] && !open) api.get<RunRow>(`/api/runs/${r[0].id}`).then(setOpen)
+        const pick = open && r.some((x) => x.id === open.id) ? open.id : r[0]?.id
+        if (pick) api.get<RunRow>(`/api/runs/${pick}`).then(setOpen)
+        else setOpen(null)
       })
       .catch(() => setRuns([]))
-  }, [running])
+  }, [brand.id, version, running?.id])
 
   if (runs === null) return null
   if (!runs.length)
     return (
       <Empty title="No reports yet.">
-        Every update ends with a report: new posts, comments to answer, and what changed.{' '}
-        <button class="g-link sm-linkbtn" type="button" onClick={openUpdate}>
+        Every update ends with one: the posts read, the comments to answer, and what changed.{' '}
+        <button class="sm-textbtn" type="button" onClick={() => openUpdate(brand.id)}>
           Update now
         </button>
       </Empty>
@@ -54,16 +57,12 @@ export function Reports({ running, openUpdate, mode }: AppState) {
                 report: open.report,
                 log: open.log,
               }
-            : runs.map((r) => ({
-                id: r.id,
-                status: r.status,
-                trigger: r.trigger,
-                started_at: r.started_at,
-              }))
+            : runs.map((r) => ({ id: r.id, status: r.status, started_at: r.started_at }))
         }
-        note="The selected report, as data. Switch to Visual to pick another."
+        note="The chosen report as data. Switch to Visual to choose another."
       />
     )
+
   return (
     <div class="sm-split">
       <ul class="sm-runs" aria-label="Updates">
@@ -78,7 +77,11 @@ export function Reports({ running, openUpdate, mode }: AppState) {
               <span>{when(r.started_at)}</span>
               <span class={`sm-run__status sm-run__status--${r.status}`}>
                 {STATUS[r.status] ?? r.status} ·{' '}
-                {r.trigger === 'schedule' ? 'scheduled' : r.trigger}
+                {r.trigger === 'schedule'
+                  ? 'on schedule'
+                  : r.trigger === 'mcp'
+                    ? 'by Claude'
+                    : 'by you'}
               </span>
             </button>
           </li>
@@ -87,19 +90,19 @@ export function Reports({ running, openUpdate, mode }: AppState) {
       <article class="sm-report">
         {open?.report ? (
           <>
-            <div class="sm-report__actions">
+            <div
+              class="sm-report__text"
+              dangerouslySetInnerHTML={{ __html: renderReport(open.report) }}
+            />
+            <p class="sm-report__actions">
               <a
-                class="g-link"
+                class="g-btn g-btn--sm"
                 href={`/api/runs/${open.id}/report.md`}
                 download={`socialmonitor-report-${open.id}.md`}
               >
                 Download as Markdown
               </a>
-            </div>
-            <div
-              class="sm-report__text"
-              dangerouslySetInnerHTML={{ __html: renderReport(open.report) }}
-            />
+            </p>
           </>
         ) : open ? (
           <pre class="sm-report__log">{open.log || 'Starting…'}</pre>

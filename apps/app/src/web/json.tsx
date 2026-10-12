@@ -20,12 +20,15 @@ export function JsonPanel({
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const [base, setBase] = useState(pretty)
+  const dirty = text !== base
+  // New data replaces the text only while nothing is being edited.
   useEffect(() => {
+    if (dirty) return
     setText(pretty)
+    setBase(pretty)
     setError(null)
   }, [pretty])
-
-  const dirty = text !== pretty
 
   const parse = (): unknown => {
     try {
@@ -46,7 +49,9 @@ export function JsonPanel({
     setStatus(null)
     setBusy(true)
     try {
-      setStatus(await onSave!(parse()))
+      const done = await onSave!(parse())
+      setBase(text)
+      setStatus(done)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -77,7 +82,10 @@ export function JsonPanel({
                 class="g-btn g-btn--ghost g-btn--sm"
                 type="button"
                 disabled={!dirty}
-                onClick={() => setText(pretty)}
+                onClick={() => {
+                  setText(pretty)
+                  setBase(pretty)
+                }}
               >
                 Undo changes
               </button>
@@ -98,6 +106,7 @@ export function JsonPanel({
         class="sm-json__text"
         spellcheck={false}
         readOnly={!onSave}
+        data-dirty={dirty ? 'true' : undefined}
         value={text}
         aria-label="JSON"
         onInput={(e) => {
