@@ -31,6 +31,13 @@ import {
 import { workbook } from '../core/xlsx.ts'
 import { brandPdf, uiOrigin } from '../core/pdf.ts'
 import { badPdf, sendBad, setAlerts } from '../core/alerts.ts'
+import {
+  authorizeUrl,
+  connection,
+  disconnect,
+  finishSignIn,
+  tiktokReady,
+} from '../core/tiktok-api.ts'
 import { deleteSaved, getSaved, listSaved, readSaved, saveReport } from '../core/saved.ts'
 import { draftReply, pickEngine, translate } from '../core/analyze.ts'
 import { getSettings } from '../core/settings.ts'
@@ -642,6 +649,30 @@ export const routes: Route[] = [
       userId: c.user.id,
     })
     return out
+  }),
+  // A brand's own TikTok, connected through TikTok's sign-in.
+  r('GET', '/api/brands/:id/tiktok', seeBrand, (c) => ({
+    ready: tiktokReady(),
+    account: connection(c.db, id(c.params.id)),
+  })),
+  r('POST', '/api/brands/:id/tiktok/connect', adminBrand, (c) => ({
+    url: authorizeUrl(
+      id(c.params.id),
+      c.user.id,
+      String((b(c) as { origin?: string }).origin ?? ''),
+    ),
+  })),
+  r('DELETE', '/api/brands/:id/tiktok', adminBrand, (c) => void disconnect(c.db, id(c.params.id))),
+  // TikTok returns here through the website's hand-back page; the state proves who asked.
+  r('GET', '/api/auth/tiktok/callback', 'public', async (c) => {
+    const err = c.query.get('error')
+    if (err) return { __redirect: `/#/?tiktok=${encodeURIComponent(err)}` }
+    const { brandId } = await finishSignIn(
+      c.db,
+      c.query.get('code') ?? '',
+      c.query.get('state') ?? '',
+    )
+    return { __redirect: `/#/b/${brandId}/about?tiktok=connected` }
   }),
   r('PUT', '/api/brands/:id/alerts', adminBrand, (c) => {
     const x = b(c) as { emails?: unknown; auto?: unknown }

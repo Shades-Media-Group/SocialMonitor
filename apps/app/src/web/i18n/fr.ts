@@ -558,6 +558,19 @@ export const fr: Dict = {
     Prepared: 'Établi le',
     'Negative comments report…': 'Rapport des commentaires négatifs…',
     'TikTok sent nothing back': 'TikTok n’a rien renvoyé',
+    'TikTok connected.': 'TikTok connecté.',
+    'Your TikTok account': 'Votre compte TikTok',
+    'Connect it with TikTok to get exact figures for its videos and its followers. SocialMonitor only reads; it never posts.':
+      'Connectez-le avec TikTok pour des chiffres exacts sur ses vidéos et ses abonnés. SocialMonitor lit seulement ; il ne publie jamais.',
+    '{n} followers': '{n} abonnés',
+    Disconnect: 'Déconnecter',
+    'Connect with TikTok': 'Se connecter avec TikTok',
+    'Add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET to .env first.':
+      'Ajoutez d’abord TIKTOK_CLIENT_KEY et TIKTOK_CLIENT_SECRET dans .env.',
+    'Not connected.': 'Non connecté.',
+    'This address cannot receive TikTok sign-ins.':
+      'Cette adresse ne peut pas recevoir de connexions TikTok.',
+    'This TikTok sign-in expired. Try again.': 'Cette connexion TikTok a expiré. Réessayez.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

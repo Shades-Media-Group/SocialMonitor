@@ -33,6 +33,21 @@ CREATE TABLE IF NOT EXISTS profiles (
   UNIQUE (brand_id, network)
 );
 
+-- A brand's own account, connected through the network's official sign-in.
+CREATE TABLE IF NOT EXISTS network_tokens (
+  brand_id INTEGER NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+  network TEXT NOT NULL,
+  open_id TEXT NOT NULL,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  refresh_expires_at TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  account TEXT NOT NULL,
+  connected_at TEXT NOT NULL,
+  PRIMARY KEY (brand_id, network)
+);
+
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY,
   profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,

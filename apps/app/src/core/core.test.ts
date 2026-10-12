@@ -342,3 +342,22 @@ describe('threads under a filter', () => {
     ])
   })
 })
+
+describe('TikTok sign-in hand-back', () => {
+  it('returns people only to this computer or our own domain', async () => {
+    const { DASHBOARD_ORIGIN } = await import('./tiktok-api.ts')
+    for (const ok of [
+      'http://127.0.0.1:4400',
+      'http://localhost:4400',
+      'https://app.socialmonitor.shades.md',
+    ])
+      expect(DASHBOARD_ORIGIN.test(ok)).toBe(true)
+    for (const bad of [
+      'https://evil.com',
+      'http://app.socialmonitor.shades.md',
+      'https://socialmonitor.shades.md.evil.com',
+      'http://127.0.0.1.evil.com',
+    ])
+      expect(DASHBOARD_ORIGIN.test(bad)).toBe(false)
+  })
+})

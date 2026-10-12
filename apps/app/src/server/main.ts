@@ -151,6 +151,10 @@ const server = createServer(async (req, res) => {
       const data = await r.handle(ctx)
       if (ctx.cookies.length) res.setHeader('set-cookie', ctx.cookies)
       if (req.method !== 'GET' && !url.pathname.startsWith('/api/auth/')) changed()
+      if (data && typeof data === 'object' && '__redirect' in data) {
+        res.writeHead(302, { location: (data as { __redirect: string }).__redirect })
+        return res.end()
+      }
       if (data && typeof data === 'object' && '__download' in data) {
         const d = data as { __download: string; data: unknown; type?: string }
         res.writeHead(200, {

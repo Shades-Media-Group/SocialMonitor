@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { Network, Tracker } from '../api.ts'
 import { api } from '../api.ts'
-import { Icon, NETWORK_NAME, Row } from '../ui.tsx'
+import { Icon, NETWORK_NAME, NetworkMark, Row, fmt } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import type { Category } from '../rate.tsx'
 import { brandCategories } from '../rate.tsx'
@@ -247,6 +247,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
               />
             </Row>
           ))}
+          <TikTokConnect brand={brand} edit={edit} notify={notify} />
         </section>
 
         <section class="sm-box">
@@ -403,5 +404,107 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
         </section>
       )}
     </form>
+  )
+}
+
+interface TikTokAccount {
+  username?: string
+  display_name?: string
+  avatar_url?: string
+  follower_count?: number
+  video_count?: number
+  connected_at: string
+}
+
+/**
+ * The brand's own TikTok, connected through TikTok's sign-in: exact figures for its videos and
+ * its follower count. Comments keep coming from public pages either way.
+ */
+function TikTokConnect({
+  brand,
+  edit,
+  notify,
+}: {
+  brand: BrandView['brand']
+  edit: boolean
+  notify: (text: string) => void
+}) {
+  const [state, setState] = useState<{ ready: boolean; account: TikTokAccount | null } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const load = () =>
+    api
+      .get<{ ready: boolean; account: TikTokAccount | null }>(`/api/brands/${brand.id}/tiktok`)
+      .then(setState)
+      .catch(() => setState(null))
+  useEffect(() => {
+    void load()
+    if (location.hash.includes('tiktok=connected')) notify(t('TikTok connected.'))
+  }, [brand.id])
+  if (!state) return null
+  const a = state.account
+  return (
+    <Row
+      label={t('Your TikTok account')}
+      hint={t(
+        'Connect it with TikTok to get exact figures for its videos and its followers. SocialMonitor only reads; it never posts.',
+      )}
+    >
+      {a ? (
+        <span class="sm-connected">
+          {a.avatar_url && <img src={a.avatar_url} alt="" />}
+          <span>
+            <b>{a.display_name ?? a.username}</b>
+            <small>
+              {a.username ? `@${a.username} · ` : ''}
+              {t('{n} followers', { n: fmt(a.follower_count ?? 0) })}
+            </small>
+          </span>
+          {edit && (
+            <button
+              class="sm-textbtn"
+              type="button"
+              onClick={async () => {
+                await api.del(`/api/brands/${brand.id}/tiktok`)
+                await load()
+              }}
+            >
+              {t('Disconnect')}
+            </button>
+          )}
+        </span>
+      ) : edit ? (
+        <span class="sm-connected">
+          <button
+            class="g-btn"
+            type="button"
+            disabled={!state.ready}
+            onClick={async () => {
+              setError(null)
+              try {
+                const r = await api.post<{ url: string }>(
+                  `/api/brands/${brand.id}/tiktok/connect`,
+                  {
+                    origin: location.origin,
+                  },
+                )
+                location.href = r.url
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
+          >
+            <NetworkMark network="tiktok" size={14} /> {t('Connect with TikTok')}
+          </button>
+          {!state.ready && (
+            <small class="sm-quiet">
+              {t('Add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET to .env first.')}
+            </small>
+          )}
+          {error && <small class="g-error">{error}</small>}
+        </span>
+      ) : (
+        <span class="sm-quiet">{t('Not connected.')}</span>
+      )}
+    </Row>
   )
 }

@@ -556,6 +556,19 @@ export const ru: Dict = {
     Prepared: 'Подготовлен',
     'Negative comments report…': 'Отчёт о негативных комментариях…',
     'TikTok sent nothing back': 'TikTok ничего не вернул',
+    'TikTok connected.': 'TikTok подключён.',
+    'Your TikTok account': 'Ваш аккаунт TikTok',
+    'Connect it with TikTok to get exact figures for its videos and its followers. SocialMonitor only reads; it never posts.':
+      'Подключите его через TikTok, чтобы видеть точные цифры по видео и подписчикам. SocialMonitor только читает и ничего не публикует.',
+    '{n} followers': 'Подписчиков: {n}',
+    Disconnect: 'Отключить',
+    'Connect with TikTok': 'Подключить TikTok',
+    'Add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET to .env first.':
+      'Сначала добавьте TIKTOK_CLIENT_KEY и TIKTOK_CLIENT_SECRET в .env.',
+    'Not connected.': 'Не подключён.',
+    'This address cannot receive TikTok sign-ins.':
+      'Этот адрес не может принимать входы через TikTok.',
+    'This TikTok sign-in expired. Try again.': 'Вход через TikTok истёк. Попробуйте снова.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

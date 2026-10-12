@@ -1,6 +1,7 @@
 import { autoSendBad } from './alerts.ts'
 import { saveImage } from './media.ts'
 import { fillTikTok } from './fill.ts'
+import { officialFigures } from './tiktok-api.ts'
 import type { Page } from 'playwright'
 import { join } from 'node:path'
 import type { DB } from './db.ts'
@@ -117,6 +118,10 @@ async function execute(db: DB, runId: number, scope: RunScope) {
           log,
         }
         const posts = await collectors[p.network].collect(page, p, opt)
+        if (p.network === 'tiktok')
+          await officialFigures(db, p, posts, log).catch((e: Error) =>
+            log(`TikTok connection: ${e.message}`),
+          )
         for (const cp of posts) {
           cp.thumb_url = await saveImage(p.network, '', cp.ext_id, cp.thumb_url)
           for (const c of cp.comments) {

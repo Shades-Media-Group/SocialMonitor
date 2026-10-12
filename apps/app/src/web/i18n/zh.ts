@@ -535,6 +535,18 @@ export const zh: Dict = {
     Prepared: '生成日期',
     'Negative comments report…': '负面评论报告…',
     'TikTok sent nothing back': 'TikTok 没有返回内容',
+    'TikTok connected.': 'TikTok 已连接。',
+    'Your TikTok account': '你的 TikTok 账号',
+    'Connect it with TikTok to get exact figures for its videos and its followers. SocialMonitor only reads; it never posts.':
+      '通过 TikTok 连接，获取视频和粉丝的准确数据。SocialMonitor 只读取，从不发布。',
+    '{n} followers': '{n} 位粉丝',
+    Disconnect: '断开连接',
+    'Connect with TikTok': '用 TikTok 连接',
+    'Add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET to .env first.':
+      '请先在 .env 中添加 TIKTOK_CLIENT_KEY 和 TIKTOK_CLIENT_SECRET。',
+    'Not connected.': '未连接。',
+    'This address cannot receive TikTok sign-ins.': '这个地址无法接收 TikTok 登录。',
+    'This TikTok sign-in expired. Try again.': '这次 TikTok 登录已过期，请重试。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

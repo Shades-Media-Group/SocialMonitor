@@ -4234,3 +4234,25 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-shell .sm-wall--6 .sm-postcard2__stats dt span {
   display: none;
 }
+
+/* A connected network account: its photo, name and followers on one line. */
+.sm-connected {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.sm-connected img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.sm-connected > span {
+  display: grid;
+  line-height: 1.3;
+}
+.sm-connected small {
+  color: var(--c-text-3);
+  font-size: 11.5px;
+}

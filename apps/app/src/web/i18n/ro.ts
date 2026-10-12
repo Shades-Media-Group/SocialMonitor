@@ -558,6 +558,19 @@ export const ro: Dict = {
     Prepared: 'Pregătit',
     'Negative comments report…': 'Raportul comentariilor negative…',
     'TikTok sent nothing back': 'TikTok nu a trimis nimic',
+    'TikTok connected.': 'TikTok conectat.',
+    'Your TikTok account': 'Contul tău TikTok',
+    'Connect it with TikTok to get exact figures for its videos and its followers. SocialMonitor only reads; it never posts.':
+      'Conectează-l prin TikTok pentru cifre exacte ale videoclipurilor și urmăritorilor. SocialMonitor doar citește; nu publică nimic.',
+    '{n} followers': '{n} urmăritori',
+    Disconnect: 'Deconectează',
+    'Connect with TikTok': 'Conectează cu TikTok',
+    'Add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET to .env first.':
+      'Adaugă mai întâi TIKTOK_CLIENT_KEY și TIKTOK_CLIENT_SECRET în .env.',
+    'Not connected.': 'Neconectat.',
+    'This address cannot receive TikTok sign-ins.':
+      'Această adresă nu poate primi conectări TikTok.',
+    'This TikTok sign-in expired. Try again.': 'Conectarea TikTok a expirat. Încearcă din nou.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',
