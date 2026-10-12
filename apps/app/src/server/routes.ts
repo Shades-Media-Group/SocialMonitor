@@ -298,6 +298,7 @@ export const routes: Route[] = [
       day: query.get('day') ?? undefined,
       urgent: query.get('urgent') === '1',
       bad: query.get('bad') === '1',
+      threads: query.get('threads') === '1',
       from: query.get('from') ?? undefined,
       readSince: query.get('since') ?? undefined,
       search: query.get('q') ?? undefined,

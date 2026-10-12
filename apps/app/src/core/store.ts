@@ -384,6 +384,8 @@ export interface CommentFilter extends PostFilter {
   day?: string
   /** Only waiting comments the AI marked urgent. */
   urgent?: boolean
+  /** Also return the replies under every comment found, whatever the filters, so threads stay whole. */
+  threads?: boolean
   /** Only negative comments: rated negative or sorted as complaints. */
   bad?: boolean
   /** Only comments written since, or read since (new in an update), ISO times. */
@@ -441,11 +443,13 @@ export function listComments(db: DB, f: CommentFilter = {}) {
     where.push('c.text LIKE ?')
     args.push(`%${f.search}%`)
   }
-  return all<Comment & { network: Network; post_url: string; brand_id: number; overdue: 0 | 1 }>(
-    db,
-    `SELECT c.*, p.network, p.url AS post_url, pr.brand_id, ${OVERDUE} AS overdue
+  type Row = Comment & { network: Network; post_url: string; brand_id: number; overdue: 0 | 1 }
+  const SELECT = `SELECT c.*, p.network, p.url AS post_url, pr.brand_id, ${OVERDUE} AS overdue
      FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
-       JOIN brands b ON b.id = pr.brand_id
+       JOIN brands b ON b.id = pr.brand_id`
+  const rows = all<Row>(
+    db,
+    `${SELECT}
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
      ORDER BY (c.needs_reply = 1 AND c.reply_status = 'open') DESC,
        (c.needs_reply = 1 AND c.reply_status = 'open') * coalesce(c.urgency, 0) DESC,
@@ -454,6 +458,17 @@ export function listComments(db: DB, f: CommentFilter = {}) {
     f.limit ?? 100,
     f.offset ?? 0,
   )
+  if (!f.threads || !rows.length) return rows
+  // The replies under what was found, in the order they were written.
+  const seen = new Set(rows.map((r) => r.id))
+  const replies = all<Row>(
+    db,
+    `${SELECT} WHERE EXISTS (SELECT 1 FROM json_each(?) j
+       WHERE json_extract(j.value, '$[0]') = c.post_id AND json_extract(j.value, '$[1]') = c.parent_ext_id)
+     ORDER BY coalesce(c.posted_at, c.fetched_at)`,
+    JSON.stringify(rows.map((r) => [r.post_id, r.ext_id])),
+  ).filter((r) => !seen.has(r.id))
+  return [...rows, ...replies]
 }
 
 /** Counts per label for a brand (or all brands), optionally since a time. */

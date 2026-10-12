@@ -79,9 +79,9 @@ export function Home({
   const ids = brands.map((b) => b.id)
   const comments = useAcross<CommentRow>(
     tab === 'comments'
-      ? `/api/comments?limit=60&t=${tick}`
+      ? `/api/comments?threads=1&limit=60&t=${tick}`
       : tab === 'waiting'
-        ? `/api/comments?reply=1&limit=200&t=${tick}`
+        ? `/api/comments?threads=1&reply=1&limit=200&t=${tick}`
         : null,
     ids,
   )

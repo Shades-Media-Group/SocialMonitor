@@ -422,7 +422,7 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
   const [tick, setTick] = useState(0)
   const [badOpen, setBadOpen] = useState(false)
 
-  const query = new URLSearchParams({ brand: String(brand.id) })
+  const query = new URLSearchParams({ brand: String(brand.id), threads: '1' })
   if (network) query.set('network', network)
   if (filter === 'reply') query.set('reply', '1')
   else if (filter === 'urgent') query.set('urgent', '1')

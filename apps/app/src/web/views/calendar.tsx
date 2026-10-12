@@ -173,7 +173,7 @@ export function Calendar({ brand, brands, network, version, mode }: BrandView) {
     setDayComments(null)
     api
       .get<CommentRow[]>(
-        `/api/comments?brand=${brand.id}&day=${picked}&limit=300${network ? `&network=${network}` : ''}`,
+        `/api/comments?brand=${brand.id}&threads=1&day=${picked}&limit=300${network ? `&network=${network}` : ''}`,
       )
       .then(setDayComments)
       .catch(() => setDayComments([]))

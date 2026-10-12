@@ -3,15 +3,7 @@ import type { CollectedComment, CollectedPost, Profile } from '../types.ts'
 import type { CollectOptions, Collector } from './index.ts'
 import type { Item, RawComment } from './tiktok-public.ts'
 import { publicComments, publicPosts, toComment } from './tiktok-public.ts'
-import {
-  Challenge,
-  capture,
-  findAll,
-  isoFromUnix,
-  num,
-  pause,
-  readScroll,
-} from './browser.ts'
+import { Challenge, capture, findAll, isoFromUnix, num, pause, readScroll } from './browser.ts'
 
 async function checkWall(page: Page) {
   if (

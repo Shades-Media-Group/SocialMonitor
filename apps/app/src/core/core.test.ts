@@ -306,3 +306,39 @@ describe('posts read before photos were kept', () => {
     ])
   })
 })
+
+describe('threads under a filter', () => {
+  it('returns the replies under each comment found, even when they do not match', () => {
+    const db = openDb(':memory:')
+    const brand = addBrand(db, 'Test', ['https://www.tiktok.com/@test'])
+    const [profile] = listProfiles(db, brand.id)
+    const c = (ext_id: string, parent: string | null, author: string) => ({
+      ext_id,
+      parent_ext_id: parent,
+      author,
+      text: ext_id,
+      likes: 0,
+      posted_at: null,
+    })
+    savePost(db, profile!, {
+      ext_id: '1',
+      url: 'u',
+      posted_at: null,
+      kind: 'video',
+      caption: '',
+      thumb_url: null,
+      likes: 0,
+      comments_count: 3,
+      shares: 0,
+      views: 0,
+      comments: [c('q', null, 'x'), c('r', 'q', 'test'), c('other', null, 'y')],
+    })
+    const q = listComments(db).find((r) => r.ext_id === 'q')!
+    setVerdict(db, q.id, 'question', true, '')
+    expect(listComments(db, { label: 'question' }).map((r) => r.ext_id)).toEqual(['q'])
+    expect(listComments(db, { label: 'question', threads: true }).map((r) => r.ext_id)).toEqual([
+      'q',
+      'r',
+    ])
+  })
+})

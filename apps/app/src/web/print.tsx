@@ -118,13 +118,17 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
         .get<Summary>(`/api/brands/${brand.id}/summary${network ? `?network=${network}` : ''}`)
         .then(setSum),
       api
-        .get<CommentRow[]>(`/api/comments?brand=${brand.id}&reply=1&others=1&limit=12${n}`)
+        .get<CommentRow[]>(
+          `/api/comments?brand=${brand.id}&threads=1&reply=1&others=1&limit=12${n}`,
+        )
         .then(async (r) =>
           // Nothing waiting: the latest comments stand in, so the report still shows what people said.
           setReply(
             r.length
               ? r
-              : await api.get<CommentRow[]>(`/api/comments?brand=${brand.id}&others=1&limit=8${n}`),
+              : await api.get<CommentRow[]>(
+                  `/api/comments?brand=${brand.id}&threads=1&others=1&limit=8${n}`,
+                ),
           ),
         ),
       api.get<PostRow[]>(`/api/posts?brand=${brand.id}&limit=10${n}`).then(setPosts),
@@ -429,7 +433,13 @@ export function PrintBad({ brand }: { brand: BrandRow }) {
 
   useEffect(() => {
     document.documentElement.dataset.theme = 'light'
-    const p = new URLSearchParams({ brand: String(brand.id), bad: '1', others: '1', limit: '2000' })
+    const p = new URLSearchParams({
+      brand: String(brand.id),
+      bad: '1',
+      others: '1',
+      threads: '1',
+      limit: '2000',
+    })
     if (network) p.set('network', network)
     if (since) p.set('since', since)
     else if (days) p.set('from', new Date(Date.now() - days * 86400_000).toISOString())
