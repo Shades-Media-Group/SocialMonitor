@@ -1,6 +1,6 @@
 import type { DB } from '../core/db.ts'
 import * as store from '../core/store.ts'
-import type { Label, Network } from '../core/types.ts'
+import type { Label, Network, Tracker } from '../core/types.ts'
 import { LABELS, NETWORKS } from '../core/types.ts'
 import { exportAll, importAll } from '../core/transfer.ts'
 import { TEMPLATES, validCategories } from '../core/categories.ts'
@@ -20,6 +20,7 @@ import {
   profileStats,
   topAuthors,
   topWords,
+  watched,
   labelTotals,
   postEngagement,
   reach,
@@ -312,6 +313,9 @@ export const routes: Route[] = [
     store.setCategories(c.db, id(c.params.id), list)
     return list
   }),
+  r('PUT', '/api/brands/:id/trackers', adminBrand, (c) =>
+    store.setTrackers(c.db, id(c.params.id), (b(c) as { trackers?: unknown }).trackers),
+  ),
   r('GET', '/api/sentiment', byBrand, ({ db, query }) =>
     store.sentimentCounts(db, query.get('brand') ? id(query.get('brand')!) : undefined),
   ),
@@ -482,6 +486,7 @@ export const routes: Route[] = [
       heatmap: heatmap(db, s),
       authors: topAuthors(db, s),
       words: topWords(db, s, brand?.name ?? ''),
+      watched: watched(db, s, JSON.parse(brand?.trackers ?? '[]') as Tracker[]),
     }
   }),
   r('GET', '/api/brands/:id/daily', seeBrand, ({ db, params, query }) => {

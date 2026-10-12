@@ -1,4 +1,5 @@
 import type { Brand, Comment, Network, Post, Profile, Schedule } from '../core/types.ts'
+export type { Tracker } from '../core/types.ts'
 
 export type BrandRow = Brand & {
   profiles: Profile[]

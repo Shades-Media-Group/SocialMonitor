@@ -4093,3 +4093,18 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-works .sm-box {
   align-self: start;
 }
+
+/* Words to watch: one row per word, its kind beside it. */
+.sm-watch {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.sm-watch li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px 28px;
+  gap: 6px;
+  align-items: center;
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
-import type { Network } from '../api.ts'
+import type { Network, Tracker } from '../api.ts'
 import { api } from '../api.ts'
 import { Icon, NETWORK_NAME, Row } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
@@ -35,6 +35,13 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
   })
   const [links, setLinks] = useState(linksOf)
   const [cats, setCats] = useState<Category[]>(() => brandCategories(brand))
+  const [watch, setWatch] = useState<Tracker[]>(() => {
+    try {
+      return JSON.parse(brand.trackers ?? '[]') as Tracker[]
+    } catch {
+      return []
+    }
+  })
   const [templates, setTemplates] = useState<
     Record<string, { name: string; categories: Category[] }>
   >({})
@@ -62,6 +69,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
         if (!links[n].trim() && brand.profiles.some((p) => p.network === n))
           await api.del(`/api/brands/${brand.id}/profiles/${n}`)
       await api.put(`/api/brands/${brand.id}/categories`, { categories: cats })
+      setWatch(await api.put<Tracker[]>(`/api/brands/${brand.id}/trackers`, { trackers: watch }))
       await reload()
       notify(t('Saved.'))
     } catch (err) {
@@ -239,6 +247,71 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
               />
             </Row>
           ))}
+        </section>
+
+        <section class="sm-box">
+          <header class="sm-box__head">
+            <h2>{t('Words to watch')}</h2>
+          </header>
+          <p class="sm-quiet">
+            {t(
+              'Your products, campaigns, other brands or topics. The overview counts how often comments mention each one.',
+            )}
+          </p>
+          <ul class="sm-watch">
+            {watch.map((w, i) => (
+              <li>
+                <input
+                  class="g-input"
+                  value={w.term}
+                  aria-label={t('Word or phrase')}
+                  maxLength={60}
+                  onInput={(e) =>
+                    setWatch(
+                      watch.map((x, j) =>
+                        j === i ? { ...x, term: (e.target as HTMLInputElement).value } : x,
+                      ),
+                    )
+                  }
+                />
+                <select
+                  class="g-select sm-select-sm"
+                  value={w.kind}
+                  aria-label={t('What it is')}
+                  onChange={(e) =>
+                    setWatch(
+                      watch.map((x, j) =>
+                        j === i
+                          ? { ...x, kind: (e.target as HTMLSelectElement).value as Tracker['kind'] }
+                          : x,
+                      ),
+                    )
+                  }
+                >
+                  <option value="product">{t('Product')}</option>
+                  <option value="competitor">{t('Other brand')}</option>
+                  <option value="topic">{t('Topic')}</option>
+                </select>
+                <button
+                  class="g-icon-btn"
+                  type="button"
+                  aria-label={t('Remove')}
+                  onClick={() => setWatch(watch.filter((_, j) => j !== i))}
+                >
+                  <Icon name="close" size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+          {watch.length < 40 && (
+            <button
+              class="sm-textbtn"
+              type="button"
+              onClick={() => setWatch([...watch, { term: '', kind: 'product' }])}
+            >
+              {t('Add a word')}
+            </button>
+          )}
         </section>
 
         <section class="sm-box">

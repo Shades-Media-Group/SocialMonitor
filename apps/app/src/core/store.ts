@@ -13,6 +13,7 @@ import type {
   ReplyStatus,
   Schedule,
   ScheduleKind,
+  Tracker,
 } from './types.ts'
 import { NETWORKS } from './types.ts'
 import { TEMPLATES } from './categories.ts'
@@ -263,6 +264,24 @@ export const setCategories = (db: DB, brandId: number, categories: unknown[]) =>
   db
     .prepare('UPDATE brands SET categories = ? WHERE id = ?')
     .run(JSON.stringify(categories), brandId)
+
+/** Keeps up to 40 distinct words of 2–60 characters; anything else is dropped. */
+export function setTrackers(db: DB, brandId: number, list: unknown): Tracker[] {
+  const kinds = ['product', 'competitor', 'topic']
+  const seen = new Set<string>()
+  const clean: Tracker[] = []
+  for (const x of Array.isArray(list) ? list : []) {
+    const term = String((x as Tracker)?.term ?? '')
+      .trim()
+      .slice(0, 60)
+    const kind = kinds.includes((x as Tracker)?.kind) ? (x as Tracker).kind : 'topic'
+    if (term.length < 2 || seen.has(term.toLowerCase()) || clean.length >= 40) continue
+    seen.add(term.toLowerCase())
+    clean.push({ term, kind })
+  }
+  db.prepare('UPDATE brands SET trackers = ? WHERE id = ?').run(JSON.stringify(clean), brandId)
+  return clean
+}
 
 export const setDescription = (db: DB, postId: number, description: string) =>
   db.prepare('UPDATE posts SET description = ? WHERE id = ?').run(description, postId)

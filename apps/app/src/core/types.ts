@@ -19,6 +19,8 @@ export interface Brand {
   notes: string | null
   /** Hours a comment may wait for an answer before it counts as overdue. */
   reply_target_hours: number
+  /** JSON: Tracker[] */
+  trackers: string
   created_at: string
 }
 
@@ -81,6 +83,12 @@ export interface Comment {
   author_avatar: string | null
   author_url: string | null
   media_url: string | null
+}
+
+/** A word the brand watches for in comments. */
+export interface Tracker {
+  term: string
+  kind: 'product' | 'competitor' | 'topic'
 }
 
 export type ReplyStatus = 'open' | 'done' | 'ignored'

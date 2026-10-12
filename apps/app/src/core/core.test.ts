@@ -12,6 +12,8 @@ import {
 import { parseVerdicts } from './analyze.ts'
 import { nextRun } from './schedule.ts'
 import { exportAll, importAll } from './transfer.ts'
+import { watched } from './insights.ts'
+import { setTrackers } from './store.ts'
 import type { Schedule } from './types.ts'
 
 describe('profile links', () => {
@@ -166,5 +168,59 @@ describe('reply queue', () => {
     expect(a.answered_by).toBe('brand')
     expect(a.answered_at).toBe('2026-01-01T13:00:00Z')
     expect(listComments(db, { overdue: true }).map((c) => c.ext_id)).toEqual(['b'])
+  })
+})
+
+describe('words to watch', () => {
+  it('keeps clean words and counts mentions in any alphabet, ignoring case', () => {
+    const db = openDb(':memory:')
+    const brand = addBrand(db, 'Test', ['https://www.tiktok.com/@test'])
+    const [profile] = listProfiles(db, brand.id)
+    const list = setTrackers(db, brand.id, [
+      { term: 'VoLTE', kind: 'topic' },
+      { term: 'volte', kind: 'product' },
+      { term: 'x', kind: 'product' },
+      { term: 'Интернет', kind: 'weird' },
+    ])
+    expect(list).toEqual([
+      { term: 'VoLTE', kind: 'topic' },
+      { term: 'Интернет', kind: 'topic' },
+    ])
+    savePost(db, profile!, {
+      ext_id: '1',
+      url: 'u',
+      posted_at: null,
+      kind: 'video',
+      caption: 'c',
+      thumb_url: null,
+      likes: 0,
+      comments_count: 2,
+      shares: 0,
+      views: 0,
+      comments: [
+        {
+          ext_id: 'a',
+          parent_ext_id: null,
+          author: 'x',
+          text: 'когда volte?',
+          likes: 0,
+          posted_at: null,
+        },
+        {
+          ext_id: 'b',
+          parent_ext_id: null,
+          author: 'y',
+          text: 'ИНТЕРНЕТ не работает',
+          likes: 0,
+          posted_at: null,
+        },
+      ],
+    })
+    const [c] = listComments(db).filter((r) => r.ext_id === 'b')
+    setVerdict(db, c!.id, 'complaint', true, 'down')
+    expect(watched(db, { brandId: brand.id }, list)).toEqual([
+      { term: 'VoLTE', kind: 'topic', n: 1, before: null, complaints: 0, praise: 0 },
+      { term: 'Интернет', kind: 'topic', n: 1, before: null, complaints: 1, praise: 0 },
+    ])
   })
 })

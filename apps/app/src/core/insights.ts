@@ -311,6 +311,34 @@ export function topWords(db: DB, s: Scope, brandName = '', limit = 24) {
     .map(([word, n]) => ({ word, n }))
 }
 
+/**
+ * How often each watched word comes up in comments, now and in the window before, with how
+ * many of those comments complain or praise. Matching ignores case in every alphabet.
+ */
+export function watched(db: DB, s: Scope, list: { term: string; kind: string }[]) {
+  if (!list.length) return []
+  const read = (scope: Scope) => {
+    const w = where(scope)
+    return db
+      .prepare(`SELECT lower(c.text) AS text, c.label, c.sentiment ${FROM} WHERE ${w.sql}`)
+      .all(...w.args) as { text: string; label: string | null; sentiment: string | null }[]
+  }
+  const now = read(s)
+  const before = s.days ? read({ ...s, previous: true }) : null
+  return list.map(({ term, kind }) => {
+    const k = term.toLowerCase()
+    const hits = now.filter((r) => r.text.toLowerCase().includes(k))
+    return {
+      term,
+      kind,
+      n: hits.length,
+      before: before ? before.filter((r) => r.text.toLowerCase().includes(k)).length : null,
+      complaints: hits.filter((r) => r.label === 'complaint' || r.sentiment === 'negative').length,
+      praise: hits.filter((r) => r.label === 'praise' || r.sentiment === 'positive').length,
+    }
+  })
+}
+
 /** Each social account of the brand in the window: its posts, what they drew, and its trend. */
 export function profileStats(db: DB, s: Scope) {
   const profiles = db

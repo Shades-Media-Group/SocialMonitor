@@ -51,6 +51,14 @@ interface Insights {
     url: string | null
   }[]
   words: { word: string; n: number }[]
+  watched: {
+    term: string
+    kind: 'product' | 'competitor' | 'topic'
+    n: number
+    before: number | null
+    complaints: number
+    praise: number
+  }[]
 }
 
 /** How a figure moved against the window before: an arrow, the change, green when it is good. */
@@ -116,6 +124,9 @@ const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) 
  * The brand at a glance: a strip of measures for the period, then panels for the trend, what
  * people say, the comments to answer, the problems they name, engagement, posts and networks.
  */
+const WATCH_KIND = { product: 'Product', competitor: 'Other brand', topic: 'Topic' } as const
+const WATCH_TONE = { product: 'question', competitor: 'suggestion', topic: 'neutral' } as const
+
 export function Overview(v: BrandView) {
   const { brand, network, version, mode, openUpdate, brands, days } = v
   const [s, setS] = useState<Summary | null>(null)
@@ -451,6 +462,57 @@ export function Overview(v: BrandView) {
               )}
             </section>
           </div>
+          {(ins?.watched.length ?? 0) > 0 && (
+            <section class="sm-box sm-box--table">
+              <header class="sm-box__head">
+                <h2>{t('Words you watch')}</h2>
+                <a class="sm-box__link" href={`#/b/${brand.id}/about`}>
+                  {t('Edit')}
+                </a>
+              </header>
+              <table class="sm-dtable">
+                <thead>
+                  <tr>
+                    <th>{t('Word')}</th>
+                    <th class="sm-num">{t('Mentions')}</th>
+                    <th class="sm-num">{t('Change')}</th>
+                    <th class="sm-num">{t('Complaints')}</th>
+                    <th class="sm-num">{t('Praise')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...ins!.watched]
+                    .sort((a, b) => b.n - a.n)
+                    .map((w) => (
+                      <tr
+                        class="sm-ctable__row"
+                        onClick={() => {
+                          sessionStorage.setItem('sm-q', w.term)
+                          location.hash = `#/b/${brand.id}/comments`
+                        }}
+                      >
+                        <td>
+                          <span class="sm-net-name">
+                            <span class={`sm-word sm-word--${WATCH_TONE[w.kind]}`}>
+                              {t(WATCH_KIND[w.kind])}
+                            </span>
+                            <b>{w.term}</b>
+                          </span>
+                        </td>
+                        <td class="sm-num g-num">{fmt(w.n)}</td>
+                        <td class="sm-num">
+                          <Delta now={w.n} before={w.before} />
+                        </td>
+                        <td class={`sm-num g-num${w.complaints ? ' sm-hot' : ''}`}>
+                          {fmt(w.complaints)}
+                        </td>
+                        <td class="sm-num g-num">{fmt(w.praise)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </section>
+          )}
         </div>
 
         <Scroller

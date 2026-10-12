@@ -221,6 +221,9 @@ function migrate(db: DatabaseSync) {
     db.exec('ALTER TABLE comments ADD COLUMN urgency INTEGER')
     db.exec('ALTER TABLE comments ADD COLUMN emotion TEXT')
   }
+  // Words the brand watches for in comments: its products, other brands, topics.
+  if (!has('brands', 'trackers'))
+    db.exec("ALTER TABLE brands ADD COLUMN trackers TEXT NOT NULL DEFAULT '[]'")
   // The brand's reply target in hours: open comments older than it count as overdue.
   if (!has('brands', 'reply_target_hours'))
     db.exec('ALTER TABLE brands ADD COLUMN reply_target_hours REAL NOT NULL DEFAULT 24')

@@ -400,7 +400,12 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
   const [filter, setFilter] = usePref<Filter>('comments.filter', 'all')
   const [sentiment, setSentiment] = usePref('comments.sentiment', '')
   const [category, setCategory] = useState('')
-  const [q, setQ] = useState('')
+  // A watched word clicked on the overview arrives as the search.
+  const [q, setQ] = useState(() => {
+    const v = sessionStorage.getItem('sm-q') ?? ''
+    sessionStorage.removeItem('sm-q')
+    return v
+  })
   const [rows, setRows] = useState<CommentRow[] | null>(null)
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
   const [look, setLook] = usePref<'list' | 'feed' | 'table'>('comments.look', 'list')
