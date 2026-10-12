@@ -21,6 +21,8 @@ Use Node 22.18 or newer. `SOCIALMONITOR_URL` changes the address (default `http:
 | `run_status` | Progress of an update                                                        |
 | `report`     | The report of an update                                                      |
 | `relabel`    | Corrects the AI's label on a comment                                         |
+| `kinds`      | A brand's positive and negative kinds of comment                             |
+| `rate`       | Rates comments positive or negative, with a kind, as Claude                  |
 | `add_brand`  | Adds a brand with its profile links                                          |
 | `schedules`  | Lists, sets or deletes schedules                                             |
 
