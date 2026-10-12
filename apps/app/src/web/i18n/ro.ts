@@ -2,6 +2,7 @@ import type { Dict } from '../i18n.ts'
 
 export const ro: Dict = {
   strings: {
+    'No problems named in this period.': 'Nicio problemă numită în această perioadă.',
     'Saved reports and exports': 'Rapoarte și exporturi salvate',
     'Every PDF, Excel and CSV made for this brand, kept to open again':
       'Fiecare PDF, Excel și CSV făcut pentru acest brand, păstrat ca să-l deschizi din nou',

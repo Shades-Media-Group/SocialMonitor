@@ -2,6 +2,7 @@ import type { Dict } from '../i18n.ts'
 
 export const zh: Dict = {
   strings: {
+    'No problems named in this period.': '这段时间没有人提到问题。',
     'Saved reports and exports': '已保存的报告和导出',
     'Every PDF, Excel and CSV made for this brand, kept to open again':
       '为该品牌生成的每个 PDF、Excel 和 CSV 都会保存，便于再次打开',
