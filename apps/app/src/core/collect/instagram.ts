@@ -1,7 +1,7 @@
 import type { Page } from 'playwright'
 import type { CollectedComment, CollectedPost, Profile } from '../types.ts'
 import type { CollectOptions, Collector } from './index.ts'
-import { Challenge, isoFromUnix, num, pause } from './browser.ts'
+import { Challenge, imageIn, isoFromUnix, num, pause } from './browser.ts'
 
 // The id Instagram's own web app sends with its API calls.
 const APP_ID = '936619743392459'
@@ -25,8 +25,10 @@ interface RawComment {
   text: string
   created_at?: number
   comment_like_count?: number
-  user?: { username?: string }
+  user?: { username?: string; profile_pic_url?: string }
   parent_comment_id?: string | number
+  giphy_media_info?: unknown
+  media?: unknown
 }
 
 /** Calls Instagram's web API from inside the page, with the page's own cookies and headers. */
@@ -145,6 +147,9 @@ async function readComments(
         text: c.text,
         likes: num(c.comment_like_count),
         posted_at: isoFromUnix(c.created_at),
+        author_avatar: c.user?.profile_pic_url ?? null,
+        author_url: c.user?.username ? `https://www.instagram.com/${c.user.username}/` : null,
+        media_url: imageIn({ g: c.giphy_media_info, m: c.media }, /url|still|first_frame/i),
       })
     }
     cursor = r.data?.next_min_id ?? ''

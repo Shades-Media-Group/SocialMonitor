@@ -1,7 +1,16 @@
 import type { Page } from 'playwright'
 import type { CollectedComment, CollectedPost, Profile } from '../types.ts'
 import type { CollectOptions, Collector } from './index.ts'
-import { Challenge, capture, findAll, isoFromUnix, num, pause, readScroll } from './browser.ts'
+import {
+  Challenge,
+  capture,
+  findAll,
+  imageIn,
+  isoFromUnix,
+  num,
+  pause,
+  readScroll,
+} from './browser.ts'
 
 interface Story {
   post_id?: string
@@ -15,7 +24,14 @@ interface RawComment {
   legacy_fbid?: string
   id: string
   body?: { text?: string }
-  author?: { name?: string }
+  author?: {
+    name?: string
+    url?: string
+    id?: string
+    profile_picture_depth_0?: unknown
+    profile_picture?: unknown
+  }
+  attachments?: unknown
   created_time?: number
   comment_parent?: { legacy_fbid?: string } | null
   feedback?: { reactors?: { count?: number }; reactors_count?: number }
@@ -136,6 +152,13 @@ async function readComments(
       parent_ext_id: c.comment_parent?.legacy_fbid ?? null,
       author: c.author?.name ?? 'unknown',
       text: c.body!.text!,
+      author_avatar: imageIn(
+        { a: c.author?.profile_picture_depth_0, b: c.author?.profile_picture },
+        /uri|url/,
+      ),
+      author_url:
+        c.author?.url ?? (c.author?.id ? `https://www.facebook.com/${c.author.id}` : null),
+      media_url: imageIn(c.attachments, /uri|url/),
       likes: num(c.feedback?.reactors?.count ?? c.feedback?.reactors_count),
       posted_at: isoFromUnix(c.created_time),
     })

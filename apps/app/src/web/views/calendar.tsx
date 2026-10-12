@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'preact/hooks'
+import type { ComponentChildren } from 'preact'
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { PostRow } from '../api.ts'
 import { api } from '../api.ts'
 import { locale, t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
 import { JsonPanel } from '../json.tsx'
-import { Menu, NetworkMark, Segmented, fmt, short } from '../ui.tsx'
+import { Icon, Menu, NetworkMark, Segmented, count, fmt, short } from '../ui.tsx'
+import { MoodStrip, PostDrawer } from '../social.tsx'
 
 /**
  * The calendar: every day, week or month of a period, shaded darker the more happened, with the
@@ -86,7 +88,70 @@ function Change({ v }: { v: number | null }) {
   )
 }
 
-export function Calendar({ brand, network, version, mode }: BrandView) {
+/**
+ * A day's details float next to the day that was clicked, the way a calendar shows an event,
+ * so the months never move. Escape, a click outside or a scroll closes it.
+ */
+function DayPop({
+  anchor,
+  title,
+  onClose,
+  children,
+}: {
+  anchor: DOMRect
+  title: string
+  onClose: () => void
+  children: ComponentChildren
+}) {
+  const box = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  useLayoutEffect(() => {
+    const w = box.current!.offsetWidth
+    const h = box.current!.offsetHeight
+    const gap = 8
+    let left = anchor.right + gap
+    if (left + w > innerWidth - 12) left = anchor.left - w - gap
+    if (left < 12) left = Math.min(Math.max(12, anchor.left), innerWidth - w - 12)
+    const top = Math.max(12, Math.min(anchor.top, innerHeight - h - 12))
+    setPos({ top, left })
+  }, [anchor])
+  useEffect(() => {
+    const inside = (e: Event) => box.current?.contains(e.target as Node)
+    const down = (e: Event) => {
+      // Another day takes over through its own click; anything else outside closes.
+      if (!inside(e) && !(e.target as Element).closest?.('.sm-cal__day')) onClose()
+    }
+    const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const scroll = (e: Event) => !inside(e) && onClose()
+    addEventListener('pointerdown', down)
+    addEventListener('keydown', key)
+    addEventListener('scroll', scroll, true)
+    return () => {
+      removeEventListener('pointerdown', down)
+      removeEventListener('keydown', key)
+      removeEventListener('scroll', scroll, true)
+    }
+  }, [onClose])
+  return (
+    <div
+      ref={box}
+      class="sm-daypop"
+      role="dialog"
+      aria-label={title}
+      style={pos ? { top: pos.top, left: pos.left } : { visibility: 'hidden' }}
+    >
+      <header class="sm-daypop__head">
+        <h2>{title}</h2>
+        <button class="g-icon-btn" type="button" onClick={onClose} aria-label={t('Close')}>
+          <Icon name="close" size={15} />
+        </button>
+      </header>
+      {children}
+    </div>
+  )
+}
+
+export function Calendar({ brand, brands, network, version, mode }: BrandView) {
   const [range, setRange] = useState<[string, string]>(
     () => presets()[1]!.slice(1) as [string, string],
   )
@@ -96,6 +161,9 @@ export function Calendar({ brand, network, version, mode }: BrandView) {
   const [before, setBefore] = useState<DayRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [picked, setPicked] = useState<string | null>(null)
+  const [anchor, setAnchor] = useState<DOMRect | null>(null)
+  const [openPost, setOpenPost] = useState<PostRow | null>(null)
+  const close = () => setPicked(null)
   const [posts, setPosts] = useState<PostRow[]>([])
 
   const [from, to] = range
@@ -160,7 +228,11 @@ export function Calendar({ brand, network, version, mode }: BrandView) {
         type="button"
         class={`sm-cal__day${a > 0.55 ? ' is-dark' : ''}${picked === day ? ' is-picked' : ''}${day === today() ? ' is-today' : ''}`}
         style={{ '--a': a }}
-        onClick={() => setPicked(picked === day ? null : day)}
+        aria-expanded={picked === day}
+        onClick={(e) => {
+          setAnchor((e.currentTarget as HTMLElement).getBoundingClientRect())
+          setPicked(picked === day ? null : day)
+        }}
         title={`${fmtDay(day, { weekday: 'long', day: 'numeric', month: 'long' })} · ${name}: ${fmt(n)}`}
       >
         <span class="sm-cal__date">{Number(day.slice(8))}</span>
@@ -266,7 +338,7 @@ export function Calendar({ brand, network, version, mode }: BrandView) {
         </div>
       </dl>
 
-      <div class={`sm-cal sm-tone--${tone}${picked ? ' has-picked' : ''}`}>
+      <div class={`sm-cal sm-tone--${tone}`}>
         <div class="sm-cal__main">
           {look === 'days' && (
             <div class="sm-cal__months">
@@ -338,42 +410,51 @@ export function Calendar({ brand, network, version, mode }: BrandView) {
           </div>
         </div>
 
-        {pickedRow && (
-          <aside class="sm-box sm-cal__detail">
-            <header class="sm-box__head">
-              <h2>{fmtDay(pickedRow.day, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
-              <button class="sm-textbtn" type="button" onClick={() => setPicked(null)}>
-                {t('Close')}
-              </button>
-            </header>
-            <dl class="sm-attr">
+        {pickedRow && anchor && (
+          <DayPop
+            anchor={anchor}
+            title={fmtDay(pickedRow.day, { weekday: 'long', day: 'numeric', month: 'long' })}
+            onClose={close}
+          >
+            <dl class="sm-daypop__stats">
               {MEASURES.map(([k, label]) => (
-                <>
+                <div class={k === measure ? 'is-on' : ''}>
                   <dt>{t(label)}</dt>
                   <dd class="g-num">{fmt(pickedRow[k])}</dd>
-                </>
+                </div>
               ))}
             </dl>
-            {pickedPosts.length > 0 && (
-              <>
-                <h3 class="sm-attr__title">{t('Posts')}</h3>
-                <ul class="sm-cal__posts">
-                  {pickedPosts.map((p) => (
-                    <li>
-                      <a href={p.url} target="_blank" rel="noreferrer">
-                        {p.thumb_url && <img src={p.thumb_url} alt="" />}
-                        <span>
-                          <NetworkMark network={p.network} size={12} /> {p.description ?? p.caption}
+            {pickedPosts.length > 0 ? (
+              <ul class="sm-daypop__posts">
+                {pickedPosts.map((p) => (
+                  <li>
+                    <button type="button" onClick={() => setOpenPost(p)}>
+                      {p.thumb_url ? (
+                        <img src={p.thumb_url} alt="" />
+                      ) : (
+                        <span class="sm-postcell__blank" />
+                      )}
+                      <span class="sm-daypop__post">
+                        <span class="sm-daypop__cap">
+                          {p.description ?? p.caption ?? t('No caption.')}
                         </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </>
+                        <small>
+                          <NetworkMark network={p.network} size={11} />
+                          {count(p.stored_comments, 'comment')} · {count(p.likes, 'like')}
+                        </small>
+                        <MoodStrip p={p} />
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="sm-daypop__none">{t('No posts this day.')}</p>
             )}
-          </aside>
+          </DayPop>
         )}
       </div>
+      <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import type { Page } from 'playwright'
 import { join } from 'node:path'
 import type { DB } from './db.ts'
@@ -69,16 +69,28 @@ export function gaps(db: DB) {
     .filter((g) => g.until)
 }
 
-async function saveThumb(network: Network, id: string, url: string | null): Promise<string | null> {
-  if (!url || url.startsWith('/media/')) return url
+/**
+ * Keeps a local copy of a picture so it still shows after the network's signed link expires.
+ * Pictures come from the networks' public image servers with no cookies, so fetching them never
+ * touches the signed-in account. A file that is already saved is not fetched again.
+ */
+async function saveImage(
+  network: Network,
+  folder: string,
+  id: string,
+  url: string | null | undefined,
+): Promise<string | null> {
+  if (!url || url.startsWith('/media/')) return url ?? null
+  const dir = join(DATA_DIR, 'media', network, folder)
+  const file = `${id.replace(/[^\w.-]/g, '_').slice(0, 80)}.jpg`
+  const local = `/media/${network}/${folder ? `${folder}/` : ''}${file}`
+  if (existsSync(join(dir, file))) return local
   try {
-    const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0' } })
+    const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0' }, credentials: 'omit' })
     if (!r.ok) return null
-    const dir = join(DATA_DIR, 'media', network)
     mkdirSync(dir, { recursive: true })
-    const file = `${id.replace(/[^\w-]/g, '')}.jpg`
     writeFileSync(join(dir, file), Buffer.from(await r.arrayBuffer()))
-    return `/media/${network}/${file}`
+    return local
   } catch {
     return null
   }
@@ -131,7 +143,11 @@ async function execute(db: DB, runId: number, scope: RunScope) {
         }
         const posts = await collectors[p.network].collect(page, p, opt)
         for (const cp of posts) {
-          cp.thumb_url = await saveThumb(p.network, cp.ext_id, cp.thumb_url)
+          cp.thumb_url = await saveImage(p.network, '', cp.ext_id, cp.thumb_url)
+          for (const c of cp.comments) {
+            c.author_avatar = await saveImage(p.network, 'people', c.author, c.author_avatar)
+            c.media_url = await saveImage(p.network, 'comments', c.ext_id, c.media_url)
+          }
           const { post, newComments } = store.savePost(db, p, cp)
           touched.push({ postId: post.id, brand: brand.name })
           if (newComments) log(`  ${newComments} new comments on ${post.url}`)

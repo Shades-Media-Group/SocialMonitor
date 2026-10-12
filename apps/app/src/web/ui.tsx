@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact'
-import { useEffect, useRef, useState } from 'preact/hooks'
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { IconName } from 'shades-gradient'
 import { renderIcon } from 'shades-gradient'
 import { MARK, WORDMARK } from './brand.ts'
@@ -91,6 +91,11 @@ export const fmt = (n: number | null | undefined) => (n == null ? '–' : nf.for
 /** 12.4K, for figures where the exact count doesn't matter. */
 export const short = (n: number | null | undefined) =>
   n == null ? '–' : n < 10000 ? nf.format(n) : compact.format(n)
+/** The time between two moments: "3 hours", "2 days". */
+export function span(from: string, to: string) {
+  const h = Math.max(1, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 3600000))
+  return h < 48 ? count(h, 'hour') : count(Math.round(h / 24), 'day')
+}
 export const pctf = (part: number, whole: number) =>
   whole ? `${Math.round((part / whole) * 100)}%` : '–'
 export const when = (iso: string | null | undefined) =>
@@ -384,5 +389,57 @@ export function Modal({
       </button>
       {children}
     </dialog>
+  )
+}
+
+/**
+ * A box that reaches down to 10px above the bottom of the window and scrolls inside, with a
+ * scrollbar that stays visible and a fade on the edge where more is hidden.
+ */
+export function Scroller({
+  head,
+  children,
+}: {
+  head?: ComponentChildren
+  children: ComponentChildren
+}) {
+  const box = useRef<HTMLElement>(null)
+  const list = useRef<HTMLDivElement>(null)
+  const [edge, setEdge] = useState({ top: false, bottom: false })
+  const check = () => {
+    const l = list.current
+    if (!l) return
+    const top = l.scrollTop > 2
+    const bottom = l.scrollTop + l.clientHeight < l.scrollHeight - 2
+    setEdge((e) => (e.top === top && e.bottom === bottom ? e : { top, bottom }))
+  }
+  useLayoutEffect(() => {
+    const fit = () => {
+      const b = box.current
+      if (!b) return
+      const top = b.getBoundingClientRect().top + scrollY
+      b.style.height = `${Math.max(360, innerHeight - top - 10)}px`
+      check()
+    }
+    fit()
+    addEventListener('resize', fit)
+    const watch = new ResizeObserver(check)
+    if (list.current?.firstElementChild) watch.observe(list.current.firstElementChild)
+    return () => {
+      removeEventListener('resize', fit)
+      watch.disconnect()
+    }
+  }, [])
+  return (
+    <section ref={box} class="sm-box sm-box--list sm-scrollbox">
+      {head}
+      <div
+        class={`sm-scrollbox__fade${edge.top ? ' is-top' : ''}${edge.bottom ? ' is-bottom' : ''}`}
+      >
+        <div ref={list} class="sm-scrollbox__list" onScroll={check}>
+          {children}
+        </div>
+      </div>
+    </section>
   )
 }

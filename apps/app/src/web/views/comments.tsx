@@ -1,9 +1,23 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
+import type { IconName } from 'shades-gradient'
 import type { BrandView } from '../app.tsx'
 import type { BrandRow, CommentRow, PostRow } from '../api.ts'
 import { api } from '../api.ts'
-import { Icon, Empty, Menu, NetworkMark, Segmented, ago, count } from '../ui.tsx'
+import {
+  Icon,
+  Empty,
+  Menu,
+  NETWORK_NAME,
+  NetworkMark,
+  Scroller,
+  Segmented,
+  ago,
+  count,
+  fmt,
+  span,
+  when,
+} from '../ui.tsx'
 import { lang, t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
 import { JsonPanel } from '../json.tsx'
@@ -35,7 +49,39 @@ const mood = (c: CommentRow, own: boolean) =>
           ? 'ask'
           : 'plain'
 
-/** The small tags that sit on the bubble's lower edge: what kind, how it was rated, the answer. */
+/** Each kind of comment has its own icon, so it reads before the word does. */
+const KIND_ICON: Record<string, IconName> = {
+  complaint: 'warning',
+  question: 'help',
+  suggestion: 'bolt',
+  praise: 'favorite',
+  neutral: 'chat',
+  spam: 'visibilityOff',
+}
+
+function Chip({
+  kind,
+  icon,
+  title,
+  children,
+}: {
+  kind: string
+  icon: IconName
+  title?: string
+  children: ComponentChildren
+}) {
+  return (
+    <span class={`sm-word sm-word--${kind}`} title={title}>
+      <Icon name={icon} size={12} />
+      {children}
+    </span>
+  )
+}
+
+/**
+ * Under the bubble, three questions answered in order: what kind of comment it is, how it
+ * feels, and whether it still needs an answer. The AI's one-line reading sits on its own line.
+ */
 function Tags({
   c,
   answered,
@@ -45,27 +91,59 @@ function Tags({
   answered: boolean
   children?: ComponentChildren
 }) {
+  // The mood only adds something when the kind doesn't already say it.
+  const mood =
+    c.sentiment === 'negative' && c.label !== 'complaint'
+      ? 'negative'
+      : c.sentiment === 'positive' && c.label !== 'praise'
+        ? 'positive'
+        : null
   return (
-    <span class="sm-b__tags">
-      {c.label && LABELS[c.label] && (
-        <span class={`sm-word sm-word--${c.label}`}>{LABELS[c.label]!.name}</span>
-      )}
-      {c.sentiment === 'negative' && (
-        <span class="sm-word sm-word--complaint">{t('Negative')}</span>
-      )}
-      {c.sentiment === 'positive' && <span class="sm-word sm-word--praise">{t('Positive')}</span>}
-      {answered ? (
-        <span class="sm-word sm-word--done">{t('Answered')}</span>
-      ) : c.needs_reply === 1 && c.reply_status === 'open' ? (
-        <span class="sm-word sm-word--wait">{t('To answer')}</span>
-      ) : null}
+    <div class="sm-b__foot">
+      <span class="sm-b__tags">
+        {c.label && LABELS[c.label] && (
+          <Chip kind={c.label} icon={KIND_ICON[c.label] ?? 'chat'}>
+            {LABELS[c.label]!.name}
+          </Chip>
+        )}
+        {mood === 'negative' && (
+          <Chip kind="complaint" icon="arrowDown">
+            {t('Negative')}
+          </Chip>
+        )}
+        {mood === 'positive' && (
+          <Chip kind="praise" icon="arrowUp">
+            {t('Positive')}
+          </Chip>
+        )}
+        {c.answered_by === 'brand' ? (
+          <Chip kind="done" icon="check" title={when(c.answered_at)}>
+            {t('Answered on the network')}
+            {c.answered_at &&
+              c.posted_at &&
+              ` · ${t('{time} later', { time: span(c.posted_at, c.answered_at) })}`}
+          </Chip>
+        ) : answered ? (
+          <Chip kind="done" icon="check">
+            {t('Answered')}
+          </Chip>
+        ) : c.overdue ? (
+          <Chip kind="late" icon="schedule">
+            {t('Overdue')}
+          </Chip>
+        ) : c.needs_reply === 1 && c.reply_status === 'open' ? (
+          <Chip kind="wait" icon="schedule">
+            {t('To answer')}
+          </Chip>
+        ) : null}
+        {children}
+      </span>
       {c.reason && (
-        <span class="sm-word sm-word--note" title={t('What the AI understood')}>
-          {c.reason}
-        </span>
+        <p class="sm-b__note">
+          <b>{t('AI')}</b> {c.reason}
+        </p>
       )}
-      {children}
-    </span>
+    </div>
   )
 }
 
@@ -133,6 +211,15 @@ export function CommentList({
     const brand = brands.find((b) => b.id === c.brand_id)
     const own = handles.get(c.brand_id)?.includes(c.author.toLowerCase())
     const edit = brand?.my_role === 'admin'
+    // The avatar and name open the person's profile on the network, in a new tab.
+    const Face = c.author_url ? 'a' : 'span'
+    const profile = c.author_url ? { href: c.author_url, target: '_blank', rel: 'noreferrer' } : {}
+    const profileName = t('Open {name} on {network}', {
+      name: c.author,
+      network: NETWORK_NAME[c.network],
+    })
+    // Older updates stored a placeholder where a sticker or picture had no words.
+    const text = c.text.trim() === '[sticker or picture]' ? '' : c.text.trim()
     const items = [
       ...(edit && c.needs_reply === 1 && c.reply_status === 'open' && !answeredBy(c)
         ? [{ label: t('Answered'), onSelect: () => mark(c, 'done') }]
@@ -160,25 +247,48 @@ export function CommentList({
     ]
     return (
       <article class={`sm-b sm-b--${mood(c, !!own)}${reply ? ' sm-b--reply' : ''}`}>
-        <span class={`sm-b__avatar sm-face--${own ? 'own' : hue(c.author)}`} aria-hidden="true">
-          {initials(c.author)}
+        <Face
+          class={`sm-b__avatar sm-face--${own ? 'own' : hue(c.author)}`}
+          {...profile}
+          aria-label={profile.href ? profileName : undefined}
+        >
+          {c.author_avatar ? (
+            <img src={c.author_avatar} alt="" loading="lazy" />
+          ) : (
+            initials(c.author)
+          )}
           <span class="sm-b__net">
             <NetworkMark network={c.network} size={10} />
           </span>
-        </span>
+        </Face>
         <div class="sm-c__body sm-b__col">
           <div class="sm-b__bubble">
-            <header class="sm-b__meta">
-              <b>{own ? `${brand?.name ?? c.author}` : c.author}</b>
-              {own && <span class="sm-b__own">{t('replied')}</span>}
-              <span>{ago(c.posted_at)}</span>
-              {c.likes ? (
-                <span class="sm-b__likes g-num">
-                  <Icon name="favorite" size={11} /> {c.likes}
-                </span>
-              ) : null}
+            <header class="sm-b__who">
+              <Face class="sm-b__name" {...profile}>
+                {own ? (brand?.name ?? c.author) : c.author}
+              </Face>
+              {own && <span class="sm-b__brand">{t('Brand')}</span>}
             </header>
-            <p class="sm-b__text">{c.text}</p>
+            {text ? (
+              <p class="sm-b__text">{text}</p>
+            ) : (
+              !c.media_url && (
+                <p class="sm-b__text sm-b__text--none">{t('Sent a sticker or a picture')}</p>
+              )
+            )}
+            {c.media_url && (
+              <a class="sm-b__media" href={c.media_url} target="_blank" rel="noreferrer">
+                <img src={c.media_url} alt={t('Picture in the comment')} loading="lazy" />
+              </a>
+            )}
+          </div>
+          <div class="sm-b__line">
+            <span title={when(c.posted_at)}>{ago(c.posted_at)}</span>
+            {c.likes ? (
+              <span class="sm-b__likes g-num">
+                <Icon name="favorite" size={11} /> {fmt(c.likes)}
+              </span>
+            ) : null}
           </div>
           {!own && (
             <Tags c={c} answered={answeredBy(c)}>
@@ -248,7 +358,9 @@ export function CommentList({
       {roots.map((c) => (
         <li>
           {one(c)}
-          {(children.get(c.ext_id) ?? []).map((r) => one(r, true))}
+          {children.has(c.ext_id) && (
+            <div class="sm-replies">{children.get(c.ext_id)!.map((r) => one(r, true))}</div>
+          )}
         </li>
       ))}
     </ul>
@@ -467,12 +579,15 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
             })}
           </div>
         ) : (
-          <section class="sm-box sm-box--list">
-            <header class="sm-box__head">
-              <h2>{count(rows.filter((c) => !c.parent_ext_id).length, 'comment')}</h2>
-            </header>
+          <Scroller
+            head={
+              <header class="sm-box__head">
+                <h2>{count(rows.filter((c) => !c.parent_ext_id).length, 'comment')}</h2>
+              </header>
+            }
+          >
             <CommentList comments={rows} brands={brands} onChange={() => setTick((x) => x + 1)} />
-          </section>
+          </Scroller>
         )
       ) : (
         <Empty title={t('No comments match.')}>

@@ -2048,9 +2048,6 @@ body:has(.sm-shell) {
   gap: var(--c-gap);
   align-items: start;
 }
-.sm-cal.has-picked {
-  grid-template-columns: minmax(0, 1fr) 300px;
-}
 .sm-cal__main {
   display: grid;
   gap: 10px;
@@ -2200,35 +2197,116 @@ body:has(.sm-shell) {
   border-radius: 3px;
   background: color-mix(in srgb, var(--tone) calc(var(--a) * 100%), var(--c-hover));
 }
-.sm-cal__detail {
-  position: sticky;
-  top: 70px;
-}
-.sm-cal__posts {
+/* A clicked day's details float beside it; the months never reflow. */
+.sm-daypop {
+  position: fixed;
+  z-index: 50;
   display: grid;
-  gap: 6px;
+  gap: 10px;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  max-height: min(520px, calc(100vh - 24px));
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--c-card-line, var(--g-line));
+  border-radius: 10px;
+  background: var(--c-card, var(--g-surface));
+  box-shadow: var(--g-shadow-md);
+}
+.sm-daypop__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sm-daypop__head h2 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 650;
+}
+.sm-daypop__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--blk, #f5f6f8);
+}
+.sm-daypop__stats div {
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.sm-daypop__stats div.is-on {
+  background: var(--c-card, var(--g-surface));
+}
+.sm-daypop__stats dt {
+  overflow: hidden;
+  color: var(--g-text-3);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-daypop__stats dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.sm-daypop__posts {
+  display: grid;
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.sm-cal__posts a {
-  display: flex;
-  gap: 8px;
+.sm-daypop__posts button {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  padding: 6px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
   color: inherit;
-  font-size: 12px;
-  text-decoration: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
-.sm-cal__posts img {
-  flex: none;
-  width: 36px;
-  height: 36px;
+.sm-daypop__posts button:hover {
+  background: var(--blk, #f5f6f8);
+}
+.sm-daypop__posts img,
+.sm-daypop__posts .sm-postcell__blank {
+  width: 44px;
+  height: 44px;
   border-radius: 6px;
   object-fit: cover;
 }
-@media (max-width: 1000px) {
-  .sm-cal.has-picked {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.sm-daypop__post {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.sm-daypop__cap {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.sm-daypop__post small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--g-text-3);
+  font-size: 11.5px;
+}
+.sm-daypop__none {
+  margin: 0;
+  color: var(--g-text-3);
+  font-size: 12.5px;
 }
 
 /* ---------------------------------------------------------------- comments as bubbles */
@@ -2705,52 +2783,182 @@ body:has(.sm-shell) {
   align-items: center;
 }
 
-/* Comment meta as words, not pills: the type in its colour, then quiet grey notes. */
+/* Under the bubble: small chips, each with its icon and a soft fill in its own colour, so the
+   kind, the mood and the answer state read at a glance. The AI's reading sits on its own line. */
+.sm-b__foot {
+  display: grid;
+  gap: 3px;
+  margin: 4px 0 0 12px;
+}
 .sm-shell .sm-b__tags {
-  margin: 3px 0 0 12px;
-  gap: 0;
-  font-size: 12px;
+  margin: 0;
+  gap: 4px;
+  font-size: 11.5px;
 }
 .sm-word {
+  --tone: var(--c-text-3);
   display: inline-flex;
   align-items: center;
-  color: var(--c-text-3);
-  font-weight: 500;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 11%, var(--c-card, #fff));
+  color: color-mix(in srgb, var(--tone) 82%, #000);
+  font-weight: 600;
+  white-space: nowrap;
 }
-.sm-word + .sm-word::before {
-  content: '·';
-  margin: 0 6px;
-  color: var(--c-text-3);
-  font-weight: 400;
+.sm-word .g-icon,
+.sm-word svg {
+  flex: none;
 }
 .sm-word--complaint {
-  color: var(--sm-c-complaint);
-  font-weight: 650;
+  --tone: var(--sm-c-complaint);
 }
 .sm-word--praise {
-  color: var(--sm-c-praise);
-  font-weight: 650;
+  --tone: var(--sm-c-praise);
 }
 .sm-word--question {
-  color: var(--sm-c-question);
-  font-weight: 650;
+  --tone: var(--sm-c-question);
 }
 .sm-word--suggestion {
-  color: var(--sm-c-suggestion);
-  font-weight: 650;
+  --tone: var(--sm-c-suggestion);
+}
+.sm-word--neutral,
+.sm-word--spam,
+.sm-word--done {
+  --tone: #5b6270;
+  font-weight: 500;
 }
 .sm-word--wait {
-  color: var(--g-amber-800, #6e5000);
-  font-weight: 650;
+  --tone: var(--g-amber-600, #b07a00);
 }
-.sm-word--done {
-  color: var(--c-text-2);
+/* Past the reply target: the one solid chip, so it is seen first. */
+.sm-word--late {
+  background: var(--sm-c-complaint);
+  color: #fff;
 }
-.sm-word--note {
+.sm-b__note {
+  margin: 0;
   overflow: hidden;
-  max-width: 420px;
+  color: var(--c-text-2);
+  font-size: 12px;
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.sm-b__note b {
+  margin-right: 4px;
+  color: var(--c-text-3);
+  font-size: 10.5px;
+  font-weight: 650;
+}
+
+/* A comment reads like it does in the apps: the photo, then a bubble holding the name and the
+   words, then the time and likes in grey, then the tags. Bubbles stay neutral; the tags carry
+   the mood. The brand's own replies are dark, so they are told apart at once. */
+.sm-shell .sm-b__bubble {
+  max-width: min(100%, 680px);
+  padding: 7px 12px 9px;
+  border-radius: 4px 14px 14px 14px;
+  background: var(--c-card, #fff);
+  box-shadow: none;
+}
+.sm-shell .sm-b--bad .sm-b__bubble,
+.sm-shell .sm-b--good .sm-b__bubble,
+.sm-shell .sm-b--ask .sm-b__bubble {
+  background: var(--c-card, #fff);
+  box-shadow: none;
+}
+.sm-shell .sm-b--own .sm-b__bubble {
+  background: #2a2d33;
+  color: #f4f5f7;
+}
+.sm-b__who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.sm-b__name {
+  overflow: hidden;
+  color: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.sm-b__name:hover {
+  text-decoration: underline;
+}
+.sm-b__brand {
+  padding: 0 5px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.16);
+  font-size: 10.5px;
+  font-weight: 650;
+  line-height: 16px;
+}
+.sm-shell .sm-b__text {
+  margin: 1px 0 0;
+}
+.sm-b__text--none {
+  color: var(--c-text-3);
+  font-style: italic;
+}
+.sm-b__media {
+  display: block;
+  margin-top: 6px;
+}
+.sm-b__media img {
+  display: block;
+  max-width: 160px;
+  max-height: 160px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+.sm-b__line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 3px 0 0 12px;
+  color: var(--c-text-3);
+  font-size: 11.5px;
+}
+.sm-b__line .sm-b__likes {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.sm-b__avatar {
+  overflow: visible;
+  color: inherit;
+  text-decoration: none;
+}
+.sm-b__avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+a.sm-b__avatar:hover img,
+a.sm-b__avatar:hover {
+  filter: brightness(0.92);
+}
+.sm-shell .sm-b__foot {
+  margin-top: 6px;
+}
+/* Replies hang from the comment on a grey thread line that starts under its photo. */
+.sm-replies {
+  display: grid;
+  gap: 10px;
+  margin: 8px 0 0 16px;
+  padding-left: 26px;
+  border-left: 2px solid var(--blk-2, #e3e5ea);
+}
+.sm-shell .sm-replies .sm-b--reply {
+  margin: 0;
 }
 .sm-shell .sm-b__tags .sm-tag--edit,
 .sm-shell .sm-b__tags .sm-menu__trigger--icon {
@@ -2872,8 +3080,12 @@ body:has(.sm-shell) {
   background: var(--c-card);
 }
 .sm-shell .sm-body .sm-b--own .sm-b__bubble {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--blk-2);
+  background: #2a2d33;
+  color: #f4f5f7;
+  box-shadow: none;
+}
+.sm-shell .sm-body .sm-b--own .sm-b__bubble .sm-b__text--none {
+  color: #b9bec8;
 }
 .sm-shell .sm-body .sm-acct__stats {
   border: 0;
@@ -3051,6 +3263,76 @@ body:has(.sm-shell) {
 .sm-shell .sm-body .sm-box--list .sm-thread {
   max-height: 420px;
   overflow-y: auto;
+}
+/* A box that fills the window and scrolls inside: the scrollbar stays visible, and the edge
+   where more is hidden fades into the box's own fill. */
+.sm-shell .sm-body .sm-scrollbox {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 4px;
+}
+.sm-scrollbox__fade {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.sm-scrollbox__fade::before,
+.sm-scrollbox__fade::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  left: 0;
+  z-index: 1;
+  height: 48px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.sm-scrollbox__fade::before {
+  top: 0;
+  background: linear-gradient(var(--blk, #f5f6f8), transparent);
+}
+.sm-scrollbox__fade::after {
+  bottom: 0;
+  background: linear-gradient(transparent, var(--blk, #f5f6f8));
+}
+.sm-scrollbox__fade.is-top::before,
+.sm-scrollbox__fade.is-bottom::after {
+  opacity: 1;
+}
+.sm-scrollbox__list {
+  height: 100%;
+  margin-right: -8px;
+  padding-right: 8px;
+  overflow-y: scroll;
+  scrollbar-color: #b9bec8 transparent;
+}
+.sm-scrollbox__list::-webkit-scrollbar {
+  width: 8px;
+}
+.sm-scrollbox__list::-webkit-scrollbar-track {
+  border-radius: 8px;
+  background: var(--blk-2, #eceef2);
+}
+.sm-scrollbox__list::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: #b9bec8;
+}
+.sm-scrollbox__list::-webkit-scrollbar-thumb:hover {
+  background: #8f95a1;
+}
+.sm-shell .sm-body .sm-scrollbox .sm-thread {
+  max-height: none;
+  overflow: visible;
+}
+@media (max-width: 720px) {
+  .sm-shell .sm-body .sm-scrollbox {
+    height: auto !important;
+  }
+  .sm-scrollbox__list {
+    overflow: visible;
+  }
 }
 @media (max-width: 1280px) {
   .sm-ga__cards {

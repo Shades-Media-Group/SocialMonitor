@@ -1,7 +1,16 @@
 import type { Page } from 'playwright'
 import type { CollectedComment, CollectedPost, Profile } from '../types.ts'
 import type { CollectOptions, Collector } from './index.ts'
-import { Challenge, capture, findAll, isoFromUnix, num, pause, readScroll } from './browser.ts'
+import {
+  Challenge,
+  imageIn,
+  capture,
+  findAll,
+  isoFromUnix,
+  num,
+  pause,
+  readScroll,
+} from './browser.ts'
 
 interface Item {
   id: string
@@ -18,7 +27,9 @@ interface RawComment {
   create_time?: number
   digg_count?: number
   reply_id?: string
-  user?: { unique_id?: string; nickname?: string }
+  user?: { unique_id?: string; nickname?: string; avatar_thumb?: unknown }
+  image_list?: unknown
+  sticker?: unknown
 }
 
 async function checkWall(page: Page) {
@@ -141,6 +152,9 @@ async function readComments(
       text: c.text,
       likes: num(c.digg_count),
       posted_at: isoFromUnix(c.create_time),
+      author_avatar: imageIn(c.user?.avatar_thumb, /url/),
+      author_url: c.user?.unique_id ? `https://www.tiktok.com/@${c.user.unique_id}` : null,
+      media_url: imageIn({ image_list: c.image_list, sticker: c.sticker }, /url/),
     })
   }
   return [...seen.values()]

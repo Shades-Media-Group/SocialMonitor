@@ -480,6 +480,18 @@ export const ro: Dict = {
     Shares: 'Distribuiri',
     'To look at': 'De verificat',
     'Comments saved': 'Comentarii salvate',
+    'Reply target': 'Țintă de răspuns',
+    'Hours a comment may wait for an answer. Older ones are marked overdue.':
+      'Câte ore poate aștepta un comentariu un răspuns. Cele mai vechi sunt marcate ca întârziate.',
+    'No posts this day.': 'Nicio postare în această zi.',
+    'Answered on the network': 'Răspuns pe rețea',
+    '{time} later': '{time} mai târziu',
+    Overdue: 'Întârziat',
+    'The reply target is between 1 hour and 30 days.':
+      'Ținta de răspuns este între 1 oră și 30 de zile.',
+    'Sent a sticker or a picture': 'A trimis un sticker sau o imagine',
+    'Picture in the comment': 'Imagine din comentariu',
+    'Open {name} on {network}': 'Deschide {name} pe {network}',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

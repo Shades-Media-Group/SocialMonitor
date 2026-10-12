@@ -481,6 +481,18 @@ export const fr: Dict = {
     Shares: 'Partages',
     'To look at': 'À examiner',
     'Comments saved': 'Commentaires enregistrés',
+    'Reply target': 'Délai de réponse',
+    'Hours a comment may wait for an answer. Older ones are marked overdue.':
+      'Heures pendant lesquelles un commentaire peut attendre une réponse. Au-delà, il est marqué en retard.',
+    'No posts this day.': 'Aucune publication ce jour-là.',
+    'Answered on the network': 'Répondu sur le réseau',
+    '{time} later': '{time} plus tard',
+    Overdue: 'En retard',
+    'The reply target is between 1 hour and 30 days.':
+      'Le délai de réponse va de 1 heure à 30 jours.',
+    'Sent a sticker or a picture': 'A envoyé un sticker ou une image',
+    'Picture in the comment': 'Image du commentaire',
+    'Open {name} on {network}': 'Ouvrir {name} sur {network}',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

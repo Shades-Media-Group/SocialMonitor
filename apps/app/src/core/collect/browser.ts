@@ -155,6 +155,25 @@ export async function capture<T = unknown>(
 }
 
 /** Every object in a JSON tree that passes `test`. Network payloads change shape often; shapes outlive paths. */
+const IMAGE = /^https:\/\/[^\s"]+$/
+/** The first image address found under the given keys, at any depth (lists of sizes included). */
+export function imageIn(o: unknown, keys: RegExp): string | null {
+  let found: string | null = null
+  const walk = (v: unknown, hit: boolean, depth: number) => {
+    if (found || !v || depth > 6) return
+    if (typeof v === 'string') {
+      if (hit && IMAGE.test(v)) found = v
+      return
+    }
+    if (typeof v !== 'object') return
+    if (Array.isArray(v)) return v.forEach((x) => walk(x, hit, depth + 1))
+    for (const [k, x] of Object.entries(v as Record<string, unknown>))
+      walk(x, hit || keys.test(k), depth + 1)
+  }
+  walk(o, false, 0)
+  return found
+}
+
 export function findAll<T>(root: unknown, test: (o: Record<string, unknown>) => boolean): T[] {
   const out: T[] = []
   const seen = new Set<unknown>()
