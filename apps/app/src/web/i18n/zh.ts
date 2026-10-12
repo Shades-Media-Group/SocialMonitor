@@ -533,6 +533,8 @@ export const zh: Dict = {
     'Save the list': '保存列表',
     'Brand report': '品牌报告',
     Prepared: '生成日期',
+    'Negative comments report…': '负面评论报告…',
+    'TikTok sent nothing back': 'TikTok 没有返回内容',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

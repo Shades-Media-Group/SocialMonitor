@@ -556,6 +556,8 @@ export const fr: Dict = {
     'Save the list': 'Enregistrer la liste',
     'Brand report': 'Rapport de marque',
     Prepared: 'Établi le',
+    'Negative comments report…': 'Rapport des commentaires négatifs…',
+    'TikTok sent nothing back': 'TikTok n’a rien renvoyé',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

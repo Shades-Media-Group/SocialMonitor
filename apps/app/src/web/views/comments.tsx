@@ -564,12 +564,18 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
           ]}
         />
         <span class="sm-toolbar__end">
-          <button class="g-btn g-btn--sm" type="button" onClick={() => setBadOpen(true)}>
-            <Icon name="warning" size={14} /> {t('Negative comments report')}
-          </button>
-          <a class="sm-textbtn" href={`/api/comments.csv?${qs}`} download>
-            {t('Download CSV')}
-          </a>
+          <Menu
+            label={t('Reports')}
+            items={[
+              { label: t('Negative comments report…'), onSelect: () => setBadOpen(true) },
+              {
+                label: t('Download CSV'),
+                onSelect: () => (location.href = `/api/comments.csv?${qs}`),
+              },
+            ]}
+          >
+            <Icon name="download" size={14} /> {t('Reports')}
+          </Menu>
         </span>
       </div>
 

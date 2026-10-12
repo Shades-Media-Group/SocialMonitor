@@ -554,6 +554,8 @@ export const ru: Dict = {
     'Save the list': 'Сохранить список',
     'Brand report': 'Отчёт по бренду',
     Prepared: 'Подготовлен',
+    'Negative comments report…': 'Отчёт о негативных комментариях…',
+    'TikTok sent nothing back': 'TikTok ничего не вернул',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

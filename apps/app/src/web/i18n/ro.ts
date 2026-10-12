@@ -556,6 +556,8 @@ export const ro: Dict = {
     'Save the list': 'Salvează lista',
     'Brand report': 'Raportul brandului',
     Prepared: 'Pregătit',
+    'Negative comments report…': 'Raportul comentariilor negative…',
+    'TikTok sent nothing back': 'TikTok nu a trimis nimic',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',
