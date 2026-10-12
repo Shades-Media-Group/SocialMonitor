@@ -18,7 +18,8 @@ const PLACEHOLDER: Record<Network, string> = {
  * What the brand is, where it posts, and the kinds of positive and negative comments it gets.
  * The field of work and the description also go to the AI, so it sorts with context.
  */
-export function About({ brand, mode, reload, notify }: BrandView) {
+export function About({ brand, mode, reload, notify, me }: BrandView) {
+  const edit = brand.my_role === 'admin'
   const linksOf = () =>
     Object.fromEntries(
       NETS.map((n) => [n, brand.profiles.find((p) => p.network === n)?.url ?? '']),
@@ -144,142 +145,148 @@ export function About({ brand, mode, reload, notify }: BrandView) {
 
   return (
     <form class="sm-about" onSubmit={save}>
-      <section>
-        <h2>The brand</h2>
-        <Row label="Name">
-          <input class="g-input" required value={f.name} onInput={set('name')} />
-        </Row>
-        <Row
-          label="Field of work"
-          hint="The AI reads it, so a shop's “out of stock again” is understood as a complaint."
-        >
-          <input
-            class="g-input"
-            value={f.industry}
-            placeholder="Retail, banking, hospitality…"
-            onInput={set('industry')}
-          />
-        </Row>
-        <Row label="Website">
-          <input
-            class="g-input"
-            type="url"
-            value={f.website}
-            placeholder="https://"
-            onInput={set('website')}
-          />
-        </Row>
-        <Row
-          label="Description"
-          hint="What it sells and to whom. Two or three sentences are enough."
-        >
-          <textarea
-            class="g-input sm-textarea"
-            rows={3}
-            value={f.description}
-            onInput={set('description')}
-          />
-        </Row>
-        <Row
-          label="Notes"
-          hint="Anything else worth keeping: products, campaigns, people to tell. Only you see it."
-        >
-          <textarea class="g-input sm-textarea" rows={3} value={f.notes} onInput={set('notes')} />
-        </Row>
-      </section>
-
-      <section>
-        <h2>Networks</h2>
-        {NETS.map((n) => (
-          <Row label={NETWORK_NAME[n]}>
+      {!edit && <p class="sm-quiet">You can read this brand. Its admins can change it.</p>}
+      <fieldset class="sm-fieldset" disabled={!edit}>
+        <section>
+          <h2>The brand</h2>
+          <Row label="Name">
+            <input class="g-input" required value={f.name} onInput={set('name')} />
+          </Row>
+          <Row
+            label="Field of work"
+            hint="The AI reads it, so a shop's “out of stock again” is understood as a complaint."
+          >
+            <input
+              class="g-input"
+              value={f.industry}
+              placeholder="Retail, banking, hospitality…"
+              onInput={set('industry')}
+            />
+          </Row>
+          <Row label="Website">
             <input
               class="g-input"
               type="url"
-              placeholder={PLACEHOLDER[n]}
-              value={links[n]}
-              onInput={(e) => setLinks({ ...links, [n]: (e.target as HTMLInputElement).value })}
+              value={f.website}
+              placeholder="https://"
+              onInput={set('website')}
             />
           </Row>
-        ))}
-      </section>
+          <Row
+            label="Description"
+            hint="What it sells and to whom. Two or three sentences are enough."
+          >
+            <textarea
+              class="g-input sm-textarea"
+              rows={3}
+              value={f.description}
+              onInput={set('description')}
+            />
+          </Row>
+          <Row
+            label="Notes"
+            hint="Anything else worth keeping: products, campaigns, people to tell. Only you see it."
+          >
+            <textarea class="g-input sm-textarea" rows={3} value={f.notes} onInput={set('notes')} />
+          </Row>
+        </section>
 
-      <section>
-        <div class="sm-section-head">
-          <h2>Kinds of comments</h2>
-          {Object.keys(templates).length > 0 && (
-            <label class="sm-inline-label">
-              <span>Start from</span>
-              <select
-                class="g-select sm-select-sm"
-                value=""
-                onChange={(e) => {
-                  const t = templates[(e.target as HTMLSelectElement).value]
-                  if (t) setCats(t.categories)
+        <section>
+          <h2>Networks</h2>
+          {NETS.map((n) => (
+            <Row label={NETWORK_NAME[n]}>
+              <input
+                class="g-input"
+                type="url"
+                placeholder={PLACEHOLDER[n]}
+                value={links[n]}
+                onInput={(e) => setLinks({ ...links, [n]: (e.target as HTMLInputElement).value })}
+              />
+            </Row>
+          ))}
+        </section>
+
+        <section>
+          <div class="sm-section-head">
+            <h2>Kinds of comments</h2>
+            {Object.keys(templates).length > 0 && (
+              <label class="sm-inline-label">
+                <span>Start from</span>
+                <select
+                  class="g-select sm-select-sm"
+                  value=""
+                  onChange={(e) => {
+                    const t = templates[(e.target as HTMLSelectElement).value]
+                    if (t) setCats(t.categories)
+                  }}
+                >
+                  <option value="">A template…</option>
+                  {Object.entries(templates).map(([k, t]) => (
+                    <option value={k}>{t.name}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
+          <p class="sm-quiet">
+            Comments are rated positive or negative, then given one of these kinds, or neutral when
+            they count neither way, by you or by Claude.
+          </p>
+          <div class="sm-kinds-grid">
+            {kindList('negative')}
+            {kindList('positive')}
+          </div>
+        </section>
+      </fieldset>
+      {error && <p class="g-error">{error}</p>}
+      {edit && (
+        <div class="sm-savebar">
+          <button class="g-btn g-btn--primary" type="submit">
+            Save
+          </button>
+          <span class="sm-quiet">Changes apply to new sorting and to Claude right away.</span>
+        </div>
+      )}
+
+      {me.super && (
+        <section class="sm-danger-zone">
+          <h2>Delete {brand.name}</h2>
+          <p class="sm-quiet">
+            Its posts, comments, reports and schedules go too. Export first if you may need them.
+          </p>
+          {confirm ? (
+            <div class="sm-inline">
+              <button
+                class="g-btn g-btn--sm sm-danger"
+                type="button"
+                onClick={async () => {
+                  await api.del(`/api/brands/${brand.id}`)
+                  await reload()
+                  notify(`${brand.name} and everything kept for it are deleted.`)
+                  location.hash = '#/'
                 }}
               >
-                <option value="">A template…</option>
-                {Object.entries(templates).map(([k, t]) => (
-                  <option value={k}>{t.name}</option>
-                ))}
-              </select>
-            </label>
-          )}
-        </div>
-        <p class="sm-quiet">
-          Comments are rated positive or negative, then given one of these kinds, or neutral when
-          they count neither way, by you or by Claude.
-        </p>
-        <div class="sm-kinds-grid">
-          {kindList('negative')}
-          {kindList('positive')}
-        </div>
-      </section>
-
-      {error && <p class="g-error">{error}</p>}
-      <div class="sm-savebar">
-        <button class="g-btn g-btn--primary" type="submit">
-          Save
-        </button>
-        <span class="sm-quiet">Changes apply to new sorting and to Claude right away.</span>
-      </div>
-
-      <section class="sm-danger-zone">
-        <h2>Delete {brand.name}</h2>
-        <p class="sm-quiet">
-          Its posts, comments, reports and schedules go too. Export first if you may need them.
-        </p>
-        {confirm ? (
-          <div class="sm-inline">
-            <button
-              class="g-btn g-btn--sm sm-danger"
-              type="button"
-              onClick={async () => {
-                await api.del(`/api/brands/${brand.id}`)
-                await reload()
-                notify(`${brand.name} and everything kept for it are deleted.`)
-                location.hash = '#/'
-              }}
-            >
-              Delete everything
-            </button>
+                Delete everything
+              </button>
+              <button
+                class="g-btn g-btn--ghost g-btn--sm"
+                type="button"
+                onClick={() => setConfirm(false)}
+              >
+                Keep it
+              </button>
+            </div>
+          ) : (
             <button
               class="g-btn g-btn--ghost g-btn--sm"
               type="button"
-              onClick={() => setConfirm(false)}
+              onClick={() => setConfirm(true)}
             >
-              Keep it
+              Delete brand
             </button>
-          </div>
-        ) : (
-          <button
-            class="g-btn g-btn--ghost g-btn--sm"
-            type="button"
-            onClick={() => setConfirm(true)}
-          >
-            Delete brand
-          </button>
-        )}
-      </section>
+          )}
+        </section>
+      )}
     </form>
   )
 }

@@ -1545,7 +1545,7 @@ p {
 }
 .sm-axis {
   fill: var(--g-text-3);
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 .sm-hit {
@@ -1700,7 +1700,7 @@ a .sm-hit {
   }
   html,
   body {
-    background: #fff;
+    background: var(--g-ink-0);
   }
   body {
     print-color-adjust: exact;
@@ -1714,4 +1714,101 @@ a .sm-hit {
   .sm-facts--row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Signing in: one narrow column on the paper, the mark, a real heading, labelled fields. */
+.sm-auth {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  width: min(400px, 100% - 2 * var(--sm-gutter));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 14vh 0 48px;
+  box-sizing: border-box;
+}
+.sm-auth h1 {
+  margin: 16px 0 0;
+  font-size: 44px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+.sm-auth__lead {
+  margin: 0;
+  color: var(--g-text-2);
+  font-size: 17px;
+}
+.sm-auth__form {
+  display: grid;
+  gap: 16px;
+  margin-top: 8px;
+}
+.sm-auth__form > .g-btn {
+  justify-self: start;
+}
+.sm-auth__form > .sm-textbtn {
+  justify-self: start;
+}
+.sm-auth__field {
+  display: grid;
+  gap: 6px;
+}
+.sm-auth__field > span {
+  font-size: 14px;
+  font-weight: 600;
+}
+.sm-auth__field > small {
+  color: var(--g-text-3);
+  font-size: 13px;
+}
+.sm-auth__foot {
+  margin-top: 32px;
+  color: var(--g-text-3);
+  font-size: 13px;
+}
+
+/* People */
+.sm-top__link {
+  color: var(--g-text-2);
+  font-size: 14px;
+  text-decoration: none;
+}
+.sm-top__link:hover,
+.sm-top__link[aria-current='page'] {
+  color: var(--g-text);
+}
+.sm-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 9px;
+  color: var(--g-text-2);
+  font-size: 14px;
+}
+.sm-people td {
+  vertical-align: top;
+}
+.sm-people__act {
+  text-align: right;
+}
+.sm-sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.sm-account {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+.sm-account__pw {
+  display: grid;
+  gap: 12px;
+}
+.sm-fieldset {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }

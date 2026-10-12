@@ -1,13 +1,20 @@
 import { chromium } from 'playwright'
+import { SESSION_COOKIE } from './auth.ts'
 
 /**
  * A brand's report as a PDF: the dashboard's own print page, rendered by a headless browser.
  * The page sets data-ready on <body> once its data is in, so the PDF never captures a half-load.
  */
-export async function brandPdf(uiOrigin: string, brandId: number, query: string) {
+/** `session` is a short-lived token for the person asking, so the page loads only what they may see. */
+export async function brandPdf(uiOrigin: string, brandId: number, query: string, session: string) {
   const browser = await chromium.launch()
   try {
     const page = await browser.newPage({ viewport: { width: 1200, height: 1600 } })
+    await page
+      .context()
+      .addCookies([
+        { name: SESSION_COOKIE, value: session, url: uiOrigin, httpOnly: true, sameSite: 'Strict' },
+      ])
     await page.addInitScript(() => {
       try {
         localStorage.setItem('sm-view', 'visual')

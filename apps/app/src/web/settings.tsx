@@ -21,6 +21,7 @@ export function SettingsSheet({
   notify,
   reload,
   mode,
+  me,
 }: AppState & { open: boolean; onClose: () => void }) {
   const [s, setS] = useState<Settings | null>(null)
   const [theme, setTheme] = useState<Theme>(
@@ -35,10 +36,11 @@ export function SettingsSheet({
       .get<Settings>('/api/settings')
       .then(setS)
       .catch(() => setS(null))
-    api
-      .get<Record<string, boolean>>('/api/browser/status')
-      .then(setSigned)
-      .catch(() => setSigned(null))
+    if (me.super)
+      api
+        .get<Record<string, boolean>>('/api/browser/status')
+        .then(setSigned)
+        .catch(() => setSigned(null))
   }, [open])
 
   const chooseTheme = (t: Theme) => {
@@ -102,7 +104,8 @@ export function SettingsSheet({
           ]}
         />
       </Row>
-      {s && (
+      <Account me={me} notify={notify} />
+      {me.super && s && (
         <>
           <Row label="Gap" hint="hours between updates that use a signed-in network">
             <input
@@ -138,62 +141,67 @@ export function SettingsSheet({
           </Row>
         </>
       )}
-      <Row
-        label="Sign in"
-        hint={`${
-          signed && !signed.busy
-            ? `Signed in: ${
-                (['tiktok', 'instagram', 'facebook'] as const)
-                  .filter((n) => signed[n])
-                  .map(
-                    (n) => ({ tiktok: 'TikTok', instagram: 'Instagram', facebook: 'Facebook' })[n],
-                  )
-                  .join(', ') || 'none yet'
-              }. `
-            : ''
-        }Opens SocialMonitor's own Chrome window. Sign in by hand; the app never sees passwords.`}
-      >
-        <button
-          class="g-btn g-btn--sm"
-          type="button"
-          onClick={() =>
-            api
-              .post('/api/browser/sign-in')
-              .then(() => notify('Sign in in the window that opened, then close it.'))
-              .catch((e: Error) => notify(e.message))
-          }
-        >
-          Sign in to networks
-        </button>
-      </Row>
-      <Row label="Saved accounts">
-        <Accounts notify={notify} />
-      </Row>
-      <Row label="Data">
-        <div class="sm-inline">
-          <a class="g-btn g-btn--sm" href="/api/export" download>
-            Export everything
-          </a>
-          <button
-            class="g-btn g-btn--ghost g-btn--sm"
-            type="button"
-            onClick={() => file.current?.click()}
+      {me.super && (
+        <>
+          <Row
+            label="Sign in"
+            hint={`${
+              signed && !signed.busy
+                ? `Signed in: ${
+                    (['tiktok', 'instagram', 'facebook'] as const)
+                      .filter((n) => signed[n])
+                      .map(
+                        (n) =>
+                          ({ tiktok: 'TikTok', instagram: 'Instagram', facebook: 'Facebook' })[n],
+                      )
+                      .join(', ') || 'none yet'
+                  }. `
+                : ''
+            }Opens SocialMonitor's own Chrome window. Sign in by hand; the app never sees passwords.`}
           >
-            Import
-          </button>
-          <input
-            ref={file}
-            type="file"
-            accept="application/json,.json"
-            hidden
-            onChange={(e) => {
-              const f = (e.target as HTMLInputElement).files?.[0]
-              if (f) importFile(f)
-              ;(e.target as HTMLInputElement).value = ''
-            }}
-          />
-        </div>
-      </Row>
+            <button
+              class="g-btn g-btn--sm"
+              type="button"
+              onClick={() =>
+                api
+                  .post('/api/browser/sign-in')
+                  .then(() => notify('Sign in in the window that opened, then close it.'))
+                  .catch((e: Error) => notify(e.message))
+              }
+            >
+              Sign in to networks
+            </button>
+          </Row>
+          <Row label="Saved accounts">
+            <Accounts notify={notify} />
+          </Row>
+          <Row label="Data">
+            <div class="sm-inline">
+              <a class="g-btn g-btn--sm" href="/api/export" download>
+                Export everything
+              </a>
+              <button
+                class="g-btn g-btn--ghost g-btn--sm"
+                type="button"
+                onClick={() => file.current?.click()}
+              >
+                Import
+              </button>
+              <input
+                ref={file}
+                type="file"
+                accept="application/json,.json"
+                hidden
+                onChange={(e) => {
+                  const f = (e.target as HTMLInputElement).files?.[0]
+                  if (f) importFile(f)
+                  ;(e.target as HTMLInputElement).value = ''
+                }}
+              />
+            </div>
+          </Row>
+        </>
+      )}
       <p class="sm-credit">
         SocialMonitor {s?.version ?? ''}. Free and open source. Built by Shades Media Group.{' '}
         <a
@@ -206,5 +214,89 @@ export function SettingsSheet({
         </a>
       </p>
     </Sheet>
+  )
+}
+
+/** The signed-in person: who they are, a new password, and signing out. */
+function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
+  const [pw, setPw] = useState<{ current: string; password: string } | null>(null)
+  const out = (path: string) => () =>
+    api
+      .post(path)
+      .then(() => dispatchEvent(new Event('sm-signed-out')))
+      .catch((e: Error) => notify(e.message))
+  return (
+    <Row label="You" hint={`${me.email}${me.super ? ', super admin' : ''}`}>
+      <div class="sm-account">
+        <b>{me.name || me.username || me.email}</b>
+        {pw ? (
+          <form
+            class="sm-account__pw"
+            onSubmit={async (e) => {
+              e.preventDefault()
+              try {
+                await api.patch('/api/auth/me', pw)
+                setPw(null)
+                notify('Password changed. Other devices are signed out.')
+              } catch (err) {
+                notify((err as Error).message)
+              }
+            }}
+          >
+            <label class="sm-auth__field">
+              <span>Current password</span>
+              <input
+                class="g-input"
+                type="password"
+                required
+                autocomplete="current-password"
+                value={pw.current}
+                onInput={(e) => setPw({ ...pw, current: (e.target as HTMLInputElement).value })}
+              />
+            </label>
+            <label class="sm-auth__field">
+              <span>New password</span>
+              <input
+                class="g-input"
+                type="password"
+                required
+                minLength={10}
+                autocomplete="new-password"
+                value={pw.password}
+                onInput={(e) => setPw({ ...pw, password: (e.target as HTMLInputElement).value })}
+              />
+            </label>
+            <div class="sm-inline">
+              <button class="g-btn g-btn--sm" type="submit">
+                Change password
+              </button>
+              <button
+                class="g-btn g-btn--ghost g-btn--sm"
+                type="button"
+                onClick={() => setPw(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div class="sm-inline">
+            <button class="g-btn g-btn--sm" type="button" onClick={out('/api/auth/logout')}>
+              Sign out
+            </button>
+            <button
+              class="g-btn g-btn--ghost g-btn--sm"
+              type="button"
+              onClick={() => setPw({ current: '', password: '' })}
+            >
+              Change password
+            </button>
+            <button class="sm-textbtn" type="button" onClick={out('/api/auth/logout-everywhere')}>
+              Sign out everywhere
+            </button>
+          </div>
+        )}
+      </div>
+    </Row>
   )
 }

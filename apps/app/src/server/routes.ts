@@ -24,25 +24,54 @@ import { workbook } from '../core/xlsx.ts'
 import { brandPdf } from '../core/pdf.ts'
 import { draftReply, pickEngine, translate } from '../core/analyze.ts'
 import { getSettings } from '../core/settings.ts'
+import type { User } from '../core/auth.ts'
+import { roleFor, signSession, visibleBrands } from '../core/auth.ts'
 
-interface Ctx {
+export class HttpError extends Error {
+  status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+  }
+}
+
+export interface Ctx {
   db: DB
   params: Record<string, string>
   query: URLSearchParams
   body: unknown
   /** The request came from this computer, not through the tunnel. */
   local: boolean
+  /** The signed-in person; null only on public routes. */
+  user: User | null
+  /** Set-Cookie headers to send back. */
+  cookies: string[]
+  /** The request arrived over HTTPS (the tunnel), so cookies are marked Secure. */
+  secure: boolean
 }
+type Signed = Ctx & { user: User }
+/**
+ * Who may call a route: anyone ('public'), anyone signed in ('user'), super admins ('super'),
+ * or a check that throws for everyone else. Every route names one, so nothing is open by default.
+ */
+export type Need = 'public' | 'user' | 'super' | ((c: Signed) => void)
 interface Route {
   method: string
   path: RegExp
+  need: Need
   handle: (c: Ctx) => unknown
 }
 
-const r = (method: string, path: string, handle: Route['handle']): Route => ({
+export const r = (
+  method: string,
+  path: string,
+  need: Need,
+  handle: (c: Signed) => unknown,
+): Route => ({
   method,
   path: new RegExp('^' + path.replace(/:(\w+)/g, '(?<$1>[^/]+)') + '$'),
-  handle,
+  need,
+  handle: handle as Route['handle'],
 })
 const id = (s: string | undefined) => {
   const n = Number(s)
@@ -55,14 +84,78 @@ const label = (s: string | null) =>
   s && (LABELS as readonly string[]).includes(s) ? (s as Label) : undefined
 const b = (c: Ctx) => c.body as Record<string, unknown>
 
+const sees = (c: Signed, brandId: number) => {
+  if (!roleFor(c.db, c.user, brandId))
+    throw new HttpError(403, 'You do not have access to this brand.')
+}
+const runs = (c: Signed, brandId: number) => {
+  if (roleFor(c.db, c.user, brandId) !== 'admin')
+    throw new HttpError(403, "Only this brand's admins can do that.")
+}
+const brandOf = (db: DB, sql: string, key: number) =>
+  (db.prepare(sql).get(key) as { brand_id: number } | undefined)?.brand_id ?? 0
+const commentBrand = (db: DB, commentId: number) =>
+  brandOf(
+    db,
+    'SELECT pr.brand_id FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id WHERE c.id = ?',
+    commentId,
+  )
+const runBrands = (db: DB, runId: number) =>
+  (JSON.parse(store.getRun(db, runId)?.scope ?? '{}') as { brandIds?: number[] }).brandIds ?? []
+/** The brand in the path. */
+const seeBrand = (c: Signed) => sees(c, id(c.params.id))
+const adminBrand = (c: Signed) => runs(c, id(c.params.id))
+/** The brand in ?brand= (or the post in ?post=); only super admins may leave it out. */
+const scoped = (c: Signed) => {
+  const brand = c.query.get('brand')
+  const post = c.query.get('post')
+  if (brand) sees(c, id(brand))
+  if (post)
+    sees(
+      c,
+      brandOf(
+        c.db,
+        'SELECT pr.brand_id FROM posts p JOIN profiles pr ON pr.id = p.profile_id WHERE p.id = ?',
+        id(post),
+      ),
+    )
+  if (!brand && !post && !c.user.super) throw new HttpError(403, 'Choose a brand.')
+}
+const seeComment = (c: Signed) => sees(c, commentBrand(c.db, id(c.params.id)))
+const adminComment = (c: Signed) => runs(c, commentBrand(c.db, id(c.params.id)))
+const seeRun = (c: Signed) => {
+  const ids = runBrands(c.db, id(c.params.id))
+  if (!c.user.super && !ids.length)
+    throw new HttpError(403, 'You do not have access to this update.')
+  for (const brandId of ids) sees(c, brandId)
+}
+const adminSchedule = (c: Signed) =>
+  runs(c, brandOf(c.db, 'SELECT brand_id FROM schedules WHERE id = ?', id(c.params.id)))
+/** Keeps only what the user may see. */
+const visible = <T>(c: Signed, rows: T[], brandOfRow: (row: T) => number | number[]) => {
+  const ids = visibleBrands(c.db, c.user)
+  if (!ids) return rows
+  return rows.filter((row) => {
+    const own = brandOfRow(row)
+    return Array.isArray(own)
+      ? own.length > 0 && own.every((x) => ids.includes(x))
+      : ids.includes(own)
+  })
+}
+
 export const routes: Route[] = [
-  r('GET', '/api/settings', ({ db }) => readSettings(db)),
-  r('PATCH', '/api/settings', (c) => writeSettings(c.db, b(c))),
-  r('GET', '/api/export', ({ db, query }) => ({
-    __download: `socialmonitor-${new Date().toISOString().slice(0, 10)}.json`,
-    data: exportAll(db, query.get('brand') ? id(query.get('brand')!) : undefined),
-  })),
-  r('GET', '/api/comments.csv', ({ db, query }) => {
+  r('GET', '/api/settings', 'user', ({ db }) => readSettings(db)),
+  r('PATCH', '/api/settings', 'super', (c) => writeSettings(c.db, b(c))),
+  r(
+    'GET',
+    '/api/export',
+    (c) => (c.query.get('brand') ? runs(c, id(c.query.get('brand')!)) : c.user.super || runs(c, 0)),
+    ({ db, query }) => ({
+      __download: `socialmonitor-${new Date().toISOString().slice(0, 10)}.json`,
+      data: exportAll(db, query.get('brand') ? id(query.get('brand')!) : undefined),
+    }),
+  ),
+  r('GET', '/api/comments.csv', scoped, ({ db, query }) => {
     const rows = store.listComments(db, {
       brandId: query.get('brand') ? id(query.get('brand')!) : undefined,
       network: net(query.get('network')),
@@ -96,23 +189,23 @@ export const routes: Route[] = [
       data: '\ufeff' + csv,
     }
   }),
-  r('POST', '/api/import', (c) => importAll(c.db, c.body as Dump)),
-  r('GET', '/api/browser/status', async () => signInStatus()),
-  r('GET', '/api/gaps', ({ db }) => gaps(db)),
+  r('POST', '/api/import', 'super', (c) => importAll(c.db, c.body as Dump)),
+  r('GET', '/api/browser/status', 'user', async () => signInStatus()),
+  r('GET', '/api/gaps', 'user', ({ db }) => gaps(db)),
   // Accounts: kept encrypted for the person's own reference. Passwords leave the server only on
   // this computer, one at a time, on an explicit Reveal.
-  r('GET', '/api/accounts', ({ db }) => listAccounts(db)),
-  r('POST', '/api/accounts', (c) => saveAccount(c.db, b(c) as Partial<Account>)),
-  r('DELETE', '/api/accounts/:key', (c) => void deleteAccount(c.db, c.params.key!)),
-  r('POST', '/api/accounts/:key/reveal', (c) => {
+  r('GET', '/api/accounts', 'super', ({ db }) => listAccounts(db)),
+  r('POST', '/api/accounts', 'super', (c) => saveAccount(c.db, b(c) as Partial<Account>)),
+  r('DELETE', '/api/accounts/:key', 'super', (c) => void deleteAccount(c.db, c.params.key!)),
+  r('POST', '/api/accounts/:key/reveal', 'super', (c) => {
     if (!c.local) throw new Error('Passwords are shown only on the computer SocialMonitor runs on.')
     return { password: revealPassword(c.db, c.params.key!) }
   }),
-  r('GET', '/api/remote', (c) => ({
+  r('GET', '/api/remote', 'user', (c) => ({
     local: c.local,
     host: process.env.SOCIALMONITOR_PUBLIC_HOST || null,
   })),
-  r('POST', '/api/browser/sign-in', async (c) => {
+  r('POST', '/api/browser/sign-in', 'super', async (c) => {
     if (!c.local)
       throw new Error(
         'Signing in opens a window on the computer SocialMonitor runs on; do it there.',
@@ -120,19 +213,20 @@ export const routes: Route[] = [
     await openSignInWindow()
   }),
 
-  r('GET', '/api/brands', ({ db }) =>
-    store.listBrands(db).map((brand) => ({
+  r('GET', '/api/brands', 'user', (c) =>
+    visible(c, store.listBrands(c.db), (br) => br.id).map((brand) => ({
+      my_role: roleFor(c.db, c.user, brand.id),
       ...brand,
-      profiles: store.listProfiles(db, brand.id),
-      counts: store.labelCounts(db, brand.id),
+      profiles: store.listProfiles(c.db, brand.id),
+      counts: store.labelCounts(c.db, brand.id),
     })),
   ),
-  r('POST', '/api/brands', (c) => {
+  r('POST', '/api/brands', 'super', (c) => {
     const { name, links, website } = b(c) as { name?: string; links?: string[]; website?: string }
     if (!name?.trim()) throw new Error('Name the brand.')
     return store.addBrand(c.db, name, links ?? [], website ?? null)
   }),
-  r('PATCH', '/api/brands/:id', (c) => {
+  r('PATCH', '/api/brands/:id', adminBrand, (c) => {
     const x = b(c) as {
       name?: string
       links?: string[]
@@ -146,14 +240,14 @@ export const routes: Route[] = [
     store.updateBrand(c.db, brandId, details)
     for (const link of links ?? []) store.setProfile(c.db, brandId, link)
   }),
-  r('DELETE', '/api/brands/:id', (c) => void store.deleteBrand(c.db, id(c.params.id))),
-  r('DELETE', '/api/brands/:id/profiles/:network', (c) => {
+  r('DELETE', '/api/brands/:id', 'super', (c) => void store.deleteBrand(c.db, id(c.params.id))),
+  r('DELETE', '/api/brands/:id/profiles/:network', adminBrand, (c) => {
     const n = net(c.params.network)
     if (!n) throw new Error('Unknown network.')
     store.removeProfile(c.db, id(c.params.id), n)
   }),
 
-  r('GET', '/api/posts', ({ db, query }) =>
+  r('GET', '/api/posts', scoped, ({ db, query }) =>
     store.listPosts(db, {
       brandId: query.get('brand') ? id(query.get('brand')!) : undefined,
       network: net(query.get('network')),
@@ -162,7 +256,7 @@ export const routes: Route[] = [
       offset: Number(query.get('offset') ?? 0),
     }),
   ),
-  r('GET', '/api/comments', ({ db, query }) =>
+  r('GET', '/api/comments', scoped, ({ db, query }) =>
     store.listComments(db, {
       brandId: query.get('brand') ? id(query.get('brand')!) : undefined,
       postId: query.get('post') ? id(query.get('post')!) : undefined,
@@ -180,40 +274,47 @@ export const routes: Route[] = [
     }),
   ),
 
-  r('GET', '/api/templates', () => TEMPLATES),
-  r('PUT', '/api/brands/:id/categories', (c) => {
+  r('GET', '/api/templates', 'user', () => TEMPLATES),
+  r('PUT', '/api/brands/:id/categories', adminBrand, (c) => {
     const list = validCategories((b(c) as { categories?: unknown }).categories)
     store.setCategories(c.db, id(c.params.id), list)
     return list
   }),
-  r('GET', '/api/sentiment', ({ db, query }) =>
+  r('GET', '/api/sentiment', scoped, ({ db, query }) =>
     store.sentimentCounts(db, query.get('brand') ? id(query.get('brand')!) : undefined),
   ),
   // Sets or clears sentiment on one or many comments. `by` is 'ai' when Claude sets it.
-  r('POST', '/api/comments/sentiment', (c) => {
-    const x = b(c) as {
-      ids?: number[]
-      sentiment?: string | null
-      category?: string | null
-      by?: string
-    }
-    const sentiment =
-      (['positive', 'negative', 'neutral'] as const).find((v) => v === x.sentiment) ?? null
-    if (x.sentiment && !sentiment)
-      throw new Error('sentiment is positive, negative, neutral or null.')
-    const ids = (x.ids ?? []).map(Number).filter((n) => Number.isInteger(n) && n > 0)
-    if (!ids.length) throw new Error('Give comment ids.')
-    for (const commentId of ids)
-      store.setSentiment(
-        c.db,
-        commentId,
-        sentiment,
-        x.category ?? null,
-        x.by === 'ai' ? 'ai' : 'you',
-      )
-    return { updated: ids.length }
-  }),
-  r('PATCH', '/api/comments/:id', (c) => {
+  r(
+    'POST',
+    '/api/comments/sentiment',
+    (c) => {
+      for (const n of ((b(c).ids ?? []) as unknown[]).map(Number)) runs(c, commentBrand(c.db, n))
+    },
+    (c) => {
+      const x = b(c) as {
+        ids?: number[]
+        sentiment?: string | null
+        category?: string | null
+        by?: string
+      }
+      const sentiment =
+        (['positive', 'negative', 'neutral'] as const).find((v) => v === x.sentiment) ?? null
+      if (x.sentiment && !sentiment)
+        throw new Error('sentiment is positive, negative, neutral or null.')
+      const ids = (x.ids ?? []).map(Number).filter((n) => Number.isInteger(n) && n > 0)
+      if (!ids.length) throw new Error('Give comment ids.')
+      for (const commentId of ids)
+        store.setSentiment(
+          c.db,
+          commentId,
+          sentiment,
+          x.category ?? null,
+          x.by === 'ai' ? 'ai' : 'you',
+        )
+      return { updated: ids.length }
+    },
+  ),
+  r('PATCH', '/api/comments/:id', adminComment, (c) => {
     const x = b(c) as {
       label?: string
       needs_reply?: boolean
@@ -237,32 +338,43 @@ export const routes: Route[] = [
   }),
   // Posts read somewhere else, by Claude through the user's own browser for example, go into
   // the same tables as an update's. Unsorted comments are sorted by the next update or by sort.
-  r('POST', '/api/ingest', (c) => {
-    const x = b(c) as { brand?: string | number; network?: string; posts?: CollectedPost[] }
-    const brand = store
-      .listBrands(c.db)
-      .find((br) => br.id === Number(x.brand) || br.name === x.brand)
-    if (!brand) throw new Error('No such brand.')
-    const n = net(x.network)
-    const profile = store.listProfiles(c.db, brand.id).find((p) => p.network === n)
-    if (!profile) throw new Error(`${brand.name} has no ${x.network} profile.`)
-    let posts = 0
-    let comments = 0
-    for (const p of x.posts ?? []) {
-      if (!p?.ext_id || !p.url) throw new Error('Every post needs ext_id and url.')
-      const r = store.savePost(c.db, profile, {
-        ...p,
-        comments: (p.comments ?? []).filter((k) => k.ext_id && k.text),
-      })
-      posts++
-      comments += r.newComments
-    }
-    store.markProfile(c.db, profile.id, 'ok', null, true)
-    return { posts, new_comments: comments }
-  }),
-  r('POST', '/api/sort', async ({ db }) => ({ sorted: await sortPending(db) })),
+  r(
+    'POST',
+    '/api/ingest',
+    (c) => {
+      const x = b(c)
+      const brand = store
+        .listBrands(c.db)
+        .find((br) => br.id === Number(x.brand) || br.name === x.brand)
+      runs(c, brand?.id ?? 0)
+    },
+    (c) => {
+      const x = b(c) as { brand?: string | number; network?: string; posts?: CollectedPost[] }
+      const brand = store
+        .listBrands(c.db)
+        .find((br) => br.id === Number(x.brand) || br.name === x.brand)
+      if (!brand) throw new Error('No such brand.')
+      const n = net(x.network)
+      const profile = store.listProfiles(c.db, brand.id).find((p) => p.network === n)
+      if (!profile) throw new Error(`${brand.name} has no ${x.network} profile.`)
+      let posts = 0
+      let comments = 0
+      for (const p of x.posts ?? []) {
+        if (!p?.ext_id || !p.url) throw new Error('Every post needs ext_id and url.')
+        const r = store.savePost(c.db, profile, {
+          ...p,
+          comments: (p.comments ?? []).filter((k) => k.ext_id && k.text),
+        })
+        posts++
+        comments += r.newComments
+      }
+      store.markProfile(c.db, profile.id, 'ok', null, true)
+      return { posts, new_comments: comments }
+    },
+  ),
+  r('POST', '/api/sort', 'super', async ({ db }) => ({ sorted: await sortPending(db) })),
   // One brand at a glance, optionally for one network: what the brand page's overview reads.
-  r('GET', '/api/brands/:id/summary', ({ db, params, query }) => {
+  r('GET', '/api/brands/:id/summary', seeBrand, ({ db, params, query }) => {
     const brandId = id(params.id)
     const brand = store.getBrand(db, brandId)
     if (!brand) throw new Error('No such brand.')
@@ -290,7 +402,7 @@ export const routes: Route[] = [
       ).n,
     }
   }),
-  r('GET', '/api/brands/:id/insights', ({ db, params, query }) => {
+  r('GET', '/api/brands/:id/insights', seeBrand, ({ db, params, query }) => {
     const s = {
       brandId: id(params.id),
       network: net(query.get('network')),
@@ -307,8 +419,10 @@ export const routes: Route[] = [
       reach: reach(posts),
     }
   }),
-  r('GET', '/api/compare', ({ db, query }) => compare(db, Number(query.get('days') ?? 30) || 0)),
-  r('GET', '/api/brands/:id/export.xlsx', ({ db, params, query }) => {
+  r('GET', '/api/compare', 'user', (c) =>
+    compare(c.db, Number(c.query.get('days') ?? 30) || 0, visibleBrands(c.db, c.user)),
+  ),
+  r('GET', '/api/brands/:id/export.xlsx', seeBrand, ({ db, params, query }) => {
     const brand = store.getBrand(db, id(params.id))
     if (!brand) throw new Error('No such brand.')
     const s = {
@@ -402,7 +516,8 @@ export const routes: Route[] = [
       ]),
     }
   }),
-  r('GET', '/api/brands/:id/report.pdf', async ({ db, params, query }) => {
+  r('GET', '/api/brands/:id/report.pdf', seeBrand, async (c) => {
+    const { db, params, query } = c
     const brand = store.getBrand(db, id(params.id))
     if (!brand) throw new Error('No such brand.')
     const ui =
@@ -413,11 +528,11 @@ export const routes: Route[] = [
     return {
       __download: `${brand.name.replace(/[^\w-]+/g, '-')}-report-${new Date().toISOString().slice(0, 10)}.pdf`,
       type: 'application/pdf',
-      data: await brandPdf(ui, brand.id, q.toString()),
+      data: await brandPdf(ui, brand.id, q.toString(), signSession(c.user, 120)),
     }
   }),
   // AI helpers on one comment. The app never posts: a draft is text to copy.
-  r('POST', '/api/comments/:id/draft', async ({ db, params }) => {
+  r('POST', '/api/comments/:id/draft', adminComment, async ({ db, params }) => {
     const engine = pickEngine(getSettings(db))
     if (!engine)
       throw new Error(
@@ -448,7 +563,7 @@ export const routes: Route[] = [
       ),
     }
   }),
-  r('POST', '/api/comments/:id/translate', async ({ db, params }) => {
+  r('POST', '/api/comments/:id/translate', seeComment, async ({ db, params }) => {
     const engine = pickEngine(getSettings(db))
     if (!engine)
       throw new Error(
@@ -463,42 +578,63 @@ export const routes: Route[] = [
     db.prepare('UPDATE comments SET translation = ? WHERE id = ?').run(translation, commentId)
     return { translation }
   }),
-  r('GET', '/api/runs', ({ db, query }) => {
-    const brand = query.get('brand')
-    const runs = store.listRuns(db, 60)
-    return brand
-      ? runs.filter((r) =>
-          (JSON.parse(r.scope) as { brandIds?: number[] }).brandIds?.includes(Number(brand)),
-        )
-      : runs
+  r('GET', '/api/runs', 'user', (c) => {
+    const brand = c.query.get('brand')
+    const list = visible(c, store.listRuns(c.db, 60), (r) => runBrands(c.db, r.id))
+    return brand ? list.filter((r) => runBrands(c.db, r.id).includes(Number(brand))) : list
   }),
-  r('POST', '/api/runs', (c) => {
-    const x = b(c) as { brandIds?: number[]; networks?: string[]; range?: Range; limit?: number }
-    const runId = queueRun(
-      c.db,
-      {
-        brandIds: (x.brandIds ?? []).map(Number).filter(Boolean),
-        networks: (x.networks ?? []).map((n) => net(n)).filter((n): n is Network => !!n),
-        range: x.range === 'all' ? 'all' : 'new',
-        limit: Number(x.limit) || 5,
-      },
-      'manual',
-    )
-    return { id: runId }
-  }),
-  r('GET', '/api/runs/:id/report.md', (c) => ({
+  r(
+    'POST',
+    '/api/runs',
+    (c) => {
+      const ids = ((b(c).brandIds ?? []) as unknown[]).map(Number)
+      if (!ids.length && !c.user.super) throw new HttpError(403, 'Choose a brand.')
+      for (const n of ids) runs(c, n)
+    },
+    (c) => {
+      const x = b(c) as { brandIds?: number[]; networks?: string[]; range?: Range; limit?: number }
+      const runId = queueRun(
+        c.db,
+        {
+          brandIds: (x.brandIds ?? []).map(Number).filter(Boolean),
+          networks: (x.networks ?? []).map((n) => net(n)).filter((n): n is Network => !!n),
+          range: x.range === 'all' ? 'all' : 'new',
+          limit: Number(x.limit) || 5,
+        },
+        'manual',
+      )
+      return { id: runId }
+    },
+  ),
+  r('GET', '/api/runs/:id/report.md', seeRun, (c) => ({
     __download: `socialmonitor-report-${c.params.id}.md`,
     type: 'text/markdown; charset=utf-8',
     data: store.getRun(c.db, id(c.params.id))?.report ?? '',
   })),
-  r('GET', '/api/runs/:id', (c) => store.getRun(c.db, id(c.params.id))),
+  r('GET', '/api/runs/:id', seeRun, (c) => store.getRun(c.db, id(c.params.id))),
 
-  r('GET', '/api/schedules', ({ db }) => store.listSchedules(db)),
-  r('POST', '/api/schedules', (c) =>
-    store.saveSchedule(c.db, b(c) as unknown as store.ScheduleInput),
+  r('GET', '/api/schedules', 'user', (c) =>
+    visible(c, store.listSchedules(c.db), (x) => x.brand_id),
   ),
-  r('PUT', '/api/schedules/:id', (c) =>
-    store.saveSchedule(c.db, b(c) as unknown as store.ScheduleInput, id(c.params.id)),
+  r(
+    'POST',
+    '/api/schedules',
+    (c) => runs(c, Number(b(c).brand_id)),
+    (c) => store.saveSchedule(c.db, b(c) as unknown as store.ScheduleInput),
   ),
-  r('DELETE', '/api/schedules/:id', (c) => void store.deleteSchedule(c.db, id(c.params.id))),
+  r(
+    'PUT',
+    '/api/schedules/:id',
+    (c) => {
+      adminSchedule(c)
+      runs(c, Number(b(c).brand_id))
+    },
+    (c) => store.saveSchedule(c.db, b(c) as unknown as store.ScheduleInput, id(c.params.id)),
+  ),
+  r(
+    'DELETE',
+    '/api/schedules/:id',
+    adminSchedule,
+    (c) => void store.deleteSchedule(c.db, id(c.params.id)),
+  ),
 ]

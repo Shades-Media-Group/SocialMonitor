@@ -90,7 +90,7 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
 
       <nav class="sm-bar" aria-label={`${brand.name} sections`}>
         <div class="sm-bar__tabs">
-          {TABS.map(([t, text]) => (
+          {TABS.filter(([t]) => t !== 'schedules' || brand.my_role === 'admin').map(([t, text]) => (
             <a href={`#/b/${brand.id}/${t}`} aria-current={t === tab ? 'page' : undefined}>
               {text}
             </a>

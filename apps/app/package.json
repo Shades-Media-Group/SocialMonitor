@@ -14,7 +14,11 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
     "fflate": "^0.8.3",
+    "nodemailer": "^7",
     "playwright": "^1.64.0",
     "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^8.0.2"
   }
 }

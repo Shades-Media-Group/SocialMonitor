@@ -4,7 +4,9 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
-import { routes } from './routes.ts'
+import { HttpError, routes } from './routes.ts'
+import { authRoutes } from './auth-routes.ts'
+import { SESSION_COOKIE, readCookie, readSession } from '../core/auth.ts'
 import { seedFromFile } from './seed.ts'
 import { isLocal, publicHost, refuseRemote } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
@@ -19,7 +21,7 @@ try {
 }
 
 const PORT = Number(process.env.SOCIALMONITOR_API_PORT ?? process.env.PORT ?? 4400)
-const HOST = '127.0.0.1' // never reachable from other devices: the dashboard has no login
+const HOST = '127.0.0.1' // never reachable from other devices directly; remote use goes through the tunnel
 const WEB = fileURLToPath(new URL('../../dist', import.meta.url))
 
 const db = openDb()
@@ -37,14 +39,6 @@ const TYPES: Record<string, string> = {
   '.webp': 'image/webp',
   '.woff2': 'font/woff2',
   '.json': 'application/json',
-}
-
-export class HttpError extends Error {
-  status: number
-  constructor(status: number, message: string) {
-    super(message)
-    this.status = status
-  }
 }
 
 async function body(req: IncomingMessage): Promise<unknown> {
@@ -95,6 +89,11 @@ const server = createServer(async (req, res) => {
   // Through a tunnel, only requests Cloudflare Access let in get anything at all.
   const refusal = await refuseRemote(req)
   if (refusal) return send(res, 403, { error: refusal })
+  // Then the person: everything except the app's own files and the sign-in endpoints needs a session.
+  const user = readSession(db, readCookie(req.headers.cookie, SESSION_COOKIE))
+  const needsUser = url.pathname.startsWith('/api/') || url.pathname.startsWith('/media/')
+  if (needsUser && !user && !url.pathname.startsWith('/api/auth/'))
+    return send(res, 401, { error: 'Sign in first.', signin: true })
   // Live updates: open dashboards keep one event stream and refetch when told something changed.
   if (url.pathname === '/api/events') {
     res.writeHead(200, {
@@ -116,18 +115,29 @@ const server = createServer(async (req, res) => {
     return serveStatic(res, url.pathname)
   }
   try {
-    for (const r of routes) {
+    for (const r of [...authRoutes, ...routes]) {
       if (r.method !== req.method) continue
       const m = r.path.exec(url.pathname)
       if (!m) continue
-      const data = await r.handle({
+      const ctx = {
         db,
         params: m.groups ?? {},
         query: url.searchParams,
         body: req.method === 'GET' ? {} : await body(req),
         local: isLocal(req),
-      })
-      if (req.method !== 'GET') changed()
+        user,
+        cookies: [] as string[],
+        secure: !isLocal(req),
+      }
+      if (r.need !== 'public') {
+        if (!user) throw new HttpError(401, 'Sign in first.')
+        if (r.need === 'super' && !user.super)
+          throw new HttpError(403, 'Only super admins can do that.')
+        if (typeof r.need === 'function') r.need({ ...ctx, user })
+      }
+      const data = await r.handle(ctx)
+      if (ctx.cookies.length) res.setHeader('set-cookie', ctx.cookies)
+      if (req.method !== 'GET' && !url.pathname.startsWith('/api/auth/')) changed()
       if (data && typeof data === 'object' && '__download' in data) {
         const d = data as { __download: string; data: unknown; type?: string }
         res.writeHead(200, {

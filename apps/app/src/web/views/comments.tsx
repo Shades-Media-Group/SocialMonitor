@@ -51,6 +51,7 @@ export function CommentList({
   const one = (c: CommentRow, reply = false) => {
     const brand = brands.find((b) => b.id === c.brand_id)
     const own = handles.get(c.brand_id)?.includes(c.author.toLowerCase())
+    const edit = brand?.my_role === 'admin'
     return (
       <article class={`sm-c${reply ? ' sm-c--reply' : ''}${own ? ' sm-c--own' : ''}`}>
         <span class={`sm-c__face sm-face--${own ? 'own' : hue(c.author)}`} aria-hidden="true">
@@ -71,14 +72,17 @@ export function CommentList({
           {c.reason && !own && <p class="sm-c__reason">AI: {c.reason}</p>}
           {!own && (
             <footer class="sm-c__actions">
-              <Rate
-                key={`${c.id}-${c.sentiment}-${c.category}`}
-                comment={c}
-                brand={brand}
-                onChange={onChange}
-              />
+              {edit && (
+                <Rate
+                  key={`${c.id}-${c.sentiment}-${c.category}`}
+                  comment={c}
+                  brand={brand}
+                  onChange={onChange}
+                />
+              )}
               <span class="sm-c__links">
-                {c.needs_reply === 1 &&
+                {edit &&
+                  c.needs_reply === 1 &&
                   (c.reply_status === 'open' ? (
                     <>
                       <button class="sm-textbtn" type="button" onClick={() => mark(c, 'done')}>

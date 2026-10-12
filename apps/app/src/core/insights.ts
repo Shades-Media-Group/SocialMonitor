@@ -150,12 +150,11 @@ export function labelTotals(db: DB, s: Scope) {
   return out
 }
 
-/** One row per brand, side by side, for the comparison on the home page. */
-export function compare(db: DB, days = 30) {
-  const brands = db.prepare('SELECT id, name FROM brands ORDER BY name').all() as {
-    id: number
-    name: string
-  }[]
+/** One row per brand, side by side, for the comparison on the home page. Only `only` when given. */
+export function compare(db: DB, days = 30, only: number[] | null = null) {
+  const brands = (
+    db.prepare('SELECT id, name FROM brands ORDER BY name').all() as { id: number; name: string }[]
+  ).filter((b) => !only || only.includes(b.id))
   const rows = brands.map((b) => {
     const s = { brandId: b.id, days }
     const posts = postEngagement(db, s, 1000)

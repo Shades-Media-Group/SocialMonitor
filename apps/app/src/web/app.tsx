@@ -9,6 +9,9 @@ import { readMode, saveMode } from './json.tsx'
 import { Home } from './home.tsx'
 import { BrandPage } from './brand-page.tsx'
 import { PrintReport } from './print.tsx'
+import type { AuthInfo, Me } from './auth.tsx'
+import { AuthScreen, linkFromHash } from './auth.tsx'
+import { People } from './people.tsx'
 
 export const TABS = [
   ['overview', 'Overview'],
@@ -26,10 +29,12 @@ export type Route =
   | { page: 'new' }
   | { page: 'brand'; brandId: number; tab: Tab }
   | { page: 'print'; brandId: number }
+  | { page: 'people' }
 
 export function readRoute(): Route {
   const [, a, b, c] = location.hash.split('/')
   if (a === 'new') return { page: 'new' }
+  if (a === 'people') return { page: 'people' }
   if (a === 'print' && Number(b?.split('?')[0]) > 0)
     return { page: 'print', brandId: Number(b!.split('?')[0]) }
   if (a === 'b' && Number(b) > 0) {
@@ -64,6 +69,8 @@ export interface AppState {
   openUpdate: (brandId?: number) => void
   notify: (text: string) => void
   mode: ViewMode
+  /** The signed-in person. */
+  me: Me
 }
 
 /** What a brand's tabs receive besides the app state. */
@@ -75,7 +82,33 @@ export interface BrandView extends AppState {
   days: number
 }
 
+/** Signs in first, then shows the dashboard. Any 401 from the server comes back here. */
 export function App() {
+  const [info, setInfo] = useState<AuthInfo | null>(null)
+  const [link, setLink] = useState(linkFromHash)
+  const check = () =>
+    api
+      .get<AuthInfo>('/api/auth/me')
+      .then(setInfo)
+      .catch(() => setInfo({ user: null, setup: false, local: false, mail: false }))
+  useEffect(() => {
+    check()
+    const out = () => check()
+    const onHash = () => setLink(linkFromHash())
+    addEventListener('sm-signed-out', out)
+    addEventListener('hashchange', onHash)
+    return () => {
+      removeEventListener('sm-signed-out', out)
+      removeEventListener('hashchange', onHash)
+    }
+  }, [])
+  if (!info) return null
+  if (!info.user || link)
+    return <AuthScreen info={info} onIn={(user) => setInfo({ ...info, user, setup: false })} />
+  return <Dashboard me={info.user} />
+}
+
+function Dashboard({ me }: { me: Me }) {
   const [brands, setBrands] = useState<BrandRow[]>([])
   const [loaded, setLoaded] = useState(false)
   const [route, setRoute] = useState<Route>(readRoute)
@@ -156,10 +189,16 @@ export function App() {
     reload,
     running,
     version,
-    openUpdate: (brandId) => setUpdate({ open: true, brandId }),
+    openUpdate: (brandId) =>
+      brandId && brands.find((b) => b.id === brandId)?.my_role !== 'admin'
+        ? setToast("Only this brand's admins can run updates.")
+        : setUpdate({ open: true, brandId }),
     notify: setToast,
     mode,
+    me,
   }
+  const canRun = me.super || me.memberships.some((m) => m.role === 'admin')
+  const manages = canRun
 
   if (route.page === 'print') return loaded && brand ? <PrintReport brand={brand} /> : null
 
@@ -201,14 +240,25 @@ export function App() {
             </button>
           ))}
         </div>
-        <button
-          class="g-btn g-btn--primary g-btn--sm"
-          type="button"
-          disabled={!brands.length || !!running}
-          onClick={() => setUpdate({ open: true, brandId: brand?.id })}
-        >
-          Update{brand ? ` ${brand.name}` : ''}
-        </button>
+        {manages && (
+          <a
+            class="sm-top__link"
+            href="#/people"
+            aria-current={route.page === 'people' ? 'page' : undefined}
+          >
+            People
+          </a>
+        )}
+        {canRun && route.page !== 'people' && (!brand || brand.my_role === 'admin') && (
+          <button
+            class="g-btn g-btn--primary g-btn--sm"
+            type="button"
+            disabled={!brands.length || !!running}
+            onClick={() => setUpdate({ open: true, brandId: brand?.id })}
+          >
+            Update{brand ? ` ${brand.name}` : ''}
+          </button>
+        )}
         <button
           class="g-icon-btn"
           type="button"
@@ -219,7 +269,9 @@ export function App() {
         </button>
       </header>
 
-      {!loaded ? null : route.page === 'brand' && brand ? (
+      {!loaded ? null : route.page === 'people' && manages ? (
+        <People {...state} />
+      ) : route.page === 'brand' && brand ? (
         <BrandPage {...state} brand={brand} tab={route.tab} />
       ) : (
         <Home {...state} adding={route.page === 'new'} />

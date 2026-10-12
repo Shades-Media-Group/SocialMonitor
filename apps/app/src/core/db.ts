@@ -98,6 +98,38 @@ CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
+-- People who can open the dashboard. A super admin sees and manages everything; everyone else
+-- sees only the brands they are a member of, as a viewer or as that brand's admin.
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  username TEXT UNIQUE COLLATE NOCASE,
+  name TEXT NOT NULL DEFAULT '',
+  pass_hash TEXT,
+  super INTEGER NOT NULL DEFAULT 0,
+  verified_at TEXT,
+  disabled INTEGER NOT NULL DEFAULT 0,
+  -- Bumped on sign-out everywhere, password change or removal: older sessions stop working.
+  session_version INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  last_seen_at TEXT
+);
+CREATE TABLE IF NOT EXISTS memberships (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  brand_id INTEGER NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('viewer','admin')),
+  PRIMARY KEY (user_id, brand_id)
+);
+-- One-time secrets sent by email: sign-in codes, invitations and password resets. Only hashes.
+CREATE TABLE IF NOT EXISTS tokens (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  purpose TEXT NOT NULL CHECK (purpose IN ('code','invite','reset')),
+  secret_hash TEXT NOT NULL,
+  tries INTEGER NOT NULL DEFAULT 0,
+  expires_at TEXT NOT NULL
+);
 `
 
 export type DB = DatabaseSync

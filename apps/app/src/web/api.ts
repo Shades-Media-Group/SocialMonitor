@@ -1,6 +1,11 @@
 import type { Brand, Comment, Network, Post, Profile, Schedule } from '../core/types.ts'
 
-export type BrandRow = Brand & { profiles: Profile[]; counts: Record<string, number> }
+export type BrandRow = Brand & {
+  profiles: Profile[]
+  counts: Record<string, number>
+  /** What the signed-in person may do here. */
+  my_role: 'viewer' | 'admin'
+}
 export type PostRow = Post & {
   brand_id: number
   handle: string
@@ -27,6 +32,9 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
     body: body ? JSON.stringify(body) : undefined,
   })
   const data = await res.json().catch(() => ({ error: `The server answered ${res.status}.` }))
+  // The session ended (signed out elsewhere, expired, blocked): back to the sign-in screen.
+  if (res.status === 401 && !path.startsWith('/api/auth/'))
+    dispatchEvent(new Event('sm-signed-out'))
   if (!res.ok)
     throw new Error((data as { error?: string }).error ?? `The server answered ${res.status}.`)
   return data as T
