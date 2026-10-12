@@ -322,6 +322,45 @@ h2 {
   padding: 4px 0 4px 112px;
 }
 
+/* Rating: positive or negative, then the kind. Colour only once chosen. */
+.sm-rate {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.sm-rate__btn {
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--g-line-strong);
+  border-radius: var(--g-radius-pill);
+  background: transparent;
+  color: var(--g-text-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.sm-rate__btn--positive[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--g-success-soft);
+  color: var(--g-success);
+  font-weight: 600;
+}
+.sm-rate__btn--negative[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--g-danger-soft);
+  color: var(--g-danger);
+  font-weight: 600;
+}
+.sm-rate__cat {
+  width: auto;
+  min-height: 26px;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
 /* Labels: one soft colour and one icon each, from Gradient's roles. */
 .sm-pill {
   display: inline-flex;

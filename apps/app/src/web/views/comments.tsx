@@ -5,6 +5,7 @@ import { api } from '../api.ts'
 import { Empty, NetworkMark, Segmented, ago } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { LabelPill } from '../labels.tsx'
+import { Rate, brandCategories } from '../rate.tsx'
 
 export function CommentList({
   comments,
@@ -37,6 +38,7 @@ export function CommentList({
           <p class="sm-comment__text">{c.text}</p>
           {c.reason && <p class="sm-comment__reason">{c.reason}</p>}
           <div class="sm-comment__actions">
+            <Rate comment={c} brand={brands.find((b) => b.id === c.brand_id)} onChange={onChange} />
             <a class="g-link" href={c.post_url} target="_blank" rel="noreferrer">
               Open the post
             </a>
@@ -69,9 +71,9 @@ export function CommentList({
 type Filter = 'reply' | 'complaint' | 'question' | 'praise' | 'all'
 
 export function Comments({ brands, brandId, running, mode, notify }: AppState) {
-  const [filter, setFilter] = useState<Filter>(() =>
-    sessionStorage.getItem('sm-post') ? 'all' : 'reply',
-  )
+  const [filter, setFilter] = useState<Filter>('all')
+  const [sentiment, setSentiment] = useState('')
+  const [category, setCategory] = useState('')
   const [network, setNetwork] = useState<Network | ''>('')
   const [q, setQ] = useState('')
   const [rows, setRows] = useState<CommentRow[] | null>(null)
@@ -86,6 +88,8 @@ export function Comments({ brands, brandId, running, mode, notify }: AppState) {
     if (filter === 'reply') p.set('reply', '1')
     else if (filter !== 'all') p.set('label', filter)
     if (q.trim()) p.set('q', q.trim())
+    if (sentiment) p.set('sentiment', sentiment)
+    if (category) p.set('category', category)
     const t = setTimeout(() => {
       api
         .get<CommentRow[]>(`/api/comments?${p}`)
@@ -93,7 +97,7 @@ export function Comments({ brands, brandId, running, mode, notify }: AppState) {
         .catch(() => setRows([]))
     }, 200)
     return () => clearTimeout(t)
-  }, [brandId, filter, network, q, running, postId, tick])
+  }, [brandId, filter, network, q, running, postId, tick, sentiment, category])
 
   const query = new URLSearchParams()
   if (brandId) query.set('brand', String(brandId))
@@ -101,6 +105,8 @@ export function Comments({ brands, brandId, running, mode, notify }: AppState) {
   if (filter === 'reply') query.set('reply', '1')
   else if (filter !== 'all') query.set('label', filter)
   if (q.trim()) query.set('q', q.trim())
+  if (sentiment) query.set('sentiment', sentiment)
+  if (category) query.set('category', category)
 
   const compact = (rows ?? []).map((c) => ({
     id: c.id,
@@ -113,6 +119,9 @@ export function Comments({ brands, brandId, running, mode, notify }: AppState) {
     needs_reply: c.needs_reply === 1,
     reply_status: c.reply_status,
     reason: c.reason,
+    sentiment: c.sentiment,
+    category: c.category,
+    sentiment_by: c.sentiment_by,
     post_url: c.post_url,
   }))
   const saveJson = async (next: unknown) => {
@@ -169,6 +178,42 @@ export function Comments({ brands, brandId, running, mode, notify }: AppState) {
           <option value="facebook">Facebook</option>
           <option value="tiktok">TikTok</option>
         </select>
+        <select
+          class="g-select sm-select-sm"
+          value={sentiment}
+          aria-label="Positive or negative"
+          onChange={(e) => {
+            setSentiment((e.target as HTMLSelectElement).value)
+            setCategory('')
+          }}
+        >
+          <option value="">Positive and negative</option>
+          <option value="positive">Positive</option>
+          <option value="negative">Negative</option>
+          <option value="none">Not rated yet</option>
+        </select>
+        {(sentiment === 'positive' || sentiment === 'negative') && (
+          <select
+            class="g-select sm-select-sm"
+            value={category}
+            aria-label="Kind"
+            onChange={(e) => setCategory((e.target as HTMLSelectElement).value)}
+          >
+            <option value="">Every kind</option>
+            {(brandId
+              ? brandCategories(brands.find((b) => b.id === brandId))
+              : brands.flatMap(brandCategories)
+            )
+              .filter(
+                (c, i, a) =>
+                  a.findIndex((x) => x.key === c.key) === i &&
+                  (!sentiment || c.sentiment === sentiment),
+              )
+              .map((c) => (
+                <option value={c.key}>{c.name}</option>
+              ))}
+          </select>
+        )}
         <input
           class="g-input sm-search"
           type="search"
