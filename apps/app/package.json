@@ -1,0 +1,19 @@
+{
+  "name": "@socialmonitor/app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "vite build && node src/server/main.ts",
+    "dev:api": "SOCIALMONITOR_API_PORT=4401 node --watch src/server/main.ts",
+    "serve": "node src/server/main.ts",
+    "dev": "vite",
+    "build": "vite build",
+    "mcp": "node src/mcp/main.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "playwright": "^1.64.0",
+    "zod": "^4.6.6"
+  }
+}
