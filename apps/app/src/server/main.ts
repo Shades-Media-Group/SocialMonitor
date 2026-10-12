@@ -134,7 +134,11 @@ const server = createServer(async (req, res) => {
           'content-type': d.type ?? 'application/json',
           'content-disposition': `attachment; filename="${d.__download}"`,
         })
-        return res.end(typeof d.data === 'string' ? d.data : JSON.stringify(d.data))
+        return res.end(
+          typeof d.data === 'string' || d.data instanceof Uint8Array
+            ? d.data
+            : JSON.stringify(d.data),
+        )
       }
       return send(res, 200, data ?? { ok: true })
     }

@@ -68,6 +68,7 @@ export interface Comment {
   category: string | null
   /** Who set the sentiment: a person or Claude. */
   sentiment_by: 'you' | 'ai' | null
+  translation: string | null
 }
 
 export type ReplyStatus = 'open' | 'done' | 'ignored'

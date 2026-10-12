@@ -11,6 +11,19 @@ import { deleteAccount, listAccounts, revealPassword, saveAccount } from '../cor
 import type { Account } from '../core/vault.ts'
 import { gaps, queueRun, sortPending } from '../core/run.ts'
 import type { CollectedPost, Range } from '../core/types.ts'
+import {
+  compare,
+  labelTotals,
+  postEngagement,
+  reach,
+  reputation,
+  responses,
+  timeline,
+} from '../core/insights.ts'
+import { workbook } from '../core/xlsx.ts'
+import { brandPdf } from '../core/pdf.ts'
+import { draftReply, pickEngine, translate } from '../core/analyze.ts'
+import { getSettings } from '../core/settings.ts'
 
 interface Ctx {
   db: DB
@@ -276,6 +289,179 @@ export const routes: Route[] = [
           .get(brandId, network ?? null, network ?? null) as { n: number }
       ).n,
     }
+  }),
+  r('GET', '/api/brands/:id/insights', ({ db, params, query }) => {
+    const s = {
+      brandId: id(params.id),
+      network: net(query.get('network')),
+      days: Number(query.get('days') ?? 30) || 0,
+    }
+    const labels = labelTotals(db, s)
+    const posts = postEngagement(db, s, 1000)
+    return {
+      timeline: timeline(db, s),
+      posts: posts.slice(-30),
+      responses: responses(db, s),
+      labels,
+      reputation: reputation(labels),
+      reach: reach(posts),
+    }
+  }),
+  r('GET', '/api/compare', ({ db, query }) => compare(db, Number(query.get('days') ?? 30) || 0)),
+  r('GET', '/api/brands/:id/export.xlsx', ({ db, params, query }) => {
+    const brand = store.getBrand(db, id(params.id))
+    if (!brand) throw new Error('No such brand.')
+    const s = {
+      brandId: brand.id,
+      network: net(query.get('network')),
+      days: Number(query.get('days') ?? 0) || 0,
+    }
+    const labels = labelTotals(db, s)
+    const r = responses(db, s)
+    const since = s.days ? new Date(Date.now() - s.days * 86400_000).toISOString() : ''
+    const comments = store
+      .listComments(db, { brandId: brand.id, network: s.network, limit: 100000 })
+      .filter((c) => !since || (c.posted_at ?? '') >= since)
+    const posts = postEngagement(db, s, 100000)
+    const day = new Date().toISOString().slice(0, 10)
+    return {
+      __download: `${brand.name.replace(/[^\w-]+/g, '-')}-socialmonitor-${day}.xlsx`,
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      data: workbook([
+        {
+          name: 'Summary',
+          rows: [
+            ['Measure', 'Value'],
+            ['Brand', brand.name],
+            ['Period', s.days ? `Last ${s.days} days` : 'All time'],
+            ['Network', s.network ?? 'All'],
+            ['Exported', day],
+            ['Customer comments', labels.total ?? 0],
+            ...['complaint', 'question', 'suggestion', 'praise', 'neutral', 'spam', 'unsorted'].map(
+              (k) => [`  ${k}`, labels[k] ?? 0],
+            ),
+            ['Answered by the brand', r.answered],
+            ['Response rate', r.rate === null ? '' : Math.round(r.rate * 100) / 100],
+            ['Median minutes to reply', r.median_minutes ?? ''],
+            ['Posts', posts.length],
+          ],
+        },
+        {
+          name: 'Comments',
+          rows: [
+            [
+              'Network',
+              'Published',
+              'Author',
+              'Comment',
+              'English',
+              'Likes',
+              'Label',
+              'Needs reply',
+              'Reply status',
+              'AI reason',
+              'Sentiment',
+              'Kind',
+              'Rated by',
+              'Post',
+            ],
+            ...comments.map((c) => [
+              c.network,
+              c.posted_at,
+              c.author,
+              c.text,
+              c.translation,
+              c.likes,
+              c.label,
+              c.needs_reply === 1,
+              c.reply_status,
+              c.reason,
+              c.sentiment,
+              c.category,
+              c.sentiment_by,
+              c.post_url,
+            ]),
+          ],
+        },
+        {
+          name: 'Posts',
+          rows: [
+            ['Network', 'Published', 'Likes', 'Comments', 'Shares', 'Views', 'About', 'URL'],
+            ...posts.map((p) => [
+              p.network,
+              p.day,
+              p.likes,
+              p.comments,
+              p.shares,
+              p.views,
+              p.about,
+              p.url,
+            ]),
+          ],
+        },
+      ]),
+    }
+  }),
+  r('GET', '/api/brands/:id/report.pdf', async ({ db, params, query }) => {
+    const brand = store.getBrand(db, id(params.id))
+    if (!brand) throw new Error('No such brand.')
+    const ui =
+      process.env.SOCIALMONITOR_UI ??
+      `http://127.0.0.1:${process.env.SOCIALMONITOR_API_PORT ?? process.env.PORT ?? 4400}`
+    const q = new URLSearchParams()
+    for (const k of ['days', 'network']) if (query.get(k)) q.set(k, query.get(k)!)
+    return {
+      __download: `${brand.name.replace(/[^\w-]+/g, '-')}-report-${new Date().toISOString().slice(0, 10)}.pdf`,
+      type: 'application/pdf',
+      data: await brandPdf(ui, brand.id, q.toString()),
+    }
+  }),
+  // AI helpers on one comment. The app never posts: a draft is text to copy.
+  r('POST', '/api/comments/:id/draft', async ({ db, params }) => {
+    const engine = pickEngine(getSettings(db))
+    if (!engine)
+      throw new Error(
+        'No AI to write with: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.',
+      )
+    const c = db
+      .prepare(
+        `SELECT c.text, p.caption, b.name, b.industry, b.description FROM comments c JOIN posts p ON p.id = c.post_id
+         JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id WHERE c.id = ?`,
+      )
+      .get(id(params.id)) as
+      | {
+          text: string
+          caption: string
+          name: string
+          industry: string | null
+          description: string | null
+        }
+      | undefined
+    if (!c) throw new Error('No such comment.')
+    return {
+      draft: await draftReply(
+        engine,
+        c.name,
+        [c.industry, c.description].filter(Boolean).join('; '),
+        c.caption,
+        c.text,
+      ),
+    }
+  }),
+  r('POST', '/api/comments/:id/translate', async ({ db, params }) => {
+    const engine = pickEngine(getSettings(db))
+    if (!engine)
+      throw new Error(
+        'No AI to translate with: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.',
+      )
+    const commentId = id(params.id)
+    const c = db.prepare('SELECT text, translation FROM comments WHERE id = ?').get(commentId) as
+      { text: string; translation: string | null } | undefined
+    if (!c) throw new Error('No such comment.')
+    if (c.translation) return { translation: c.translation }
+    const translation = await translate(engine, c.text)
+    db.prepare('UPDATE comments SET translation = ? WHERE id = ?').run(translation, commentId)
+    return { translation }
   }),
   r('GET', '/api/runs', ({ db, query }) => {
     const brand = query.get('brand')

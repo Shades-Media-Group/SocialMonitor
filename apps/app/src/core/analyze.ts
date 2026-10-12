@@ -122,6 +122,34 @@ async function viaApi(
   return d.content?.map((c) => c.text ?? '').join('') ?? ''
 }
 
+/** A reply the brand could post, in the comment's own language. Never posted by the app. */
+export async function draftReply(
+  engine: Engine,
+  brand: string,
+  about: string,
+  post: string,
+  comment: string,
+) {
+  const prompt = `You answer comments for ${brand}${about ? ` (${clip(about, 240)})` : ''}. Post: ${clip(post, 300) || '(no caption)'}
+Write one reply to the comment below, in the comment's own language: warm, short (at most 3 sentences), specific, no hashtags, no promises the brand cannot keep. If it is a complaint, apologise once and say how to get help. Output only the reply.`
+  const text =
+    engine === 'claude'
+      ? await viaClaudeCode(prompt, clip(comment, 800))
+      : await viaApi(prompt, clip(comment, 800))
+  return text.trim().slice(0, 1200)
+}
+
+/** The comment in English. */
+export async function translate(engine: Engine, text: string) {
+  const prompt =
+    'Translate this social media comment into natural English. Keep emoji. Output only the translation.'
+  const out =
+    engine === 'claude'
+      ? await viaClaudeCode(prompt, clip(text, 1500))
+      : await viaApi(prompt, clip(text, 1500))
+  return out.trim().slice(0, 2000)
+}
+
 /** Parses "n|label|r|why" lines; anything else is ignored. */
 export function parseVerdicts(text: string): Map<number, Verdict> {
   const out = new Map<number, Verdict>()

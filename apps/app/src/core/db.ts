@@ -133,6 +133,8 @@ function migrate(db: DatabaseSync) {
     db.exec('ALTER TABLE brands ADD COLUMN description TEXT')
     db.exec('ALTER TABLE brands ADD COLUMN notes TEXT')
   }
+  // An English translation of a comment, made on request and kept.
+  if (!has('comments', 'translation')) db.exec('ALTER TABLE comments ADD COLUMN translation TEXT')
   // Each brand's own positive and negative categories.
   if (!has('brands', 'categories'))
     db.exec("ALTER TABLE brands ADD COLUMN categories TEXT NOT NULL DEFAULT '[]'")
