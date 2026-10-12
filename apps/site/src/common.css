@@ -1,0 +1,117 @@
+/* Shared by every page, the test page included: its footer carries the same links. */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/*
+ * Google's Preferred Sources button, as Google draws it (light: #fff on #1f1f1f,
+ * dark: #131314 on #e3e3e3, 100px radius), with the Gemini gradient as its ring.
+ * The ring is the surface clipped to the padding box over a conic gradient on
+ * the border box; it turns only on hover or focus, and never with reduced motion.
+ */
+@property --pref-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 90deg;
+}
+.pref {
+  --pref-surface: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 15px 8px 13px;
+  border: 2px solid transparent;
+  border-radius: 100px;
+  background:
+    linear-gradient(var(--pref-surface), var(--pref-surface)) padding-box,
+    conic-gradient(from var(--pref-angle, 90deg), #4285f4, #9b72cb, #d96570, #9b72cb, #4285f4)
+      border-box;
+  color: #1f1f1f;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  text-decoration: none;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
+}
+.pref:hover {
+  --pref-surface: #f8f9fa;
+  box-shadow:
+    0 1px 2px 0 rgba(60, 64, 67, 0.3),
+    0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+.pref-g {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .pref {
+    --pref-surface: #131314;
+    color: #e3e3e3;
+  }
+  .pref:hover {
+    --pref-surface: #1f1f21;
+    box-shadow: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pref:hover,
+  .pref:focus-visible {
+    animation: pref-turn 5s linear infinite;
+  }
+}
+@keyframes pref-turn {
+  to {
+    --pref-angle: 450deg;
+  }
+}
+
+/* Footer languages: the six written ones inline, Google's behind "More languages". */
+.langs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 20px;
+  font-size: 14px;
+}
+.langs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 0;
+  list-style: none;
+}
+.langs a,
+.langs summary {
+  color: var(--ink-2);
+  text-decoration: none;
+  cursor: pointer;
+}
+.langs a:hover,
+.langs summary:hover {
+  color: var(--ink);
+}
+.langs a[aria-current] {
+  color: var(--ink);
+  font-weight: 600;
+}
+.langs details[open] {
+  flex-basis: 100%;
+}
+.langs details p {
+  margin-top: 10px;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+.langs details ul {
+  margin-top: 8px;
+}

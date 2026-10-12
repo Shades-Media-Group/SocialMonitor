@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  // The website: static files served by a Worker at socialmonitor.shades.md.
+  // The dashboard is never hosted; it runs on each user's computer.
+  "name": "socialmonitor-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "none",
+    "html_handling": "auto-trailing-slash",
+  },
+  "routes": [{ "pattern": "socialmonitor.shades.md", "custom_domain": true }],
+  "observability": { "enabled": false },
+}

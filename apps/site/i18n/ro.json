@@ -1,0 +1,201 @@
+{
+  "language": "Limba",
+  "imageAlt": "SocialMonitor: află ce spun oamenii despre brandul tău",
+  "preferred": {
+    "button": "Adaugă la sursele preferate<span class='visually-hidden'> în Google</span>",
+    "mention": "Găsește SocialMonitor mai des în căutarea Google: <a data-link='preferred' target='_blank'>adaugă-l la sursele preferate</a>."
+  },
+  "nav": {
+    "label": "Principal",
+    "home": "Acasă",
+    "homeLabel": "SocialMonitor, pagina principală",
+    "how": "Cum funcționează",
+    "features": "Funcții",
+    "privacy": "Confidențialitate",
+    "faq": "Întrebări",
+    "cta": "Pornește-l"
+  },
+  "footer": {
+    "tagline": "Urmărește branduri pe Instagram, Facebook și TikTok. Fiecare comentariu rămâne pe calculatorul tău, sortat de AI.",
+    "mcp": "Server MCP",
+    "status": "În dezvoltare",
+    "top": "SocialMonitor, înapoi sus",
+    "label": "Subsol",
+    "product": "Produs",
+    "project": "Proiect",
+    "trust": "Încredere",
+    "changelog": "Istoricul schimbărilor",
+    "issues": "Raportează o problemă",
+    "security": "Securitate",
+    "license": "Licența MIT",
+    "credit": "Gratuit și open source. Creat de <a data-link='shades'>Shades Media Group</a>."
+  },
+  "home": {
+    "title": "Monitorizare social media gratuită, pe calculatorul tău | SocialMonitor",
+    "description": "O aplicație gratuită și open source care păstrează fiecare comentariu de pe Instagram, Facebook și TikTok pe calculatorul tău și le sortează cu AI.",
+    "hero": {
+      "title": "Află ce spun oamenii despre brandul tău.",
+      "lead": "SocialMonitor păstrează fiecare postare și comentariu de pe Instagram, Facebook și TikTok pe calculatorul tău. AI-ul sortează comentariile și le marchează pe cele care cer un răspuns.",
+      "how": "Cum funcționează",
+      "github": "Urmărește pe GitHub",
+      "note": "În dezvoltare, încă fără o versiune lansată. Rulează deja din codul sursă, gratuit și open source."
+    },
+    "how": {
+      "title": "De la un link la un raport.",
+      "text": "SocialMonitor citește rețelele prin propriul browser, în care te autentifici singur. Nu îți vede niciodată parola.",
+      "name": "Urmărește comentariile unui brand cu SocialMonitor",
+      "steps": {
+        "add": {
+          "name": "Adaugă un brand",
+          "text": "Lipește linkurile profilurilor lui de pe Instagram, Facebook și TikTok."
+        },
+        "update": {
+          "name": "Apasă Update",
+          "text": "Alege rețelele, apoi postările noi sau pe toate. Nimic nu rulează până atunci."
+        },
+        "sort": {
+          "name": "Fiecare comentariu sortat",
+          "text": "Fiecare comentariu primește o etichetă și motivul ei. Cele care cer un răspuns apar primele."
+        },
+        "report": {
+          "name": "Citește raportul",
+          "text": "După fiecare actualizare vine un raport. Sau întreabă-l pe Claude despre datele tale din orice chat."
+        }
+      }
+    },
+    "features": {
+      "title": "Întâi comentariile care au nevoie de tine.",
+      "text": "Fiecare postare și comentariu este păstrat, descris și sortat. Începi cu ce așteaptă un răspuns.",
+      "sort": {
+        "title": "Sortat, cu motivul",
+        "text": "Laude, întrebări, reclamații, sugestii sau spam. Fiecare etichetă vine cu un rând care explică de ce."
+      },
+      "reply": {
+        "title": "O coadă de răspunsuri",
+        "text": "Comentariile care cer un răspuns sunt marcate și listate primele, cele mai apreciate sus."
+      },
+      "posts": {
+        "title": "Fiecare postare descrisă",
+        "text": "O scurtă descriere a ceea ce arată fiecare postare, din text și din imaginea de copertă. Inclusiv clipurile video."
+      },
+      "schedule": {
+        "title": "Manual sau programat",
+        "text": "Actualizările pornesc când apeși Update. Programările sunt opționale: la câteva ore, zilnic sau la ore fixe."
+      },
+      "report": {
+        "title": "Rapoarte, export și import",
+        "text": "Un raport după fiecare actualizare. Exportă toată baza de date într-un fișier și import-o oriunde."
+      },
+      "claude": {
+        "title": "Claude, integrat",
+        "text": "Un server MCP integrat îi permite lui Claude să interogheze datele tale și să pornească actualizări din orice chat."
+      }
+    },
+    "privacy": {
+      "title": "Datele tale rămân pe calculatorul tău.",
+      "text": "Fără server SocialMonitor, fără cont, fără statistici. Baza de date, profilul de browser și fiecare raport rămân pe calculatorul tău.",
+      "claude": "Textul postărilor și al comentariilor, plus imaginea de copertă a fiecărei postări, ajung la Claude prin propriul tău Claude Code sau cheie API Anthropic. Aceasta este singura excepție."
+    },
+    "open": {
+      "title": "Open source, până la ultimul rând.",
+      "text": "Tot codul este pe GitHub, sub licența MIT. O singură comandă conectează Claude Code la datele tale.",
+      "mcp": "Citește ghidul MCP",
+      "codeLabel": "Comanda care conectează SocialMonitor la Claude Code",
+      "github": "Citește codul"
+    },
+    "faq": {
+      "title": "Întrebări, cu răspunsuri.",
+      "lead": "Ce întreabă oamenii înainte să urmărească primul brand.",
+      "items": {
+        "free": {
+          "q": "SocialMonitor chiar e gratuit?",
+          "a": "Da. Nu există planuri, limite, perioade de probă sau conturi, și nu vor exista niciodată. AI-ul rulează pe propriul tău Claude Code sau cheie API Anthropic, facturate de Anthropic ca de obicei."
+        },
+        "data": {
+          "q": "Unde sunt păstrate datele mele?",
+          "a": "Pe calculatorul tău, în folderul data al SocialMonitor. Nu există un server SocialMonitor. Exportul și importul mută toată baza de date într-un singur fișier."
+        },
+        "ban": {
+          "q": "Îmi va fi blocat contul?",
+          "a": "SocialMonitor doar citește: nu postează, nu dă like și nu urmărește pe nimeni. Citește încet, așteaptă cel puțin 4 ore între citirile autentificate și se oprește la primul captcha. Niciun instrument nu poate promite că un cont nu va fi restricționat, așa că folosește un cont secundar."
+        },
+        "networks": {
+          "q": "Ce rețele urmărește?",
+          "a": "Instagram, Facebook și TikTok. Urmărește un brand pe o rețea, pe câteva sau pe toate trei."
+        },
+        "ai": {
+          "q": "Ce vede AI-ul?",
+          "a": "Textul postărilor și al comentariilor, plus imaginea de copertă a fiecărei postări. Ajung la Claude prin propriul tău Claude Code sau cheie API Anthropic, și nicăieri altundeva."
+        },
+        "when": {
+          "q": "Când îl pot folosi?",
+          "a": "SocialMonitor este în dezvoltare, încă fără o versiune lansată. Rulează deja din codul sursă: <a data-link='run'>README-ul</a> explică cum. Urmărește <a data-link='repo'>repository-ul</a> ca să afli de prima versiune."
+        }
+      }
+    },
+    "install": {
+      "title": "Ia SocialMonitor.",
+      "run": "Rulează-l din codul sursă",
+      "runText": "Clonează repository-ul și pornește panoul pe calculatorul tău. Ai nevoie de Node 22.18 și Yarn.",
+      "runButton": "Vezi pașii",
+      "github": "Codul sursă",
+      "githubText": "Citește codul, raportează o problemă sau propune o funcție.",
+      "githubLink": "Deschide pe GitHub"
+    }
+  },
+  "privacy": {
+    "title": "Politica de confidențialitate | SocialMonitor",
+    "description": "Shades Media Group nu primește nimic. SocialMonitor păstrează postările și comentariile pe calculatorul tău; doar textul și imaginile de copertă ajung la Claude, prin cheia ta.",
+    "updated": "Ultima actualizare: 12 octombrie 2026",
+    "intro": "SocialMonitor este o aplicație pe care o rulezi pe propriul calculator, creată de Shades Media Group. Această politică acoperă aplicația și acest site.",
+    "short": "Shades Media Group nu primește nimic. Tot ce colectează SocialMonitor rămâne pe calculatorul tău. Singura excepție este ce îi cere lui Claude să citească, care ajunge la Anthropic prin propriul tău cont.",
+    "appTitle": "Ce colectează aplicația și unde ajunge",
+    "appPosts": "<strong>Postări și comentarii</strong> de pe profilurile publice pe care le adaugi, citite printr-un profil de browser de pe calculatorul tău. Acestea includ numele și cuvintele celor care comentează.",
+    "appStore": "<strong>Le stochează</strong> într-o bază de date din folderul <code>data/</code>, doar pe calculatorul tău.",
+    "appClaude": "<strong>Pentru a descrie postările și a sorta comentariile,</strong> textul lor și imaginea de copertă a fiecărei postări sunt trimise la Claude prin Claude Code sau cheia API Anthropic pe care o configurezi. <a data-link='anthropic'>Politica de confidențialitate Anthropic</a> acoperă acest pas.",
+    "appReports": "<strong>Rapoartele și exporturile</strong> sunt fișiere pe care le salvezi; ajung oriunde le pui.",
+    "dutiesTitle": "Responsabilitățile tale",
+    "duties": "Comentariile sunt date personale. Dacă folosești SocialMonitor pentru o organizație, ea este operatorul acestor date. Urmărește doar profiluri pe care ai un motiv să le urmărești, păstrează datele doar cât îți trebuie (Settings → Keep data for) și respectă termenii rețelelor. Șterge un brand ca să-i ștergi toate postările și comentariile.",
+    "site": "Site-ul este static. Nu setează cookie-uri și nu încarcă scripturi, fonturi sau trackere de la terți. O preferință de afișare pe care o alegi rămâne în browserul tău.",
+    "heading": "Politica de confidențialitate",
+    "shortTitle": "Pe scurt",
+    "siteTitle": "Acest site",
+    "dataTitle": "Datele pe care le primim",
+    "data": "Niciunele. Nu există conturi, analytics, rapoarte de erori sau urmărire de niciun fel.",
+    "changesTitle": "Modificări",
+    "changes": "Modificările acestei politici sunt publicate pe această pagină și notate în <a data-link='changelog'>istoricul schimbărilor</a>.",
+    "contactTitle": "Contact"
+  },
+  "prefs": {
+    "open": "Afișare și accesibilitate",
+    "title": "Afișare",
+    "theme": "Temă",
+    "light": "Luminoasă",
+    "dark": "Întunecată",
+    "system": "Auto",
+    "access": "Accesibilitate",
+    "text": "Text mai mare",
+    "contrast": "Contrast mai mare",
+    "motion": "Mai puține animații",
+    "links": "Linkuri subliniate",
+    "reading": "Citire mai ușoară",
+    "saved": "Salvat doar în acest browser.",
+    "reset": "Resetează",
+    "close": "Închide",
+    "privacy": "Opțiuni de confidențialitate"
+  },
+  "consent": {
+    "title": "Confidențialitatea ta",
+    "text": "Acest site păstrează doar ce îi trebuie ca să funcționeze, cum ar fi setările de afișare. Instrumentele de analiză sau marketing ar rula doar cu acordul tău.",
+    "acceptAll": "Accept tot",
+    "necessaryOnly": "Doar necesare",
+    "customize": "Personalizează",
+    "save": "Salvează alegerile",
+    "necessary": "Necesare",
+    "necessaryText": "Rețin alegerile tale de afișare și confidențialitate. Mereu active.",
+    "analytics": "Analiză",
+    "analyticsText": "Vizite numărate anonim, ca să aflăm ce ajută. Nefolosit pe acest site în prezent.",
+    "marketing": "Marketing",
+    "marketingText": "Reclame și măsurarea campaniilor. Nefolosit pe acest site în prezent."
+  }
+}

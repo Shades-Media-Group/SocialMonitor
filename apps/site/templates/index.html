@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="{{@lang}}" data-theme-default="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {{@head}}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <header class="nav">
+      <a class="nav-logo" href="#top" aria-label="SocialMonitor">{{@logo}}</a>
+      <nav aria-label="{{nav.label}}">
+        <a href="#how">{{nav.how}}</a>
+        <a href="#features">{{nav.features}}</a>
+        <a href="#privacy">{{nav.privacy}}</a>
+        <a href="#faq">{{nav.faq}}</a>
+        <a data-link="repo">GitHub</a>
+      </nav>
+      {{@langs}}
+      <a class="nav-cta" href="#install">{{nav.cta}}</a>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <h1>{{home.hero.title}}</h1>
+        <p class="hero-lead">{{home.hero.lead}}</p>
+        <p class="cta">
+          <a class="btn btn--primary" href="#how"
+            >{{home.hero.how}}<span class="btn-arrow" aria-hidden="true"></span
+          ></a>
+          <a class="btn btn--secondary" data-link="repo">{{home.hero.github}}</a>
+        </p>
+        <p class="cta-note">{{home.hero.note}}</p>
+      </section>
+
+      <section class="chapter how" id="how">
+        <div class="chapter-head" data-reveal>
+          <h2>{{home.how.title}}</h2>
+          <p>{{home.how.text}}</p>
+        </div>
+        <ol class="steps" data-reveal>
+          <li>
+            <strong>{{home.how.steps.add.name}}</strong><span>{{home.how.steps.add.text}}</span>
+          </li>
+          <li>
+            <strong>{{home.how.steps.update.name}}</strong
+            ><span>{{home.how.steps.update.text}}</span>
+          </li>
+          <li>
+            <strong>{{home.how.steps.sort.name}}</strong><span>{{home.how.steps.sort.text}}</span>
+          </li>
+          <li>
+            <strong>{{home.how.steps.report.name}}</strong
+            ><span>{{home.how.steps.report.text}}</span>
+          </li>
+        </ol>
+      </section>
+
+      <section class="chapter chapter--ink" id="features">
+        <div class="chapter-head" data-reveal>
+          <h2>{{home.features.title}}</h2>
+          <p>{{home.features.text}}</p>
+        </div>
+        <ul class="features" data-reveal>
+          <li>
+            <strong>{{home.features.sort.title}}</strong><span>{{home.features.sort.text}}</span>
+          </li>
+          <li>
+            <strong>{{home.features.reply.title}}</strong><span>{{home.features.reply.text}}</span>
+          </li>
+          <li>
+            <strong>{{home.features.posts.title}}</strong><span>{{home.features.posts.text}}</span>
+          </li>
+          <li>
+            <strong>{{home.features.schedule.title}}</strong
+            ><span>{{home.features.schedule.text}}</span>
+          </li>
+          <li>
+            <strong>{{home.features.report.title}}</strong
+            ><span>{{home.features.report.text}}</span>
+          </li>
+          <li>
+            <strong>{{home.features.claude.title}}</strong
+            ><span>{{home.features.claude.text}}</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="chapter chapter--red" id="privacy">
+        <h2 data-reveal>{{home.privacy.title}}</h2>
+        <p>{{home.privacy.text}}</p>
+        <p>{{home.privacy.claude}}</p>
+      </section>
+
+      <section class="chapter chapter--open">
+        <div class="chapter-head" data-reveal>
+          <h2>{{home.open.title}}</h2>
+          <p>{{home.open.text}}</p>
+          <p class="cta cta--left">
+            <a class="btn btn--dark" data-link="repo"
+              >{{home.open.github}}<span class="btn-arrow" aria-hidden="true"></span
+            ></a>
+            <a class="link" data-link="mcp">{{home.open.mcp}} <span aria-hidden="true">›</span></a>
+          </p>
+        </div>
+        <pre
+          class="code"
+          data-reveal
+          tabindex="0"
+          aria-label="{{home.open.codeLabel}}"
+        ><code><span class="k">claude</span> mcp add socialmonitor \
+  --scope user -- node \
+  <span class="s">/path/to/<wbr />SocialMonitor/<wbr />apps/app/<wbr />src/mcp/main.ts</span></code></pre>
+      </section>
+
+      <section class="chapter faq" id="faq">
+        <div class="chapter-head" data-reveal>
+          <h2>{{home.faq.title}}</h2>
+          <p>{{home.faq.lead}}</p>
+        </div>
+        {{@faq}}
+      </section>
+
+      <section class="install" id="install">
+        <h2>{{home.install.title}}</h2>
+        <div class="install-row" data-reveal>
+          <a class="install-item" data-link="run">
+            <span class="tile tile--terminal"
+              ><svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M6 8l4 4-4 4M12.5 16.5H18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg
+            ></span>
+            <strong>{{home.install.run}}</strong>
+            <span class="install-text">{{home.install.runText}}</span>
+            <span class="btn btn--primary btn--small"
+              >{{home.install.runButton}}<span class="btn-arrow" aria-hidden="true"></span
+            ></span>
+          </a>
+          <a class="install-item" data-link="repo">
+            <span class="tile tile--github"
+              ><svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8 0 3.2.9.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.5.4.9 1 .9 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3"
+                /></svg
+            ></span>
+            <strong>{{home.install.github}}</strong>
+            <span class="install-text">{{home.install.githubText}}</span>
+            <span class="link">{{home.install.githubLink}} <span aria-hidden="true">›</span></span>
+          </a>
+        </div>
+        <p class="install-note">{{preferred.mention}}</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a class="footer-logo" href="#top" aria-label="{{footer.top}}">{{@logo}}</a>
+          <p>{{footer.tagline}}</p>
+          <a class="btn btn--primary btn--small" href="#how"
+            >{{home.hero.how}}<span class="btn-arrow" aria-hidden="true"></span
+          ></a>
+        </div>
+        <nav class="footer-cols" aria-label="{{footer.label}}">
+          <div>
+            <h3>{{footer.product}}</h3>
+            <ul>
+              <li><a data-link="run">{{home.install.run}}</a></li>
+              <li><a href="#how">{{nav.how}}</a></li>
+              <li><a href="#features">{{nav.features}}</a></li>
+              <li><a href="#faq">{{nav.faq}}</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3>{{footer.project}}</h3>
+            <ul>
+              <li><a data-link="repo">GitHub</a></li>
+              <li><a data-link="changelog">{{footer.changelog}}</a></li>
+              <li><a data-link="mcp">{{footer.mcp}}</a></li>
+              <li><a data-link="issues">{{footer.issues}}</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3>{{footer.trust}}</h3>
+            <ul>
+              <li><a href="{{@base}}privacy/">{{nav.privacy}}</a></li>
+              <li><a data-link="security">{{footer.security}}</a></li>
+              <li><a data-link="license">{{footer.license}}</a></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-extra">{{@langlist}} {{@preferred}}</div>
+      <div class="footer-base">
+        <p>{{footer.credit}}</p>
+        <p><a data-link="changelog">{{footer.status}}</a> · © 2026</p>
+      </div>
+      <a class="footer-mark" href="#top" aria-label="{{footer.top}}">{{@wordmark}}</a>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

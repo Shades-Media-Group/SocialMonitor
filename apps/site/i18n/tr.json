@@ -1,0 +1,201 @@
+{
+  "language": "Dil",
+  "imageAlt": "SocialMonitor: markanız hakkında ne söylendiğini bilin",
+  "preferred": {
+    "button": "Tercih edilen kaynaklara ekle<span class='visually-hidden'> (Google)</span>",
+    "mention": "SocialMonitor'u Google Arama'da daha sık gör: <a data-link='preferred' target='_blank'>tercih edilen kaynak olarak ekle</a>."
+  },
+  "nav": {
+    "label": "Ana menü",
+    "home": "Ana sayfa",
+    "homeLabel": "SocialMonitor ana sayfa",
+    "how": "Nasıl çalışır",
+    "features": "Özellikler",
+    "privacy": "Gizlilik",
+    "faq": "Sorular",
+    "cta": "Çalıştır"
+  },
+  "footer": {
+    "tagline": "Instagram, Facebook ve TikTok'ta markaları takip edin. Her yorum, yapay zekâyla sınıflanmış olarak bilgisayarınızda kalır.",
+    "mcp": "MCP sunucusu",
+    "status": "Geliştiriliyor",
+    "top": "SocialMonitor, başa dön",
+    "label": "Alt bilgi",
+    "product": "Ürün",
+    "project": "Proje",
+    "trust": "Güven",
+    "changelog": "Değişiklik günlüğü",
+    "issues": "Sorun bildir",
+    "security": "Güvenlik",
+    "license": "MIT lisansı",
+    "credit": "Ücretsiz ve açık kaynak. <a data-link='shades'>Shades Media Group</a> tarafından geliştirildi."
+  },
+  "home": {
+    "title": "Bilgisayarınızda ücretsiz sosyal medya takibi | SocialMonitor",
+    "description": "Instagram, Facebook ve TikTok'taki her yorumu bilgisayarınızda saklayan ve yapay zekâyla sınıflayan ücretsiz, açık kaynaklı bir uygulama.",
+    "hero": {
+      "title": "Markanız hakkında ne söylendiğini bilin.",
+      "lead": "SocialMonitor, Instagram, Facebook ve TikTok'taki her gönderiyi ve yorumu bilgisayarınızda saklar. Yapay zekâ yorumları sınıflar ve yanıt bekleyenleri işaretler.",
+      "how": "Nasıl çalışır",
+      "github": "GitHub'da takip et",
+      "note": "Geliştiriliyor, henüz bir sürüm yok. Bugün kaynak koddan çalışıyor; ücretsiz ve açık kaynak."
+    },
+    "how": {
+      "title": "Bir bağlantıdan bir rapora.",
+      "text": "SocialMonitor ağları kendi tarayıcısıyla okur ve bu tarayıcıda oturumu siz açarsınız. Şifrenizi asla görmez.",
+      "name": "SocialMonitor ile bir markanın yorumlarını takip edin",
+      "steps": {
+        "add": {
+          "name": "Bir marka ekleyin",
+          "text": "Instagram, Facebook ve TikTok profil bağlantılarını yapıştırın."
+        },
+        "update": {
+          "name": "Update'e basın",
+          "text": "Ağları, ardından yeni gönderileri ya da tümünü seçin. Siz basmadan hiçbir şey çalışmaz."
+        },
+        "sort": {
+          "name": "Her yorum sınıflanır",
+          "text": "Her yorum bir etiket ve gerekçesini alır. Yanıt bekleyenler en üstte yer alır."
+        },
+        "report": {
+          "name": "Raporu okuyun",
+          "text": "Her güncellemenin ardından bir rapor gelir. Ya da verilerinizi herhangi bir sohbetten Claude'a sorun."
+        }
+      }
+    },
+    "features": {
+      "title": "Önce size ihtiyaç duyan yorumlar.",
+      "text": "Her gönderi ve yorum saklanır, açıklanır ve sınıflanır. Yanıt bekleyenlerden başlarsınız.",
+      "sort": {
+        "title": "Gerekçesiyle sınıflanmış",
+        "text": "Övgü, soru, şikâyet, öneri ya da spam. Her etiketin yanında nedenini anlatan bir satır olur."
+      },
+      "reply": {
+        "title": "Yanıt kuyruğu",
+        "text": "Yanıt bekleyen yorumlar işaretlenir ve önce listelenir; en çok beğenilenler en üstte."
+      },
+      "posts": {
+        "title": "Her gönderinin açıklaması",
+        "text": "Her gönderinin ne gösterdiğine dair kısa bir açıklama, metninden ve kapak görselinden. Videolar dahil."
+      },
+      "schedule": {
+        "title": "Elle ya da zamanlanmış",
+        "text": "Güncellemeler Update'e bastığınızda başlar. Zamanlama isteğe bağlıdır: birkaç saatte bir, her gün ya da belirli saatlerde."
+      },
+      "report": {
+        "title": "Raporlar, dışa ve içe aktarma",
+        "text": "Her güncellemeden sonra bir rapor. Tüm veritabanını tek dosya olarak dışa aktarın, istediğiniz yere içe aktarın."
+      },
+      "claude": {
+        "title": "Yerleşik Claude",
+        "text": "Yerleşik MCP sunucusu, Claude'un verilerinizi sorgulamasını ve herhangi bir sohbetten güncelleme başlatmasını sağlar."
+      }
+    },
+    "privacy": {
+      "title": "Verileriniz bilgisayarınızda kalır.",
+      "text": "SocialMonitor sunucusu, hesap ya da analitik yok. Veritabanı, tarayıcı profili ve her rapor bilgisayarınızda kalır.",
+      "claude": "Gönderi ve yorum metinleri ile her gönderinin kapak görseli, kendi Claude Code'unuz ya da Anthropic API anahtarınız üzerinden Claude'a gider. Tek istisna budur."
+    },
+    "open": {
+      "title": "Son satırına kadar açık kaynak.",
+      "text": "Kodun tamamı MIT lisansıyla GitHub'da. Tek bir komut Claude Code'u verilerinize bağlar.",
+      "mcp": "MCP rehberini okuyun",
+      "codeLabel": "SocialMonitor'ı Claude Code'a bağlayan komut",
+      "github": "Kodu oku"
+    },
+    "faq": {
+      "title": "Sorular ve yanıtlar.",
+      "lead": "İlk markayı takip etmeden önce sorulanlar.",
+      "items": {
+        "free": {
+          "q": "SocialMonitor gerçekten ücretsiz mi?",
+          "a": "Evet. Plan, sınır, deneme ya da hesap yok ve hiçbir zaman olmayacak. Yapay zekâ kendi Claude Code'unuz ya da Anthropic API anahtarınızla çalışır; ücreti Anthropic her zamanki gibi alır."
+        },
+        "data": {
+          "q": "Verilerim nerede saklanıyor?",
+          "a": "Bilgisayarınızda, SocialMonitor'ın data klasöründe. SocialMonitor sunucusu yoktur. Dışa ve içe aktarma, tüm veritabanını tek bir dosyayla taşır."
+        },
+        "ban": {
+          "q": "Hesabım engellenir mi?",
+          "a": "SocialMonitor yalnızca okur: paylaşım yapmaz, beğenmez, kimseyi takip etmez. Yavaş okur, oturum açılmış okumalar arasında en az 4 saat bekler ve ilk captcha'da durur. Hiçbir araç bir hesabın asla kısıtlanmayacağını vaat edemez; bu yüzden yedek bir hesapla oturum açın."
+        },
+        "networks": {
+          "q": "Hangi ağları takip ediyor?",
+          "a": "Instagram, Facebook ve TikTok. Bir markayı tek ağda, birkaçında ya da üçünde birden takip edin."
+        },
+        "ai": {
+          "q": "Yapay zekâ neyi görür?",
+          "a": "Gönderi ve yorum metinlerini ve her gönderinin kapak görselini. Bunlar kendi Claude Code'unuz ya da Anthropic API anahtarınız üzerinden Claude'a gider, başka hiçbir yere gitmez."
+        },
+        "when": {
+          "q": "Ne zaman kullanabilirim?",
+          "a": "SocialMonitor geliştiriliyor, henüz bir sürüm yok. Bugün kaynak koddan çalışıyor: nasıl yapılacağını <a data-link='run'>README</a> anlatıyor. İlk sürümden haberdar olmak için <a data-link='repo'>depoyu</a> takip edin."
+        }
+      }
+    },
+    "install": {
+      "title": "SocialMonitor'ı edinin.",
+      "run": "Kaynak koddan çalıştırın",
+      "runText": "Depoyu klonlayın ve paneli bilgisayarınızda başlatın. Node 22.18 ve Yarn gerekir.",
+      "runButton": "Adımları görün",
+      "github": "Kaynak kod",
+      "githubText": "Kodu oku, bir sorun bildir ya da bir özellik öner.",
+      "githubLink": "GitHub'da aç"
+    }
+  },
+  "privacy": {
+    "title": "Gizlilik politikası | SocialMonitor",
+    "description": "Shades Media Group hiçbir şey almaz. SocialMonitor gönderileri ve yorumları bilgisayarınızda tutar; yalnızca metinler ve kapaklar anahtarınızla Claude'a gider.",
+    "updated": "Son güncelleme: 12 Ekim 2026",
+    "intro": "SocialMonitor, Shades Media Group'un yaptığı ve kendi bilgisayarınızda çalıştırdığınız bir uygulamadır. Bu politika uygulamayı ve bu web sitesini kapsar.",
+    "short": "Shades Media Group hiçbir şey almaz. SocialMonitor'ın topladığı her şey bilgisayarınızda kalır. Tek istisna, Claude'a okuttuğu içeriktir; o da kendi hesabınız üzerinden Anthropic'e gider.",
+    "appTitle": "Uygulama neleri toplar ve bunlar nereye gider",
+    "appPosts": "<strong>Gönderiler ve yorumlar</strong>: eklediğiniz herkese açık profillerden, bilgisayarınızdaki bir tarayıcı profiliyle okunur. Yorum yapanların adlarını ve sözlerini içerir.",
+    "appStore": "<strong>Saklama:</strong> hepsi yalnızca bilgisayarınızda, <code>data/</code> klasöründeki bir veritabanında tutulur.",
+    "appClaude": "<strong>Gönderileri açıklamak ve yorumları sınıflamak için</strong> metinleri ve her gönderinin kapak görseli, yapılandırdığınız Claude Code ya da Anthropic API anahtarı üzerinden Claude'a gönderilir. Bu adımı <a data-link='anthropic'>Anthropic'in gizlilik politikası</a> kapsar.",
+    "appReports": "<strong>Raporlar ve dışa aktarımlar</strong> sizin kaydettiğiniz dosyalardır; onları nereye koyarsanız oraya giderler.",
+    "dutiesTitle": "Sorumluluklarınız",
+    "duties": "Yorumlar kişisel veridir. SocialMonitor'ı bir kuruluş için çalıştırıyorsanız, bu verilerin sorumlusu o kuruluştur. Yalnızca takip etmek için bir nedeniniz olan profilleri izleyin, verileri gerektiğinden uzun tutmayın (Settings → Keep data for) ve ağların koşullarına uyun. Bir markayı silmek, tüm gönderilerini ve yorumlarını siler.",
+    "site": "Web sitesi statiktir. Çerez kullanmaz; üçüncü taraf betik, yazı tipi ya da izleyici yüklemez. Seçtiğiniz görünüm tercihi tarayıcınızda kalır.",
+    "heading": "Gizlilik politikası",
+    "shortTitle": "Kısaca",
+    "siteTitle": "Bu web sitesi",
+    "dataTitle": "Aldığımız veriler",
+    "data": "Hiçbiri. Hesap, analitik, çökme raporu ya da herhangi bir izleme yok.",
+    "changesTitle": "Değişiklikler",
+    "changes": "Bu politikadaki değişiklikler bu sayfada yayınlanır ve <a data-link='changelog'>değişiklik günlüğünde</a> belirtilir.",
+    "contactTitle": "İletişim"
+  },
+  "prefs": {
+    "open": "Görünüm ve erişilebilirlik",
+    "title": "Görünüm",
+    "theme": "Tema",
+    "light": "Açık",
+    "dark": "Koyu",
+    "system": "Otomatik",
+    "access": "Erişilebilirlik",
+    "text": "Daha büyük metin",
+    "contrast": "Daha fazla kontrast",
+    "motion": "Hareketi azalt",
+    "links": "Bağlantıların altını çiz",
+    "reading": "Daha kolay okuma",
+    "saved": "Yalnızca bu tarayıcıya kaydedildi.",
+    "reset": "Sıfırla",
+    "close": "Kapat",
+    "privacy": "Gizlilik tercihleri"
+  },
+  "consent": {
+    "title": "Gizliliğin",
+    "text": "Bu site yalnızca çalışması için gerekenleri, örneğin görünüm ayarlarını saklar. Analiz veya pazarlama araçları ancak onay verirsen çalışır.",
+    "acceptAll": "Tümünü kabul et",
+    "necessaryOnly": "Yalnızca gerekli",
+    "customize": "Özelleştir",
+    "save": "Seçimleri kaydet",
+    "necessary": "Gerekli",
+    "necessaryText": "Görünüm ve gizlilik seçimlerini hatırlar. Her zaman açık.",
+    "analytics": "Analiz",
+    "analyticsText": "Neyin işe yaradığını görmek için anonim ziyaret sayımı. Şu an bu sitede kullanılmıyor.",
+    "marketing": "Pazarlama",
+    "marketingText": "Reklam ve kampanya ölçümü. Şu an bu sitede kullanılmıyor."
+  }
+}

@@ -1,0 +1,201 @@
+{
+  "language": "Idioma",
+  "imageAlt": "SocialMonitor: descubre qué dice la gente de tu marca",
+  "preferred": {
+    "button": "Añadir a fuentes preferidas<span class='visually-hidden'> en Google</span>",
+    "mention": "Encuentra SocialMonitor más a menudo en la Búsqueda de Google: <a data-link='preferred' target='_blank'>añádelo a tus fuentes preferidas</a>."
+  },
+  "nav": {
+    "label": "Principal",
+    "home": "Inicio",
+    "homeLabel": "Inicio de SocialMonitor",
+    "how": "Cómo funciona",
+    "features": "Funciones",
+    "privacy": "Privacidad",
+    "faq": "Preguntas",
+    "cta": "Ejecútalo"
+  },
+  "footer": {
+    "tagline": "Sigue marcas en Instagram, Facebook y TikTok. Cada comentario se queda en tu ordenador, clasificado por IA.",
+    "mcp": "Servidor MCP",
+    "status": "En desarrollo",
+    "top": "SocialMonitor, volver arriba",
+    "label": "Pie de página",
+    "product": "Producto",
+    "project": "Proyecto",
+    "trust": "Confianza",
+    "changelog": "Registro de cambios",
+    "issues": "Informar de un problema",
+    "security": "Seguridad",
+    "license": "Licencia MIT",
+    "credit": "Gratis y de código abierto. Creado por <a data-link='shades'>Shades Media Group</a>."
+  },
+  "home": {
+    "title": "Monitorización de redes sociales gratis, en tu ordenador | SocialMonitor",
+    "description": "Una app gratuita y de código abierto que guarda cada comentario de Instagram, Facebook y TikTok en tu ordenador y los clasifica con IA.",
+    "hero": {
+      "title": "Descubre qué dice la gente de tu marca.",
+      "lead": "SocialMonitor guarda cada publicación y comentario de Instagram, Facebook y TikTok en tu ordenador. La IA clasifica los comentarios y marca los que necesitan respuesta.",
+      "how": "Cómo funciona",
+      "github": "Seguir en GitHub",
+      "note": "En desarrollo, aún sin versión publicada. Ya se ejecuta desde el código fuente, gratis y de código abierto."
+    },
+    "how": {
+      "title": "De un enlace a un informe.",
+      "text": "SocialMonitor lee las redes con su propio navegador, en el que inicias sesión tú. Nunca ve tu contraseña.",
+      "name": "Sigue los comentarios de una marca con SocialMonitor",
+      "steps": {
+        "add": {
+          "name": "Añade una marca",
+          "text": "Pega los enlaces de sus perfiles en Instagram, Facebook y TikTok."
+        },
+        "update": {
+          "name": "Pulsa Update",
+          "text": "Elige las redes y luego las publicaciones nuevas o todas. Nada se ejecuta hasta entonces."
+        },
+        "sort": {
+          "name": "Cada comentario clasificado",
+          "text": "Cada comentario recibe una etiqueta y su motivo. Los que necesitan respuesta salen primero."
+        },
+        "report": {
+          "name": "Lee el informe",
+          "text": "Cada actualización termina con un informe. O pregunta a Claude por tus datos desde cualquier chat."
+        }
+      }
+    },
+    "features": {
+      "title": "Primero, los comentarios que te necesitan.",
+      "text": "Cada publicación y comentario se guarda, se describe y se clasifica. Empiezas por lo que espera respuesta.",
+      "sort": {
+        "title": "Clasificado, con el motivo",
+        "text": "Elogios, preguntas, quejas, sugerencias o spam. Cada etiqueta viene con una línea que explica por qué."
+      },
+      "reply": {
+        "title": "Una cola de respuestas",
+        "text": "Los comentarios que necesitan respuesta se marcan y aparecen primero, los que tienen más me gusta arriba."
+      },
+      "posts": {
+        "title": "Cada publicación descrita",
+        "text": "Una breve descripción de lo que muestra cada publicación, a partir de su texto y su imagen de portada. Vídeos incluidos."
+      },
+      "schedule": {
+        "title": "Manual o programado",
+        "text": "Las actualizaciones arrancan cuando pulsas Update. Las programaciones son opcionales: cada pocas horas, a diario o a horas fijas."
+      },
+      "report": {
+        "title": "Informes, exportación e importación",
+        "text": "Un informe tras cada actualización. Exporta toda la base de datos en un archivo e impórtala donde quieras."
+      },
+      "claude": {
+        "title": "Claude, integrado",
+        "text": "Un servidor MCP integrado permite a Claude consultar tus datos y lanzar actualizaciones desde cualquier chat."
+      }
+    },
+    "privacy": {
+      "title": "Tus datos se quedan en tu ordenador.",
+      "text": "Sin servidor de SocialMonitor, sin cuenta, sin analítica. La base de datos, el perfil del navegador y cada informe se quedan en tu equipo.",
+      "claude": "El texto de publicaciones y comentarios, y la imagen de portada de cada publicación, van a Claude a través de tu propio Claude Code o clave API de Anthropic. Esa es la única excepción."
+    },
+    "open": {
+      "title": "Código abierto, hasta la última línea.",
+      "text": "Todo el código está en GitHub con licencia MIT. Un solo comando conecta Claude Code con tus datos.",
+      "mcp": "Lee la guía MCP",
+      "codeLabel": "El comando que conecta SocialMonitor con Claude Code",
+      "github": "Leer el código"
+    },
+    "faq": {
+      "title": "Preguntas, con respuesta.",
+      "lead": "Lo que se pregunta antes de seguir la primera marca.",
+      "items": {
+        "free": {
+          "q": "¿SocialMonitor es gratis de verdad?",
+          "a": "Sí. No hay planes, límites, pruebas ni cuentas, y nunca los habrá. La IA funciona con tu propio Claude Code o clave API de Anthropic, que Anthropic factura como siempre."
+        },
+        "data": {
+          "q": "¿Dónde se guardan mis datos?",
+          "a": "En tu ordenador, en la carpeta data de SocialMonitor. No existe un servidor de SocialMonitor. La exportación y la importación mueven toda la base de datos en un solo archivo."
+        },
+        "ban": {
+          "q": "¿Me bloquearán la cuenta?",
+          "a": "SocialMonitor solo lee: nunca publica, da me gusta ni sigue a nadie. Lee despacio, espera al menos 4 horas entre lecturas con sesión iniciada y se detiene ante el primer captcha. Ninguna herramienta puede prometer que una cuenta nunca se restrinja, así que usa una cuenta secundaria."
+        },
+        "networks": {
+          "q": "¿Qué redes sigue?",
+          "a": "Instagram, Facebook y TikTok. Sigue una marca en una red, en varias o en las tres."
+        },
+        "ai": {
+          "q": "¿Qué ve la IA?",
+          "a": "El texto de publicaciones y comentarios, y la imagen de portada de cada publicación. Van a Claude a través de tu propio Claude Code o clave API de Anthropic, y a ningún otro sitio."
+        },
+        "when": {
+          "q": "¿Cuándo podré usarlo?",
+          "a": "SocialMonitor está en desarrollo, aún sin versión publicada. Ya se ejecuta desde el código fuente: el <a data-link='run'>README</a> explica cómo. Sigue el <a data-link='repo'>repositorio</a> para enterarte de la primera versión."
+        }
+      }
+    },
+    "install": {
+      "title": "Consigue SocialMonitor.",
+      "run": "Ejecútalo desde el código",
+      "runText": "Clona el repositorio e inicia el panel en tu ordenador. Necesitas Node 22.18 y Yarn.",
+      "runButton": "Ver los pasos",
+      "github": "Código fuente",
+      "githubText": "Lee el código, informa de un problema o sugiere una función.",
+      "githubLink": "Abrir en GitHub"
+    }
+  },
+  "privacy": {
+    "title": "Política de privacidad | SocialMonitor",
+    "description": "Shades Media Group no recibe nada. SocialMonitor guarda publicaciones y comentarios en tu ordenador; solo los textos y las portadas van a Claude, con tu clave.",
+    "updated": "Última actualización: 12 de octubre de 2026",
+    "intro": "SocialMonitor es una app que ejecutas en tu propio ordenador, creada por Shades Media Group. Esta política cubre la app y este sitio web.",
+    "short": "Shades Media Group no recibe nada. Todo lo que recoge SocialMonitor se queda en tu ordenador. La única excepción es lo que pide leer a Claude, que va a Anthropic a través de tu propia cuenta.",
+    "appTitle": "Qué recoge la app y adónde va",
+    "appPosts": "<strong>Publicaciones y comentarios</strong> de los perfiles públicos que añades, leídos con un perfil de navegador en tu ordenador. Incluyen los nombres y las palabras de quienes comentan.",
+    "appStore": "<strong>Los guarda</strong> en una base de datos en la carpeta <code>data/</code>, solo en tu ordenador.",
+    "appClaude": "<strong>Para describir publicaciones y clasificar comentarios,</strong> su texto y la imagen de portada de cada publicación se envían a Claude a través del Claude Code o la clave API de Anthropic que configures. <a data-link='anthropic'>La política de privacidad de Anthropic</a> cubre ese paso.",
+    "appReports": "<strong>Los informes y las exportaciones</strong> son archivos que guardas tú; van adonde los pongas.",
+    "dutiesTitle": "Tus responsabilidades",
+    "duties": "Los comentarios son datos personales. Si usas SocialMonitor para una organización, ella es la responsable de esos datos. Sigue solo perfiles que tengas motivos para seguir, guarda los datos solo el tiempo necesario (Settings → Keep data for) y respeta las condiciones de las redes. Elimina una marca para eliminar todas sus publicaciones y comentarios.",
+    "site": "El sitio web es estático. No usa cookies ni carga scripts, fuentes o rastreadores de terceros. La preferencia de visualización que elijas se queda en tu navegador.",
+    "heading": "Política de privacidad",
+    "shortTitle": "En resumen",
+    "siteTitle": "Este sitio web",
+    "dataTitle": "Datos que recibimos",
+    "data": "Ninguno. No hay cuentas, analítica, informes de errores ni seguimiento de ningún tipo.",
+    "changesTitle": "Cambios",
+    "changes": "Los cambios en esta política se publican en esta página y se anotan en el <a data-link='changelog'>registro de cambios</a>.",
+    "contactTitle": "Contacto"
+  },
+  "prefs": {
+    "open": "Pantalla y accesibilidad",
+    "title": "Pantalla",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Auto",
+    "access": "Accesibilidad",
+    "text": "Texto más grande",
+    "contrast": "Más contraste",
+    "motion": "Reducir el movimiento",
+    "links": "Subrayar los enlaces",
+    "reading": "Lectura más fácil",
+    "saved": "Se guarda solo en este navegador.",
+    "reset": "Restablecer",
+    "close": "Cerrar",
+    "privacy": "Opciones de privacidad"
+  },
+  "consent": {
+    "title": "Tu privacidad",
+    "text": "Este sitio guarda solo lo que necesita para funcionar, como tus ajustes de pantalla. Las herramientas de analítica o marketing solo funcionarían con tu permiso.",
+    "acceptAll": "Aceptar todo",
+    "necessaryOnly": "Solo necesarias",
+    "customize": "Personalizar",
+    "save": "Guardar elección",
+    "necessary": "Necesarias",
+    "necessaryText": "Recuerdan tus ajustes de pantalla y privacidad. Siempre activas.",
+    "analytics": "Analítica",
+    "analyticsText": "Recuento anónimo de visitas, para saber qué ayuda. No se usa en este sitio hoy.",
+    "marketing": "Marketing",
+    "marketingText": "Publicidad y medición de campañas. No se usa en este sitio hoy."
+  }
+}

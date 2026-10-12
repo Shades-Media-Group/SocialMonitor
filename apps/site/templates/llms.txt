@@ -1,0 +1,29 @@
+# SocialMonitor
+
+> SocialMonitor is a free, open-source app, in development, that watches brands on Instagram, Facebook and TikTok. It runs on the user's own computer, keeps every post and comment in a local database, describes each post with AI, and sorts comments into praise, questions, complaints, suggestions and spam, flagging the ones that need a reply. Made by Shades Media Group.
+
+## Facts
+
+- Status: in development, with no release yet. It runs from source today: clone the repository, `yarn install`, `yarn start`, and the dashboard opens at http://localhost:4400.
+- Price: free forever. No plans, limits, trials, accounts or upgrade prompts. MIT licence.
+- Networks: Instagram, Facebook and TikTok, one, several or all three per brand.
+- Updates: manual by default. Press Update, choose the networks and new posts or all posts. Optional schedules: every N hours, daily, or at set times. Signed-in reads are at least 4 hours apart.
+- Sorting: each comment is labelled praise, question, complaint, suggestion, neutral or spam, with the reason, and flagged when it needs a reply.
+- Reports: one after every update. The whole database can be exported and imported.
+- Claude: a built-in MCP server lets Claude query the data and run updates. `claude mcp add socialmonitor --scope user -- node /path/to/SocialMonitor/apps/app/src/mcp/main.ts`
+- Reading: read-only and slow, through SocialMonitor's own browser profile, which the user signs into by hand. The app never sees passwords. It stops at the first captcha.
+- Privacy: no SocialMonitor server, accounts or analytics. The database, browser profile and reports stay on the user's computer. Post and comment text, and each post's cover picture, go to Claude through the user's own Claude Code or Anthropic API key. Nothing else leaves the computer.
+- The dashboard is never hosted. Only this website is.
+- Languages: this site is in English, French, Romanian, Russian, Spanish, Italian, Turkish, Hindi, Japanese, Simplified and Traditional Chinese. The dashboard is in English.
+
+## Site
+
+- [Home](https://socialmonitor.shades.md/): what SocialMonitor does, how it works, privacy, and a FAQ.
+- [Privacy policy](https://socialmonitor.shades.md/privacy/)
+
+## Optional
+
+- [Source code on GitHub](https://github.com/Shades-Media-Group/SocialMonitor)
+- [MCP server guide](https://github.com/Shades-Media-Group/SocialMonitor/blob/main/docs/mcp.md)
+- [Changelog](https://github.com/Shades-Media-Group/SocialMonitor/blob/main/CHANGELOG.md)
+- [Full text for language models](https://socialmonitor.shades.md/llms-full.txt): these facts plus the FAQ.

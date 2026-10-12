@@ -1,0 +1,201 @@
+{
+  "language": "言語",
+  "imageAlt": "SocialMonitor：ブランドについて何が語られているかを知る",
+  "preferred": {
+    "button": "優先するソースに追加<span class='visually-hidden'>（Google）</span>",
+    "mention": "Google検索でSocialMonitorをもっと見つけやすく。<a data-link='preferred' target='_blank'>優先するソースに追加</a>してください。"
+  },
+  "nav": {
+    "label": "メイン",
+    "home": "ホーム",
+    "homeLabel": "SocialMonitorホーム",
+    "how": "仕組み",
+    "features": "機能",
+    "privacy": "プライバシー",
+    "faq": "よくある質問",
+    "cta": "使ってみる"
+  },
+  "footer": {
+    "tagline": "Instagram、Facebook、TikTokでブランドを見守ります。コメントはすべてAIで分類され、あなたのパソコンに残ります。",
+    "mcp": "MCPサーバー",
+    "status": "開発中",
+    "top": "SocialMonitor、ページの先頭へ",
+    "label": "フッター",
+    "product": "プロダクト",
+    "project": "プロジェクト",
+    "trust": "安全性",
+    "changelog": "変更履歴",
+    "issues": "問題を報告",
+    "security": "セキュリティ",
+    "license": "MITライセンス",
+    "credit": "無料のオープンソース。<a data-link='shades'>Shades Media Group</a>が制作。"
+  },
+  "home": {
+    "title": "自分のパソコンで動く無料のSNSモニタリング | SocialMonitor",
+    "description": "Instagram、Facebook、TikTokのコメントをすべてパソコンに保存し、AIで分類する無料のオープンソースアプリ。",
+    "hero": {
+      "title": "ブランドについて、何が語られているかを知る。",
+      "lead": "SocialMonitorは、Instagram、Facebook、TikTokの投稿とコメントをすべてあなたのパソコンに保存します。AIがコメントを分類し、返信が必要なものに印を付けます。",
+      "how": "仕組みを見る",
+      "github": "GitHubでフォロー",
+      "note": "開発中で、まだリリースはありません。今はソースから動かせます。無料でオープンソースです。"
+    },
+    "how": {
+      "title": "リンクひとつから、レポートまで。",
+      "text": "SocialMonitorは専用のブラウザでSNSを読み込みます。ログインはあなた自身が行い、アプリがパスワードを見ることはありません。",
+      "name": "SocialMonitorでブランドへのコメントを見守る",
+      "steps": {
+        "add": {
+          "name": "ブランドを追加",
+          "text": "Instagram、Facebook、TikTokのプロフィールのリンクを貼り付けます。"
+        },
+        "update": {
+          "name": "Updateを押す",
+          "text": "SNSを選び、新しい投稿かすべての投稿かを選びます。押すまで何も動きません。"
+        },
+        "sort": {
+          "name": "コメントを分類",
+          "text": "すべてのコメントにラベルと理由が付きます。返信が必要なものが先頭に並びます。"
+        },
+        "report": {
+          "name": "レポートを読む",
+          "text": "更新のたびにレポートが届きます。どのチャットからでも、Claudeにデータについて聞けます。"
+        }
+      }
+    },
+    "features": {
+      "title": "あなたが必要なコメントから先に。",
+      "text": "投稿とコメントはすべて保存され、説明され、分類されます。返信を待つものから始められます。",
+      "sort": {
+        "title": "理由つきで分類",
+        "text": "称賛、質問、苦情、提案、スパム。どのラベルにも、その理由が一行で付きます。"
+      },
+      "reply": {
+        "title": "返信待ちの一覧",
+        "text": "返信が必要なコメントには印が付き、先頭に並びます。いいねの多いものが上です。"
+      },
+      "posts": {
+        "title": "投稿ごとの説明",
+        "text": "各投稿が何を見せているかを、本文とカバー画像から短く説明します。動画も対象です。"
+      },
+      "schedule": {
+        "title": "手動でも、スケジュールでも",
+        "text": "更新はUpdateを押したときに動きます。スケジュールは任意で、数時間ごと、毎日、指定時刻から選べます。"
+      },
+      "report": {
+        "title": "レポート、エクスポート、インポート",
+        "text": "更新のたびにレポート。データベース全体を1つのファイルに書き出し、どこにでも読み込めます。"
+      },
+      "claude": {
+        "title": "Claudeと連携",
+        "text": "内蔵のMCPサーバーで、Claudeがどのチャットからでもデータを調べ、更新を実行できます。"
+      }
+    },
+    "privacy": {
+      "title": "データは、あなたのパソコンに。",
+      "text": "SocialMonitorのサーバーも、アカウントも、アクセス解析もありません。データベース、ブラウザのプロファイル、すべてのレポートはあなたのパソコンに残ります。",
+      "claude": "投稿とコメントの本文、そして各投稿のカバー画像は、あなた自身のClaude CodeまたはAnthropic APIキーを通じてClaudeに送られます。例外はこれだけです。"
+    },
+    "open": {
+      "title": "最後の一行まで、オープンソース。",
+      "text": "すべてのコードはMITライセンスでGitHubにあります。コマンドひとつで、Claude Codeがあなたのデータにつながります。",
+      "mcp": "MCPガイドを読む",
+      "codeLabel": "SocialMonitorをClaude Codeにつなぐコマンド",
+      "github": "コードを読む"
+    },
+    "faq": {
+      "title": "よくある質問。",
+      "lead": "最初のブランドを見守る前に、よく聞かれること。",
+      "items": {
+        "free": {
+          "q": "SocialMonitorは本当に無料ですか？",
+          "a": "はい。プラン、制限、試用期間、アカウントはなく、これからもありません。AIはあなた自身のClaude CodeまたはAnthropic APIキーで動き、料金はいつもどおりAnthropicから請求されます。"
+        },
+        "data": {
+          "q": "データはどこに保存されますか？",
+          "a": "あなたのパソコンの、SocialMonitorのdataフォルダです。SocialMonitorのサーバーはありません。エクスポートとインポートで、データベース全体を1つのファイルとして移せます。"
+        },
+        "ban": {
+          "q": "アカウントが停止されませんか？",
+          "a": "SocialMonitorは読むだけで、投稿もいいねもフォローもしません。ゆっくり読み、ログインしての読み込みは4時間以上あけ、最初のCAPTCHAで止まります。アカウントが制限されないとは、どのツールも約束できません。予備のアカウントでログインしてください。"
+        },
+        "networks": {
+          "q": "どのSNSに対応していますか？",
+          "a": "Instagram、Facebook、TikTokです。ブランドごとに、1つでも、いくつでも、3つすべてでも見守れます。"
+        },
+        "ai": {
+          "q": "AIは何を見ますか？",
+          "a": "投稿とコメントの本文、そして各投稿のカバー画像です。これらはあなた自身のClaude CodeまたはAnthropic APIキーを通じてClaudeに送られ、ほかにはどこにも送られません。"
+        },
+        "when": {
+          "q": "いつ使えますか？",
+          "a": "SocialMonitorは開発中で、まだリリースはありません。今はソースから動かせます。手順は<a data-link='run'>README</a>にあります。最初のリリースを知るには<a data-link='repo'>リポジトリ</a>をウォッチしてください。"
+        }
+      }
+    },
+    "install": {
+      "title": "SocialMonitorを入手。",
+      "run": "ソースから動かす",
+      "runText": "リポジトリをクローンして、パソコンでダッシュボードを起動します。Node 22.18とYarnが必要です。",
+      "runButton": "手順を見る",
+      "github": "ソースコード",
+      "githubText": "コードを読んだり、問題を報告したり、機能を提案したり。",
+      "githubLink": "GitHubで開く"
+    }
+  },
+  "privacy": {
+    "title": "プライバシーポリシー | SocialMonitor",
+    "description": "Shades Media Groupは何も受け取りません。投稿とコメントはパソコンに残り、本文とカバー画像だけがあなたのキーでClaudeに送られます。",
+    "updated": "最終更新日：2026年10月12日",
+    "intro": "SocialMonitorは、あなたが自分のパソコンで動かすアプリで、Shades Media Groupが制作しています。このポリシーは、アプリとこのWebサイトに適用されます。",
+    "short": "Shades Media Groupは何も受け取りません。SocialMonitorが集めたものは、すべてあなたのパソコンに残ります。唯一の例外はClaudeに読ませる内容で、あなた自身のアカウントを通じてAnthropicに送られます。",
+    "appTitle": "アプリが集めるもの、その行き先",
+    "appPosts": "<strong>投稿とコメント</strong>：あなたが追加した公開プロフィールから、パソコン上のブラウザのプロファイルで読み込みます。コメントした人の名前と言葉も含まれます。",
+    "appStore": "<strong>保存先</strong>は<code>data/</code>フォルダのデータベースで、あなたのパソコンの中だけです。",
+    "appClaude": "<strong>投稿の説明とコメントの分類のため、</strong>本文と各投稿のカバー画像を、あなたが設定したClaude CodeまたはAnthropic APIキーを通じてClaudeに送ります。この段階には<a data-link='anthropic'>Anthropicのプライバシーポリシー</a>が適用されます。",
+    "appReports": "<strong>レポートとエクスポート</strong>は、あなたが保存するファイルです。置いた場所にだけ存在します。",
+    "dutiesTitle": "あなたの責任",
+    "duties": "コメントは個人データです。組織のためにSocialMonitorを使う場合、そのデータの管理者は組織です。見守る理由のあるプロフィールだけを追加し、データは必要な期間だけ保管し（Settings → Keep data for）、各SNSの規約を守ってください。ブランドを削除すると、その投稿とコメントもすべて削除されます。",
+    "site": "このWebサイトは静的なサイトです。Cookieを設定せず、サードパーティのスクリプト、フォント、トラッカーも読み込みません。選択した表示設定は、お使いのブラウザに保存されます。",
+    "heading": "プライバシーポリシー",
+    "shortTitle": "要約",
+    "siteTitle": "このWebサイト",
+    "dataTitle": "当社が受け取るデータ",
+    "data": "ありません。アカウント、アナリティクス、クラッシュレポート、いかなる種類のトラッキングもありません。",
+    "changesTitle": "変更について",
+    "changes": "このポリシーの変更はこのページで公開し、<a data-link='changelog'>変更履歴</a>に記載します。",
+    "contactTitle": "お問い合わせ"
+  },
+  "prefs": {
+    "open": "表示とアクセシビリティ",
+    "title": "表示",
+    "theme": "テーマ",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "自動",
+    "access": "アクセシビリティ",
+    "text": "文字を大きく",
+    "contrast": "コントラストを強く",
+    "motion": "動きを減らす",
+    "links": "リンクに下線",
+    "reading": "読みやすく",
+    "saved": "このブラウザにのみ保存されます。",
+    "reset": "リセット",
+    "close": "閉じる",
+    "privacy": "プライバシー設定"
+  },
+  "consent": {
+    "title": "プライバシーについて",
+    "text": "このサイトが保存するのは、表示設定など動作に必要な情報だけです。分析やマーケティングのツールは、同意をいただいた場合にのみ動作します。",
+    "acceptAll": "すべて許可",
+    "necessaryOnly": "必要なもののみ",
+    "customize": "カスタマイズ",
+    "save": "選択を保存",
+    "necessary": "必須",
+    "necessaryText": "表示とプライバシーの設定を記憶します。常にオン。",
+    "analytics": "分析",
+    "analyticsText": "役立つ内容を知るための匿名の訪問数カウント。現在このサイトでは使用していません。",
+    "marketing": "マーケティング",
+    "marketingText": "広告とキャンペーンの効果測定。現在このサイトでは使用していません。"
+  }
+}

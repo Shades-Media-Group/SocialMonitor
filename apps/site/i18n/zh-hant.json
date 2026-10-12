@@ -1,0 +1,201 @@
+{
+  "language": "語言",
+  "imageAlt": "SocialMonitor：了解大家怎麼評價你的品牌",
+  "preferred": {
+    "button": "新增為偏好來源<span class='visually-hidden'>（Google）</span>",
+    "mention": "想在 Google 搜尋中更常看到 SocialMonitor？<a data-link='preferred' target='_blank'>將它新增為偏好來源</a>。"
+  },
+  "nav": {
+    "label": "主選單",
+    "home": "首頁",
+    "homeLabel": "SocialMonitor 首頁",
+    "how": "運作方式",
+    "features": "功能",
+    "privacy": "隱私",
+    "faq": "常見問題",
+    "cta": "執行"
+  },
+  "footer": {
+    "tagline": "在 Instagram、Facebook 和 TikTok 上關注品牌。每則留言都由 AI 分類，並留在你的電腦上。",
+    "mcp": "MCP 伺服器",
+    "status": "開發中",
+    "top": "SocialMonitor，回到頂端",
+    "label": "頁尾",
+    "product": "產品",
+    "project": "專案",
+    "trust": "信任",
+    "changelog": "更新紀錄",
+    "issues": "回報問題",
+    "security": "安全性",
+    "license": "MIT 授權",
+    "credit": "免費且開源。由 <a data-link='shades'>Shades Media Group</a> 打造。"
+  },
+  "home": {
+    "title": "在你自己的電腦上免費監測社群媒體 | SocialMonitor",
+    "description": "一款免費開源 App，把 Instagram、Facebook 和 TikTok 上的每則留言保存在你的電腦上，並用 AI 分類。",
+    "hero": {
+      "title": "了解大家怎麼評價你的品牌。",
+      "lead": "SocialMonitor 把 Instagram、Facebook 和 TikTok 上的每則貼文和留言保存在你的電腦上。AI 為留言分類，並標出需要回覆的留言。",
+      "how": "了解運作方式",
+      "github": "在 GitHub 上追蹤",
+      "note": "開發中，尚未發布。現在可以從原始碼執行，免費且開源。"
+    },
+    "how": {
+      "title": "從一個連結，到一份報告。",
+      "text": "SocialMonitor 用自己的瀏覽器讀取社群網路，由你親手登入。它永遠看不到你的密碼。",
+      "name": "用 SocialMonitor 關注品牌的留言",
+      "steps": {
+        "add": {
+          "name": "新增品牌",
+          "text": "貼上它在 Instagram、Facebook 和 TikTok 上的個人檔案連結。"
+        },
+        "update": {
+          "name": "按下 Update",
+          "text": "選擇網路，再選新貼文或全部貼文。在你按下之前，什麼都不會執行。"
+        },
+        "sort": {
+          "name": "留言逐則分類",
+          "text": "每則留言都有一個標籤和理由。需要回覆的排在最前面。"
+        },
+        "report": {
+          "name": "閱讀報告",
+          "text": "每次更新後都會產生一份報告。也可以在任何對話中向 Claude 詢問你的資料。"
+        }
+      }
+    },
+    "features": {
+      "title": "先看需要你處理的留言。",
+      "text": "每則貼文和留言都會被保存、描述和分類。你從等待回覆的內容開始。",
+      "sort": {
+        "title": "分類，附上理由",
+        "text": "稱讚、提問、抱怨、建議或垃圾訊息。每個標籤都附一行說明原因。"
+      },
+      "reply": {
+        "title": "待回覆佇列",
+        "text": "需要回覆的留言會被標出並排在最前面，按讚最多的在最上方。"
+      },
+      "posts": {
+        "title": "每則貼文都有描述",
+        "text": "根據內文和封面圖，簡短描述每則貼文呈現的內容。影片也包括在內。"
+      },
+      "schedule": {
+        "title": "手動或排程",
+        "text": "按下 Update 時才會更新。排程可自由選擇：每隔幾小時、每天或在固定時間。"
+      },
+      "report": {
+        "title": "報告、匯出與匯入",
+        "text": "每次更新後一份報告。把整個資料庫匯出成一個檔案，在任何地方匯入。"
+      },
+      "claude": {
+        "title": "內建 Claude",
+        "text": "內建的 MCP 伺服器讓 Claude 在任何對話中查詢你的資料並執行更新。"
+      }
+    },
+    "privacy": {
+      "title": "你的資料留在你的電腦上。",
+      "text": "沒有 SocialMonitor 伺服器，沒有帳號，沒有數據分析。資料庫、瀏覽器設定檔和每份報告都留在你的電腦上。",
+      "claude": "貼文和留言的文字，以及每則貼文的封面圖，會透過你自己的 Claude Code 或 Anthropic API 金鑰傳送給 Claude。這是唯一的例外。"
+    },
+    "open": {
+      "title": "開源，直到最後一行。",
+      "text": "全部程式碼以 MIT 授權發布在 GitHub 上。一行指令就能把 Claude Code 連接到你的資料。",
+      "mcp": "閱讀 MCP 指南",
+      "codeLabel": "把 SocialMonitor 連接到 Claude Code 的指令",
+      "github": "閱讀程式碼"
+    },
+    "faq": {
+      "title": "常見問題。",
+      "lead": "關注第一個品牌之前，大家常問的問題。",
+      "items": {
+        "free": {
+          "q": "SocialMonitor 真的免費嗎？",
+          "a": "是的。沒有方案、限制、試用或帳號，以後也不會有。AI 使用你自己的 Claude Code 或 Anthropic API 金鑰，由 Anthropic 照常計費。"
+        },
+        "data": {
+          "q": "我的資料存放在哪裡？",
+          "a": "在你的電腦上，SocialMonitor 的 data 資料夾裡。沒有 SocialMonitor 伺服器。匯出和匯入會把整個資料庫當成一個檔案移轉。"
+        },
+        "ban": {
+          "q": "我的帳號會被停用嗎？",
+          "a": "SocialMonitor 只讀取：從不發文、按讚或追蹤。它讀得很慢，兩次登入讀取之間至少間隔 4 小時，遇到第一個驗證碼就停止。沒有工具能保證帳號永遠不受限制，所以請用備用帳號登入。"
+        },
+        "networks": {
+          "q": "它支援哪些社群網路？",
+          "a": "Instagram、Facebook 和 TikTok。一個品牌可以只看一個網路、幾個，或全部三個。"
+        },
+        "ai": {
+          "q": "AI 會看到什麼？",
+          "a": "貼文和留言的文字，以及每則貼文的封面圖。它們透過你自己的 Claude Code 或 Anthropic API 金鑰傳送給 Claude，不會傳到其他任何地方。"
+        },
+        "when": {
+          "q": "什麼時候可以使用？",
+          "a": "SocialMonitor 正在開發中，尚未發布。現在可以從原始碼執行：<a data-link='run'>README</a> 裡有說明。關注<a data-link='repo'>程式碼儲存庫</a>，第一時間得知首個版本。"
+        }
+      }
+    },
+    "install": {
+      "title": "取得 SocialMonitor。",
+      "run": "從原始碼執行",
+      "runText": "複製程式碼儲存庫，在你的電腦上啟動控制台。需要 Node 22.18 和 Yarn。",
+      "runButton": "查看步驟",
+      "github": "原始碼",
+      "githubText": "閱讀程式碼、回報問題或建議新功能。",
+      "githubLink": "在 GitHub 上開啟"
+    }
+  },
+  "privacy": {
+    "title": "隱私權政策 | SocialMonitor",
+    "description": "Shades Media Group 不接收任何資料。SocialMonitor 把貼文和留言保存在你的電腦上；只有文字和封面圖會透過你的金鑰傳送給 Claude。",
+    "updated": "最後更新：2026 年 10 月 12 日",
+    "intro": "SocialMonitor 是一款在你自己電腦上執行的 App，由 Shades Media Group 製作。本政策適用於該 App 和本網站。",
+    "short": "Shades Media Group 不接收任何資料。SocialMonitor 收集的一切都留在你的電腦上。唯一的例外是它請 Claude 讀取的內容，會透過你自己的帳號傳送給 Anthropic。",
+    "appTitle": "App 收集什麼，以及去向",
+    "appPosts": "<strong>貼文和留言</strong>：來自你新增的公開個人檔案，透過你電腦上的瀏覽器設定檔讀取。其中包括留言者的名字和言論。",
+    "appStore": "<strong>儲存位置</strong>：<code>data/</code> 資料夾中的資料庫，只在你的電腦上。",
+    "appClaude": "<strong>為了描述貼文和分類留言，</strong>它們的文字和每則貼文的封面圖會透過你設定的 Claude Code 或 Anthropic API 金鑰傳送給 Claude。這一步適用 <a data-link='anthropic'>Anthropic 的隱私權政策</a>。",
+    "appReports": "<strong>報告和匯出檔</strong>由你儲存，你放在哪裡，它們就在哪裡。",
+    "dutiesTitle": "你的責任",
+    "duties": "留言屬於個人資料。如果你為某個組織執行 SocialMonitor，該組織就是這些資料的控制者。只關注你有理由關注的個人檔案，資料保留時間不要超過所需（Settings → Keep data for），並遵守各網路的條款。刪除一個品牌，即可刪除它的所有貼文和留言。",
+    "site": "本網站是靜態網站。它不設定 Cookie，也不載入任何第三方指令碼、字型或追蹤器。你選擇的顯示偏好只保存在你的瀏覽器中。",
+    "heading": "隱私權政策",
+    "shortTitle": "簡短版本",
+    "siteTitle": "本網站",
+    "dataTitle": "我們收到的資料",
+    "data": "沒有。沒有帳號、分析工具、當機報告，也沒有任何形式的追蹤。",
+    "changesTitle": "政策變更",
+    "changes": "本政策的變更會公布在本頁，並記錄在<a data-link='changelog'>更新紀錄</a>中。",
+    "contactTitle": "聯絡我們"
+  },
+  "prefs": {
+    "open": "顯示與無障礙",
+    "title": "顯示",
+    "theme": "主題",
+    "light": "淺色",
+    "dark": "深色",
+    "system": "自動",
+    "access": "無障礙",
+    "text": "放大文字",
+    "contrast": "提高對比",
+    "motion": "減少動態",
+    "links": "連結加底線",
+    "reading": "更易閱讀",
+    "saved": "只儲存在這個瀏覽器中。",
+    "reset": "重設",
+    "close": "關閉",
+    "privacy": "隱私選項"
+  },
+  "consent": {
+    "title": "你的隱私",
+    "text": "本網站只保存運作所需的資訊，例如你的顯示設定。分析或行銷工具只有在你同意後才會執行。",
+    "acceptAll": "全部接受",
+    "necessaryOnly": "僅必要項目",
+    "customize": "自訂",
+    "save": "儲存選擇",
+    "necessary": "必要",
+    "necessaryText": "記住你的顯示與隱私選擇。永遠開啟。",
+    "analytics": "分析",
+    "analyticsText": "匿名統計造訪次數，了解哪些內容有幫助。本網站目前未使用。",
+    "marketing": "行銷",
+    "marketingText": "廣告與活動成效衡量。本網站目前未使用。"
+  }
+}
