@@ -2,6 +2,15 @@ import type { Dict } from '../i18n.ts'
 
 export const ru: Dict = {
   strings: {
+    'Period before': 'Прошлый период',
+    'What the AI understood': 'Как понял ИИ',
+    replied: 'ответил(а)',
+    'Change the rating': 'Изменить оценку',
+    Bubbles: 'Пузыри',
+    'What to chart': 'Что на графике',
+    '{n}% answered': '{n}% с ответом',
+    'Preferences are an object.': 'Настройки должны быть объектом.',
+    'Too many preferences.': 'Слишком много настроек.',
     Open: 'Открыть',
     'No comments saved for this post.': 'Для этой публикации нет сохранённых комментариев.',
     'View all {n}': 'Показать все: {n}',

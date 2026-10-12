@@ -421,3 +421,94 @@ export function Heatmap({
     </div>
   )
 }
+
+/**
+ * One measure over time, the way analytics reports draw it: this period as a solid line with a
+ * faint area, the period before as a dashed grey line, a crosshair and a readout on hover.
+ */
+export function LineChart({
+  days,
+  values,
+  previous,
+  label,
+}: {
+  days: string[]
+  values: number[]
+  previous: number[]
+  label: string
+}) {
+  const [ref, W] = useWidth()
+  const [hover, setHover] = useState<number | null>(null)
+  const H2 = 240
+  const pad = { l: 36, r: 12, t: 12, b: 26 }
+  const iw = W - pad.l - pad.r
+  const ih = H2 - pad.t - pad.b
+  const max = niceMax(Math.max(1, ...values, ...previous))
+  const n = Math.max(1, days.length - 1)
+  const x = (i: number) => pad.l + (i / n) * iw
+  const y = (v: number) => pad.t + ih - (v / max) * ih
+  const path = (vs: number[]) =>
+    vs.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join('')
+  const every = Math.ceil(days.length / Math.max(2, Math.floor(W / 110)))
+  const h = hover === null ? null : hover
+  return (
+    <figure class="sm-chart sm-line">
+      <div class="sm-chart__plot" ref={ref}>
+        <svg
+          viewBox={`0 0 ${W} ${H2}`}
+          role="img"
+          aria-label={label}
+          onMouseLeave={() => setHover(null)}
+          onMouseMove={(e) => {
+            const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect()
+            const i = Math.round(((e.clientX - r.left - pad.l) / iw) * n)
+            setHover(Math.max(0, Math.min(days.length - 1, i)))
+          }}
+        >
+          {[0, max / 2, max].map((t) => (
+            <g>
+              <line class="sm-grid" x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} />
+              <text class="sm-axis" x={pad.l - 8} y={y(t) + 4} text-anchor="end">
+                {fmt(t)}
+              </text>
+            </g>
+          ))}
+          {days.map((d, i) =>
+            i % every === 0 ? (
+              <text class="sm-axis" x={x(i)} y={H2 - 6} text-anchor="middle">
+                {dayLabel(d)}
+              </text>
+            ) : null,
+          )}
+          {previous.length === values.length && <path class="sm-line__prev" d={path(previous)} />}
+          <path
+            class="sm-line__area"
+            d={`${path(values)}L${x(values.length - 1)} ${y(0)}L${x(0)} ${y(0)}Z`}
+          />
+          <path class="sm-line__now" d={path(values)} />
+          {h !== null && (
+            <g>
+              <line class="sm-line__cross" x1={x(h)} x2={x(h)} y1={pad.t} y2={pad.t + ih} />
+              <circle class="sm-line__dot" cx={x(h)} cy={y(values[h] ?? 0)} r={4} />
+            </g>
+          )}
+        </svg>
+        {h !== null && (
+          <div class="sm-tip" style={{ left: `clamp(110px, ${x(h)}px, calc(100% - 110px))` }}>
+            <b>{dayLabel(days[h]!)}</b>
+            <span>
+              <i class="sm-swatch sm-line__key" aria-hidden="true" /> {label}{' '}
+              <b class="g-num">{fmt(values[h])}</b>
+            </span>
+            {previous.length === values.length && (
+              <span>
+                <i class="sm-swatch sm-line__key sm-line__key--prev" aria-hidden="true" />{' '}
+                {t('Period before')} <b class="g-num">{fmt(previous[h])}</b>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </figure>
+  )
+}

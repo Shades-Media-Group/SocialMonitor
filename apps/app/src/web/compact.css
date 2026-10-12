@@ -2659,3 +2659,413 @@ body:has(.sm-shell) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+/* Tighter bubbles: the AI note rides on the tag row, the rating is small and close under. */
+.sm-shell .sm-thread > li {
+  padding: 8px 0 10px;
+}
+.sm-b__tags .sm-b__ai {
+  margin: 0 0 0 4px;
+  align-self: center;
+}
+.sm-b__col > .sm-c__actions {
+  margin-top: 4px;
+}
+.sm-shell .sm-b__col .sm-rate button {
+  min-height: 22px;
+  padding: 0 8px;
+  font-size: 11.5px;
+}
+.sm-shell .sm-b__col .sm-rate select {
+  height: 22px;
+  min-height: 22px;
+  font-size: 11.5px;
+}
+.sm-b__bubble {
+  padding: 7px 12px 11px;
+}
+.sm-tag--edit {
+  border: 0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.sm-tag--edit:hover,
+.sm-tag--edit.is-on {
+  background: var(--c-ink);
+  color: var(--c-bg);
+  box-shadow: none;
+}
+.sm-b__tags .sm-menu__trigger--icon {
+  width: 22px;
+  height: 20px;
+  border-radius: 999px;
+}
+.sm-b__tags {
+  align-items: center;
+}
+
+/* Comment meta as words, not pills: the type in its colour, then quiet grey notes. */
+.sm-shell .sm-b__tags {
+  margin: 3px 0 0 12px;
+  gap: 0;
+  font-size: 12px;
+}
+.sm-word {
+  display: inline-flex;
+  align-items: center;
+  color: var(--c-text-3);
+  font-weight: 500;
+}
+.sm-word + .sm-word::before {
+  content: '·';
+  margin: 0 6px;
+  color: var(--c-text-3);
+  font-weight: 400;
+}
+.sm-word--complaint {
+  color: var(--sm-c-complaint);
+  font-weight: 650;
+}
+.sm-word--praise {
+  color: var(--sm-c-praise);
+  font-weight: 650;
+}
+.sm-word--question {
+  color: var(--sm-c-question);
+  font-weight: 650;
+}
+.sm-word--suggestion {
+  color: var(--sm-c-suggestion);
+  font-weight: 650;
+}
+.sm-word--wait {
+  color: var(--g-amber-800, #6e5000);
+  font-weight: 650;
+}
+.sm-word--done {
+  color: var(--c-text-2);
+}
+.sm-word--note {
+  overflow: hidden;
+  max-width: 420px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-shell .sm-b__tags .sm-tag--edit,
+.sm-shell .sm-b__tags .sm-menu__trigger--icon {
+  margin-left: 6px;
+  height: 20px;
+  padding: 0 5px;
+  background: none;
+  box-shadow: none;
+  color: var(--c-text-3);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.sm-b:hover .sm-b__tags .sm-tag--edit,
+.sm-b:hover .sm-b__tags .sm-menu__trigger--icon,
+.sm-b__tags .sm-tag--edit.is-on,
+.sm-b__tags :focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .sm-shell .sm-b__tags .sm-tag--edit,
+  .sm-shell .sm-b__tags .sm-menu__trigger--icon {
+    opacity: 1;
+  }
+}
+/* The brand's reply: a light bubble, a word saying it replied. */
+.sm-shell .sm-b--own .sm-b__bubble {
+  background: var(--c-card);
+  color: var(--c-text);
+  box-shadow: inset 0 0 0 1px var(--c-line);
+}
+.sm-shell .sm-b--own .sm-b__meta b {
+  color: var(--c-text);
+}
+.sm-b__own {
+  color: var(--c-text-3);
+}
+.sm-shell .sm-b__bubble {
+  padding: 7px 12px 8px;
+}
+
+/* ================================================================================================
+ * Dashboard content (the shell stays Intercom). Blocks are soft grey fills without borders on the
+ * white page; divisions inside them are white gaps; colour is mostly neutral and the few colours
+ * that carry meaning are muted towards slate.
+ * ============================================================================================== */
+.sm-shell .sm-body {
+  --blk: #f5f6f8;
+  --blk-2: #eceef2;
+  --sm-c-complaint: color-mix(in oklab, var(--g-red-600) 78%, #4d525c);
+  --sm-c-question: color-mix(in oklab, var(--g-blue-600) 70%, #4d525c);
+  --sm-c-suggestion: color-mix(in oklab, var(--g-amber-700) 75%, #4d525c);
+  --sm-c-praise: color-mix(in oklab, var(--g-green-600) 75%, #4d525c);
+  --sm-c-other: #c3c7ce;
+}
+[data-theme='dark'] .sm-shell .sm-body {
+  --blk: #18191c;
+  --blk-2: #212328;
+}
+.sm-shell .sm-body .sm-box,
+.sm-shell .sm-body .sm-kpis,
+.sm-shell .sm-body .sm-acct,
+.sm-shell .sm-body .sm-cal__tile,
+.sm-shell .sm-body .sm-runs,
+.sm-shell .sm-body .sm-report {
+  border: 0;
+  background: var(--blk);
+  box-shadow: none;
+}
+.sm-shell .sm-body .sm-box__head {
+  border-bottom: 0;
+}
+.sm-shell .sm-body .sm-dtable th {
+  border-bottom: 0;
+  background: var(--blk-2);
+}
+.sm-shell .sm-body .sm-dtable td {
+  border-bottom: 1px solid var(--c-card);
+}
+.sm-shell .sm-body .sm-dtable--rows tbody tr:hover td {
+  background: var(--blk-2);
+}
+.sm-shell .sm-body .sm-kpi {
+  background: none;
+  box-shadow:
+    inset -1px 0 0 var(--c-card),
+    inset 0 -1px 0 var(--c-card);
+}
+.sm-shell .sm-body .sm-kpis > .sm-kpi:first-child {
+  background: none;
+}
+.sm-shell .sm-body .sm-kpis > .sm-kpi:first-child dt,
+.sm-shell .sm-body .sm-kpis > .sm-kpi:first-child .sm-kpi__sub {
+  color: var(--c-text-3);
+}
+.sm-shell .sm-body .sm-kpi__icon {
+  display: none;
+}
+.sm-shell .sm-body .sm-kpi dt {
+  color: var(--c-text-3);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.sm-shell .sm-body .sm-kpi__value .g-num {
+  font-size: 24px;
+  font-weight: 650;
+}
+.sm-shell .sm-body .sm-spark__line {
+  stroke: var(--c-text-2);
+}
+.sm-shell .sm-body .sm-spark__area {
+  fill: var(--c-text-2);
+  opacity: 0.06;
+}
+.sm-shell .sm-body [class*='sm-face--'] {
+  background: var(--blk-2);
+  color: var(--c-text-2);
+}
+.sm-shell .sm-body .sm-b__bubble {
+  background: var(--c-card);
+}
+.sm-shell .sm-body .sm-b--own .sm-b__bubble {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--blk-2);
+}
+.sm-shell .sm-body .sm-acct__stats {
+  border: 0;
+  background: var(--c-card);
+}
+.sm-shell .sm-body .sm-acct__stats > div {
+  box-shadow:
+    inset -1px 0 0 var(--blk),
+    inset 0 -1px 0 var(--blk);
+}
+.sm-shell .sm-body .sm-postcard2,
+.sm-shell .sm-body .sm-feedcard {
+  border: 0;
+  background: var(--blk);
+}
+.sm-shell .sm-body .sm-cal__day {
+  background: color-mix(in srgb, #3b5bdb calc(var(--a, 0) * 100%), var(--c-card));
+}
+.sm-shell .sm-body .sm-cal__day.is-out {
+  background: none;
+}
+.sm-shell .sm-body .sm-cal__legend i,
+.sm-shell .sm-body .sm-heat__cell {
+  background: color-mix(in srgb, #3b5bdb calc(var(--a) * 100%), var(--c-card));
+}
+.sm-shell .sm-body .sm-cal__tile {
+  background: color-mix(in srgb, #3b5bdb calc(var(--a, 0) * 100%), var(--blk));
+}
+.sm-shell .sm-body .sm-words li {
+  background: color-mix(in srgb, #3b5bdb calc(var(--w) * 12%), var(--c-card));
+  color: var(--c-text);
+}
+
+/* ---------------------------------------------------------------- analytics report: scorecards drive the chart */
+.sm-ga {
+  display: grid;
+  gap: var(--c-gap);
+}
+.sm-shell .sm-body .sm-ga__report {
+  padding: 0 0 8px;
+  gap: 0;
+}
+.sm-ga__cards {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  border-bottom: 1px solid var(--c-card);
+}
+.sm-ga__card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px 14px 12px;
+  border: 0;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset -1px 0 0 var(--c-card);
+}
+.sm-ga__card:hover {
+  background: var(--blk-2);
+}
+.sm-ga__card[aria-selected='true'] {
+  background: var(--c-card);
+}
+.sm-ga__card[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: #3b5bdb;
+}
+.sm-ga__card--static {
+  cursor: default;
+}
+.sm-ga__card--static:hover {
+  background: none;
+}
+.sm-ga__label {
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-ga__value {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.sm-ga__value.sm-hot {
+  color: var(--sm-c-complaint);
+}
+.sm-ga__sub {
+  color: var(--c-text-3);
+  font-size: 11.5px;
+}
+.sm-ga__card .sm-delta {
+  justify-self: start;
+}
+.sm-shell .sm-body .sm-ga__report .sm-line {
+  padding: 10px 14px 0;
+}
+.sm-line__now {
+  fill: none;
+  stroke: #3b5bdb;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.sm-line__area {
+  fill: #3b5bdb;
+  opacity: 0.07;
+}
+.sm-line__prev {
+  fill: none;
+  stroke: #9aa0aa;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+.sm-line__cross {
+  stroke: var(--c-text-3);
+  stroke-width: 1;
+}
+.sm-line__dot {
+  fill: #3b5bdb;
+  stroke: var(--c-card);
+  stroke-width: 2;
+}
+.sm-line__key {
+  background: #3b5bdb;
+}
+.sm-line__key--prev {
+  background: #9aa0aa;
+}
+.sm-span-5 {
+  grid-column: span 5;
+}
+.sm-span-7 {
+  grid-column: span 7;
+}
+.sm-bars--split .sm-bars__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sm-bars__fill.sm-c-complaint {
+  background: var(--sm-c-complaint);
+}
+.sm-bars__fill.sm-c-question {
+  background: var(--sm-c-question);
+}
+.sm-bars__fill.sm-c-suggestion {
+  background: var(--sm-c-suggestion);
+}
+.sm-bars__fill.sm-c-praise {
+  background: var(--sm-c-praise);
+}
+.sm-bars__fill.sm-c-other {
+  background: var(--sm-c-other);
+}
+.sm-bars__fill--ink {
+  background: #5b6170;
+}
+.sm-shell .sm-body .sm-bars__track {
+  background: var(--c-card);
+}
+.sm-ga__mood {
+  min-width: 120px;
+}
+.sm-shell .sm-body .sm-box--list .sm-thread {
+  max-height: 420px;
+  overflow-y: auto;
+}
+@media (max-width: 1280px) {
+  .sm-ga__cards {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .sm-span-5,
+  .sm-span-7 {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 700px) {
+  .sm-ga__cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.sm-ga .sm-layout {
+  align-items: start;
+}

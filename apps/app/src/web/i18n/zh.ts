@@ -2,6 +2,15 @@ import type { Dict } from '../i18n.ts'
 
 export const zh: Dict = {
   strings: {
+    'Period before': '上一时段',
+    'What the AI understood': 'AI 的理解',
+    replied: '已回复',
+    'Change the rating': '修改评价',
+    Bubbles: '气泡',
+    'What to chart': '图表内容',
+    '{n}% answered': '{n}% 已回复',
+    'Preferences are an object.': '偏好设置必须是对象。',
+    'Too many preferences.': '偏好设置过多。',
     Open: '打开',
     'No comments saved for this post.': '这条帖子没有保存的评论。',
     'View all {n}': '查看全部{n}',

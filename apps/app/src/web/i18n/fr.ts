@@ -2,6 +2,15 @@ import type { Dict } from '../i18n.ts'
 
 export const fr: Dict = {
   strings: {
+    'Period before': 'Période précédente',
+    'What the AI understood': 'Ce que l’IA a compris',
+    replied: 'a répondu',
+    'Change the rating': 'Modifier l’évaluation',
+    Bubbles: 'Bulles',
+    'What to chart': 'Ce que montre le graphique',
+    '{n}% answered': '{n} % avec réponse',
+    'Preferences are an object.': 'Les préférences sont un objet.',
+    'Too many preferences.': 'Trop de préférences.',
     Open: 'Ouvrir',
     'No comments saved for this post.': 'Aucun commentaire enregistré pour cette publication.',
     'View all {n}': 'Voir les {n}',

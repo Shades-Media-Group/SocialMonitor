@@ -2,6 +2,15 @@ import type { Dict } from '../i18n.ts'
 
 export const ro: Dict = {
   strings: {
+    'Period before': 'Perioada anterioară',
+    'What the AI understood': 'Ce a înțeles AI-ul',
+    replied: 'a răspuns',
+    'Change the rating': 'Schimbă evaluarea',
+    Bubbles: 'Bule',
+    'What to chart': 'Ce arată graficul',
+    '{n}% answered': '{n}% cu răspuns',
+    'Preferences are an object.': 'Preferințele sunt un obiect.',
+    'Too many preferences.': 'Prea multe preferințe.',
     Open: 'Deschide',
     'No comments saved for this post.': 'Nu sunt comentarii salvate pentru această postare.',
     'View all {n}': 'Vezi toate cele {n}',

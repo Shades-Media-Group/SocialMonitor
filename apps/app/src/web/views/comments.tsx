@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
+import type { ComponentChildren } from 'preact'
 import type { BrandView } from '../app.tsx'
 import type { BrandRow, CommentRow, PostRow } from '../api.ts'
 import { api } from '../api.ts'
@@ -7,9 +8,8 @@ import { lang, t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
 import { JsonPanel } from '../json.tsx'
 import { LABELS } from '../labels.tsx'
-import type { IconName } from 'shades-gradient'
 import { Rate, brandCategories } from '../rate.tsx'
-import { FeedCard, PostDrawer } from '../social.tsx'
+import { CommentDrawer, CommentTable, FeedCard, PostDrawer } from '../social.tsx'
 
 // Initials sit on one of Gradient's ramps, chosen by the author's name: the same person keeps
 // the same colour everywhere, and a thread reads at a glance.
@@ -35,43 +35,36 @@ const mood = (c: CommentRow, own: boolean) =>
           ? 'ask'
           : 'plain'
 
-const LABEL_ICON: Record<string, IconName> = {
-  complaint: 'warning',
-  question: 'help',
-  suggestion: 'sparkle',
-  praise: 'favorite',
-  neutral: 'remove',
-  spam: 'error',
-}
-
 /** The small tags that sit on the bubble's lower edge: what kind, how it was rated, the answer. */
-function Tags({ c, answered }: { c: CommentRow; answered: boolean }) {
+function Tags({
+  c,
+  answered,
+  children,
+}: {
+  c: CommentRow
+  answered: boolean
+  children?: ComponentChildren
+}) {
   return (
     <span class="sm-b__tags">
       {c.label && LABELS[c.label] && (
-        <span class={`sm-tag sm-tag--${c.label}`}>
-          <Icon name={LABEL_ICON[c.label] ?? 'info'} size={11} /> {LABELS[c.label]!.name}
-        </span>
+        <span class={`sm-word sm-word--${c.label}`}>{LABELS[c.label]!.name}</span>
       )}
       {c.sentiment === 'negative' && (
-        <span class="sm-tag sm-tag--bad">
-          <Icon name="arrowDown" size={11} /> {t('Negative')}
-        </span>
+        <span class="sm-word sm-word--complaint">{t('Negative')}</span>
       )}
-      {c.sentiment === 'positive' && (
-        <span class="sm-tag sm-tag--good">
-          <Icon name="arrowUp" size={11} /> {t('Positive')}
-        </span>
-      )}
+      {c.sentiment === 'positive' && <span class="sm-word sm-word--praise">{t('Positive')}</span>}
       {answered ? (
-        <span class="sm-tag sm-tag--done">
-          <Icon name="check" size={11} /> {t('Answered')}
-        </span>
+        <span class="sm-word sm-word--done">{t('Answered')}</span>
       ) : c.needs_reply === 1 && c.reply_status === 'open' ? (
-        <span class="sm-tag sm-tag--wait">
-          <Icon name="schedule" size={11} /> {t('To answer')}
-        </span>
+        <span class="sm-word sm-word--wait">{t('To answer')}</span>
       ) : null}
+      {c.reason && (
+        <span class="sm-word sm-word--note" title={t('What the AI understood')}>
+          {c.reason}
+        </span>
+      )}
+      {children}
     </span>
   )
 }
@@ -108,6 +101,7 @@ export function CommentList({
     Record<number, { kind: 'translation' | 'draft'; text: string }>
   >({})
   const [busy, setBusy] = useState<number | null>(null)
+  const [editing, setEditing] = useState<number | null>(null)
   const ask = async (c: CommentRow, kind: 'translation' | 'draft') => {
     setBusy(c.id)
     try {
@@ -139,6 +133,31 @@ export function CommentList({
     const brand = brands.find((b) => b.id === c.brand_id)
     const own = handles.get(c.brand_id)?.includes(c.author.toLowerCase())
     const edit = brand?.my_role === 'admin'
+    const items = [
+      ...(edit && c.needs_reply === 1 && c.reply_status === 'open' && !answeredBy(c)
+        ? [{ label: t('Answered'), onSelect: () => mark(c, 'done') }]
+        : []),
+      ...(!(lang === 'en' && c.translation) && !extra[c.id]
+        ? [
+            {
+              label: t('Translate'),
+              onSelect: () => ask(c, 'translation'),
+              disabled: busy === c.id,
+            },
+          ]
+        : []),
+      ...(edit
+        ? [{ label: t('Draft a reply'), onSelect: () => ask(c, 'draft'), disabled: busy === c.id }]
+        : []),
+      ...(edit && c.needs_reply === 1 && c.reply_status === 'open'
+        ? [{ label: t('Skip'), onSelect: () => mark(c, 'ignored') }]
+        : []),
+      ...(edit && c.needs_reply === 1 && c.reply_status !== 'open'
+        ? [{ label: t('undo'), onSelect: () => mark(c, 'open') }]
+        : []),
+      { label: t('Open the post'), onSelect: () => open(c.post_url, '_blank', 'noreferrer') },
+      { label: t('Copy the text'), onSelect: () => navigator.clipboard?.writeText(c.text) },
+    ]
     return (
       <article class={`sm-b sm-b--${mood(c, !!own)}${reply ? ' sm-b--reply' : ''}`}>
         <span class={`sm-b__avatar sm-face--${own ? 'own' : hue(c.author)}`} aria-hidden="true">
@@ -151,11 +170,7 @@ export function CommentList({
           <div class="sm-b__bubble">
             <header class="sm-b__meta">
               <b>{own ? `${brand?.name ?? c.author}` : c.author}</b>
-              {own && (
-                <span class="sm-b__own">
-                  <Icon name="success" size={12} /> {t('Brand reply')}
-                </span>
-              )}
+              {own && <span class="sm-b__own">{t('replied')}</span>}
               <span>{ago(c.posted_at)}</span>
               {c.likes ? (
                 <span class="sm-b__likes g-num">
@@ -165,11 +180,22 @@ export function CommentList({
             </header>
             <p class="sm-b__text">{c.text}</p>
           </div>
-          {!own && <Tags c={c} answered={answeredBy(c)} />}
-          {c.reason && !own && (
-            <p class="sm-b__ai">
-              <Icon name="sparkle" size={12} /> {c.reason}
-            </p>
+          {!own && (
+            <Tags c={c} answered={answeredBy(c)}>
+              {!wide && edit && (
+                <button
+                  type="button"
+                  class={`sm-tag sm-tag--edit${editing === c.id ? ' is-on' : ''}`}
+                  aria-expanded={editing === c.id}
+                  aria-label={t('Change the rating')}
+                  title={t('Change the rating')}
+                  onClick={() => setEditing(editing === c.id ? null : c.id)}
+                >
+                  <Icon name="edit" size={12} />
+                </button>
+              )}
+              {!wide && <Menu label={t('More actions')} items={items} />}
+            </Tags>
           )}
           {(extra[c.id] || (lang === 'en' && c.translation)) && (
             <p class={`sm-c__extra${extra[c.id]?.kind === 'draft' ? ' sm-c__extra--draft' : ''}`}>
@@ -186,7 +212,7 @@ export function CommentList({
               )}
             </p>
           )}
-          {!own && (
+          {!own && (wide || editing === c.id) && (
             <footer class="sm-c__actions">
               {edit && (
                 <Rate
@@ -196,51 +222,9 @@ export function CommentList({
                   onChange={onChange}
                 />
               )}
-              <span class="sm-c__links">
-                {edit && c.needs_reply === 1 && c.reply_status === 'open' && (
-                  <button
-                    class="g-btn g-btn--sm sm-btn-answered"
-                    type="button"
-                    onClick={() => mark(c, 'done')}
-                  >
-                    {t('Answered')}
-                  </button>
-                )}
-                {wide ? (
-                  [
-                    ...(!(lang === 'en' && c.translation) && !extra[c.id]
-                      ? [
-                          {
-                            label: t('Translate'),
-                            onSelect: () => ask(c, 'translation'),
-                            disabled: busy === c.id,
-                          },
-                        ]
-                      : []),
-                    ...(edit
-                      ? [
-                          {
-                            label: t('Draft a reply'),
-                            onSelect: () => ask(c, 'draft'),
-                            disabled: busy === c.id,
-                          },
-                        ]
-                      : []),
-                    ...(edit && c.needs_reply === 1 && c.reply_status === 'open'
-                      ? [{ label: t('Skip'), onSelect: () => mark(c, 'ignored') }]
-                      : []),
-                    ...(edit && c.needs_reply === 1 && c.reply_status !== 'open'
-                      ? [{ label: t('undo'), onSelect: () => mark(c, 'open') }]
-                      : []),
-                    {
-                      label: t('Open the post'),
-                      onSelect: () => open(c.post_url, '_blank', 'noreferrer'),
-                    },
-                    {
-                      label: t('Copy the text'),
-                      onSelect: () => navigator.clipboard?.writeText(c.text),
-                    },
-                  ].map((it) => (
+              {wide && (
+                <span class="sm-c__links">
+                  {items.map((it) => (
                     <button
                       class="g-btn g-btn--ghost g-btn--sm"
                       type="button"
@@ -249,47 +233,9 @@ export function CommentList({
                     >
                       {it.label}
                     </button>
-                  ))
-                ) : (
-                  <Menu
-                    label={t('More actions')}
-                    items={[
-                      ...(!(lang === 'en' && c.translation) && !extra[c.id]
-                        ? [
-                            {
-                              label: t('Translate'),
-                              onSelect: () => ask(c, 'translation'),
-                              disabled: busy === c.id,
-                            },
-                          ]
-                        : []),
-                      ...(edit
-                        ? [
-                            {
-                              label: t('Draft a reply'),
-                              onSelect: () => ask(c, 'draft'),
-                              disabled: busy === c.id,
-                            },
-                          ]
-                        : []),
-                      ...(edit && c.needs_reply === 1 && c.reply_status === 'open'
-                        ? [{ label: t('Skip'), onSelect: () => mark(c, 'ignored') }]
-                        : []),
-                      ...(edit && c.needs_reply === 1 && c.reply_status !== 'open'
-                        ? [{ label: t('undo'), onSelect: () => mark(c, 'open') }]
-                        : []),
-                      {
-                        label: t('Open the post'),
-                        onSelect: () => open(c.post_url, '_blank', 'noreferrer'),
-                      },
-                      {
-                        label: t('Copy the text'),
-                        onSelect: () => navigator.clipboard?.writeText(c.text),
-                      },
-                    ]}
-                  />
-                )}
-              </span>
+                  ))}
+                </span>
+              )}
             </footer>
           )}
         </div>
@@ -318,7 +264,8 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
   const [q, setQ] = useState('')
   const [rows, setRows] = useState<CommentRow[] | null>(null)
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
-  const [look, setLook] = usePref<'list' | 'feed'>('comments.look', 'list')
+  const [look, setLook] = usePref<'list' | 'feed' | 'table'>('comments.look', 'list')
+  const [openComment, setOpenComment] = useState<CommentRow | null>(null)
   const [posts, setPosts] = useState<Map<number, PostRow>>(new Map())
   useEffect(() => {
     api
@@ -458,13 +405,14 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
           value={q}
           onInput={(e) => setQ((e.target as HTMLInputElement).value)}
         />
-        <Segmented<'list' | 'feed'>
+        <Segmented<'list' | 'feed' | 'table'>
           label={t('Layout')}
           value={look}
           onChange={setLook}
           options={[
-            ['list', t('Comments')],
+            ['list', t('Bubbles')],
             ['feed', t('By post')],
+            ['table', t('Table')],
           ]}
         />
         <a class="sm-textbtn sm-toolbar__end" href={`/api/comments.csv?${qs}`} download>
@@ -495,7 +443,15 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
           note={t('Edit label, reply_status, sentiment or category, then save.')}
         />
       ) : rows === null ? null : rows.length ? (
-        look === 'feed' ? (
+        look === 'table' ? (
+          <section class="sm-box sm-box--table">
+            <header class="sm-box__head">
+              <h2>{count(rows.filter((c) => !c.parent_ext_id).length, 'comment')}</h2>
+              <span class="sm-box__meta">{t('Click a row to read and answer it')}</span>
+            </header>
+            <CommentTable rows={rows} brands={brands} posts={posts} onOpen={setOpenComment} />
+          </section>
+        ) : look === 'feed' ? (
           <div class="sm-feed">
             {[...new Set(rows.map((c) => c.post_id))].map((pid) => {
               const post = posts.get(pid)
@@ -524,6 +480,14 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
         </Empty>
       )}
       <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />
+      <CommentDrawer
+        comment={openComment}
+        rows={rows ?? []}
+        brands={brands}
+        posts={posts}
+        onClose={() => setOpenComment(null)}
+        onChange={() => setTick((x) => x + 1)}
+      />
     </div>
   )
 }

@@ -2,14 +2,14 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { CommentRow, Network, PostRow, Profile } from '../api.ts'
 import { api } from '../api.ts'
-import { Icon, NETWORK_NAME, NetworkMark, count, fmt } from '../ui.tsx'
-import type { IconName } from 'shades-gradient'
+import { Icon, NETWORK_NAME, NetworkMark, ago, fmt, short, when } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { brandCategories } from '../rate.tsx'
-import { Donut, Heatmap, Sparkline, TimelineChart } from '../charts.tsx'
+import { Heatmap, LineChart } from '../charts.tsx'
 import type { PostPoint } from '../charts.tsx'
 import { locale, t } from '../i18n.ts'
-import { AccountCard, PostCard, PostDrawer } from '../social.tsx'
+import { usePref } from '../prefs.ts'
+import { MoodStrip, PostDrawer } from '../social.tsx'
 import { CommentList } from './comments.tsx'
 import type { ProfileStat } from '../social.tsx'
 
@@ -51,17 +51,6 @@ interface Insights {
   words: { word: string; n: number }[]
 }
 
-const duration = (min: number | null) =>
-  min == null
-    ? '–'
-    : min < 60
-      ? t('{n} min', { n: min })
-      : min < 1440
-        ? t('{n} h', { n: Math.round(min / 60) })
-        : count(Math.round(min / 1440), 'day')
-
-type Tone = 'blue' | 'orange' | 'red' | 'green' | 'violet' | 'amber' | 'pink' | 'ink'
-
 /** How a figure moved against the window before: an arrow, the change, green when it is good. */
 function Delta({
   now,
@@ -93,41 +82,18 @@ function Delta({
   )
 }
 
-/** One figure: a tinted tile with its icon, the number, how it moved and its trend. */
-const Kpi = ({
-  label,
-  value,
-  sub,
-  tone,
-  icon,
-  delta,
-  spark,
-}: {
-  label: string
-  value: string
-  sub?: string
-  tone: Tone
-  icon: IconName
-  delta?: preact.ComponentChildren
-  spark?: number[]
-}) => (
-  <div class={`sm-kpi sm-tone--${tone}`}>
-    <dt>
-      <span class="sm-kpi__icon">
-        <Icon name={icon} size={16} />
-      </span>
-      {label}
-    </dt>
-    <dd class="sm-kpi__value">
-      <span class="g-num">{value}</span>
-      {delta}
-    </dd>
-    <dd class="sm-kpi__foot">
-      <span class="sm-kpi__sub">{sub}</span>
-      {spark && <Sparkline values={spark} tone={tone} />}
-    </dd>
-  </div>
-)
+interface DayRow {
+  day: string
+  comments: number
+  complaints: number
+  questions: number
+  praise: number
+  posts: number
+  likes: number
+  views: number
+  interactions: number
+}
+type DayKey = Exclude<keyof DayRow, 'day'>
 
 interface Summary {
   profiles: Profile[]
@@ -157,6 +123,8 @@ export function Overview(v: BrandView) {
   const [latest, setLatest] = useState<CommentRow[]>([])
   const [tick, setTick] = useState(0)
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
+  const [metric, setMetric] = usePref<DayKey>('overview.metric', 'comments')
+  const [series, setSeries] = useState<{ now: DayRow[]; before: DayRow[] } | null>(null)
 
   useEffect(() => {
     const n = network ? `&network=${network}` : ''
@@ -202,6 +170,21 @@ export function Overview(v: BrandView) {
       .catch(() => setIns(null))
   }, [brand.id, network, version, days, tick])
 
+  // The chart's two windows: this period and the same length just before.
+  useEffect(() => {
+    const span = days || 365
+    const iso = (d: Date) => d.toISOString().slice(0, 10)
+    const to = iso(new Date())
+    const from = iso(new Date(Date.now() - (span - 1) * 86400_000))
+    const pFrom = iso(new Date(Date.now() - (2 * span - 1) * 86400_000))
+    const pTo = iso(new Date(Date.now() - span * 86400_000))
+    const q = (a: string, b: string) =>
+      `/api/brands/${brand.id}/daily?from=${a}&to=${b}${network ? `&network=${network}` : ''}`
+    Promise.all([api.get<DayRow[]>(q(from, to)), api.get<DayRow[]>(q(pFrom, pTo))])
+      .then(([now, before]) => setSeries({ now, before }))
+      .catch(() => setSeries(null))
+  }, [brand.id, network, version, days, tick])
+
   if (!s) return null
   const c = s.counts
   const total = c.total ?? 0
@@ -209,8 +192,6 @@ export function Overview(v: BrandView) {
   const cats = brandCategories(brand)
   const negatives = s.sentiment.filter((x) => x.sentiment === 'negative')
   const positives = s.sentiment.filter((x) => x.sentiment === 'positive')
-  const rated = s.sentiment.reduce((n, x) => n + x.n, 0)
-  const neutral = s.sentiment.filter((x) => x.sentiment === 'neutral').reduce((n, x) => n + x.n, 0)
   const name = (key: string | null) => cats.find((k) => k.key === key)?.name ?? t('No kind given')
 
   if (mode === 'json')
@@ -265,37 +246,13 @@ export function Overview(v: BrandView) {
   const P = ins?.previous
   const lTotal = L.total ?? 0
   const lSorted = lTotal - (L.unsorted ?? 0)
-  const share = (k: string, labels = L) => {
-    const sortedN = (labels.total ?? 0) - (labels.unsorted ?? 0)
-    return sortedN ? ((labels[k] ?? 0) / sortedN) * 100 : null
-  }
   const r = ins?.responses
-  const period = days ? t('Last {days}', { days: count(days, 'day') }) : t('All time')
-  const series = (k: 'complaint' | 'praise' | 'all') =>
-    (ins?.timeline ?? []).map((d) =>
-      k === 'all' ? d.complaint + d.question + d.suggestion + d.praise + d.other : d[k],
-    )
-  const hasTrend = series('all').some(Boolean)
   const weekdays = Array.from({ length: 7 }, (_, d) =>
     new Date(Date.UTC(2024, 0, 7 + d)).toLocaleDateString(locale, {
       weekday: 'short',
       timeZone: 'UTC',
     }),
   )
-  const maxWord = Math.max(1, ...(ins?.words ?? []).map((w) => w.n))
-  const posNeg = [
-    {
-      key: 'praise',
-      name: t('Positive'),
-      n: s.sentiment.filter((x) => x.sentiment === 'positive').reduce((n, x) => n + x.n, 0),
-    },
-    {
-      key: 'complaint',
-      name: t('Negative'),
-      n: s.sentiment.filter((x) => x.sentiment === 'negative').reduce((n, x) => n + x.n, 0),
-    },
-    { key: 'other', name: t('Neutral'), n: neutral },
-  ]
   const byLabel = [
     { key: 'complaint', name: t('Complaints'), n: L.complaint ?? 0 },
     { key: 'question', name: t('Questions'), n: L.question ?? 0 },
@@ -328,140 +285,126 @@ export function Overview(v: BrandView) {
       </div>
     )
 
-  const since = days ? new Date(Date.now() - days * 86400_000).toISOString() : ''
-  const wall = posts.filter((p) => !since || (p.posted_at ?? '') >= since).slice(0, 10)
+  const sum = (rows: DayRow[] | undefined, k: DayKey) => (rows ?? []).reduce((n, r) => n + r[k], 0)
+  const CARDS: [DayKey, string][] = [
+    ['comments', t('Comments')],
+    ['complaints', t('Complaints')],
+    ['praise', t('Praise')],
+    ['questions', t('Questions')],
+    ['posts', t('Posts')],
+    ['likes', t('Likes')],
+    ['views', t('Views')],
+  ]
+  const active = CARDS.find(([k]) => k === metric) ?? CARDS[0]!
   const stream = reply.length ? reply : latest
+  const live = (ins?.profiles ?? []).filter((p) => p.posts || p.comments || p.last_status)
+  const maxWord = Math.max(1, ...(ins?.words ?? []).map((w) => w.n))
+  const split = byLabel.filter((x) => x.n)
+  const splitTotal = split.reduce((n, x) => n + x.n, 0)
 
   return (
-    <div class="sm-overview">
-      <section class="sm-sec">
-        <header class="sm-sec__head">
-          <h2>{t('Accounts')}</h2>
-          <span class="sm-sec__meta">{period}</span>
-          <a class="sm-box__link" href={`#/b/${brand.id}/about`}>
-            {t('Edit links')}
-          </a>
-        </header>
-        <div class="sm-accounts">
-          {(ins?.profiles ?? []).map((p) => (
-            <AccountCard p={p} />
-          ))}
-        </div>
-      </section>
-
-      <dl class="sm-kpis sm-kpis--six">
-        <Kpi
-          tone="blue"
-          icon="chat"
-          label={t('Comments')}
-          value={fmt(lTotal)}
-          delta={<Delta now={lTotal} before={P?.labels.total} />}
-          sub={s.week.total ? t('{n} in the last 7 days', { n: fmt(s.week.total) }) : undefined}
-          spark={series('all')}
-        />
-        <Kpi
-          tone="orange"
-          icon="schedule"
-          label={t('Waiting for an answer')}
-          value={fmt(waiting)}
-          sub={waiting ? t('Oldest first in Comments') : t('All answered')}
-        />
-        <Kpi
-          tone="red"
-          icon="warning"
-          label={t('Complaints')}
-          value={share('complaint') == null ? '–' : `${Math.round(share('complaint')!)}%`}
-          delta={
-            <Delta
-              now={share('complaint')}
-              before={P ? share('complaint', P.labels) : null}
-              points
-              upIsGood={false}
-            />
-          }
-          sub={t('{n} comments', { n: fmt(L.complaint ?? 0) })}
-          spark={series('complaint')}
-        />
-        <Kpi
-          tone="green"
-          icon="favorite"
-          label={t('Praise')}
-          value={share('praise') == null ? '–' : `${Math.round(share('praise')!)}%`}
-          delta={
-            <Delta now={share('praise')} before={P ? share('praise', P.labels) : null} points />
-          }
-          sub={t('{n} comments', { n: fmt(L.praise ?? 0) })}
-          spark={series('praise')}
-        />
-        <Kpi
-          tone="violet"
-          icon="star"
-          label={t('Reputation')}
-          value={ins?.reputation == null ? '–' : `${ins.reputation}`}
-          delta={<Delta now={ins?.reputation ?? null} before={P?.reputation} points />}
-          sub={t('out of 100; 50 is even')}
-        />
-        <Kpi
-          tone="amber"
-          icon="check"
-          label={t('Answered by the brand')}
-          value={r?.rate == null ? '–' : `${Math.round(r.rate * 100)}%`}
-          delta={
-            <Delta
-              now={r?.rate == null ? null : r.rate * 100}
-              before={P?.responses.rate == null ? null : P.responses.rate * 100}
-              points
-            />
-          }
-          sub={
-            r?.median_minutes == null
-              ? undefined
-              : t('usually within {time}', { time: duration(r.median_minutes) })
-          }
-        />
-      </dl>
-
-      <section class="sm-sec">
-        <header class="sm-sec__head">
-          <h2>{t('Posts')}</h2>
-          <span class="sm-sec__meta">{t('Click a post to read its comments')}</span>
-          <a class="sm-box__link" href={`#/b/${brand.id}/posts`}>
-            {t('All {n} posts', { n: fmt(s.posts) })}
-          </a>
-        </header>
-        {wall.length ? (
-          <div class="sm-wall">
-            {wall.map((p) => (
-              <PostCard p={p} onOpen={setOpenPost} />
-            ))}
+    <div class="sm-overview sm-ga">
+      <section class="sm-box sm-ga__report">
+        <div class="sm-ga__cards" role="tablist" aria-label={t('What to chart')}>
+          {CARDS.map(([k, label]) => {
+            const now = sum(series?.now, k)
+            const before = sum(series?.before, k)
+            return (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={metric === k}
+                class="sm-ga__card"
+                onClick={() => setMetric(k)}
+              >
+                <span class="sm-ga__label">{label}</span>
+                <span class="sm-ga__value g-num">{short(now)}</span>
+                <Delta now={now} before={series ? before : null} upIsGood={k !== 'complaints'} />
+              </button>
+            )
+          })}
+          <div class="sm-ga__card sm-ga__card--static">
+            <span class="sm-ga__label">{t('Waiting for an answer')}</span>
+            <span class={`sm-ga__value g-num${waiting ? ' sm-hot' : ''}`}>{fmt(waiting)}</span>
+            <span class="sm-ga__sub">
+              {r?.rate == null ? '' : t('{n}% answered', { n: Math.round(r.rate * 100) })}
+            </span>
           </div>
-        ) : (
-          <p class="sm-quiet">{t('No posts in this period.')}</p>
+          <div class="sm-ga__card sm-ga__card--static">
+            <span class="sm-ga__label">{t('Reputation')}</span>
+            <span class="sm-ga__value g-num">{ins?.reputation ?? '–'}</span>
+            <Delta now={ins?.reputation ?? null} before={P?.reputation} points />
+          </div>
+        </div>
+        {series && (
+          <LineChart
+            days={series.now.map((d) => d.day)}
+            values={series.now.map((d) => d[active[0]])}
+            previous={series.before.map((d) => d[active[0]])}
+            label={active[1]}
+          />
         )}
       </section>
 
       <div class="sm-layout">
-        <section class="sm-box sm-span-8">
+        <section class="sm-box sm-box--table sm-span-7">
           <header class="sm-box__head">
-            <h2>{t('Comments over time')}</h2>
-            <span class="sm-box__meta">{period}</span>
+            <h2>{t('Accounts')}</h2>
+            <a class="sm-box__link" href={`#/b/${brand.id}/about`}>
+              {t('Edit links')}
+            </a>
           </header>
-          {hasTrend ? (
-            <TimelineChart days={ins!.timeline} />
-          ) : (
-            <p class="sm-quiet">{t('No comments in this period.')}</p>
-          )}
+          <table class="sm-dtable">
+            <thead>
+              <tr>
+                <th>{t('Account')}</th>
+                <th class="sm-num">{t('Posts')}</th>
+                <th class="sm-num">{t('Comments')}</th>
+                <th class="sm-num">{t('Likes per post')}</th>
+                <th class="sm-num">{t('Views')}</th>
+                <th class="sm-num">{t('Complaints')}</th>
+                <th>{t('Status')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(ins?.profiles ?? []).map((p) => (
+                <tr>
+                  <td>
+                    <span class="sm-net-name">
+                      <NetworkMark network={p.network} size={14} />
+                      <a href={p.url} target="_blank" rel="noreferrer">
+                        @{p.handle}
+                      </a>
+                    </span>
+                  </td>
+                  <td class="sm-num g-num">{fmt(p.posts)}</td>
+                  <td class="sm-num g-num">{fmt(p.comments)}</td>
+                  <td class="sm-num g-num">{p.likes_avg == null ? '–' : fmt(p.likes_avg)}</td>
+                  <td class="sm-num g-num">{short(p.views)}</td>
+                  <td class={`sm-num g-num${p.complaints ? ' sm-hot' : ''}`}>
+                    {fmt(p.complaints)}
+                  </td>
+                  <td class="sm-nowrap">
+                    {p.last_status === 'error' ? (
+                      <span class="sm-word sm-word--complaint" title={p.last_error ?? undefined}>
+                        {t('Needs you')}
+                      </span>
+                    ) : p.last_status === 'ok' ? (
+                      <span class="sm-word">
+                        {t('Updated {when}', { when: ago(p.last_run_at) })}
+                      </span>
+                    ) : (
+                      <span class="sm-word">{t('Not read yet')}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {live.length === 0 && <p class="sm-quiet">{t('No posts in this period.')}</p>}
         </section>
 
-        <section class="sm-box sm-span-4">
-          <header class="sm-box__head">
-            <h2>{t('What people say')}</h2>
-            <span class="sm-box__meta">{t('{n} sorted', { n: fmt(lSorted) })}</span>
-          </header>
-          <Donut parts={byLabel} total={fmt(lSorted)} caption={t('sorted')} />
-        </section>
-
-        <section class="sm-box sm-span-8 sm-box--list">
+        <section class="sm-box sm-box--list sm-span-5">
           <header class="sm-box__head">
             <h2>{reply.length ? t('Answer first') : t('Newest comments')}</h2>
             <a class="sm-box__link" href={`#/b/${brand.id}/comments`}>
@@ -475,35 +418,122 @@ export function Overview(v: BrandView) {
           )}
         </section>
 
-        <div class="sm-span-4 sm-stack">
-          <section class="sm-box">
-            <header class="sm-box__head">
-              <h2>{t('Positive or negative')}</h2>
-              <span class="sm-box__meta">
-                {t('{rated} of {total} rated', { rated, total: fmt(total) })}
-              </span>
-            </header>
-            <Donut parts={posNeg} total={fmt(rated)} caption={t('rated')} />
-          </section>
-          <section class="sm-box">
-            <header class="sm-box__head">
-              <h2>{t('Problems people name')}</h2>
-            </header>
-            {negatives.length ? (
-              tally(negatives)
-            ) : (
-              <p class="sm-quiet">
-                {t('Rate comments negative, or ask Claude to, and their kinds add up here.')}
-              </p>
-            )}
-            {positives.length > 0 && (
-              <>
-                <h3 class="sm-box__sub">{t('What people like')}</h3>
-                {tally(positives, true)}
-              </>
-            )}
-          </section>
-        </div>
+        <section class="sm-box sm-box--table sm-span-12">
+          <header class="sm-box__head">
+            <h2>{t('Posts')}</h2>
+            <a class="sm-box__link" href={`#/b/${brand.id}/posts`}>
+              {t('All {n} posts', { n: fmt(s.posts) })}
+            </a>
+          </header>
+          <div class="sm-scroll">
+            <table class="sm-dtable sm-dtable--rows">
+              <thead>
+                <tr>
+                  <th>{t('Post')}</th>
+                  <th>{t('Published')}</th>
+                  <th class="sm-num">{t('Likes')}</th>
+                  <th class="sm-num">{t('Comments')}</th>
+                  <th class="sm-num">{t('Shares')}</th>
+                  <th class="sm-num">{t('Views')}</th>
+                  <th>{t('What people say')}</th>
+                  <th class="sm-num">{t('To answer')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.slice(0, 8).map((p) => (
+                  <tr class="sm-ctable__row" onClick={() => setOpenPost(p)}>
+                    <td>
+                      <span class="sm-postcell">
+                        {p.thumb_url ? (
+                          <img src={p.thumb_url} alt="" loading="lazy" />
+                        ) : (
+                          <span class="sm-postcell__blank" />
+                        )}
+                        <NetworkMark network={p.network} size={13} />
+                        <span class="sm-postcell__text">{p.description ?? p.caption}</span>
+                      </span>
+                    </td>
+                    <td class="sm-nowrap">{when(p.posted_at)}</td>
+                    <td class="sm-num g-num">{fmt(p.likes)}</td>
+                    <td class="sm-num g-num">{fmt(p.comments_count)}</td>
+                    <td class="sm-num g-num">{fmt(p.shares)}</td>
+                    <td class="sm-num g-num">{fmt(p.views)}</td>
+                    <td class="sm-ga__mood">
+                      <MoodStrip p={p} />
+                    </td>
+                    <td class={`sm-num g-num${p.waiting ? ' sm-hot' : ''}`}>{p.waiting || '–'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="sm-box sm-span-4">
+          <header class="sm-box__head">
+            <h2>{t('What people say')}</h2>
+            <span class="sm-box__meta">{t('{n} sorted', { n: fmt(lSorted) })}</span>
+          </header>
+          <ul class="sm-bars sm-bars--split">
+            {split.map((x) => (
+              <li>
+                <span class="sm-bars__name">
+                  <i class={`sm-swatch sm-c-${x.key}`} aria-hidden="true" /> {x.name}
+                </span>
+                <span class="sm-bars__track">
+                  <span
+                    class={`sm-bars__fill sm-c-${x.key}`}
+                    style={{ width: `${Math.max(2, (x.n / Math.max(1, splitTotal)) * 100)}%` }}
+                  />
+                </span>
+                <b class="g-num">{x.n}</b>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section class="sm-box sm-span-4">
+          <header class="sm-box__head">
+            <h2>{t('Problems people name')}</h2>
+          </header>
+          {negatives.length ? (
+            tally(negatives)
+          ) : (
+            <p class="sm-quiet">
+              {t('Rate comments negative, or ask Claude to, and their kinds add up here.')}
+            </p>
+          )}
+          {positives.length > 0 && (
+            <>
+              <h3 class="sm-box__sub">{t('What people like')}</h3>
+              {tally(positives, true)}
+            </>
+          )}
+        </section>
+
+        <section class="sm-box sm-span-4">
+          <header class="sm-box__head">
+            <h2>{t('Words people use')}</h2>
+          </header>
+          {ins?.words.length ? (
+            <ul class="sm-bars">
+              {ins.words.slice(0, 8).map((w) => (
+                <li>
+                  <span class="sm-bars__name">{w.word}</span>
+                  <span class="sm-bars__track">
+                    <span
+                      class="sm-bars__fill sm-bars__fill--ink"
+                      style={{ width: `${(w.n / maxWord) * 100}%` }}
+                    />
+                  </span>
+                  <b class="g-num">{w.n}</b>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="sm-quiet">{t('Words show once a few comments repeat them.')}</p>
+          )}
+        </section>
 
         <section class="sm-box sm-span-8">
           <header class="sm-box__head">
@@ -513,54 +543,32 @@ export function Overview(v: BrandView) {
           {ins && <Heatmap grid={ins.heatmap} days={weekdays} caption={t('When people comment')} />}
         </section>
 
-        <div class="sm-span-4 sm-stack">
-          <section class="sm-box">
-            <header class="sm-box__head">
-              <h2>{t('Words people use')}</h2>
-            </header>
-            {ins?.words.length ? (
-              <ul class="sm-words">
-                {ins.words.map((w) => (
-                  <li
-                    style={{ '--w': 0.25 + (w.n / maxWord) * 0.75 }}
-                    title={count(w.n, 'comment')}
-                  >
-                    {w.word}
-                    <b class="g-num">{w.n}</b>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p class="sm-quiet">{t('Words show once a few comments repeat them.')}</p>
-            )}
-          </section>
-          <section class="sm-box sm-box--table">
-            <header class="sm-box__head">
-              <h2>{t('Most active people')}</h2>
-            </header>
-            <table class="sm-dtable">
-              <tbody>
-                {(ins?.authors ?? []).map((a) => (
-                  <tr>
-                    <td>
-                      <span class="sm-person">
-                        <NetworkMark network={a.network} size={13} />
-                        <span class="sm-person__name">{a.author}</span>
-                      </span>
-                    </td>
-                    <td class="sm-num">
-                      {a.complaints > 0 && (
-                        <span class="sm-dot sm-c-complaint" title={t('Complaints')} />
-                      )}
-                      {a.praise > 0 && <span class="sm-dot sm-c-praise" title={t('Praise')} />}
-                    </td>
-                    <td class="sm-num g-num">{a.n}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        </div>
+        <section class="sm-box sm-box--table sm-span-4">
+          <header class="sm-box__head">
+            <h2>{t('Most active people')}</h2>
+          </header>
+          <table class="sm-dtable">
+            <tbody>
+              {(ins?.authors ?? []).map((a) => (
+                <tr>
+                  <td>
+                    <span class="sm-person">
+                      <NetworkMark network={a.network} size={13} />
+                      <span class="sm-person__name">{a.author}</span>
+                    </span>
+                  </td>
+                  <td class="sm-num">
+                    {a.complaints > 0 && (
+                      <span class="sm-dot sm-c-complaint" title={t('Complaints')} />
+                    )}
+                    {a.praise > 0 && <span class="sm-dot sm-c-praise" title={t('Praise')} />}
+                  </td>
+                  <td class="sm-num g-num">{a.n}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
       </div>
 
       <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />
