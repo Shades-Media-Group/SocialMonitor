@@ -14,6 +14,7 @@ import type {
   ScheduleKind,
 } from './types.ts'
 import { NETWORKS } from './types.ts'
+import { TEMPLATES } from './categories.ts'
 
 type Row = Record<string, unknown>
 const all = <T>(db: DB, sql: string, ...args: (string | number | null)[]) =>
@@ -44,12 +45,14 @@ export function addBrand(
   name: string,
   links: string[],
   website: string | null = null,
+  categories: unknown[] = TEMPLATES.general!.categories,
 ): Brand {
   const brand = one<Brand>(
     db,
-    'INSERT INTO brands (name, website) VALUES (?, ?) RETURNING *',
+    'INSERT INTO brands (name, website, categories) VALUES (?, ?, ?) RETURNING *',
     name.trim(),
     website,
+    JSON.stringify(categories),
   )!
   for (const link of links.filter(Boolean)) setProfile(db, brand.id, link)
   return brand
@@ -71,6 +74,19 @@ export function setProfile(db: DB, brandId: number, link: string): Profile {
 
 export const removeProfile = (db: DB, brandId: number, network: Network) =>
   db.prepare('DELETE FROM profiles WHERE brand_id = ? AND network = ?').run(brandId, network)
+
+/** Updates the brand's own details; fields left undefined keep their value. */
+export function updateBrand(
+  db: DB,
+  id: number,
+  f: { name?: string; website?: string | null; industry?: string | null; description?: string | null; notes?: string | null },
+) {
+  for (const [col, v] of Object.entries(f)) {
+    if (v === undefined || !['name', 'website', 'industry', 'description', 'notes'].includes(col)) continue
+    if (col === 'name' && !String(v).trim()) throw new Error('A brand needs a name.')
+    db.prepare(`UPDATE brands SET ${col} = ? WHERE id = ?`).run(v === null ? null : String(v).trim().slice(0, 4000) || null, id)
+  }
+}
 
 export const renameBrand = (db: DB, id: number, name: string) =>
   db.prepare('UPDATE brands SET name = ? WHERE id = ?').run(name.trim(), id)
@@ -167,6 +183,27 @@ export function savePost(
 export const setReplyStatus = (db: DB, commentId: number, status: ReplyStatus) =>
   db.prepare('UPDATE comments SET reply_status = ? WHERE id = ?').run(status, commentId)
 
+/** Sets or clears a comment's sentiment and category. `by`: a person ('you') or Claude ('ai'). */
+export function setSentiment(
+  db: DB,
+  commentId: number,
+  sentiment: 'positive' | 'negative' | null,
+  category: string | null,
+  by: 'you' | 'ai',
+) {
+  db.prepare('UPDATE comments SET sentiment = ?, category = ?, sentiment_by = ? WHERE id = ?').run(
+    sentiment,
+    sentiment ? category : null,
+    sentiment ? by : null,
+    commentId,
+  )
+}
+
+export const setCategories = (db: DB, brandId: number, categories: unknown[]) =>
+  db
+    .prepare('UPDATE brands SET categories = ? WHERE id = ?')
+    .run(JSON.stringify(categories), brandId)
+
 export const setDescription = (db: DB, postId: number, description: string) =>
   db.prepare('UPDATE posts SET description = ? WHERE id = ?').run(description, postId)
 
@@ -188,6 +225,8 @@ export function setVerdict(
 export interface PostFilter {
   brandId?: number
   network?: Network
+  /** 'top': most likes + comments + shares first. Default: newest first. */
+  sort?: 'new' | 'top'
   limit?: number
   offset?: number
 }
@@ -210,7 +249,7 @@ export function listPosts(db: DB, f: PostFilter = {}) {
        (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND (c.label = 'complaint' OR c.needs_reply = 1)) AS flagged
      FROM posts p JOIN profiles pr ON pr.id = p.profile_id
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-     ORDER BY p.posted_at DESC, p.id DESC LIMIT ? OFFSET ?`,
+     ORDER BY ${f.sort === 'top' ? 'coalesce(p.likes,0) + 3 * coalesce(p.comments_count,0) + 5 * coalesce(p.shares,0) DESC,' : ''} p.posted_at DESC, p.id DESC LIMIT ? OFFSET ?`,
     ...args,
     f.limit ?? 50,
     f.offset ?? 0,
@@ -225,6 +264,9 @@ export interface CommentFilter extends PostFilter {
   needsReply?: boolean
   unsorted?: boolean
   search?: string
+  /** 'positive', 'negative', or 'none' for comments nobody has rated. */
+  sentiment?: 'positive' | 'negative' | 'none'
+  category?: string
 }
 
 export function listComments(db: DB, f: CommentFilter = {}) {
@@ -248,6 +290,15 @@ export function listComments(db: DB, f: CommentFilter = {}) {
   }
   if (f.needsReply) where.push("c.needs_reply = 1 AND c.reply_status = 'open'")
   if (f.unsorted) where.push('c.label IS NULL')
+  if (f.sentiment === 'none') where.push('c.sentiment IS NULL')
+  else if (f.sentiment) {
+    where.push('c.sentiment = ?')
+    args.push(f.sentiment)
+  }
+  if (f.category) {
+    where.push('c.category = ?')
+    args.push(f.category)
+  }
   if (f.search) {
     where.push('c.text LIKE ?')
     args.push(`%${f.search}%`)
@@ -265,17 +316,34 @@ export function listComments(db: DB, f: CommentFilter = {}) {
 }
 
 /** Counts per label for a brand (or all brands), optionally since a time. */
-export function labelCounts(db: DB, brandId?: number, since?: string) {
+/** Rated comments per sentiment and category, for one brand or all. */
+export function sentimentCounts(db: DB, brandId?: number, network?: Network) {
+  return all<{ sentiment: string; category: string | null; n: number }>(
+    db,
+    `SELECT c.sentiment, c.category, count(*) AS n
+     FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
+     WHERE c.sentiment IS NOT NULL AND (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR p.network = ?)
+     GROUP BY c.sentiment, c.category ORDER BY n DESC`,
+    brandId ?? null,
+    brandId ?? null,
+    network ?? null,
+    network ?? null,
+  )
+}
+
+export function labelCounts(db: DB, brandId?: number, since?: string, network?: Network) {
   const rows = all<{ label: string | null; n: number; replies: number }>(
     db,
     `SELECT c.label, count(*) AS n, sum(CASE WHEN c.needs_reply = 1 AND c.reply_status = 'open' THEN 1 ELSE 0 END) AS replies
      FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
-     WHERE (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR c.fetched_at >= ?)
+     WHERE (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR c.fetched_at >= ?) AND (? IS NULL OR p.network = ?)
      GROUP BY c.label`,
     brandId ?? null,
     brandId ?? null,
     since ?? null,
     since ?? null,
+    network ?? null,
+    network ?? null,
   )
   const out: Record<string, number> = { total: 0, needs_reply: 0, unsorted: 0 }
   for (const r of rows) {

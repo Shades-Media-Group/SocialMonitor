@@ -12,6 +12,11 @@ export interface Brand {
   id: number
   name: string
   website: string | null
+  /** JSON: Category[] */
+  categories: string
+  industry: string | null
+  description: string | null
+  notes: string | null
   created_at: string
 }
 
@@ -58,6 +63,10 @@ export interface Comment {
   needs_reply: 0 | 1 | null
   reason: string | null
   reply_status: ReplyStatus
+  sentiment: 'positive' | 'negative' | null
+  category: string | null
+  /** Who set the sentiment: a person or Claude. */
+  sentiment_by: 'you' | 'ai' | null
 }
 
 export type ReplyStatus = 'open' | 'done' | 'ignored'

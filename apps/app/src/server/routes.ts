@@ -3,11 +3,12 @@ import * as store from '../core/store.ts'
 import type { Label, Network } from '../core/types.ts'
 import { LABELS, NETWORKS } from '../core/types.ts'
 import { exportAll, importAll } from '../core/transfer.ts'
+import { TEMPLATES, validCategories } from '../core/categories.ts'
 import type { Dump } from '../core/transfer.ts'
 import { openSignInWindow, signInStatus } from '../core/collect/browser.ts'
 import { readSettings, writeSettings } from '../core/settings.ts'
-import { gaps, queueRun } from '../core/run.ts'
-import type { Range } from '../core/types.ts'
+import { gaps, queueRun, sortPending } from '../core/run.ts'
+import type { CollectedPost, Range } from '../core/types.ts'
 
 interface Ctx {
   db: DB
@@ -132,11 +133,46 @@ export const routes: Route[] = [
       label: label(query.get('label')),
       needsReply: query.get('reply') === '1',
       search: query.get('q') ?? undefined,
+      sentiment: (['positive', 'negative', 'none'] as const).find(
+        (v) => v === query.get('sentiment'),
+      ),
+      category: query.get('category') ?? undefined,
       limit: Number(query.get('limit') ?? 100),
       offset: Number(query.get('offset') ?? 0),
     }),
   ),
 
+  r('GET', '/api/templates', () => TEMPLATES),
+  r('PUT', '/api/brands/:id/categories', (c) => {
+    const list = validCategories((b(c) as { categories?: unknown }).categories)
+    store.setCategories(c.db, id(c.params.id), list)
+    return list
+  }),
+  r('GET', '/api/sentiment', ({ db, query }) =>
+    store.sentimentCounts(db, query.get('brand') ? id(query.get('brand')!) : undefined),
+  ),
+  // Sets or clears sentiment on one or many comments. `by` is 'ai' when Claude sets it.
+  r('POST', '/api/comments/sentiment', (c) => {
+    const x = b(c) as {
+      ids?: number[]
+      sentiment?: string | null
+      category?: string | null
+      by?: string
+    }
+    const sentiment = x.sentiment === 'positive' || x.sentiment === 'negative' ? x.sentiment : null
+    if (x.sentiment && !sentiment) throw new Error('sentiment is positive, negative or null.')
+    const ids = (x.ids ?? []).map(Number).filter((n) => Number.isInteger(n) && n > 0)
+    if (!ids.length) throw new Error('Give comment ids.')
+    for (const commentId of ids)
+      store.setSentiment(
+        c.db,
+        commentId,
+        sentiment,
+        x.category ?? null,
+        x.by === 'ai' ? 'ai' : 'you',
+      )
+    return { updated: ids.length }
+  }),
   r('PATCH', '/api/comments/:id', (c) => {
     const x = b(c) as {
       label?: string
@@ -159,6 +195,32 @@ export const routes: Route[] = [
       (x.reason ?? 'Set by hand.').slice(0, 120),
     )
   }),
+  // Posts read somewhere else, by Claude through the user's own browser for example, go into
+  // the same tables as an update's. Unsorted comments are sorted by the next update or by sort.
+  r('POST', '/api/ingest', (c) => {
+    const x = b(c) as { brand?: string | number; network?: string; posts?: CollectedPost[] }
+    const brand = store
+      .listBrands(c.db)
+      .find((br) => br.id === Number(x.brand) || br.name === x.brand)
+    if (!brand) throw new Error('No such brand.')
+    const n = net(x.network)
+    const profile = store.listProfiles(c.db, brand.id).find((p) => p.network === n)
+    if (!profile) throw new Error(`${brand.name} has no ${x.network} profile.`)
+    let posts = 0
+    let comments = 0
+    for (const p of x.posts ?? []) {
+      if (!p?.ext_id || !p.url) throw new Error('Every post needs ext_id and url.')
+      const r = store.savePost(c.db, profile, {
+        ...p,
+        comments: (p.comments ?? []).filter((k) => k.ext_id && k.text),
+      })
+      posts++
+      comments += r.newComments
+    }
+    store.markProfile(c.db, profile.id, 'ok', null, true)
+    return { posts, new_comments: comments }
+  }),
+  r('POST', '/api/sort', async ({ db }) => ({ sorted: await sortPending(db) })),
   r('GET', '/api/runs', ({ db }) => store.listRuns(db)),
   r('POST', '/api/runs', (c) => {
     const x = b(c) as { brandIds?: number[]; networks?: string[]; range?: Range; limit?: number }

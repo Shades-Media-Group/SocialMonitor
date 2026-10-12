@@ -50,9 +50,14 @@ export function importAll(db: DB, dump: Dump) {
     for (const r of t.brands ?? []) {
       const row = db
         .prepare(
-          'INSERT INTO brands (name, website, created_at) VALUES (?, ?, ?) ON CONFLICT (name) DO UPDATE SET website = coalesce(brands.website, excluded.website) RETURNING id',
+          'INSERT INTO brands (name, website, created_at, categories) VALUES (?, ?, ?, ?) ON CONFLICT (name) DO UPDATE SET website = coalesce(brands.website, excluded.website) RETURNING id',
         )
-        .get(r.name as string, (r.website as string) ?? null, r.created_at as string) as {
+        .get(
+          r.name as string,
+          (r.website as string) ?? null,
+          r.created_at as string,
+          (r.categories as string) ?? '[]',
+        ) as {
         id: number
       }
       brandIds.set(r.id as number, row.id)
@@ -118,6 +123,9 @@ export function importAll(db: DB, dump: Dump) {
       'needs_reply',
       'reason',
       'reply_status',
+      'sentiment',
+      'category',
+      'sentiment_by',
     ] as const
     const insert = db.prepare(
       `INSERT INTO comments (post_id, ${ccols.join(', ')}) VALUES (?, ${ccols.map(() => '?').join(', ')})

@@ -121,6 +121,21 @@ function migrate(db: DatabaseSync) {
   // Where a comment that needs a reply stands: open until someone answers it on the network or skips it.
   if (!has('comments', 'reply_status'))
     db.exec("ALTER TABLE comments ADD COLUMN reply_status TEXT NOT NULL DEFAULT 'open'")
+  // Positive or negative, and which kind, set by a person or by Claude. Empty until someone does.
+  if (!has('comments', 'sentiment')) {
+    db.exec('ALTER TABLE comments ADD COLUMN sentiment TEXT')
+    db.exec('ALTER TABLE comments ADD COLUMN category TEXT')
+    db.exec('ALTER TABLE comments ADD COLUMN sentiment_by TEXT')
+  }
+  // What the brand is: shown on its About page and given to the AI as context.
+  if (!has('brands', 'industry')) {
+    db.exec('ALTER TABLE brands ADD COLUMN industry TEXT')
+    db.exec('ALTER TABLE brands ADD COLUMN description TEXT')
+    db.exec('ALTER TABLE brands ADD COLUMN notes TEXT')
+  }
+  // Each brand's own positive and negative categories.
+  if (!has('brands', 'categories'))
+    db.exec("ALTER TABLE brands ADD COLUMN categories TEXT NOT NULL DEFAULT '[]'")
 }
 
 export const now = () => new Date().toISOString()

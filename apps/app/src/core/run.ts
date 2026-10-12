@@ -88,7 +88,6 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   const log = (line: string) => store.logRun(db, runId, line)
   const since = now()
   const settings = getSettings(db)
-  const engine = pickEngine(settings)
   const touched: { postId: number; brand: string }[] = []
   const problems: string[] = []
   const skipped: string[] = []
@@ -151,42 +150,10 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   await closeBrowser()
 
   // The AI step: describe new posts, sort new comments.
-  if (!engine) {
-    problems.push(
-      'Comments were kept but not sorted: install Claude Code, or set ANTHROPIC_API_KEY in .env.',
-    )
-  } else {
-    for (const { postId, brand } of touched) {
-      const post = store.getPost(db, postId)!
-      const unsorted = store.listComments(db, { postId, unsorted: true, limit: 2000 })
-      try {
-        if (unsorted.length) {
-          log(`Sorting ${unsorted.length} comments on ${post.url}`)
-          const verdicts = await sortComments(
-            engine,
-            brand,
-            post.caption,
-            unsorted.map((c) => ({ id: c.id, text: c.text })),
-          )
-          for (const [id, v] of verdicts) store.setVerdict(db, id, v.label, v.needsReply, v.reason)
-        }
-        if (!post.description) {
-          const top = store.listComments(db, { postId, limit: 5 }).map((c) => c.text)
-          const image = post.thumb_url?.startsWith('/media/')
-            ? join(DATA_DIR, post.thumb_url)
-            : null
-          store.setDescription(
-            db,
-            postId,
-            await describePost(engine, brand, post.caption, top, image),
-          )
-        }
-      } catch (e) {
-        problems.push(`AI: ${(e as Error).message}`)
-        log(`AI step failed: ${(e as Error).message}`)
-        break
-      }
-    }
+  try {
+    await aiStep(db, touched, log)
+  } catch (e) {
+    problems.push((e as Error).message)
   }
 
   // Retention: comments older than the setting are deleted after every update.
@@ -207,4 +174,62 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   const status = problems.length ? (touched.length ? 'partial' : 'error') : 'ok'
   store.finishRun(db, runId, status, stats, text)
   log('Done.')
+}
+
+/** Describes posts without a description and sorts unsorted comments, post by post. */
+async function aiStep(
+  db: DB,
+  touched: { postId: number; brand: string }[],
+  log: (line: string) => void,
+) {
+  const engine = pickEngine(getSettings(db))
+  if (!engine)
+    throw new Error(
+      'Comments were kept but not sorted: install Claude Code, or set ANTHROPIC_API_KEY in .env.',
+    )
+  for (const { postId, brand } of touched) {
+    const post = store.getPost(db, postId)!
+    const unsorted = store.listComments(db, { postId, unsorted: true, limit: 2000 })
+    try {
+      if (unsorted.length) {
+        log(`Sorting ${unsorted.length} comments on ${post.url}`)
+        const verdicts = await sortComments(
+          engine,
+          brand,
+          post.caption,
+          unsorted.map((c) => ({ id: c.id, text: c.text })),
+        )
+        for (const [id, v] of verdicts) store.setVerdict(db, id, v.label, v.needsReply, v.reason)
+      }
+      if (!post.description) {
+        const top = store.listComments(db, { postId, limit: 5 }).map((c) => c.text)
+        const image = post.thumb_url?.startsWith('/media/') ? join(DATA_DIR, post.thumb_url) : null
+        store.setDescription(
+          db,
+          postId,
+          await describePost(engine, brand, post.caption, top, image),
+        )
+      }
+    } catch (e) {
+      throw new Error(`AI: ${(e as Error).message}`, { cause: e })
+    }
+  }
+}
+
+/** Sorts every unsorted comment and describes every post without a description. Returns how many comments it sorted. */
+export async function sortPending(db: DB) {
+  const rows = db
+    .prepare(
+      `SELECT DISTINCT p.id AS postId, b.name AS brand FROM posts p JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id
+       WHERE p.description IS NULL OR EXISTS (SELECT 1 FROM comments c WHERE c.post_id = p.id AND c.label IS NULL)`,
+    )
+    .all() as { postId: number; brand: string }[]
+  const before = (
+    db.prepare('SELECT count(*) AS n FROM comments WHERE label IS NULL').get() as { n: number }
+  ).n
+  await aiStep(db, rows, () => {})
+  const after = (
+    db.prepare('SELECT count(*) AS n FROM comments WHERE label IS NULL').get() as { n: number }
+  ).n
+  return before - after
 }
