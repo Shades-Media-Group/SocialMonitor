@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-12T00:00:00Z",
+  "title": "Design System: SocialMonitor",
+  "extensions": {
+    "inherits": {
+      "system": "Gradient (shades-gradient 0.5.0)",
+      "tokens": "node_modules/shades-gradient/dist/tokens.css",
+      "note": "All colour roles, ramps, fonts, radii, shadows and motion are Gradient tokens referenced by name. Component CSS below uses var(--g-*) and needs Gradient's tokens loaded."
+    },
+    "colorMeta": {
+      "mark-red": { "role": "primary", "displayName": "Mark Red", "canonical": "#f9000a", "tonalRamp": ["oklch(15% 0.06 29)", "oklch(25% 0.1 29)", "oklch(35% 0.14 29)", "oklch(45% 0.19 29)", "oklch(55% 0.23 29)", "oklch(63% 0.257 29)", "oklch(80% 0.12 29)", "oklch(95% 0.03 29)"] },
+      "mark-rose": { "role": "primary", "displayName": "Mark Rose", "canonical": "#ff8299", "tonalRamp": ["oklch(15% 0.04 5)", "oklch(25% 0.07 5)", "oklch(35% 0.1 5)", "oklch(45% 0.13 5)", "oklch(55% 0.15 5)", "oklch(65% 0.15 5)", "oklch(76% 0.15 5)", "oklch(95% 0.03 5)"] },
+      "mark-ink": { "role": "neutral", "displayName": "Mark Ink", "canonical": "#0a0a0b", "tonalRamp": ["oklch(15% 0.002 286)", "oklch(25% 0.002 286)", "oklch(35% 0.002 286)", "oklch(45% 0.002 286)", "oklch(55% 0.002 286)", "oklch(65% 0.002 286)", "oklch(80% 0.002 286)", "oklch(95% 0.002 286)"] },
+      "instagram-mark": { "role": "secondary", "displayName": "Instagram's own mark", "canonical": "#e1306c" },
+      "facebook-mark": { "role": "secondary", "displayName": "Facebook's own mark", "canonical": "#1877f2" }
+    },
+    "typographyMeta": {
+      "page-name": { "displayName": "Page name", "purpose": "The brand's name or 'Brands' in the page head." },
+      "statement": { "displayName": "Statement", "purpose": "The overview's opening sentence; numbers 700 tabular." },
+      "brand-name": { "displayName": "Brand name", "purpose": "Each brand row on Home." },
+      "figure": { "displayName": "Figure", "purpose": "Counts on a brand row." },
+      "headline": { "displayName": "Headline", "purpose": "Section heads." },
+      "lead": { "displayName": "Lead", "purpose": "The 'what it is' text in the page head." },
+      "body": { "displayName": "Body", "purpose": "Comments, tabs, controls." },
+      "meta": { "displayName": "Meta", "purpose": "Timestamps, statuses, hints, legends." },
+      "label": { "displayName": "Label", "purpose": "Label pills, Brand reply tag, badges." },
+      "code": { "displayName": "Code", "purpose": "JSON view and report log only." }
+    },
+    "shadows": [
+      { "name": "--g-shadow-sm", "value": "var(--g-shadow-sm)", "purpose": "Selected segmented pill; the add-brand panel." },
+      { "name": "--g-shadow-lg", "value": "var(--g-shadow-lg)", "purpose": "Under the sheet." },
+      { "name": "--g-shadow-accent", "value": "var(--g-shadow-accent)", "purpose": "Comes with Gradient's primary button only." }
+    ],
+    "motion": [
+      { "name": "row-hover", "value": "background-color var(--g-dur-snap) var(--g-ease-snap)", "purpose": "Brand row hover to sunken." },
+      { "name": "cover-hover", "value": "transform var(--g-dur-move) var(--g-ease-move)", "purpose": "Covers scale 1.02-1.03 on hover; off under reduced motion." },
+      { "name": "live-pulse", "value": "1.4s var(--g-ease-move) infinite", "purpose": "The freshness dot while an update runs; off under reduced motion." }
+    ],
+    "breakpoints": [
+      { "name": "narrow", "value": "1080px" },
+      { "name": "phone", "value": "760px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Gradient's red pill, compact. One per view.",
+      "html": "<button class=\"ds-btn-primary\">Update</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; min-height: 36px; padding: 0 1rem; border: 0; border-radius: var(--g-radius-pill); background: var(--g-accent); box-shadow: var(--g-shadow-accent); color: var(--g-on-accent); font: 600 14px/1 var(--g-font-body); cursor: pointer; transition: background-color var(--g-dur-snap) var(--g-ease-snap), transform var(--g-dur-snap) var(--g-ease-snap); } .ds-btn-primary:hover { background: var(--g-accent-hover); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: none; box-shadow: var(--g-shadow-accent), var(--g-focus); }"
+    },
+    {
+      "name": "Section Bar",
+      "kind": "nav",
+      "refersTo": "section-tab",
+      "description": "Gradient's sticky text bar with the network switch on its right.",
+      "html": "<nav class=\"ds-bar\"><div class=\"ds-bar__tabs\"><a aria-current=\"page\" href=\"#\">Overview</a><a href=\"#\">Comments</a><a href=\"#\">Posts</a><a href=\"#\">Reports</a><a href=\"#\">Schedules</a><a href=\"#\">About</a></div><div class=\"ds-netswitch\" role=\"radiogroup\"><button role=\"radio\" aria-checked=\"true\">All</button><button role=\"radio\" aria-checked=\"false\">Instagram</button><button role=\"radio\" aria-checked=\"false\">Facebook</button></div></nav>",
+      "css": ".ds-bar { display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--g-line); background: var(--g-bg); font-family: var(--g-font-body); } .ds-bar__tabs { display: flex; flex: 1; gap: 4px; } .ds-bar__tabs a { margin-bottom: -1px; padding: 14px 14px 13px; border-bottom: 2px solid transparent; color: var(--g-text-2); font-size: 15px; text-decoration: none; } .ds-bar__tabs a:first-child { padding-left: 0; } .ds-bar__tabs a:hover { color: var(--g-text); } .ds-bar__tabs a[aria-current='page'] { border-bottom-color: var(--g-text); color: var(--g-text); font-weight: 600; } .ds-bar a:focus-visible, .ds-netswitch button:focus-visible { outline: none; box-shadow: var(--g-focus); } .ds-netswitch { display: flex; gap: 4px; } .ds-netswitch button { padding: 5px 12px; border: 1px solid transparent; border-radius: var(--g-radius-pill); background: transparent; color: var(--g-text-2); font: inherit; font-size: 13px; cursor: pointer; } .ds-netswitch button:hover { color: var(--g-text); } .ds-netswitch button[aria-checked='true'] { border-color: var(--g-line-strong); background: var(--g-surface); color: var(--g-text); font-weight: 600; }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "chip",
+      "refersTo": "segmented-option-active",
+      "description": "Gradient's sunken pill track with a raised selected pill.",
+      "html": "<div class=\"ds-seg\" role=\"radiogroup\"><button role=\"radio\" aria-checked=\"true\">Needs a reply</button><button role=\"radio\" aria-checked=\"false\">All</button><button role=\"radio\" aria-checked=\"false\">Complaints</button></div>",
+      "css": ".ds-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--g-radius-pill); background: var(--g-sunken); box-shadow: inset 0 0 0 1px var(--g-line); font-family: var(--g-font-body); } .ds-seg button { padding: 6px 14px; border: 0; border-radius: var(--g-radius-pill); background: transparent; color: var(--g-text-2); font: inherit; font-size: 13px; cursor: pointer; } .ds-seg button:hover { color: var(--g-text); } .ds-seg button[aria-checked='true'] { background: var(--g-surface); color: var(--g-text); font-weight: 600; box-shadow: var(--g-shadow-sm); } .ds-seg button:focus-visible { outline: none; box-shadow: var(--g-focus); }"
+    },
+    {
+      "name": "Brand Line",
+      "kind": "custom",
+      "description": "A brand on Home: display name, field, figures, freshness, on hairlines.",
+      "html": "<a class=\"ds-brandline\" href=\"#\"><span class=\"ds-brandline__name\"><strong>Brand name</strong><span>Field of work</span></span><span class=\"ds-brandline__fig\"><b class=\"ds-hot\">12</b><span>to answer</span></span><span class=\"ds-brandline__fig\"><b>34</b><span>complaints</span></span><span class=\"ds-brandline__when\">Updated 3 hours ago</span></a>",
+      "css": ".ds-brandline { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, 104px) 150px; gap: 24px; align-items: center; padding: 28px 12px 28px 0; border-top: 1px solid var(--g-line-strong); border-bottom: 1px solid var(--g-line); color: var(--g-text); text-decoration: none; font-family: var(--g-font-body); transition: background-color var(--g-dur-snap) var(--g-ease-snap); } .ds-brandline:hover { background: var(--g-sunken); } .ds-brandline:focus-visible { outline: none; box-shadow: var(--g-focus); } .ds-brandline__name { display: grid; gap: 4px; } .ds-brandline__name strong { font: 600 32px/1.1 var(--g-font-display); letter-spacing: -0.02em; } .ds-brandline__name span, .ds-brandline__fig span, .ds-brandline__when { color: var(--g-text-3); font-size: 13px; } .ds-brandline__fig { display: grid; gap: 2px; } .ds-brandline__fig b { font: 600 28px/1 var(--g-font-display); font-variant-numeric: tabular-nums; } .ds-hot { color: var(--g-danger); }"
+    },
+    {
+      "name": "Comment with Brand Reply",
+      "kind": "custom",
+      "description": "A thread: initials on a ramp-100 disc, label pill, and the brand's reply indented and tagged.",
+      "html": "<div class=\"ds-c\"><span class=\"ds-face\">AM</span><div class=\"ds-c__body\"><div class=\"ds-c__meta\"><b>Ana M.</b><span>2 hours ago</span><span class=\"ds-pill ds-pill--danger\">Complaint</span></div><p class=\"ds-c__text\">My order still has not arrived.</p></div></div><div class=\"ds-c ds-c--reply\"><span class=\"ds-face ds-face--own\">BR</span><div class=\"ds-c__body\"><div class=\"ds-c__meta\"><b>Brand</b><span class=\"ds-own\">Brand reply</span></div><p class=\"ds-c__text\">We have sent you a message.</p></div></div>",
+      "css": ".ds-c { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; font-family: var(--g-font-body); color: var(--g-text); } .ds-c--reply { margin: 14px 0 0 50px; grid-template-columns: 28px minmax(0, 1fr); } .ds-face { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--g-blue-100); color: var(--g-blue-800); font-size: 12px; font-weight: 700; } .ds-c--reply .ds-face { width: 28px; height: 28px; font-size: 10px; } .ds-face--own { background: var(--g-text); color: var(--g-bg); } .ds-c__body { display: grid; gap: 6px; } .ds-c__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--g-text-3); font-size: 13px; } .ds-c__meta b { color: var(--g-text); font-size: 15px; } .ds-c__text { margin: 0; max-width: 70ch; font-size: 15px; line-height: 1.55; } .ds-c--reply .ds-c__text { color: var(--g-text-2); } .ds-own { padding: 1px 8px; border-radius: var(--g-radius-pill); background: var(--g-info-soft); color: var(--g-info); font-size: 12px; font-weight: 600; } .ds-pill { display: inline-flex; align-items: center; min-height: 22px; padding: 0 9px 0 7px; border-radius: var(--g-radius-pill); font-size: 12px; font-weight: 600; } .ds-pill--danger { background: var(--g-danger-soft); color: var(--g-danger); }"
+    },
+    {
+      "name": "Label Pills",
+      "kind": "chip",
+      "refersTo": "label-pill",
+      "description": "Each AI label is a word on one soft role fill.",
+      "html": "<span class=\"ds-lp ds-lp--danger\">Complaint</span> <span class=\"ds-lp ds-lp--info\">Question</span> <span class=\"ds-lp ds-lp--success\">Praise</span> <span class=\"ds-lp ds-lp--warning\">Suggestion</span> <span class=\"ds-lp ds-lp--neutral\">Neutral</span> <span class=\"ds-lp ds-lp--quiet\">Spam</span>",
+      "css": ".ds-lp { display: inline-flex; align-items: center; min-height: 22px; padding: 0 9px 0 7px; border-radius: var(--g-radius-pill); font: 600 12px var(--g-font-body); } .ds-lp--danger { background: var(--g-danger-soft); color: var(--g-danger); } .ds-lp--info { background: var(--g-info-soft); color: var(--g-info); } .ds-lp--success { background: var(--g-success-soft); color: var(--g-success); } .ds-lp--warning { background: var(--g-warning-soft); color: var(--g-warning); } .ds-lp--neutral { background: var(--g-sunken); color: var(--g-text-2); } .ds-lp--quiet { color: var(--g-text-3); }"
+    },
+    {
+      "name": "Rating Pills",
+      "kind": "button",
+      "refersTo": "rate-pill",
+      "description": "Positive, Negative, Neutral; grey until chosen.",
+      "html": "<div class=\"ds-rate\"><button class=\"ds-rate__btn ds-rate__btn--positive\" aria-pressed=\"false\">Positive</button><button class=\"ds-rate__btn ds-rate__btn--negative\" aria-pressed=\"true\">Negative</button><button class=\"ds-rate__btn ds-rate__btn--neutral\" aria-pressed=\"false\">Neutral</button></div>",
+      "css": ".ds-rate { display: inline-flex; gap: 6px; } .ds-rate__btn { min-height: 28px; padding: 0 12px; border: 1px solid var(--g-line-strong); border-radius: var(--g-radius-pill); background: transparent; color: var(--g-text-2); font: 13px var(--g-font-body); cursor: pointer; } .ds-rate__btn:hover { color: var(--g-text); border-color: var(--g-text-3); } .ds-rate__btn:focus-visible { outline: none; box-shadow: var(--g-focus); } .ds-rate__btn--positive[aria-pressed='true'] { border-color: transparent; background: var(--g-success-soft); color: var(--g-success); font-weight: 600; } .ds-rate__btn--negative[aria-pressed='true'] { border-color: transparent; background: var(--g-danger-soft); color: var(--g-danger); font-weight: 600; } .ds-rate__btn--neutral[aria-pressed='true'] { background: var(--g-ink-100); color: var(--g-text); font-weight: 600; }"
+    },
+    {
+      "name": "Mood Bar",
+      "kind": "custom",
+      "description": "How comments split, trouble first, in ramp 500s.",
+      "html": "<figure class=\"ds-mood\"><div class=\"ds-mood__bar\"><span style=\"flex-grow:3;background:var(--g-danger-fill)\"></span><span style=\"flex-grow:2;background:var(--g-blue-500)\"></span><span style=\"flex-grow:1;background:var(--g-amber-500)\"></span><span style=\"flex-grow:4;background:var(--g-green-500)\"></span><span style=\"flex-grow:2;background:var(--g-ink-300)\"></span></div><figcaption class=\"ds-mood__legend\">Complaint <b>25%</b> Question <b>17%</b> Suggestion <b>8%</b> Praise <b>33%</b> Neutral <b>17%</b></figcaption></figure>",
+      "css": ".ds-mood { display: grid; gap: 12px; margin: 0; font-family: var(--g-font-body); } .ds-mood__bar { display: flex; gap: 2px; height: 14px; overflow: hidden; border-radius: var(--g-radius-pill); } .ds-mood__bar span { min-width: 4px; } .ds-mood__legend { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--g-text-2); font-size: 13px; } .ds-mood__legend b { color: var(--g-text); font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Statement",
+      "kind": "custom",
+      "description": "The overview's opening sentence in the display face, numbers tabular bold.",
+      "html": "<p class=\"ds-statement\"><b class=\"ds-hot\">12</b> comments wait for an answer. Complaints are <b>25%</b> of what people said, and <b>140</b> new comments came in this week.</p>",
+      "css": ".ds-statement { margin: 0; max-width: 30ch; color: var(--g-text); font: 500 clamp(28px, 3.4vw, 44px)/1.15 var(--g-font-display); letter-spacing: -0.02em; text-wrap: balance; } .ds-statement b { font-weight: 700; font-variant-numeric: tabular-nums; } .ds-hot { color: var(--g-danger); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Brand Ledger",
+    "overview": "SocialMonitor inherits Gradient, the Shades design system (npm shades-gradient 0.5.0, live at gradient.shades.md). Every colour role, ramp, font stack, radius, shadow, duration and easing comes from Gradient's tokens (node_modules/shades-gradient/dist/tokens.css) and is referenced here by name (--g-bg, --g-danger-soft, --g-blue-100), never re-declared. Gradient's components (g-btn, g-segmented, g-table, g-input, g-link, g-num, g-icon-btn) are used as shipped. This file records only SocialMonitor's own decisions on top: the page grid and widths, the type scale it actually uses, its signature components and their states, its responsive rules, and the lessons that bind it.\n\nThe product is brand-first. Home is a list of brands on hairlines. Each brand page reads like a Gradient page: a big Space Grotesk name on the left, a \"what it is\" lead on the right, Gradient's sticky text section bar (Overview, Comments, Posts, Reports, Schedules, About) with a network switch on its right, then the body. The overview opens with one sentence in the display face, not a row of KPI tiles. Comments read as threads, posts as a contact sheet of real covers. There is no sidebar nav and no card grid.\n\nThe ground is Gradient's paper (--g-bg), light by default; dark follows Gradient's own dark tokens with no SocialMonitor overrides beyond the mark's ink quarter. Colour appears only where it means something.",
+    "keyCharacteristics": [
+      "Inherits Gradient; references its tokens by name, adds no colour roles of its own.",
+      "Brand-first navigation: brand list, then brand page with a sticky text section bar.",
+      "Hairline lists and tables; one surface panel at most per view.",
+      "Pill controls throughout; one red primary action per view.",
+      "Colour is meaning: network marks, label roles, ratings, commenter initials, the mood bar.",
+      "A display-face statement sentence leads the overview instead of KPI tiles."
+    ],
+    "rules": [
+      { "name": "The Meaning-Only Rule", "body": "A colour appears only when it says something: a network, a label, a rating, a person, a share. No decorative tint, no accent wash, no coloured section.", "section": "colors" },
+      { "name": "The Mark-Only Rule", "body": "Mark Red, Rose and Ink are for the logo. Interface red is always Gradient's --g-accent or --g-danger family.", "section": "colors" },
+      { "name": "The Colour-Once-Chosen Rule", "body": "Rating pills are outlined and grey until pressed; only the chosen rating takes its role fill.", "section": "colors" },
+      { "name": "The Tabular-Not-Mono Rule", "body": "Every number is .g-num tabular figures in its own face. Monospace is only the JSON view and the report log, because those are code.", "section": "typography" },
+      { "name": "The Paper Bars Rule", "body": "Sticky surfaces (top bar, section bar, save bar) are the ground colour with at most a hairline; never a blur, glass or drop shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do reference Gradient tokens by name (var(--g-danger-soft)); add a SocialMonitor value only for layout.",
+      "Do keep one red primary action per view.",
+      "Do put lists and tables on hairlines with no container.",
+      "Do use .g-num tabular figures for every count, in the display face for figures and the statement.",
+      "Do show real covers and real data; when there is none, a two-line empty state that says what to do.",
+      "Do check light and dark at 375 and 1440px."
+    ],
+    "donts": [
+      "Don't add a KPI tile row, a card grid or a sidebar nav.",
+      "Don't nest cards, box lists in rounded containers, use tinted callout boxes or coloured side borders.",
+      "Don't use monospace for numbers or metadata; mono is for the JSON view and logs only.",
+      "Don't put eyebrows, kickers, tracked small caps or section numbers above headings.",
+      "Don't put an icon on every row, icons in circles, or emoji and Unicode glyphs as icons.",
+      "Don't use gradient text, glass, glow, decorative blur, or a shadowed logo.",
+      "Don't use skeleton illustrations, fake data or made-up sample brands."
+    ]
+  }
+}

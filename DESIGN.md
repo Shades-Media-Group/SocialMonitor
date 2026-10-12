@@ -47,6 +47,10 @@ typography:
     fontSize: '15px'
     fontWeight: 400
     lineHeight: 1.5
+  control:
+    fontFamily: 'var(--g-font-body)'
+    fontSize: '14px'
+    fontWeight: 400
   meta:
     fontFamily: 'var(--g-font-body)'
     fontSize: '13px'
