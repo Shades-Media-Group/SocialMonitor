@@ -95,6 +95,18 @@ export const routes: Route[] = [
     }),
   ),
 
+  r('PATCH', '/api/comments/:id', (c) => {
+    const x = b(c) as { label?: string; needs_reply?: boolean; reason?: string }
+    const l = label(x.label ?? null)
+    if (!l) throw new Error('Unknown label.')
+    store.setVerdict(
+      c.db,
+      id(c.params.id),
+      l,
+      !!x.needs_reply,
+      (x.reason ?? 'Set by hand.').slice(0, 120),
+    )
+  }),
   r('GET', '/api/runs', ({ db }) => store.listRuns(db)),
   r('POST', '/api/runs', (c) => {
     const x = b(c) as { brandIds?: number[]; networks?: string[]; range?: Range; limit?: number }
