@@ -3972,3 +3972,86 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-daypop .sm-b__text {
   font-size: 13.5px;
 }
+
+/* ------------------------------------------------------------------ posts as pictures
+   The picture is shown whole, letterboxed on grey, never cropped. The person picks how many
+   sit in a row; columns drop on their own when a row would get too narrow. Two in a row turn
+   into wide cards: the picture on the left, everything about the post on the right. */
+.sm-shell .sm-wall {
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(max(170px, calc((100% - (var(--cols, 4) - 1) * var(--c-gap)) / var(--cols, 4))), 1fr)
+  );
+}
+.sm-shell .sm-postcard2__img {
+  aspect-ratio: 4 / 5;
+  background: #e3e6eb;
+}
+.sm-shell .sm-postcard2__img img {
+  object-fit: contain;
+}
+.sm-shell .sm-postcard2__img:hover img {
+  transform: none;
+}
+.sm-shell .sm-postcard2__img:hover {
+  filter: brightness(0.96);
+}
+.sm-postcard2__when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+.sm-postcard2__when .sm-word {
+  margin-left: auto;
+}
+.sm-shell .sm-postcard2__text {
+  font-size: 13px;
+  -webkit-line-clamp: 3;
+}
+.sm-postcard2__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--c-card, #fff);
+}
+.sm-postcard2__stats div {
+  padding: 4px 6px;
+  min-width: 0;
+}
+.sm-postcard2__stats dt {
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-postcard2__stats dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+.sm-wall--5 .sm-postcard2__stats,
+.sm-wall--6 .sm-postcard2__stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.sm-wall--2 .sm-postcard2 {
+  grid-template-columns: minmax(180px, 38%) minmax(0, 1fr);
+  grid-template-rows: auto;
+}
+.sm-wall--2 .sm-postcard2__body {
+  gap: 10px;
+  padding: 14px 16px;
+}
+.sm-wall--2 .sm-postcard2__text {
+  font-size: 14px;
+  -webkit-line-clamp: 8;
+}
+@media (max-width: 720px) {
+  .sm-wall--2 .sm-postcard2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

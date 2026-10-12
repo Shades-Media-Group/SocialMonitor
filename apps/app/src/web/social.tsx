@@ -133,6 +133,12 @@ export function MoodStrip({ p }: { p: PostRow }) {
 
 /** A post as the network shows it: the picture, when, what it says, and what it drew. */
 export function PostCard({ p, onOpen }: { p: PostRow; onOpen: (p: PostRow) => void }) {
+  const stats: [string, number | null][] = [
+    ['Likes', p.likes],
+    ['Comments', p.comments_count],
+    ['Shares', p.shares],
+    ['Views', p.views],
+  ]
   return (
     <article class="sm-postcard2">
       <button
@@ -142,32 +148,26 @@ export function PostCard({ p, onOpen }: { p: PostRow; onOpen: (p: PostRow) => vo
         aria-label={t('Open the post')}
       >
         {p.thumb_url ? <img src={p.thumb_url} alt="" loading="lazy" /> : <span />}
-        <span class="sm-postcard2__net">
-          <NetworkMark network={p.network} size={13} />
-        </span>
-        {p.waiting > 0 && (
-          <span class="sm-postcard2__waiting">{t('{n} to answer', { n: p.waiting })}</span>
-        )}
       </button>
       <div class="sm-postcard2__body">
-        <span class="sm-postcard2__when">{when(p.posted_at)}</span>
-        <p class="sm-postcard2__text">{p.description ?? p.caption ?? t('No caption.')}</p>
-        <span class="sm-postcard2__metrics g-num">
-          <span title={t('Likes')}>
-            <Icon name="favorite" size={13} /> {short(p.likes)}
-          </span>
-          <span title={t('Comments')}>
-            <Icon name="chat" size={13} /> {short(p.comments_count)}
-          </span>
-          <span title={t('Shares')}>
-            <Icon name="share" size={13} /> {short(p.shares)}
-          </span>
-          {p.views != null && (
-            <span title={t('Views')}>
-              <Icon name="visibility" size={13} /> {short(p.views)}
-            </span>
+        <span class="sm-postcard2__when">
+          <NetworkMark network={p.network} size={12} />
+          {when(p.posted_at)}
+          {p.waiting > 0 && (
+            <span class="sm-word sm-word--late">{t('{n} to answer', { n: p.waiting })}</span>
           )}
         </span>
+        <p class="sm-postcard2__text" title={p.description ?? p.caption ?? undefined}>
+          {p.description ?? p.caption ?? t('No caption.')}
+        </p>
+        <dl class="sm-postcard2__stats">
+          {stats.map(([label, v]) => (
+            <div>
+              <dt>{t(label)}</dt>
+              <dd class="g-num">{short(v)}</dd>
+            </div>
+          ))}
+        </dl>
         <MoodStrip p={p} />
       </div>
     </article>

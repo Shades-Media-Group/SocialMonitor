@@ -495,6 +495,8 @@ export const fr: Dict = {
     'Open {name} on {network}': 'Ouvrir {name} sur {network}',
     'Loading…': 'Chargement…',
     'No comments this day.': 'Aucun commentaire ce jour-là.',
+    'Per row': 'Par rangée',
+    '{n} per row': '{n} par rangée',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

@@ -12,7 +12,8 @@ import { MoodStrip, PostCard, PostDrawer } from '../social.tsx'
 export function Posts({ brand, network, version, mode, openUpdate, days, brands }: BrandView) {
   const [all, setAll] = useState<PostRow[] | null>(null)
   const [sort, setSort] = usePref<'new' | 'top'>('posts.sort', 'new')
-  const [look, setLook] = usePref<'table' | 'grid'>('posts.look', 'grid')
+  const [look, setLook] = usePref<'table' | 'grid'>('posts.look.v2', 'table')
+  const [cols, setCols] = usePref<'2' | '3' | '4' | '5' | '6'>('posts.cols', '4')
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
 
   useEffect(() => {
@@ -70,13 +71,24 @@ export function Posts({ brand, network, version, mode, openUpdate, days, brands 
           ]}
         />
         <span class="sm-toolbar__end">
+          {look === 'grid' && (
+            <Segmented
+              label={t('Per row')}
+              value={cols}
+              onChange={setCols}
+              options={(['2', '3', '4', '5', '6'] as const).map((n) => [
+                n,
+                t('{n} per row', { n }),
+              ])}
+            />
+          )}
           <Segmented
             label={t('Layout')}
             value={look}
             onChange={setLook}
             options={[
-              ['grid', t('Pictures')],
               ['table', t('Table')],
+              ['grid', t('Pictures')],
             ]}
           />
         </span>
@@ -134,7 +146,7 @@ export function Posts({ brand, network, version, mode, openUpdate, days, brands 
           </div>
         </section>
       ) : (
-        <div class="sm-wall">
+        <div class={`sm-wall sm-wall--${cols}`} style={{ '--cols': cols }}>
           {rows.map((p) => (
             <PostCard p={p} onOpen={setOpenPost} />
           ))}

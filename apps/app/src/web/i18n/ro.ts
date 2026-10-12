@@ -494,6 +494,8 @@ export const ro: Dict = {
     'Open {name} on {network}': 'Deschide {name} pe {network}',
     'Loading…': 'Se încarcă…',
     'No comments this day.': 'Niciun comentariu în această zi.',
+    'Per row': 'Pe rând',
+    '{n} per row': '{n} pe rând',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

@@ -493,6 +493,8 @@ export const ru: Dict = {
     'Open {name} on {network}': 'Открыть {name} в {network}',
     'Loading…': 'Загрузка…',
     'No comments this day.': 'В этот день комментариев нет.',
+    'Per row': 'В ряд',
+    '{n} per row': '{n} в ряд',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',
