@@ -44,7 +44,7 @@ The dashboard is built on Gradient's components and tokens and follows its [tool
 - eyebrow labels, tracked small caps above headings, decorative section numbers
 - an icon on every row, emoji or Unicode glyphs as icons
 - gradient text, glass, glow, decorative blur, 3D or shadowed logos
-- skeleton illustrations, fake data in screenshots, made-up sample brands
+- skeleton illustrations, or screenshots with real people's data. Website screenshots come from `scripts/demo-data.ts` (Tavelo, an invented brand; never telecom examples) through `scripts/demo-shots.ts`, and the site says the brand is made up
 
 Before committing UI:
 
