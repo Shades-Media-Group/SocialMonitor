@@ -273,13 +273,13 @@ export function setVerdict(
   label: Label,
   needsReply: boolean,
   reason: string,
+  urgency?: number | null,
+  emotion?: string | null,
 ) {
-  db.prepare('UPDATE comments SET label = ?, needs_reply = ?, reason = ? WHERE id = ?').run(
-    label,
-    needsReply ? 1 : 0,
-    reason,
-    commentId,
-  )
+  db.prepare(
+    `UPDATE comments SET label = ?, needs_reply = ?, reason = ?,
+       urgency = coalesce(?, urgency), emotion = coalesce(?, emotion) WHERE id = ?`,
+  ).run(label, needsReply ? 1 : 0, reason, urgency ?? null, emotion ?? null, commentId)
 }
 
 export interface PostFilter {
@@ -354,6 +354,8 @@ export interface CommentFilter extends PostFilter {
   overdue?: boolean
   /** Only comments written on this day, YYYY-MM-DD (UTC). */
   day?: string
+  /** Only waiting comments the AI marked urgent. */
+  urgent?: boolean
 }
 
 export function listComments(db: DB, f: CommentFilter = {}) {
@@ -378,6 +380,7 @@ export function listComments(db: DB, f: CommentFilter = {}) {
   if (f.needsReply) where.push("c.needs_reply = 1 AND c.reply_status = 'open'")
   if (f.unsorted) where.push('c.label IS NULL')
   if (f.overdue) where.push(OVERDUE)
+  if (f.urgent) where.push("c.needs_reply = 1 AND c.reply_status = 'open' AND c.urgency = 2")
   if (f.day && /^\d{4}-\d{2}-\d{2}$/.test(f.day)) {
     where.push('substr(coalesce(c.posted_at, c.fetched_at), 1, 10) = ?')
     args.push(f.day)
@@ -402,7 +405,9 @@ export function listComments(db: DB, f: CommentFilter = {}) {
      FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
        JOIN brands b ON b.id = pr.brand_id
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-     ORDER BY (c.needs_reply = 1 AND c.reply_status = 'open') DESC, c.likes DESC, c.id DESC LIMIT ? OFFSET ?`,
+     ORDER BY (c.needs_reply = 1 AND c.reply_status = 'open') DESC,
+       (c.needs_reply = 1 AND c.reply_status = 'open') * coalesce(c.urgency, 0) DESC,
+       c.likes DESC, c.id DESC LIMIT ? OFFSET ?`,
     ...args,
     f.limit ?? 100,
     f.offset ?? 0,

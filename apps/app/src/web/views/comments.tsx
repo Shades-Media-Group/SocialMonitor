@@ -49,6 +49,19 @@ const mood = (c: CommentRow, own: boolean) =>
           ? 'ask'
           : 'plain'
 
+/** How the person feels, in the colour of what it means for the brand. */
+const EMOTION: Record<string, { name: string; tone: string }> = {
+  angry: { name: t('Angry'), tone: 'complaint' },
+  frustrated: { name: t('Frustrated'), tone: 'complaint' },
+  disappointed: { name: t('Disappointed'), tone: 'complaint' },
+  worried: { name: t('Worried'), tone: 'suggestion' },
+  confused: { name: t('Confused'), tone: 'question' },
+  curious: { name: t('Curious'), tone: 'question' },
+  happy: { name: t('Happy'), tone: 'praise' },
+  grateful: { name: t('Grateful'), tone: 'praise' },
+  excited: { name: t('Excited'), tone: 'praise' },
+}
+
 /** Each kind of comment has its own icon, so it reads before the word does. */
 const KIND_ICON: Record<string, IconName> = {
   complaint: 'warning',
@@ -92,8 +105,11 @@ function Tags({
   children?: ComponentChildren
 }) {
   // The mood only adds something when the kind doesn't already say it.
-  const mood =
-    c.sentiment === 'negative' && c.label !== 'complaint'
+  const feel = c.emotion ? EMOTION[c.emotion] : undefined
+  const waiting = c.needs_reply === 1 && c.reply_status === 'open'
+  const mood = feel
+    ? null
+    : c.sentiment === 'negative' && c.label !== 'complaint'
       ? 'negative'
       : c.sentiment === 'positive' && c.label !== 'praise'
         ? 'positive'
@@ -104,6 +120,11 @@ function Tags({
         {c.label && LABELS[c.label] && (
           <Chip kind={c.label} icon={KIND_ICON[c.label] ?? 'chat'}>
             {LABELS[c.label]!.name}
+          </Chip>
+        )}
+        {feel && (
+          <Chip kind={feel.tone} icon="person" title={t('How they feel')}>
+            {feel.name}
           </Chip>
         )}
         {mood === 'negative' && (
@@ -126,6 +147,11 @@ function Tags({
         ) : answered ? (
           <Chip kind="done" icon="check">
             {t('Answered')}
+          </Chip>
+        ) : waiting && c.urgency === 2 ? (
+          <Chip kind="late" icon="bolt" title={t('Outage, money, safety, or a threat to leave')}>
+            {t('Urgent')}
+            {c.overdue ? ` · ${t('Overdue')}` : ''}
           </Chip>
         ) : c.overdue ? (
           <Chip kind="late" icon="schedule">
@@ -368,7 +394,7 @@ export function CommentList({
   )
 }
 
-type Filter = 'all' | 'reply' | 'complaint' | 'question' | 'praise'
+type Filter = 'all' | 'reply' | 'urgent' | 'complaint' | 'question' | 'praise'
 
 export function Comments({ brand, network, version, mode, notify, brands }: BrandView) {
   const [filter, setFilter] = usePref<Filter>('comments.filter', 'all')
@@ -392,6 +418,7 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
   const query = new URLSearchParams({ brand: String(brand.id) })
   if (network) query.set('network', network)
   if (filter === 'reply') query.set('reply', '1')
+  else if (filter === 'urgent') query.set('urgent', '1')
   else if (filter !== 'all') query.set('label', filter)
   if (q.trim()) query.set('q', q.trim())
   if (sentiment) query.set('sentiment', sentiment)
@@ -478,6 +505,7 @@ export function Comments({ brand, network, version, mode, notify, brands }: Bran
           options={[
             ['all', t('All')],
             ['reply', t('To answer')],
+            ['urgent', t('Urgent')],
             ['complaint', t('Complaints')],
             ['question', t('Questions')],
             ['praise', t('Praise')],

@@ -74,6 +74,9 @@ export interface Comment {
   /** When the comment was answered, and whether the brand did it on the network or a person marked it. */
   answered_at: string | null
   answered_by: 'brand' | 'user' | null
+  /** From the AI sort: 0 can wait, 1 soon, 2 urgent; and how the person feels. */
+  urgency: 0 | 1 | 2 | null
+  emotion: string | null
   /** Saved copies under /media, or null when the network gave none. */
   author_avatar: string | null
   author_url: string | null

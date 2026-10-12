@@ -220,7 +220,8 @@ async function aiStep(
           unsorted.map((c) => ({ id: c.id, text: c.text })),
           about,
         )
-        for (const [id, v] of verdicts) store.setVerdict(db, id, v.label, v.needsReply, v.reason)
+        for (const [id, v] of verdicts)
+          store.setVerdict(db, id, v.label, v.needsReply, v.reason, v.urgency, v.emotion)
       }
       if (!post.description) {
         const top = store.listComments(db, { postId, others: true, limit: 5 }).map((c) => c.text)

@@ -18,13 +18,33 @@ export interface Verdict {
   label: Label
   needsReply: boolean
   reason: string
+  /** 0 can wait, 1 answer soon, 2 urgent (outage, money lost, safety, a threat to leave or go public). */
+  urgency?: 0 | 1 | 2
+  emotion?: Emotion
 }
+
+/** How the person feels, from most to least upset. */
+export const EMOTIONS = [
+  'angry',
+  'frustrated',
+  'disappointed',
+  'worried',
+  'confused',
+  'neutral',
+  'curious',
+  'happy',
+  'grateful',
+  'excited',
+] as const
+export type Emotion = (typeof EMOTIONS)[number]
 
 const SORT = (brand: string, post: string, about = '') =>
   `Brand: ${brand}${about ? ` (${about})` : ''}. Post: ${post || '(no caption)'}
-Sort each comment line "n|text". Reply with one line per comment, "n|label|r|why":
+Sort each comment line "n|text". Reply with one line per comment, "n|label|r|u|e|why":
 label is one of ${LABELS.join(', ')}; complaint = unhappy with the product, service, price or support.
 r is 1 if the brand should answer (complaints, questions, unhappy or confused customers), else 0.
+u is urgency: 2 = outage, money lost, safety, or a threat to leave or go public; 1 = should be answered today; 0 = can wait.
+e is the feeling, one of ${EMOTIONS.join(', ')}.
 why: at most 8 words, in English. Output only these lines.`
 
 const DESCRIBE = (brand: string) =>
@@ -157,18 +177,22 @@ export async function translate(engine: Engine, text: string, lang = 'en') {
   return out.trim().slice(0, 2000)
 }
 
-/** Parses "n|label|r|why" lines; anything else is ignored. */
+/** Parses "n|label|r|u|e|why" lines (and the older "n|label|r|why"); anything else is ignored. */
 export function parseVerdicts(text: string): Map<number, Verdict> {
   const out = new Map<number, Verdict>()
   for (const line of text.split('\n')) {
-    const [n, label, r, ...why] = line.trim().split('|')
+    const [n, label, r, ...rest] = line.trim().split('|')
     const i = Number(n)
     const l = label?.trim().toLowerCase() as Label
     if (!Number.isInteger(i) || !(LABELS as readonly string[]).includes(l)) continue
+    const u = rest[0]?.trim()
+    const e = rest[1]?.trim().toLowerCase() as Emotion
+    const full = rest.length >= 3 && /^[012]$/.test(u ?? '') && EMOTIONS.includes(e)
     out.set(i, {
       label: l,
       needsReply: r?.trim() === '1',
-      reason: why.join('|').trim().slice(0, 120),
+      reason: (full ? rest.slice(2) : rest).join('|').trim().slice(0, 120),
+      ...(full ? { urgency: Number(u) as 0 | 1 | 2, emotion: e } : {}),
     })
   }
   return out

@@ -45,6 +45,18 @@ describe('AI answers', () => {
     expect(v.get(2)?.label).toBe('praise')
     expect(v.has(3)).toBe(false)
   })
+
+  it('reads urgency and feeling when given, and still reads the older lines', () => {
+    const v = parseVerdicts('1|complaint|1|2|angry|no internet for a week|again\n2|praise|0|thanks')
+    expect(v.get(1)).toEqual({
+      label: 'complaint',
+      needsReply: true,
+      urgency: 2,
+      emotion: 'angry',
+      reason: 'no internet for a week|again',
+    })
+    expect(v.get(2)).toEqual({ label: 'praise', needsReply: false, reason: 'thanks' })
+  })
 })
 
 describe('schedules', () => {

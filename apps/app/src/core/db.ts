@@ -216,6 +216,11 @@ function migrate(db: DatabaseSync) {
     db.exec('ALTER TABLE comments ADD COLUMN author_url TEXT')
     db.exec('ALTER TABLE comments ADD COLUMN media_url TEXT')
   }
+  // How urgent a comment is (0–2) and how the person feels, from the AI sort.
+  if (!has('comments', 'urgency')) {
+    db.exec('ALTER TABLE comments ADD COLUMN urgency INTEGER')
+    db.exec('ALTER TABLE comments ADD COLUMN emotion TEXT')
+  }
   // The brand's reply target in hours: open comments older than it count as overdue.
   if (!has('brands', 'reply_target_hours'))
     db.exec('ALTER TABLE brands ADD COLUMN reply_target_hours REAL NOT NULL DEFAULT 24')

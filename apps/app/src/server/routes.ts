@@ -294,6 +294,7 @@ export const routes: Route[] = [
       needsReply: query.get('reply') === '1',
       overdue: query.get('overdue') === '1',
       day: query.get('day') ?? undefined,
+      urgent: query.get('urgent') === '1',
       search: query.get('q') ?? undefined,
       sentiment: (['positive', 'negative', 'neutral', 'none'] as const).find(
         (v) => v === query.get('sentiment'),

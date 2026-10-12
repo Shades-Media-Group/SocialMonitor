@@ -103,24 +103,26 @@ server.registerTool(
   'comments',
   {
     description:
-      'Comments as lines "id|network|label|reply|sentiment:kind|likes|author|text". The brand\'s own replies are left out. Filter by brand, label, network, needs_reply, sentiment (positive, negative, none) or a search word.',
+      'Comments as lines "id|network|label|reply|urgency|feeling|sentiment:kind|likes|author|text". reply 1 = waits for an answer; urgency 0 can wait, 1 today, 2 urgent. The brand\'s own replies are left out. Filter by brand, label, network, needs_reply, urgent, sentiment (positive, negative, none) or a search word.',
     inputSchema: {
       brand: z.string().optional(),
       label: label.optional(),
       network: network.optional(),
       needs_reply: z.boolean().optional(),
+      urgent: z.boolean().optional(),
       search: z.string().optional(),
       sentiment: z.enum(['positive', 'negative', 'neutral', 'none']).optional(),
       limit: z.number().int().min(1).max(200).default(30),
     },
   },
-  async ({ brand, label, network, needs_reply, search, sentiment, limit }) => {
+  async ({ brand, label, network, needs_reply, urgent, search, sentiment, limit }) => {
     const p = new URLSearchParams({ limit: String(limit) })
     const id = await brandId(brand)
     if (id) p.set('brand', String(id))
     if (label) p.set('label', label)
     if (network) p.set('network', network)
     if (needs_reply) p.set('reply', '1')
+    if (urgent) p.set('urgent', '1')
     if (search) p.set('q', search)
     if (sentiment) p.set('sentiment', sentiment)
     const rows = await call<
@@ -129,6 +131,9 @@ server.registerTool(
         network: string
         label: string | null
         needs_reply: number | null
+        reply_status: string
+        urgency: number | null
+        emotion: string | null
         likes: number | null
         author: string
         text: string
@@ -142,7 +147,7 @@ server.registerTool(
       rows
         .map(
           (c) =>
-            `${c.id}|${c.network}|${c.label ?? 'unsorted'}|${c.needs_reply ? 1 : 0}|${c.sentiment ? `${c.sentiment}:${c.category ?? '-'}` : '-'}|${c.likes ?? 0}|${c.author}|${one(c.text, 240)}`,
+            `${c.id}|${c.network}|${c.label ?? 'unsorted'}|${c.needs_reply && c.reply_status === 'open' ? 1 : 0}|${c.urgency ?? '-'}|${c.emotion ?? '-'}|${c.sentiment ? `${c.sentiment}:${c.category ?? '-'}` : '-'}|${c.likes ?? 0}|${c.author}|${one(c.text, 240)}`,
         )
         .join('\n'),
     )
