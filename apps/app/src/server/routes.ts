@@ -15,6 +15,7 @@ import {
   byNetwork,
   compare,
   heatmap,
+  profileStats,
   topAuthors,
   topWords,
   labelTotals,
@@ -452,6 +453,7 @@ export const routes: Route[] = [
           }
         : null,
       networks: byNetwork(db, s),
+      profiles: profileStats(db, s),
       heatmap: heatmap(db, s),
       authors: topAuthors(db, s),
       words: topWords(db, s, brand?.name ?? ''),

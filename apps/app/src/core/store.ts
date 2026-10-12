@@ -253,11 +253,32 @@ export function listPosts(db: DB, f: PostFilter = {}) {
     where.push('p.network = ?')
     args.push(f.network)
   }
-  return all<Post & { brand_id: number; handle: string; stored_comments: number; flagged: number }>(
+  return all<
+    Post & {
+      brand_id: number
+      handle: string
+      stored_comments: number
+      flagged: number
+      n_complaint: number
+      n_question: number
+      n_suggestion: number
+      n_praise: number
+      n_other: number
+      waiting: number
+    }
+  >(
     db,
     `SELECT p.*, pr.brand_id, pr.handle,
        (SELECT count(*) FROM comments c WHERE c.post_id = p.id) AS stored_comments,
-       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND (c.label = 'complaint' OR c.needs_reply = 1)) AS flagged
+       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND (c.label = 'complaint' OR c.needs_reply = 1)) AS flagged,
+       -- What people said under the post, without the brand's own replies.
+       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND lower(c.author) != lower(pr.handle) AND c.label = 'complaint') AS n_complaint,
+       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND lower(c.author) != lower(pr.handle) AND c.label = 'question') AS n_question,
+       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND lower(c.author) != lower(pr.handle) AND c.label = 'suggestion') AS n_suggestion,
+       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND lower(c.author) != lower(pr.handle) AND c.label = 'praise') AS n_praise,
+       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND lower(c.author) != lower(pr.handle)
+          AND (c.label IS NULL OR c.label NOT IN ('complaint', 'question', 'suggestion', 'praise'))) AS n_other,
+       (SELECT count(*) FROM comments c WHERE c.post_id = p.id AND c.needs_reply = 1 AND c.reply_status = 'open') AS waiting
      FROM posts p JOIN profiles pr ON pr.id = p.profile_id
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
      ORDER BY ${f.sort === 'top' ? 'coalesce(p.likes,0) + 3 * coalesce(p.comments_count,0) + 5 * coalesce(p.shares,0) DESC,' : ''} p.posted_at DESC, p.id DESC LIMIT ? OFFSET ?`,

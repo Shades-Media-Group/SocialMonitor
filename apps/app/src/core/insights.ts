@@ -307,3 +307,45 @@ export function topWords(db: DB, s: Scope, brandName = '', limit = 24) {
     .slice(0, limit)
     .map(([word, n]) => ({ word, n }))
 }
+
+/** Each social account of the brand in the window: its posts, what they drew, and its trend. */
+export function profileStats(db: DB, s: Scope) {
+  const profiles = db
+    .prepare(
+      `SELECT id, network, handle, url, last_run_at, last_status, last_error FROM profiles
+       WHERE (? IS NULL OR brand_id = ?) AND (? IS NULL OR network = ?) ORDER BY network`,
+    )
+    .all(s.brandId ?? null, s.brandId ?? null, s.network ?? null, s.network ?? null) as {
+    id: number
+    network: Network
+    handle: string
+    url: string
+    last_run_at: string | null
+    last_status: string | null
+    last_error: string | null
+  }[]
+  return profiles.map((pr) => {
+    const scope = { ...s, network: pr.network }
+    const posts = postEngagement(db, scope, 1000)
+    const labels = labelTotals(db, scope)
+    const days = timeline(db, scope)
+    const sum = (k: 'likes' | 'comments' | 'shares' | 'views') =>
+      posts.reduce((n, p) => n + (p[k] ?? 0), 0)
+    return {
+      ...pr,
+      posts: posts.length,
+      comments: labels.total ?? 0,
+      complaints: labels.complaint ?? 0,
+      praise: labels.praise ?? 0,
+      likes: sum('likes'),
+      likes_avg: posts.length ? Math.round(sum('likes') / posts.length) : null,
+      views: sum('views'),
+      interactions: sum('likes') + sum('comments') + sum('shares'),
+      last_post: posts.at(-1)?.day ?? null,
+      series: days.map((d) => {
+        const r = d as unknown as Record<string, number>
+        return r.complaint! + r.question! + r.suggestion! + r.praise! + r.other!
+      }),
+    }
+  })
+}
