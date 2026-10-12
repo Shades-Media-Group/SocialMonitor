@@ -296,7 +296,7 @@ function render(locale: Locale, page: Page): string {
       `<div class="faq-list" data-reveal>${questions(dict)
         .map(
           ({ q, a }) =>
-            `\n          <div class="faq-item"><h3>${q}</h3><div class="faq-answer">${a}</div></div>`,
+            `\n          <details class="faq-item"><summary><h3>${q}</h3></summary><div class="faq-answer">${a}</div></details>`,
         )
         .join('')}\n        </div>`,
   }
