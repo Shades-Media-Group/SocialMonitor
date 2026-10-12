@@ -322,6 +322,97 @@ h2 {
   padding: 4px 0 4px 112px;
 }
 
+/* Labels: one soft colour and one icon each, from Gradient's roles. */
+.sm-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  padding: 0 9px 0 7px;
+  border-radius: var(--g-radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+}
+.sm-pill--danger {
+  background: var(--g-danger-soft);
+  color: var(--g-danger);
+}
+.sm-pill--info {
+  background: var(--g-info-soft);
+  color: var(--g-info);
+}
+.sm-pill--success {
+  background: var(--g-success-soft);
+  color: var(--g-success);
+}
+.sm-pill--warning {
+  background: var(--g-warning-soft);
+  color: var(--g-warning);
+}
+.sm-pill--neutral {
+  background: var(--g-sunken);
+  color: var(--g-text-2);
+}
+.sm-pill--quiet {
+  background: transparent;
+  color: var(--g-text-3);
+}
+
+/* The mood bar: how comments split, trouble on the left. Ramp 500s, one per label. */
+.sm-mood {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.sm-mood__bar {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  overflow: hidden;
+  border-radius: var(--g-radius-pill);
+}
+.sm-mood__part {
+  min-width: 4px;
+}
+.sm-mood__part--complaint {
+  background: var(--g-danger-fill);
+}
+.sm-mood__part--question {
+  background: var(--g-blue-500);
+}
+.sm-mood__part--suggestion {
+  background: var(--g-amber-500);
+}
+.sm-mood__part--praise {
+  background: var(--g-green-500);
+}
+.sm-mood__part--neutral {
+  background: var(--g-ink-300);
+}
+.sm-mood__part--spam {
+  background: var(--g-ink-200);
+}
+.sm-mood__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  color: var(--g-text-2);
+  font-size: 12px;
+}
+.sm-mood__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sm-mood__legend b {
+  color: var(--g-text);
+}
+.sm-mood__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
 /* Labels are words, coloured only where they mean trouble or the answer people wait for. */
 .sm-label {
   font-size: 12px;

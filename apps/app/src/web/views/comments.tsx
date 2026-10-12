@@ -4,15 +4,7 @@ import type { BrandRow, CommentRow, Network } from '../api.ts'
 import { api } from '../api.ts'
 import { Empty, NetworkMark, Segmented, ago } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
-
-const LABEL_NAME: Record<string, string> = {
-  complaint: 'Complaint',
-  question: 'Question',
-  praise: 'Praise',
-  suggestion: 'Suggestion',
-  neutral: 'Neutral',
-  spam: 'Spam',
-}
+import { LabelPill } from '../labels.tsx'
 
 export function CommentList({
   comments,
@@ -40,12 +32,7 @@ export function CommentList({
               {ago(c.posted_at)}
               {c.likes ? ` · ${c.likes} likes` : ''}
             </span>
-            {c.label && (
-              <span class={`sm-label sm-label--${c.label}`}>
-                {LABEL_NAME[c.label]}
-                {c.needs_reply ? ' · reply' : ''}
-              </span>
-            )}
+            {c.label && <LabelPill label={c.label} reply={c.needs_reply === 1} />}
           </div>
           <p class="sm-comment__text">{c.text}</p>
           {c.reason && <p class="sm-comment__reason">{c.reason}</p>}

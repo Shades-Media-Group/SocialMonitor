@@ -5,6 +5,7 @@ import { api } from '../api.ts'
 import { Empty, NETWORK_NAME, NetworkMark, ago, fmt } from '../ui.tsx'
 import { CommentList } from './comments.tsx'
 import { JsonPanel } from '../json.tsx'
+import { MoodBar } from '../labels.tsx'
 
 export function Overview({ brands, brandId, go, openUpdate, running, reload, mode }: AppState) {
   const scope = brandId ? brands.filter((b) => b.id === brandId) : brands
@@ -80,6 +81,23 @@ export function Overview({ brands, brandId, go, openUpdate, running, reload, mod
           <span class="sm-figure__label">comments kept</span>
         </div>
       </section>
+
+      {sorted > 0 && (
+        <section>
+          <div class="sm-section-head">
+            <h2>What people say</h2>
+            <span class="sm-quiet">{fmt(sorted)} sorted comments</span>
+          </div>
+          <MoodBar
+            counts={Object.fromEntries(
+              ['complaint', 'question', 'suggestion', 'praise', 'neutral', 'spam'].map((k) => [
+                k,
+                sum(k),
+              ]),
+            )}
+          />
+        </section>
+      )}
 
       <section>
         <div class="sm-section-head">
