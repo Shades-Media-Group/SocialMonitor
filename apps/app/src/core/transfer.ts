@@ -117,6 +117,7 @@ export function importAll(db: DB, dump: Dump) {
       'label',
       'needs_reply',
       'reason',
+      'reply_status',
     ] as const
     const insert = db.prepare(
       `INSERT INTO comments (post_id, ${ccols.join(', ')}) VALUES (?, ${ccols.map(() => '?').join(', ')})

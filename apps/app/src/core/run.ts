@@ -56,6 +56,19 @@ function gapUntil(db: DB, p: Profile): string | null {
   return next.getTime() > Date.now() ? next.toISOString() : null
 }
 
+/** For each profile inside the gap, when its comments can be read again. */
+export function gaps(db: DB) {
+  return store
+    .listProfiles(db)
+    .map((p) => ({
+      profile_id: p.id,
+      brand_id: p.brand_id,
+      network: p.network,
+      until: gapUntil(db, p),
+    }))
+    .filter((g) => g.until)
+}
+
 async function saveThumb(network: Network, id: string, url: string | null): Promise<string | null> {
   if (!url || url.startsWith('/media/')) return url
   try {
