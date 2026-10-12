@@ -8,6 +8,7 @@ import type { ViewMode } from './json.tsx'
 import { readMode, saveMode } from './json.tsx'
 import { Home } from './home.tsx'
 import { BrandPage } from './brand-page.tsx'
+import { PrintReport } from './print.tsx'
 
 export const TABS = [
   ['overview', 'Overview'],
@@ -21,11 +22,16 @@ export type Tab = (typeof TABS)[number][0]
 
 /** Where the app is: the brand list, a new brand, or one brand's tab. Kept in the URL hash. */
 export type Route =
-  { page: 'home' } | { page: 'new' } | { page: 'brand'; brandId: number; tab: Tab }
+  | { page: 'home' }
+  | { page: 'new' }
+  | { page: 'brand'; brandId: number; tab: Tab }
+  | { page: 'print'; brandId: number }
 
 export function readRoute(): Route {
   const [, a, b, c] = location.hash.split('/')
   if (a === 'new') return { page: 'new' }
+  if (a === 'print' && Number(b?.split('?')[0]) > 0)
+    return { page: 'print', brandId: Number(b!.split('?')[0]) }
   if (a === 'b' && Number(b) > 0) {
     const tab = (TABS.some(([t]) => t === c) ? c : 'overview') as Tab
     return { page: 'brand', brandId: Number(b), tab }
@@ -65,6 +71,8 @@ export interface BrandView extends AppState {
   brand: BrandRow
   /** '' means every network. */
   network: Network | ''
+  /** The window, in days back from today; 0 is all time. */
+  days: number
 }
 
 export function App() {
@@ -132,7 +140,10 @@ export function App() {
     return () => clearTimeout(t)
   }, [toast])
 
-  const brand = route.page === 'brand' ? brands.find((b) => b.id === route.brandId) : undefined
+  const brand =
+    route.page === 'brand' || route.page === 'print'
+      ? brands.find((b) => b.id === route.brandId)
+      : undefined
   const scope = brand ? [brand] : brands
   const lastRun = scope
     .flatMap((b) => b.profiles.map((p) => p.last_run_at))
@@ -149,6 +160,8 @@ export function App() {
     notify: setToast,
     mode,
   }
+
+  if (route.page === 'print') return loaded && brand ? <PrintReport brand={brand} /> : null
 
   return (
     <div class="sm-app">

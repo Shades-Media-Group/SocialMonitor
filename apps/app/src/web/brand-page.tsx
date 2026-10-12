@@ -28,12 +28,32 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
     }
   }, [network, brand.id])
 
+  const [days, setDays] = useState<number>(() => {
+    try {
+      return Number(sessionStorage.getItem('sm-days') ?? 30)
+    } catch {
+      return 30
+    }
+  })
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('sm-days', String(days))
+    } catch {
+      /* private mode */
+    }
+  }, [days])
+
   const nets = brand.profiles.map((p) => p.network)
   const view: BrandView = {
     ...props,
     brand,
     network: nets.includes(network as Network) ? network : '',
+    days,
   }
+  const exportQuery = new URLSearchParams({
+    days: String(days),
+    ...(view.network ? { network: view.network } : {}),
+  })
 
   return (
     <main class="sm-page">
@@ -49,6 +69,22 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
               knows what it sells.
             </p>
           )}
+          <p class="sm-head__exports">
+            <a
+              class="g-btn g-btn--sm"
+              href={`/api/brands/${brand.id}/report.pdf?${exportQuery}`}
+              download
+            >
+              PDF report
+            </a>
+            <a
+              class="g-btn g-btn--ghost g-btn--sm"
+              href={`/api/brands/${brand.id}/export.xlsx?${exportQuery}`}
+              download
+            >
+              Excel
+            </a>
+          </p>
         </div>
       </header>
 
@@ -60,6 +96,20 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
             </a>
           ))}
         </div>
+        {(tab === 'overview' || tab === 'posts') && (
+          <select
+            class="g-select sm-select-sm sm-range"
+            aria-label="Period"
+            value={days}
+            onChange={(e) => setDays(Number((e.target as HTMLSelectElement).value))}
+          >
+            <option value={7}>Last 7 days</option>
+            <option value={30}>Last 30 days</option>
+            <option value={90}>Last 90 days</option>
+            <option value={365}>Last year</option>
+            <option value={0}>All time</option>
+          </select>
+        )}
         {tab !== 'about' && tab !== 'schedules' && nets.length > 1 && (
           <div class="sm-netswitch" role="radiogroup" aria-label="Network">
             <button

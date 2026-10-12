@@ -7,6 +7,63 @@ import { JsonPanel } from '../json.tsx'
 import { MoodBar } from '../labels.tsx'
 import { brandCategories } from '../rate.tsx'
 import { CommentList } from './comments.tsx'
+import { EngagementChart, TimelineChart } from '../charts.tsx'
+import type { PostPoint } from '../charts.tsx'
+
+interface Insights {
+  timeline: ({ day: string } & Record<
+    'complaint' | 'question' | 'suggestion' | 'praise' | 'other',
+    number
+  >)[]
+  posts: PostPoint[]
+  responses: {
+    comments: number
+    answered: number
+    rate: number | null
+    median_minutes: number | null
+  }
+  reputation: number | null
+  reach: number
+}
+
+const duration = (min: number | null) =>
+  min == null
+    ? '–'
+    : min < 60
+      ? `${min} min`
+      : min < 1440
+        ? `${Math.round(min / 60)} h`
+        : `${Math.round(min / 1440)} days`
+
+/** The brand's measures for the period, as a list on hairlines: each a word and its number. */
+function Figures({ ins, days }: { ins: Insights; days: number }) {
+  const r = ins.responses
+  return (
+    <section>
+      <h2>{days ? `Last ${days} days` : 'All time'}</h2>
+      <dl class="sm-facts">
+        <div>
+          <dt>Reputation</dt>
+          <dd class="g-num">{ins.reputation == null ? '–' : `${ins.reputation} / 100`}</dd>
+        </div>
+        <div>
+          <dt>Reach (views)</dt>
+          <dd class="g-num">{fmt(ins.reach)}</dd>
+        </div>
+        <div>
+          <dt>Brand answered</dt>
+          <dd class="g-num">
+            {r.rate == null ? '–' : `${Math.round(r.rate * 100)}% of ${fmt(r.comments)}`}
+          </dd>
+        </div>
+        <div>
+          <dt>Usual time to answer</dt>
+          <dd class="g-num">{duration(r.median_minutes)}</dd>
+        </div>
+      </dl>
+    </section>
+  )
+}
 
 interface Summary {
   profiles: Profile[]
@@ -29,8 +86,9 @@ const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) 
  * latest posts and the state of each network.
  */
 export function Overview(v: BrandView) {
-  const { brand, network, version, mode, openUpdate, brands } = v
+  const { brand, network, version, mode, openUpdate, brands, days } = v
   const [s, setS] = useState<Summary | null>(null)
+  const [ins, setIns] = useState<Insights | null>(null)
   const [reply, setReply] = useState<CommentRow[]>([])
   const [posts, setPosts] = useState<PostRow[]>([])
   const [latest, setLatest] = useState<CommentRow[]>([])
@@ -70,6 +128,15 @@ export function Overview(v: BrandView) {
       .then(setPosts)
       .catch(() => setPosts([]))
   }, [brand.id, network, version, tick])
+
+  useEffect(() => {
+    api
+      .get<Insights>(
+        `/api/brands/${brand.id}/insights?days=${days}${network ? `&network=${network}` : ''}`,
+      )
+      .then(setIns)
+      .catch(() => setIns(null))
+  }, [brand.id, network, version, days, tick])
 
   if (!s) return null
   const c = s.counts
@@ -197,6 +264,7 @@ export function Overview(v: BrandView) {
         </section>
 
         <aside class="sm-side">
+          {ins && <Figures ins={ins} days={days} />}
           <section>
             <h2>What people say</h2>
             {sorted ? (
@@ -234,6 +302,29 @@ export function Overview(v: BrandView) {
           )}
         </aside>
       </div>
+
+      {ins &&
+        ins.timeline.some((d) => d.complaint + d.question + d.suggestion + d.praise + d.other) && (
+          <section>
+            <div class="sm-section-head">
+              <h2>Comments over time</h2>
+              <span class="sm-quiet">
+                {days ? `Last ${days} days` : 'All time'}, by the day they were written
+              </span>
+            </div>
+            <TimelineChart days={ins.timeline} />
+          </section>
+        )}
+
+      {ins && ins.posts.length > 0 && (
+        <section>
+          <div class="sm-section-head">
+            <h2>Likes per post</h2>
+            <span class="sm-quiet">Hover a bar for comments and views; click to open the post</span>
+          </div>
+          <EngagementChart posts={ins.posts} />
+        </section>
+      )}
 
       {posts.length > 0 && (
         <section>
