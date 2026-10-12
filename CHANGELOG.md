@@ -6,6 +6,8 @@ All notable changes to SocialMonitor are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-12
+
 ### Added
 
 - **Reading the networks.** Paced, read-only readers for TikTok, Instagram and Facebook keep every post and comment in a local SQLite database. TikTok is read from its public pages with no account, with each commenter's photo, profile link and any sticker or picture.

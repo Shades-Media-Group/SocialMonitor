@@ -1,6 +1,6 @@
 {
   "name": "socialmonitor",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Watch brands on Instagram, Facebook and TikTok: every post and comment kept on your computer, sorted into good and bad by AI. A free, open-source local dashboard.",
   "license": "MIT",
