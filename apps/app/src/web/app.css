@@ -717,8 +717,8 @@ p {
   font-weight: 600;
 }
 .sm-rate__btn--neutral[aria-pressed='true'] {
-  border-color: transparent;
-  background: var(--g-sunken);
+  border-color: var(--g-line-strong);
+  background: var(--g-ink-100);
   color: var(--g-text);
   font-weight: 600;
 }
@@ -1374,6 +1374,15 @@ p {
   }
   .sm-c__actions {
     justify-content: flex-start;
+    gap: 8px 14px;
+  }
+  .sm-rate__btn {
+    min-height: 26px;
+    padding: 0 9px;
+    font-size: 12px;
+  }
+  .sm-rate .sm-quiet {
+    font-size: 12px;
   }
   .sm-sheet {
     height: auto;

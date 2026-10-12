@@ -90,7 +90,7 @@ export function Rate({
           ))}
         </select>
       )}
-      {by === 'ai' && <span class="sm-quiet">set by Claude</span>}
+      {by === 'ai' && <span class="sm-quiet">by Claude</span>}
     </span>
   )
 }
