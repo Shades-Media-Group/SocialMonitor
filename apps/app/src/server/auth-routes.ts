@@ -1,6 +1,6 @@
 import * as auth from '../core/auth.ts'
 import type { Role, User } from '../core/auth.ts'
-import { mailReady, sendMail } from '../core/mail.ts'
+import { accessMail, codeMail, linkMail, mailReady, sendMail } from '../core/mail.ts'
 import { mailLang, mailText } from '../core/mail-text.ts'
 import * as store from '../core/store.ts'
 import { publicHost } from './access.ts'
@@ -51,24 +51,14 @@ async function invite(c: Ctx & { user: User }, user: User) {
   const from = c.user.name || c.user.email
   // A new person reads the email in the inviter's language; someone set up, in their own.
   const lang = kind === 'invite' ? langOf(c) : user.lang
-  await sendMail(
-    user.email,
-    mailText(lang, kind === 'invite' ? 'inviteSubject' : 'resetSubject', { from }),
-    mailText(lang, kind === 'invite' ? 'inviteBody' : 'resetBody', { from, link }),
-    lang,
-  )
+  await sendMail(user.email, linkMail(lang, kind, link, from))
   if (kind === 'invite') auth.setLang(c.db, user.id, lang)
 }
 
 /** Emails a six-digit code for signing in; the ticket names it without revealing it. */
 async function sendCode(userId: number, email: string, lang: ReturnType<typeof langOf>, c: Ctx) {
   const t = auth.issue(c.db, userId, 'code')
-  await sendMail(
-    email,
-    mailText(lang, 'codeSubject', { code: t.secret }),
-    mailText(lang, 'codeBody', { code: t.secret }),
-    lang,
-  )
+  await sendMail(email, codeMail(lang, t.secret))
   return { ticket: t.id, to: mask(email), mail: mailReady() }
 }
 
@@ -214,12 +204,7 @@ export const authRoutes = [
     if (u && !u.disabled && u.verified_at) {
       const t = auth.issue(c.db, u.id, 'reset')
       const lang = langOf(c)
-      await sendMail(
-        u.email,
-        mailText(lang, 'resetSubject'),
-        mailText(lang, 'forgotBody', { link: `${base()}/#/reset/${t.id}.${t.secret}` }),
-        lang,
-      )
+      await sendMail(u.email, linkMail(lang, 'forgot', `${base()}/#/reset/${t.id}.${t.secret}`))
     }
     return { ok: true }
   }),
@@ -268,16 +253,15 @@ export const authRoutes = [
     else
       await sendMail(
         user.email,
-        mailText(user.lang, 'accessSubject'),
-        mailText(user.lang, 'accessBody', {
-          from: c.user.name || c.user.email,
-          brands:
-            ms
-              .filter((m) => m.role)
-              .map((m) => store.getBrand(c.db, m.brand_id)!.name)
-              .join(', ') || mailText(user.lang, 'everyBrand'),
-        }),
-        user.lang,
+        accessMail(
+          user.lang,
+          c.user.name || c.user.email,
+          ms
+            .filter((m) => m.role)
+            .map((m) => store.getBrand(c.db, m.brand_id)!.name)
+            .join(', ') || mailText(user.lang, 'everyBrand'),
+          base(),
+        ),
       )
     // The same reply whether or not the person already had an account.
     return { invited: email }

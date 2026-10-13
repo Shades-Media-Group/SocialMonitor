@@ -1,8 +1,8 @@
 import type { DB } from './db.ts'
 import { now } from './db.ts'
 import { brandPdf, uiOrigin } from './pdf.ts'
-import { sendMail } from './mail.ts'
-import { mailLang, mailText } from './mail-text.ts'
+import { badMail, sendMail } from './mail.ts'
+import { mailLang } from './mail-text.ts'
 import { signSession } from './auth.ts'
 import { saveReport } from './saved.ts'
 import * as store from './store.ts'
@@ -88,15 +88,8 @@ export async function sendBad(
         limit: 100000,
       }).length
   const { filename, data } = await badPdf(db, brandId, opts, viewer)
-  const vars = { brand: brand.name, n: String(n) }
-  for (const to of emails)
-    await sendMail(
-      to,
-      mailText(brand.alert_lang, 'badSubject', vars),
-      mailText(brand.alert_lang, 'badBody', vars),
-      brand.alert_lang,
-      [{ filename, content: data }],
-    )
+  const mail = badMail(brand.alert_lang, brand.name, n, uiOrigin())
+  for (const to of emails) await sendMail(to, mail, [{ filename, content: data }])
   db.prepare('UPDATE brands SET alert_sent_at = ? WHERE id = ?').run(now(), brandId)
   return emails.length
 }
