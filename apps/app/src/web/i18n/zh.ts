@@ -658,6 +658,7 @@ export const zh: Dict = {
     'Pick posts in the table to compare them, up to {n}.':
       '在表格中选择帖子进行对比，最多 {n} 篇。',
     Clear: '清除',
+    'Last problem': '最近的问题',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

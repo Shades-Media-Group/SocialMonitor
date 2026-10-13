@@ -279,9 +279,12 @@ async function aiStep(
         }
       }
     } catch (e) {
+      // Kept so Settings can say why the AI stopped; the comments stay for the next update.
+      store.setSetting(db, 'ai_error', JSON.stringify({ at: now(), message: (e as Error).message }))
       throw new Error(`AI: ${(e as Error).message}`, { cause: e })
     }
   }
+  store.setSetting(db, 'ai_error', '')
 }
 
 /**

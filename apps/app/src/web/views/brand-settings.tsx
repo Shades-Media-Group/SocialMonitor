@@ -26,6 +26,7 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
   const nets = brand.profiles.map((p) => p.network)
   const [own, setOwn] = useState<Schedule | null | undefined>(undefined)
   const [engine, setEngine] = useState<'claude' | 'api' | null | undefined>(undefined)
+  const [aiError, setAiError] = useState<{ at: string; message: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const [report, setReport] = useState(false)
 
@@ -39,8 +40,13 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
   useEffect(() => {
     void load()
     api
-      .get<{ engine: 'claude' | 'api' | null }>('/api/ai')
-      .then((r) => setEngine(r.engine))
+      .get<{ engine: 'claude' | 'api' | null; error: { at: string; message: string } | null }>(
+        '/api/ai',
+      )
+      .then((r) => {
+        setEngine(r.engine)
+        setAiError(r.error)
+      })
       .catch(() => setEngine(null))
   }, [brand.id])
 
@@ -209,6 +215,13 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
                   : t('No AI yet: install Claude Code, or set ANTHROPIC_API_KEY in .env.')}
           </span>
         </Row>
+        {aiError && (
+          <Row label={t('Last problem')}>
+            <p class="g-error" role="alert">
+              {when(aiError.at)}: {aiError.message}
+            </p>
+          </Row>
+        )}
       </section>
 
       <section class="sm-box">

@@ -132,7 +132,7 @@ function viaClaudeCode(prompt: string, input: string, pics: Pic[] = []): Promise
             return reject(
               new Error(
                 /authenticat|oauth|log ?in|credential/i.test(d.result ?? '')
-                  ? 'Claude Code is signed out: run claude in a terminal, type /login, then update again.'
+                  ? 'Claude Code is signed out. On this computer run  claude setup-token  and put CLAUDE_CODE_OAUTH_TOKEN=… in .env (it lasts a year), then restart SocialMonitor.'
                   : `Claude Code: ${d.result}`,
               ),
             )

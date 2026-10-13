@@ -171,7 +171,13 @@ const visible = <T>(c: Signed, rows: T[], brandOfRow: (row: T) => number | numbe
 export const routes: Route[] = [
   r('GET', '/api/settings', 'user', ({ db }) => readSettings(db)),
   // Which AI sorts comments on this computer: Claude Code, an API key, or none yet.
-  r('GET', '/api/ai', 'user', ({ db }) => ({ engine: pickEngine(getSettings(db)) })),
+  r('GET', '/api/ai', 'user', ({ db }) => {
+    const last = store.getSetting(db, 'ai_error')
+    return {
+      engine: pickEngine(getSettings(db)),
+      error: last ? (JSON.parse(last) as { at: string; message: string }) : null,
+    }
+  }),
   r('PATCH', '/api/settings', 'super', (c) => writeSettings(c.db, b(c))),
   r(
     'GET',

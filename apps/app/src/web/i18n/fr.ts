@@ -691,6 +691,7 @@ export const fr: Dict = {
     'Pick posts in the table to compare them, up to {n}.':
       'Choisissez des publications dans le tableau pour les comparer, jusqu’à {n}.',
     Clear: 'Effacer',
+    'Last problem': 'Dernier problème',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

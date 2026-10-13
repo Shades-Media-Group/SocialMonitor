@@ -688,6 +688,7 @@ export const ru: Dict = {
     'Pick posts in the table to compare them, up to {n}.':
       'Выберите посты в таблице для сравнения, до {n}.',
     Clear: 'Сбросить',
+    'Last problem': 'Последняя проблема',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

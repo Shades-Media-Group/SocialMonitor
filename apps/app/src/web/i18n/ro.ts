@@ -690,6 +690,7 @@ export const ro: Dict = {
     'Pick posts in the table to compare them, up to {n}.':
       'Alege postări din tabel ca să le compari, până la {n}.',
     Clear: 'Golește',
+    'Last problem': 'Ultima problemă',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',
