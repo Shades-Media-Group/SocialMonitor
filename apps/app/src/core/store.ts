@@ -347,10 +347,10 @@ export const setDescription = (db: DB, postId: number, description: string) =>
   db.prepare('UPDATE posts SET description = ? WHERE id = ?').run(description, postId)
 
 /**
- * The AI sort's version. Raise it when the sort learns to read more (the thread, pictures,
+ * The AI sort's version. Raise it when the sort learns to read more (the thread, pictures, emoji,
  * the post), and every comment sorted by an older version is sorted again on the next update.
  */
-export const SORT_VERSION = 2
+export const SORT_VERSION = 3
 
 /** A comment the AI has not read yet, or read with an older version of the sort. */
 export const STALE = `(c.label IS NULL OR coalesce(c.sort_v, 0) < ${SORT_VERSION})`

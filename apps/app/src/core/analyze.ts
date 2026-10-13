@@ -53,6 +53,10 @@ answers, the answers under it (the brand's own included) and a picture the perso
 Judge what the person means in that whole context, as a person would: sarcasm and irony, jokes,
 quoting what others say ("many say it's bad") to then show the opposite, rival names, and
 screenshots that carry the real point (a fast speed test is praise, an error screen a complaint).
+Emoji are part of the meaning; read them with the words. 😂 or 🤣 after a claim often mean
+mockery or sarcasm, 😏 doubt, 🙏 pleading, 😭 or 💔 sadness, ❤️ 🥰 👍 approval, ❌ and ✅ a verdict.
+A comment of only emoji has their feeling. TikTok writes some emoji as names in brackets, like
+[LOL mare] or [Слезы радости]: read those as the emoji they name.
 Reply with one line per comment, "n|label|r|u|e|k|why":
 label is one of ${LABELS.join(', ')}; complaint = unhappy with the product, service, price or support.
 r is 1 if the brand should answer (complaints, questions, unhappy or confused customers), else 0.
@@ -62,7 +66,7 @@ k is the brand's kind of comment when it is clearly negative or positive, one of
 why: at most 8 words, in English. Output only these lines.`
 
 const DESCRIBE = (brand: string) =>
-  `Brand: ${brand}. In one sentence of at most 25 words, in English, say what this social media post is about and what it promotes. Output only the sentence.`
+  `Brand: ${brand}. In one sentence of at most 25 words, in English, say what this social media post is about and what it promotes. Read emoji in the caption and comments as part of the tone. Output only the sentence.`
 
 const clip = (s: string, n: number) => {
   const t = s.replace(/\s+/g, ' ').trim()
