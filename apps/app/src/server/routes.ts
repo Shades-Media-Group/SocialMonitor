@@ -40,8 +40,17 @@ import {
 } from '../core/tiktok-api.ts'
 import * as meta from '../core/meta-api.ts'
 import { deleteSaved, getSaved, listSaved, readSaved, saveReport } from '../core/saved.ts'
-import { draftReply, pickEngine, translate } from '../core/analyze.ts'
+import { draftFromSaved, draftReply, pickEngine, translate } from '../core/analyze.ts'
+import {
+  addReply,
+  candidates,
+  deleteReply,
+  fillReply,
+  listReplies,
+  updateReply,
+} from '../core/replies.ts'
 import { getSettings } from '../core/settings.ts'
+import { latestSummary, refreshSummary } from '../core/summary.ts'
 import type { User } from '../core/auth.ts'
 import { roleFor, signSession, visibleBrands } from '../core/auth.ts'
 
@@ -345,6 +354,15 @@ export const routes: Route[] = [
   r('PUT', '/api/brands/:id/trackers', adminBrand, (c) =>
     store.setTrackers(c.db, id(c.params.id), (b(c) as { trackers?: unknown }).trackers),
   ),
+  // Saved replies: any member reads them, the brand's admins keep them.
+  r('GET', '/api/brands/:id/replies', seeBrand, (c) => listReplies(c.db, id(c.params.id))),
+  r('POST', '/api/brands/:id/replies', adminBrand, (c) => addReply(c.db, id(c.params.id), c.body)),
+  r('PUT', '/api/brands/:id/replies/:reply', adminBrand, (c) =>
+    updateReply(c.db, id(c.params.id), id(c.params.reply), c.body),
+  ),
+  r('DELETE', '/api/brands/:id/replies/:reply', adminBrand, (c) =>
+    deleteReply(c.db, id(c.params.id), id(c.params.reply)),
+  ),
   r('GET', '/api/sentiment', byBrand, ({ db, query }) =>
     store.sentimentCounts(db, query.get('brand') ? id(query.get('brand')!) : undefined),
   ),
@@ -471,6 +489,18 @@ export const routes: Route[] = [
           .get(brandId, network ?? null, network ?? null) as { n: number }
       ).n,
     }
+  }),
+  // The weekly summary Claude wrote at the end of an update, and writing it again on request.
+  r('GET', '/api/brands/:id/week', seeBrand, ({ db, params }) => ({
+    summary: latestSummary(db, id(params.id)),
+  })),
+  r('POST', '/api/brands/:id/week', adminBrand, async ({ db, params }) => {
+    const brandId = id(params.id)
+    if (store.getBrand(db, brandId)?.ai_sort === 0)
+      throw new Error('The AI is off for this brand. Turn it on in Settings first.')
+    const summary = await refreshSummary(db, brandId, true)
+    if (!summary) throw new Error('Nothing to sum up: no comments in the last two weeks.')
+    return { summary }
   }),
   r('GET', '/api/brands/:id/insights', seeBrand, ({ db, params, query }) => {
     const s = {
@@ -771,27 +801,39 @@ export const routes: Route[] = [
       )
     const c = db
       .prepare(
-        `SELECT c.text, p.caption, b.name, b.industry, b.description FROM comments c JOIN posts p ON p.id = c.post_id
+        `SELECT c.text, c.author, c.category, p.caption, b.id AS brand_id, b.name, b.industry, b.description
+         FROM comments c JOIN posts p ON p.id = c.post_id
          JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id WHERE c.id = ?`,
       )
       .get(id(params.id)) as
       | {
           text: string
+          author: string
+          category: string | null
           caption: string
+          brand_id: number
           name: string
           industry: string | null
           description: string | null
         }
       | undefined
     if (!c) throw new Error('No such comment.')
+    const about = [c.industry, c.description].filter(Boolean).join('; ')
+    // With saved replies, Claude picks the one that fits and fills it in; else a fresh draft.
+    const saved = candidates(listReplies(db, c.brand_id), c.category)
+    if (!saved.length) return { draft: await draftReply(engine, c.name, about, c.caption, c.text) }
+    const pick = await draftFromSaved(
+      engine,
+      c.name,
+      about,
+      c.caption,
+      { text: c.text, author: c.author, kind: c.category },
+      saved,
+    )
+    const name = c.author.replace(/^@/, '')
     return {
-      draft: await draftReply(
-        engine,
-        c.name,
-        [c.industry, c.description].filter(Boolean).join('; '),
-        c.caption,
-        c.text,
-      ),
+      draft: fillReply(pick.text, { name }),
+      saved: pick.index === null ? null : saved[pick.index]!.title,
     }
   }),
   r('POST', '/api/comments/:id/translate', seeComment, async ({ db, params, body }) => {

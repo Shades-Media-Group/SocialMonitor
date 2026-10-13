@@ -723,6 +723,39 @@ export const ru: Dict = {
     'On the 1st of each month at 08:00, with the brand report as a PDF, to the same addresses.':
       'Первого числа каждого месяца в 08:00, с отчётом по бренду в PDF, на те же адреса.',
     'Off: nobody gets a summary.': 'Выключено: сводку никто не получает.',
+    'This week': 'Эта неделя',
+    'Written {when}': 'Написано {when}',
+    'Writing…': 'Пишется…',
+    'Write it again': 'Написать заново',
+    'Write it now': 'Написать сейчас',
+    'Claude writes a few lines on the week at the end of the next update.':
+      'Claude напишет несколько строк о неделе в конце следующего обновления.',
+    'The AI is off for this brand. Turn it on in Settings first.':
+      'ИИ выключен для этого бренда. Сначала включите его в настройках.',
+    'Nothing to sum up: no comments in the last two weeks.':
+      'Нечего подытожить: за последние две недели комментариев нет.',
+    'Claude did not write a summary. Try again.': 'Claude не написал сводку. Попробуйте снова.',
+    'From the saved reply “{title}”': 'Из сохранённого ответа «{title}»',
+    'Saved replies': 'Сохранённые ответы',
+    'Add a saved reply': 'Добавить сохранённый ответ',
+    'Answers your team gives again and again. Draft a reply picks the one that fits a comment and fills in the person’s name; when none fits, it writes a new one.':
+      'Ответы, которые команда даёт снова и снова. «Набросать ответ» выбирает подходящий для комментария и подставляет имя человека; если ни один не подходит, пишет новый.',
+    Title: 'Название',
+    'Where is my refund?': 'Где мой возврат денег?',
+    Reply: 'Ответ',
+    'Write {name} where the person’s name goes, and other details in braces, like {order}. Claude fills in what the comment tells it.':
+      'Пишите {name} там, где должно быть имя человека, а другие детали в фигурных скобках, например {order}. Claude подставит то, что есть в комментарии.',
+    'For comments about': 'Для комментариев о',
+    'Any kind': 'Любой тип',
+    '{name} removed.': '{name} удалён.',
+    'Remove it for good': 'Удалить насовсем',
+    'None yet.': 'Пока нет.',
+    'A saved reply needs a title.': 'У сохранённого ответа должно быть название.',
+    'A saved reply needs its text.': 'У сохранённого ответа должен быть текст.',
+    'A brand keeps at most 100 saved replies.':
+      'У бренда может быть не больше 100 сохранённых ответов.',
+    'No such saved reply.': 'Такого сохранённого ответа нет.',
+    'Choose off, weekly or monthly.': 'Выберите: выкл., еженедельно или ежемесячно.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

@@ -130,6 +130,81 @@ interface Summary {
 
 const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) * 100) : 0)
 
+interface WeekSummary {
+  text: string
+  from: string
+  to: string
+  created_at: string
+}
+
+/**
+ * Claude's few lines on the brand's week: what people said, what changed against the week
+ * before, what to answer first. Written at the end of an update; admins can ask for it again.
+ */
+function Week({
+  v,
+  summary,
+  onChange,
+}: {
+  v: BrandView
+  summary: WeekSummary | null
+  onChange: (s: WeekSummary) => void
+}) {
+  const { brand, notify } = v
+  const [busy, setBusy] = useState(false)
+  const admin = brand.my_role === 'admin' && brand.ai_sort !== 0
+  if (!summary && !admin) return null
+  const date = (d: string) =>
+    new Date(`${d}T00:00:00Z`).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'UTC',
+    })
+  const again = async () => {
+    setBusy(true)
+    try {
+      onChange((await api.post<{ summary: WeekSummary }>(`/api/brands/${brand.id}/week`)).summary)
+    } catch (e) {
+      notify((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <section class="sm-box sm-week" aria-busy={busy}>
+      <header class="sm-box__head">
+        <h2>{t('This week')}</h2>
+        <span class="sm-inline sm-week__meta">
+          {summary && (
+            <span
+              class="sm-box__meta"
+              title={t('Written {when}', { when: when(summary.created_at) })}
+            >
+              {date(summary.from)} – {date(summary.to)}
+            </span>
+          )}
+          {admin && (
+            <button class="sm-textbtn" type="button" disabled={busy} onClick={() => void again()}>
+              {busy ? t('Writing…') : summary ? t('Write it again') : t('Write it now')}
+            </button>
+          )}
+        </span>
+      </header>
+      {summary ? (
+        <div class="sm-week__text">
+          {summary.text.split('\n').map((p) => (
+            <p>{p}</p>
+          ))}
+        </div>
+      ) : (
+        <p class="sm-quiet">
+          {t('Claude writes a few lines on the week at the end of the next update.')}
+        </p>
+      )}
+    </section>
+  )
+}
+
 /**
  * The brand at a glance: a strip of measures for the period, then panels for the trend, what
  * people say, the comments to answer, the problems they name, engagement, posts and networks.
@@ -148,6 +223,14 @@ export function Overview(v: BrandView) {
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
   const [metric, setMetric] = usePref<DayKey>('overview.metric', 'comments')
   const [series, setSeries] = useState<{ now: DayRow[]; before: DayRow[] } | null>(null)
+  const [week, setWeek] = useState<WeekSummary | null>(null)
+
+  useEffect(() => {
+    api
+      .get<{ summary: WeekSummary | null }>(`/api/brands/${brand.id}/week`)
+      .then((r) => setWeek(r.summary))
+      .catch(() => setWeek(null))
+  }, [brand.id, version])
 
   useEffect(() => {
     const n = network ? `&network=${network}` : ''
@@ -223,6 +306,7 @@ export function Overview(v: BrandView) {
         value={{
           brand: brand.name,
           network: network || 'all',
+          this_week: week,
           comments: c,
           last_7_days: s.week,
           rated: Object.fromEntries(
@@ -327,6 +411,8 @@ export function Overview(v: BrandView) {
 
   return (
     <div class="sm-overview sm-ga">
+      {/* The summary covers every network, so it stays out of a one-network view. */}
+      {!network && <Week v={v} summary={week} onChange={setWeek} />}
       <section class="sm-box sm-ga__report">
         <div class="sm-ga__cards" role="tablist" aria-label={t('What to chart')}>
           {CARDS.map(([k, label]) => {

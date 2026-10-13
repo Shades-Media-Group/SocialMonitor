@@ -4701,3 +4701,43 @@ th[aria-sort='descending'] .sm-sortbtn::after {
 th[aria-sort='ascending'] .sm-sortbtn::after {
   content: ' ↑';
 }
+
+/* The weekly summary at the top of the Overview: a heading, its dates and a few plain lines. */
+.sm-week__meta {
+  align-items: baseline;
+  gap: 12px;
+}
+.sm-week__text {
+  display: grid;
+  gap: 8px;
+  max-width: 76ch;
+}
+.sm-week__text p {
+  margin: 0;
+  color: var(--g-text);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* Saved replies in a brand's Settings: each one a labelled row, its text kept as written. */
+.sm-saved__text {
+  max-width: 72ch;
+  margin: 0;
+  padding-top: 8px;
+  color: var(--g-text);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.sm-saved__meta {
+  align-items: baseline;
+  gap: 14px;
+}
+.sm-saved__actions {
+  padding: 6px 0 4px 176px;
+}
+@media (max-width: 760px) {
+  .sm-saved__actions {
+    padding-left: 0;
+  }
+}
