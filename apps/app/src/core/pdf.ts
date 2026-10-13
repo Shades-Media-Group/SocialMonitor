@@ -52,6 +52,8 @@ export async function brandPdf(uiOrigin: string, brandId: number, query: string,
 async function shrinkImages(page: Page) {
   await page.evaluate(async () => {
     const imgs = [...document.images]
+    // Lazy pictures below the fold would never load, and waiting for them would never end.
+    for (const img of imgs) img.loading = 'eager'
     await Promise.all(imgs.map((img) => (img.complete ? null : img.decode().catch(() => null))))
     for (const img of imgs) {
       const w = Math.round(img.getBoundingClientRect().width * 2)
