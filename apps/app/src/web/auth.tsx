@@ -125,6 +125,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
         }
       >
         <form
+          key="link"
           class="sm-auth__form"
           onSubmit={go(async () => {
             const r = await api.post<{ email: string }>('/api/auth/accept', {
@@ -179,6 +180,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
         lead={t('It becomes the super admin: it sees every brand and invites everyone else.')}
       >
         <form
+          key="setup"
           class="sm-auth__form"
           onSubmit={go(async () => {
             onIn(
@@ -251,6 +253,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
         }
       >
         <form
+          key="code"
           class="sm-auth__form"
           onSubmit={go(async () => {
             onIn(await api.post<Me>('/api/auth/code', { ticket: ticket.ticket, code: f.code }))
@@ -297,6 +300,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
       >
         {step === 'forgot' && (
           <form
+            key="forgot"
             class="sm-auth__form"
             onSubmit={go(async () => {
               await api.post('/api/auth/forgot', { login: f.login })
@@ -323,6 +327,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   return (
     <Frame title={t('Sign in')}>
       <form
+        key="signin"
         class="sm-auth__form"
         onSubmit={go(async () => {
           const r = await api.post<{ ticket: string; to: string; mail: boolean }>(
