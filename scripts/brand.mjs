@@ -145,9 +145,29 @@ async function main() {
   await render(files['app-icon.svg'], 128, join(out, 'png/app-icon-128.png'))
   await render(files['app-icon.svg'], 512, join(out, 'png/app-icon-512.png'))
   await render(files['app-icon.svg'], 1024, join(out, 'png/app-icon-1024.png'))
+
+  // Email: Gmail shows no SVG, so the lockup and the mark go out as PNGs at twice their size,
+  // served from the website (mail.ts points at them).
+  const email = join(root, 'apps/site/public/email')
+  await mkdir(email, { recursive: true })
+  const lockupHeight = 56
+  const lockupWidth = Math.round((lockupHeight * width) / markSize)
+  await page.setViewportSize({ width: lockupWidth, height: lockupHeight })
+  for (const [file, png] of [
+    ['logo.svg', 'logo.png'],
+    ['logo-dark.svg', 'logo-dark.png'],
+  ]) {
+    await page.setContent(
+      `<style>html,body{margin:0;background:transparent}svg{display:block;width:${lockupWidth}px;height:${lockupHeight}px}</style>${files[file]}`,
+    )
+    await page.screenshot({ path: join(email, png), omitBackground: true })
+  }
+  await render(files['logomark.svg'], 96, join(email, 'mark.png'))
   await browser.close()
 
-  console.log(`brand: wrote ${Object.keys(files).length} SVGs and 4 PNGs to assets/brand`)
+  console.log(
+    `brand: wrote ${Object.keys(files).length} SVGs and 4 PNGs to assets/brand, and the email PNGs`,
+  )
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) await main()
