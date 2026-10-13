@@ -1,4 +1,4 @@
-import { autoSendBad } from './alerts.ts'
+import { autoSendBad, instantAlerts } from './alerts.ts'
 import { saveImage } from './media.ts'
 import { fillTikTok } from './fill.ts'
 import { officialFigures } from './tiktok-api.ts'
@@ -204,6 +204,12 @@ async function execute(db: DB, runId: number, scope: RunScope) {
     db,
     touched.map((t) => t.brandId),
     since,
+    log,
+  )
+  // Instant alerts: urgent comments, a run of complaints, words to watch.
+  await instantAlerts(
+    db,
+    touched.map((t) => t.brandId),
     log,
   )
 

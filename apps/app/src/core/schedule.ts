@@ -2,6 +2,7 @@ import type { DB } from './db.ts'
 import * as store from './store.ts'
 import type { Schedule } from './types.ts'
 import { queueRun } from './run.ts'
+import { sendDigests } from './alerts.ts'
 
 /** A few random minutes on every start, so updates never land on the same second twice. */
 const jitter = (maxMinutes: number) => Math.round(Math.random() * maxMinutes * 60_000)
@@ -52,6 +53,8 @@ export function startScheduler(db: DB) {
       }
       store.setNextRun(db, s.id, nextRun(s)?.toISOString() ?? null)
     }
+    // Weekly and monthly summary emails, each sent once when its time comes.
+    void sendDigests(db)
   }
   tick()
   return setInterval(tick, 60_000)

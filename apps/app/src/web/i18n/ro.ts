@@ -707,6 +707,25 @@ export const ro: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Această autentificare Facebook a expirat. Încearcă din nou.',
     'Facebook and Instagram connected.': 'Facebook și Instagram conectate.',
+    'Instant alerts': 'Alerte imediate',
+    'Urgent comments': 'Comentarii urgente',
+    'An email as soon as an update finds a comment that needs an answer urgently.':
+      'Un e-mail imediat ce o actualizare găsește un comentariu care cere un răspuns urgent.',
+    'A run of complaints': 'Un șir de plângeri',
+    'An email once {n} new negative comments have come in since the last alert.':
+      'Un e-mail când s-au strâns {n} comentarii negative noi de la ultima alertă.',
+    'An email when a new comment names one of the words to watch on the About tab.':
+      'Un e-mail când un comentariu nou pomenește unul dintre cuvintele urmărite din fila Despre.',
+    'Sent to': 'Se trimite la',
+    'Summary email': 'Rezumat pe e-mail',
+    'Send a summary': 'Trimite un rezumat',
+    Weekly: 'Săptămânal',
+    Monthly: 'Lunar',
+    'Every Monday at 08:00, with the brand report as a PDF, to the same addresses.':
+      'În fiecare luni la 08:00, cu raportul brandului ca PDF, la aceleași adrese.',
+    'On the 1st of each month at 08:00, with the brand report as a PDF, to the same addresses.':
+      'Pe 1 ale fiecărei luni la 08:00, cu raportul brandului ca PDF, la aceleași adrese.',
+    'Off: nobody gets a summary.': 'Oprit: nimeni nu primește rezumatul.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

@@ -145,6 +145,99 @@ export const badMail = (lang: string, brand: string, n: number, link: string): M
   )
 }
 
+/** A comment as an alert shows it. */
+export interface AlertItem {
+  author: string
+  text: string
+  network: string
+  post_url: string
+}
+
+/** What an instant alert holds: comments grouped by why they need someone now. */
+export interface InstantPick<T extends AlertItem = AlertItem> {
+  urgent: T[]
+  /** Negative comments of a run not already listed as urgent; `run` counts the whole run. */
+  bad: T[]
+  run: number
+  /** Comments naming a word to watch, not already listed above, and which words they named. */
+  watched: T[]
+  terms: string[]
+}
+
+const NETWORK: Record<string, string> = {
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+}
+const SHOWN = 10
+
+/** Comments that need someone now: urgent ones, a run of complaints, words to watch. */
+export function instantMail(lang: string, brand: string, pick: InstantPick, link: string): Mail {
+  const n = pick.urgent.length + pick.bad.length + pick.watched.length
+  const vars = { brand, n: String(n) }
+  const group = (title: string, items: AlertItem[]) =>
+    items.length
+      ? [
+          ui.heading(title),
+          ...items.slice(0, SHOWN).flatMap((c) => {
+            const t = c.text.replace(/\s+/g, ' ').trim()
+            return [
+              ui.paragraph(`“${t.length > 300 ? t.slice(0, 299) + '…' : t}”`),
+              ui.note(`${c.author} · ${NETWORK[c.network] ?? c.network} · ${c.post_url}`),
+            ]
+          }),
+          ...(items.length > SHOWN
+            ? [ui.note(mailText(lang, 'instantMore', { n: String(items.length - SHOWN) }))]
+            : []),
+        ]
+      : []
+  return build(
+    lang,
+    mailText(lang, 'instantSubject', vars),
+    mailText(lang, 'instantHeading', vars),
+    mailText(lang, 'instantLead', vars),
+    [
+      ...group(mailText(lang, 'instantUrgent'), pick.urgent),
+      ...group(mailText(lang, 'instantRun', { n: String(pick.run) }), pick.bad),
+      ...group(mailText(lang, 'instantWatched', { terms: pick.terms.join(', ') }), pick.watched),
+      ui.button(mailText(lang, 'open'), link),
+      ui.note(`${mailText(lang, 'orCopy')} ${link}`),
+    ],
+  )
+}
+
+/** The weekly or monthly summary: the period's counts; the report PDF is attached by the caller. */
+export function digestMail(
+  lang: string,
+  brand: string,
+  kind: 'weekly' | 'monthly',
+  days: number,
+  counts: Record<string, number>,
+  pdf: boolean,
+  link: string,
+): Mail {
+  const week = kind === 'weekly'
+  const num = (k: string) => String(counts[k] ?? 0)
+  return build(
+    lang,
+    mailText(lang, week ? 'digestWeekSubject' : 'digestMonthSubject', { brand }),
+    mailText(lang, week ? 'digestWeekHeading' : 'digestMonthHeading'),
+    mailText(lang, 'digestLead', { brand, days: String(days) }),
+    [
+      ui.fields([
+        { label: mailText(lang, 'digestNew'), value: num('total') },
+        { label: mailText(lang, 'digestReply'), value: num('needs_reply') },
+        { label: mailText(lang, 'digestComplaints'), value: num('complaint') },
+        { label: mailText(lang, 'digestQuestions'), value: num('question') },
+        { label: mailText(lang, 'digestPraise'), value: num('praise') },
+      ]),
+      ...(pdf ? [ui.note(mailText(lang, 'digestPdf'))] : []),
+      ui.button(mailText(lang, 'open'), link),
+      ui.note(`${mailText(lang, 'orCopy')} ${link}`),
+    ],
+  )
+}
+
 export async function sendMail(
   to: string,
   mail: Mail,

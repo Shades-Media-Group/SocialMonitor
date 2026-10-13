@@ -672,6 +672,25 @@ export const zh: Dict = {
       'Facebook 连接已过期：请在“关于”标签页重新连接。',
     'This Facebook sign-in expired. Try again.': '此 Facebook 登录已过期，请重试。',
     'Facebook and Instagram connected.': 'Facebook 和 Instagram 已连接。',
+    'Instant alerts': '即时提醒',
+    'Urgent comments': '紧急评论',
+    'An email as soon as an update finds a comment that needs an answer urgently.':
+      '更新一发现需要紧急回复的评论，就立即发送邮件。',
+    'A run of complaints': '连续投诉',
+    'An email once {n} new negative comments have come in since the last alert.':
+      '自上次提醒以来累计出现 {n} 条新的负面评论时发送邮件。',
+    'An email when a new comment names one of the words to watch on the About tab.':
+      '新评论提到“关于”标签页中的某个关注词时发送邮件。',
+    'Sent to': '发送给',
+    'Summary email': '摘要邮件',
+    'Send a summary': '发送摘要',
+    Weekly: '每周',
+    Monthly: '每月',
+    'Every Monday at 08:00, with the brand report as a PDF, to the same addresses.':
+      '每周一 08:00 发送到相同的地址，并附上 PDF 格式的品牌报告。',
+    'On the 1st of each month at 08:00, with the brand report as a PDF, to the same addresses.':
+      '每月 1 日 08:00 发送到相同的地址，并附上 PDF 格式的品牌报告。',
+    'Off: nobody gets a summary.': '已关闭：没有人会收到摘要。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

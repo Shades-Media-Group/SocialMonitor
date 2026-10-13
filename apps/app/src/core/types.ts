@@ -30,10 +30,27 @@ export interface Brand {
   alert_auto: 0 | 1
   alert_lang: string
   alert_sent_at: string | null
+  /** Instant alerts to the same addresses, per trigger, counting comments read since instant_since. */
+  instant_urgent: 0 | 1
+  instant_bad: 0 | 1
+  instant_watched: 0 | 1
+  instant_since: string | null
+  /** The summary email to the same addresses, and when the last one went out. */
+  digest: Digest
+  digest_sent_at: string | null
   /** 1: Claude sorts its comments and describes its posts after each update; 0: left to people. */
   ai_sort: 0 | 1
   created_at: string
 }
+
+export type Digest = 'off' | 'weekly' | 'monthly'
+
+/**
+ * The instant alert for a run of complaints: this many negative comments that no alert has
+ * carried yet, counted across updates from when the trigger was switched on. Three today and
+ * two tomorrow make a run; once sent they are marked, so the count starts again from zero.
+ */
+export const RUN = 5
 
 export interface Profile {
   id: number
@@ -90,6 +107,8 @@ export interface Comment {
   /** From the AI sort: 0 can wait, 1 soon, 2 urgent; and how the person feels. */
   urgency: 0 | 1 | 2 | null
   emotion: string | null
+  /** When it went out in an instant alert. */
+  alerted_at: string | null
   /** Saved copies under /media, or null when the network gave none. */
   author_avatar: string | null
   author_url: string | null
