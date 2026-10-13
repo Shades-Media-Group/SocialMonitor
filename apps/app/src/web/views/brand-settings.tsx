@@ -5,6 +5,162 @@ import { api } from '../api.ts'
 import { BadReport } from '../bad-report.tsx'
 import { t } from '../i18n.ts'
 import { NETWORK_NAME, NetworkMark, Row, Segmented, when } from '../ui.tsx'
+import { brandCategories } from '../rate.tsx'
+
+interface SavedReply {
+  id: number
+  title: string
+  text: string
+  category: string | null
+}
+type Draft = { title: string; text: string; category: string }
+const EMPTY: Draft = { title: '', text: '', category: '' }
+
+/**
+ * Answers the team gives again and again. "Draft a reply" on a comment picks the one that fits
+ * and fills in {name} and the other details; it writes a fresh reply when none fits.
+ */
+function SavedReplies({ brand, notify }: Pick<BrandView, 'brand' | 'notify'>) {
+  const [list, setList] = useState<SavedReply[] | null>(null)
+  // The reply being edited: its id, 'new' for one being added, or null.
+  const [editing, setEditing] = useState<number | 'new' | null>(null)
+  const [f, setF] = useState<Draft>(EMPTY)
+  const [removing, setRemoving] = useState<number | null>(null)
+  const [error, setError] = useState('')
+  const cats = brandCategories(brand)
+
+  const load = () =>
+    api
+      .get<SavedReply[]>(`/api/brands/${brand.id}/replies`)
+      .then(setList)
+      .catch(() => setList([]))
+  useEffect(() => {
+    void load()
+    setEditing(null)
+  }, [brand.id])
+
+  const open = (r: SavedReply | null) => {
+    setError('')
+    setRemoving(null)
+    setEditing(r ? r.id : 'new')
+    setF(r ? { title: r.title, text: r.text, category: r.category ?? '' } : EMPTY)
+  }
+  const save = async (e: Event) => {
+    e.preventDefault()
+    try {
+      const body = { ...f, category: f.category || null }
+      if (editing === 'new') await api.post(`/api/brands/${brand.id}/replies`, body)
+      else await api.put(`/api/brands/${brand.id}/replies/${editing}`, body)
+      setEditing(null)
+      await load()
+      notify(t('Saved.'))
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+  const remove = async (r: SavedReply) => {
+    if (removing !== r.id) return setRemoving(r.id)
+    await api.del(`/api/brands/${brand.id}/replies/${r.id}`)
+    setRemoving(null)
+    await load()
+    notify(t('{name} removed.', { name: r.title }))
+  }
+  const kindName = (key: string | null) => cats.find((k) => k.key === key)?.name
+
+  const form = (
+    <form class="sm-saved__form" onSubmit={(e) => void save(e)}>
+      <Row label={t('Title')}>
+        <input
+          class="g-input"
+          value={f.title}
+          maxLength={80}
+          required
+          placeholder={t('Where is my refund?')}
+          onInput={(e) => setF({ ...f, title: (e.target as HTMLInputElement).value })}
+        />
+      </Row>
+      <Row
+        label={t('Reply')}
+        hint={t(
+          'Write {name} where the person’s name goes, and other details in braces, like {order}. Claude fills in what the comment tells it.',
+        )}
+      >
+        <textarea
+          class="g-input sm-textarea"
+          rows={4}
+          maxLength={1000}
+          required
+          value={f.text}
+          onInput={(e) => setF({ ...f, text: (e.target as HTMLTextAreaElement).value })}
+        />
+      </Row>
+      <Row label={t('For comments about')}>
+        <select
+          class="g-select sm-select-sm"
+          value={f.category}
+          onChange={(e) => setF({ ...f, category: (e.target as HTMLSelectElement).value })}
+        >
+          <option value="">{t('Any kind')}</option>
+          {cats.map((k) => (
+            <option value={k.key}>{k.name}</option>
+          ))}
+        </select>
+      </Row>
+      {error && (
+        <p class="g-error" role="alert">
+          {error}
+        </p>
+      )}
+      <div class="sm-inline sm-saved__actions">
+        <button class="g-btn g-btn--sm" type="submit">
+          {t('Save')}
+        </button>
+        <button class="g-btn g-btn--ghost g-btn--sm" type="button" onClick={() => setEditing(null)}>
+          {t('Cancel')}
+        </button>
+      </div>
+    </form>
+  )
+
+  if (!list) return null
+  return (
+    <section class="sm-box">
+      <header class="sm-box__head">
+        <h2>{t('Saved replies')}</h2>
+        {editing === null && (
+          <button class="sm-textbtn" type="button" onClick={() => open(null)}>
+            {t('Add a saved reply')}
+          </button>
+        )}
+      </header>
+      <p class="sm-quiet">
+        {t(
+          'Answers your team gives again and again. Draft a reply picks the one that fits a comment and fills in the person’s name; when none fits, it writes a new one.',
+        )}
+      </p>
+      {list.map((r) =>
+        editing === r.id ? (
+          form
+        ) : (
+          <Row label={r.title}>
+            <p class="sm-saved__text">{r.text}</p>
+            <span class="sm-inline sm-saved__meta">
+              <span class="sm-quiet">{kindName(r.category) ?? t('Any kind')}</span>
+              <button class="sm-textbtn" type="button" onClick={() => open(r)}>
+                {t('Edit')}
+              </button>
+              <button class="sm-textbtn" type="button" onClick={() => void remove(r)}>
+                {removing === r.id ? t('Remove it for good') : t('Remove')}
+              </button>
+            </span>
+          </Row>
+        ),
+      )}
+      {editing === 'new' && form}
+      {!list.length && editing !== 'new' && <p class="sm-quiet">{t('None yet.')}</p>}
+    </section>
+  )
+}
 
 type Range = 'new' | 'due' | 'all'
 
@@ -248,6 +404,8 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
           </span>
         </Row>
       </section>
+
+      <SavedReplies brand={brand} notify={notify} />
 
       <BadReport
         brand={brand}

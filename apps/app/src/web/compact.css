@@ -4718,3 +4718,26 @@ th[aria-sort='ascending'] .sm-sortbtn::after {
   font-size: 14px;
   line-height: 1.55;
 }
+
+/* Saved replies in a brand's Settings: each one a labelled row, its text kept as written. */
+.sm-saved__text {
+  max-width: 72ch;
+  margin: 0;
+  padding-top: 8px;
+  color: var(--g-text);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.sm-saved__meta {
+  align-items: baseline;
+  gap: 14px;
+}
+.sm-saved__actions {
+  padding: 6px 0 4px 176px;
+}
+@media (max-width: 760px) {
+  .sm-saved__actions {
+    padding-left: 0;
+  }
+}

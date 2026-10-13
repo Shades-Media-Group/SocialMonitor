@@ -719,6 +719,26 @@ export const ro: Dict = {
     'Nothing to sum up: no comments in the last two weeks.':
       'Nimic de rezumat: niciun comentariu în ultimele două săptămâni.',
     'Claude did not write a summary. Try again.': 'Claude nu a scris un rezumat. Încearcă din nou.',
+    'From the saved reply “{title}”': 'Din răspunsul salvat „{title}”',
+    'Saved replies': 'Răspunsuri salvate',
+    'Add a saved reply': 'Adaugă un răspuns salvat',
+    'Answers your team gives again and again. Draft a reply picks the one that fits a comment and fills in the person’s name; when none fits, it writes a new one.':
+      'Răspunsuri pe care echipa le dă iar și iar. „Scrie o ciornă de răspuns” alege pe cel potrivit pentru un comentariu și completează numele persoanei; când niciunul nu se potrivește, scrie unul nou.',
+    Title: 'Titlu',
+    'Where is my refund?': 'Unde sunt banii mei înapoi?',
+    Reply: 'Răspuns',
+    'Write {name} where the person’s name goes, and other details in braces, like {order}. Claude fills in what the comment tells it.':
+      'Scrie {name} unde vine numele persoanei, iar alte detalii între acolade, ca {order}. Claude completează ce află din comentariu.',
+    'For comments about': 'Pentru comentarii despre',
+    'Any kind': 'Orice tip',
+    '{name} removed.': '{name} a fost eliminat.',
+    'Remove it for good': 'Elimină definitiv',
+    'None yet.': 'Niciunul încă.',
+    'A saved reply needs a title.': 'Un răspuns salvat are nevoie de un titlu.',
+    'A saved reply needs its text.': 'Un răspuns salvat are nevoie de text.',
+    'A brand keeps at most 100 saved replies.':
+      'Un brand păstrează cel mult 100 de răspunsuri salvate.',
+    'No such saved reply.': 'Nu există acest răspuns salvat.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

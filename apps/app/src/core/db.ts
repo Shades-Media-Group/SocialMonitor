@@ -149,6 +149,18 @@ CREATE TABLE IF NOT EXISTS week_summaries (
   created_at TEXT NOT NULL
 );
 
+-- Answers the team keeps for questions that come up again. The text may hold placeholders such
+-- as {name}, filled per comment; category is one of the brand's kinds (its key), or null.
+CREATE TABLE IF NOT EXISTS saved_replies (
+  id INTEGER PRIMARY KEY,
+  brand_id INTEGER NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  text TEXT NOT NULL,
+  category TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS saved_replies_brand ON saved_replies(brand_id);
+
 -- People who can open the dashboard. A super admin sees and manages everything; everyone else
 -- sees only the brands they are a member of, as a viewer or as that brand's admin.
 CREATE TABLE IF NOT EXISTS users (

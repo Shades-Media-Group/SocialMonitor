@@ -206,18 +206,21 @@ export function CommentList({
 
   // Translations and drafted replies, shown under the comment they belong to.
   const [extra, setExtra] = useState<
-    Record<number, { kind: 'translation' | 'draft'; text: string }>
+    Record<number, { kind: 'translation' | 'draft'; text: string; saved?: string | null }>
   >({})
   const [busy, setBusy] = useState<number | null>(null)
   const [editing, setEditing] = useState<number | null>(null)
   const ask = async (c: CommentRow, kind: 'translation' | 'draft') => {
     setBusy(c.id)
     try {
-      const r = await api.post<{ translation?: string; draft?: string }>(
+      const r = await api.post<{ translation?: string; draft?: string; saved?: string | null }>(
         `/api/comments/${c.id}/${kind === 'translation' ? 'translate' : 'draft'}`,
         { lang },
       )
-      setExtra((x) => ({ ...x, [c.id]: { kind, text: (r.translation ?? r.draft)! } }))
+      setExtra((x) => ({
+        ...x,
+        [c.id]: { kind, text: (r.translation ?? r.draft)!, saved: r.saved },
+      }))
     } catch (e) {
       setExtra((x) => ({ ...x, [c.id]: { kind, text: (e as Error).message } }))
     } finally {
@@ -342,7 +345,13 @@ export function CommentList({
           )}
           {(extra[c.id] || (lang === 'en' && c.translation)) && (
             <p class={`sm-c__extra${extra[c.id]?.kind === 'draft' ? ' sm-c__extra--draft' : ''}`}>
-              <b>{extra[c.id]?.kind === 'draft' ? t('Draft reply') : t('Translation')}</b>{' '}
+              <b>
+                {extra[c.id]?.kind !== 'draft'
+                  ? t('Translation')
+                  : extra[c.id]?.saved
+                    ? t('From the saved reply “{title}”', { title: extra[c.id]!.saved! })
+                    : t('Draft reply')}
+              </b>{' '}
               {extra[c.id]?.text ?? c.translation}
               {extra[c.id]?.kind === 'draft' && (
                 <button

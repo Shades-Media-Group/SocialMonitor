@@ -212,6 +212,47 @@ Write one reply to the comment below, in the comment's own language: warm, short
   return text.trim().slice(0, 1200)
 }
 
+/**
+ * Which saved reply the model chose ("n|reply", 1-based) or none ("0|reply", a fresh draft).
+ * An answer without the "n|" lead counts as a fresh draft. A model that echoes the saved
+ * reply's "title|kind|" before the text has them taken off.
+ */
+export function parsePick(text: string, count: number): { index: number | null; text: string } {
+  const m = /^\s*(\d+)\s*\|([\s\S]*)$/.exec(text)
+  const n = m ? Number(m[1]) : 0
+  let reply = (m ? m[2]! : text).trim()
+  const echo = /^[^|\n]{1,80}\|[^|\n]{1,40}\|([\s\S]+)$/.exec(reply)
+  if (echo) reply = echo[1]!.trim()
+  return { index: n >= 1 && n <= count ? n - 1 : null, text: reply }
+}
+
+/**
+ * The best of the brand's saved replies for this comment, filled in for the person who wrote it;
+ * a fresh draft when none fits. Saved replies go in clipped, the most fitting first.
+ */
+export async function draftFromSaved(
+  engine: Engine,
+  brand: string,
+  about: string,
+  post: string,
+  comment: { text: string; author: string; kind?: string | null },
+  saved: { title: string; text: string; category: string | null }[],
+) {
+  const prompt = `You answer comments for ${brand}${about ? ` (${clip(about, 240)})` : ''}. Post: ${clip(post, 300) || '(no caption)'}
+The team keeps these saved replies, each a number, its title, the kind of comment it is for, then its text:
+${saved.map((s, i) => `[${i + 1}] ${clip(s.title, 80)} (for: ${s.category ?? 'any comment'})\n${clip(s.text, 600)}`).join('\n')}
+The comment below is by @${comment.author}${comment.kind ? `, kind ${comment.kind}` : ''}.
+If one saved reply answers it, output its number, "|", then the reply: keep its wording, fill each {placeholder} from the comment ({name} is the commenter's name; use a first name when the username shows one), leave a placeholder you cannot fill as it is, and translate the reply only if the comment is in another language.
+If none fits, output "0|" then one new reply in the comment's own language: warm, short (at most 3 sentences), specific, no hashtags, no promises the brand cannot keep, and no facts (prices, times, rules) that the post or the saved replies do not give.
+Output only that, for example "2|Hi Ana, …".`
+  const text =
+    engine === 'claude'
+      ? await viaClaude(prompt, clip(comment.text, 800))
+      : await viaApi(prompt, clip(comment.text, 800))
+  const pick = parsePick(text, saved.length)
+  return { index: pick.index, text: pick.text.slice(0, 1200) }
+}
+
 const LANGUAGE: Record<string, string> = {
   en: 'English',
   ro: 'Romanian',

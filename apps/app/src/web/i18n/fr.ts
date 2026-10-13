@@ -719,6 +719,26 @@ export const fr: Dict = {
     'Nothing to sum up: no comments in the last two weeks.':
       'Rien à résumer : aucun commentaire ces deux dernières semaines.',
     'Claude did not write a summary. Try again.': 'Claude n’a pas rédigé de résumé. Réessayez.',
+    'From the saved reply “{title}”': 'D’après la réponse enregistrée « {title} »',
+    'Saved replies': 'Réponses enregistrées',
+    'Add a saved reply': 'Ajouter une réponse enregistrée',
+    'Answers your team gives again and again. Draft a reply picks the one that fits a comment and fills in the person’s name; when none fits, it writes a new one.':
+      'Les réponses que votre équipe donne encore et encore. « Rédiger une réponse » choisit celle qui convient à un commentaire et y met le nom de la personne ; si aucune ne convient, elle en écrit une nouvelle.',
+    Title: 'Titre',
+    'Where is my refund?': 'Où est mon remboursement ?',
+    Reply: 'Réponse',
+    'Write {name} where the person’s name goes, and other details in braces, like {order}. Claude fills in what the comment tells it.':
+      'Écrivez {name} là où va le nom de la personne, et les autres détails entre accolades, comme {order}. Claude complète ce que le commentaire lui apprend.',
+    'For comments about': 'Pour les commentaires sur',
+    'Any kind': 'Tout type',
+    '{name} removed.': '{name} supprimé.',
+    'Remove it for good': 'Supprimer définitivement',
+    'None yet.': 'Aucune pour l’instant.',
+    'A saved reply needs a title.': 'Une réponse enregistrée a besoin d’un titre.',
+    'A saved reply needs its text.': 'Une réponse enregistrée a besoin de son texte.',
+    'A brand keeps at most 100 saved replies.':
+      'Une marque garde au plus 100 réponses enregistrées.',
+    'No such saved reply.': 'Cette réponse enregistrée n’existe pas.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',
