@@ -704,6 +704,25 @@ export const ru: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Этот вход через Facebook истёк. Попробуйте снова.',
     'Facebook and Instagram connected.': 'Facebook и Instagram подключены.',
+    'Instant alerts': 'Мгновенные оповещения',
+    'Urgent comments': 'Срочные комментарии',
+    'An email as soon as an update finds a comment that needs an answer urgently.':
+      'Письмо сразу, как только обновление найдёт комментарий, на который нужно срочно ответить.',
+    'A run of complaints': 'Серия жалоб',
+    'An email once {n} new negative comments have come in since the last alert.':
+      'Письмо, когда с прошлого оповещения наберётся {n} новых негативных комментариев.',
+    'An email when a new comment names one of the words to watch on the About tab.':
+      'Письмо, когда новый комментарий упоминает одно из отслеживаемых слов с вкладки «О бренде».',
+    'Sent to': 'Получатели',
+    'Summary email': 'Сводка по почте',
+    'Send a summary': 'Отправлять сводку',
+    Weekly: 'Еженедельно',
+    Monthly: 'Ежемесячно',
+    'Every Monday at 08:00, with the brand report as a PDF, to the same addresses.':
+      'Каждый понедельник в 08:00, с отчётом по бренду в PDF, на те же адреса.',
+    'On the 1st of each month at 08:00, with the brand report as a PDF, to the same addresses.':
+      'Первого числа каждого месяца в 08:00, с отчётом по бренду в PDF, на те же адреса.',
+    'Off: nobody gets a summary.': 'Выключено: сводку никто не получает.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

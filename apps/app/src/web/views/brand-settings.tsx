@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { Network, Schedule } from '../api.ts'
+import type { Digest } from '../../core/types.ts'
+import { RUN } from '../../core/types.ts'
 import { api } from '../api.ts'
 import { BadReport } from '../bad-report.tsx'
 import { t } from '../i18n.ts'
@@ -15,6 +17,26 @@ const EVERY: [number, string][] = [
   [6, 'Every 6 hours'],
   [12, 'Every 12 hours'],
   [24, 'Once a day'],
+]
+
+type Trigger = 'urgent' | 'bad' | 'watched'
+
+const TRIGGERS: [Trigger, string, string][] = [
+  [
+    'urgent',
+    'Urgent comments',
+    'An email as soon as an update finds a comment that needs an answer urgently.',
+  ],
+  [
+    'bad',
+    'A run of complaints',
+    'An email once {n} new negative comments have come in since the last alert.',
+  ],
+  [
+    'watched',
+    'Words to watch',
+    'An email when a new comment names one of the words to watch on the About tab.',
+  ],
 ]
 
 /**
@@ -91,6 +113,20 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
         ? t('Claude sorts new comments after each update.')
         : t('The AI is off for {brand}.', { brand: brand.name }),
     )
+  }
+
+  /** Instant-alert triggers and the summary email; both go to the report's addresses. */
+  const saveNotify = async (patch: { [k in Trigger]?: boolean } & { digest?: Digest }) => {
+    setBusy(true)
+    try {
+      await api.put(`/api/brands/${brand.id}/notify`, patch)
+      await reload()
+      notify(t('Saved.'))
+    } catch (e) {
+      notify((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
   }
 
   const emails = (() => {
@@ -246,6 +282,74 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
               {t('Change')}
             </button>
           </span>
+        </Row>
+      </section>
+
+      <section class="sm-box">
+        <header class="sm-box__head">
+          <h2>{t('Instant alerts')}</h2>
+        </header>
+        {TRIGGERS.map(([key, label, hint]) => {
+          const on = !!brand[`instant_${key}`]
+          return (
+            <Row label={t(label)} hint={t(hint, { n: RUN })}>
+              <label class="g-check">
+                <input
+                  class="g-switch"
+                  type="checkbox"
+                  checked={on}
+                  disabled={busy}
+                  onChange={(e) =>
+                    void saveNotify({ [key]: (e.target as HTMLInputElement).checked })
+                  }
+                />
+                {on ? t('On') : t('Off')}
+              </label>
+            </Row>
+          )
+        })}
+        <Row label={t('Sent to')}>
+          <span class="sm-inline">
+            <span class="sm-quiet">
+              {emails.length ? emails.join(', ') : t('Nobody gets it yet.')}
+            </span>
+            <button
+              class="g-btn g-btn--ghost g-btn--sm"
+              type="button"
+              onClick={() => setReport(true)}
+            >
+              {t('Change')}
+            </button>
+          </span>
+        </Row>
+      </section>
+
+      <section class="sm-box">
+        <header class="sm-box__head">
+          <h2>{t('Summary email')}</h2>
+        </header>
+        <Row
+          label={t('Send a summary')}
+          hint={
+            brand.digest === 'weekly'
+              ? t('Every Monday at 08:00, with the brand report as a PDF, to the same addresses.')
+              : brand.digest === 'monthly'
+                ? t(
+                    'On the 1st of each month at 08:00, with the brand report as a PDF, to the same addresses.',
+                  )
+                : t('Off: nobody gets a summary.')
+          }
+        >
+          <Segmented
+            label={t('Send a summary')}
+            value={brand.digest}
+            onChange={(v) => void saveNotify({ digest: v })}
+            options={[
+              ['off', t('Off')],
+              ['weekly', t('Weekly')],
+              ['monthly', t('Monthly')],
+            ]}
+          />
         </Row>
       </section>
 

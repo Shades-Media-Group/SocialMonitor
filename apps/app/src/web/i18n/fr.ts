@@ -707,6 +707,25 @@ export const fr: Dict = {
       'La connexion Facebook a expiré : reconnectez-la dans l’onglet À propos.',
     'This Facebook sign-in expired. Try again.': 'Cette connexion Facebook a expiré. Réessayez.',
     'Facebook and Instagram connected.': 'Facebook et Instagram connectés.',
+    'Instant alerts': 'Alertes immédiates',
+    'Urgent comments': 'Commentaires urgents',
+    'An email as soon as an update finds a comment that needs an answer urgently.':
+      'Un e-mail dès qu’une mise à jour trouve un commentaire qui demande une réponse urgente.',
+    'A run of complaints': 'Une série de plaintes',
+    'An email once {n} new negative comments have come in since the last alert.':
+      'Un e-mail dès que {n} nouveaux commentaires négatifs sont arrivés depuis la dernière alerte.',
+    'An email when a new comment names one of the words to watch on the About tab.':
+      'Un e-mail quand un nouveau commentaire cite l’un des mots à suivre de l’onglet À propos.',
+    'Sent to': 'Envoyé à',
+    'Summary email': 'Résumé par e-mail',
+    'Send a summary': 'Envoyer un résumé',
+    Weekly: 'Chaque semaine',
+    Monthly: 'Chaque mois',
+    'Every Monday at 08:00, with the brand report as a PDF, to the same addresses.':
+      'Chaque lundi à 08:00, avec le rapport de la marque en PDF, aux mêmes adresses.',
+    'On the 1st of each month at 08:00, with the brand report as a PDF, to the same addresses.':
+      'Le 1er de chaque mois à 08:00, avec le rapport de la marque en PDF, aux mêmes adresses.',
+    'Off: nobody gets a summary.': 'Désactivé : personne ne reçoit de résumé.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',
