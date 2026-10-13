@@ -30,7 +30,17 @@ Run `yarn start` under the server's own process manager, so it starts with the m
 
 - **Linux:** a systemd service with `WorkingDirectory` set to the repository and `ExecStart` running `yarn start`.
 - **macOS:** a launchd agent, or `pm2 start "yarn start" --name socialmonitor`.
-- **Windows:** `pm2` with `pm2-windows-startup`, or a Task Scheduler task at startup.
+- **Windows:** in PowerShell opened as administrator, from the repository, run `powershell -ExecutionPolicy Bypass -File scripts\windows-service.ps1`. It adds a startup task that runs before anyone signs in, restarts SocialMonitor within a minute if it stops, and logs to `data\service.log`. Add `-Remove` to take it out.
+
+## Keep Claude signed in
+
+The sign-in Claude Code keeps after `/login` expires, and an unattended server cannot log in again. Give it a token made for this instead, valid for a year:
+
+```bash
+claude setup-token      # once, on the server; it opens the browser to approve
+```
+
+Put the token it prints in `.env` as `CLAUDE_CODE_OAUTH_TOKEN=…` and restart SocialMonitor. On Windows, install the native Claude Code (`irm https://claude.ai/install.ps1 | iex`), not the npm one. If sorting stops anyway, the brand's Settings tab shows the last problem, and the comments it could not sort are sorted on the next update.
 
 ## Protect the saved accounts
 
