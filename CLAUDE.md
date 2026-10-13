@@ -28,6 +28,7 @@ Use Node 22: `export PATH=$HOME/.nvm/versions/node/v22.23.1/bin:$PATH`; the shel
 - **Never invent proof:** no made-up numbers, users, ratings or testimonials.
 - **One source per value:** the logo geometry in `scripts/brand.mjs`; generated files are never edited by hand.
 - **Commits:** conventional, one logical change each, no AI attribution or Co-Authored-By lines.
+- **Email:** every email is built with `shades-gradient/email` and follows Gradient's [email guide](https://github.com/Shades-Media-Group/gradient/blob/main/docs/guides/email.md). One-time codes lead the subject with the code and sit on the copyable code pass. Meetings attach an .ics invitation with Google and Outlook links. Bookings get a ticket pass and schema.org markup. Each kind ships a test that checks these.
 
 ## Brand
 
