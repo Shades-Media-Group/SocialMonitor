@@ -27,7 +27,8 @@ export function AutoUpdate({ brand, onSaved }: { brand: BrandRow; onSaved?: () =
       )
       .catch(() => setOwn(null))
   useEffect(() => void load(), [brand.id])
-  if (own === undefined || brand.my_role !== 'admin') return null
+  if (own === undefined) return null
+  const admin = brand.my_role === 'admin'
   const value = own?.enabled ? (own.every_hours ?? 0) : 0
   const set = async (hours: number) => {
     setBusy(true)
@@ -54,7 +55,7 @@ export function AutoUpdate({ brand, onSaved }: { brand: BrandRow; onSaved?: () =
       <select
         class="g-select sm-select-sm"
         value={String(EVERY.some(([h]) => h === value) ? value : 24)}
-        disabled={busy || !brand.profiles.length}
+        disabled={!admin || busy || !brand.profiles.length}
         aria-label={t('Automatic updates for {brand}', { brand: brand.name })}
         onChange={(e) => void set(Number((e.target as HTMLSelectElement).value))}
       >

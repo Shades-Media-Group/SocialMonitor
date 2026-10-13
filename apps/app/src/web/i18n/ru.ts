@@ -642,6 +642,51 @@ export const ru: Dict = {
     'What people say about your brand, sorted.': 'Что люди говорят о вашем бренде, по полочкам.',
     'Free and open source. Built by Shades Media Group.':
       'Бесплатно и с открытым кодом. Сделано в Shades Media Group.',
+    'Day {n}': 'День {n}',
+    'Answering and updates': 'Ответы и обновления',
+    'Find a post by its words or hashtags': 'Найти пост по словам или хэштегам',
+    'Two posts, day by day': 'Два поста, день за днём',
+    'How the post grew, day by day': 'Как рос пост, день за днём',
+    'Pick a post in the table to see it, or two to compare them.':
+      'Выберите пост в таблице, чтобы увидеть его, или два, чтобы сравнить.',
+    Difference: 'Разница',
+    'Trend: {metric} at each update': 'Тренд: {metric} при каждом обновлении',
+    Pick: 'Выбрать',
+    Trend: 'Тренд',
+    'Pick {post}': 'Выбрать {post}',
+    Statistics: 'Статистика',
+    'Every hour': 'Каждый час',
+    'Every 2 hours': 'Каждые 2 часа',
+    'Every 6 hours': 'Каждые 6 часов',
+    'New posts and fresh numbers, read by themselves. More choices in Settings.':
+      'Новые посты и свежие цифры, сами по себе. Больше настроек в «Настройках».',
+    'Claude sorts new comments after each update.':
+      'Claude сортирует новые комментарии после каждого обновления.',
+    'The AI is off for {brand}.': 'ИИ отключён для {brand}.',
+    'Update by itself': 'Обновлять самостоятельно',
+    'Off: nothing runs until someone presses Update.':
+      'Выключено: ничего не запускается, пока кто-то не нажмёт «Обновить».',
+    On: 'Включено',
+    'How often': 'Как часто',
+    'What it reads': 'Что читать',
+    'Only posts it has not seen yet.': 'Только посты, которых ещё не было.',
+    'New posts, plus older ones due for fresh numbers: weekly for a month, then monthly.':
+      'Новые посты и старые, которым пора обновить цифры: еженедельно месяц, затем ежемесячно.',
+    'The latest 15 posts on each network again, with all their comments.':
+      'Последние 15 постов в каждой сети заново, со всеми комментариями.',
+    'New posts': 'Новые посты',
+    'Sort with Claude': 'Сортировать с Claude',
+    'After each update, Claude describes new posts and sorts new comments, reading the thread, emoji and pictures. Off: comments stay unsorted until someone rates them.':
+      'После каждого обновления Claude описывает новые посты и сортирует новые комментарии, учитывая ветку, эмодзи и картинки. Выключено: комментарии остаются неотсортированными, пока их не оценят.',
+    'On this computer': 'На этом компьютере',
+    'Claude Code': 'Claude Code',
+    'Anthropic API key': 'Ключ API Anthropic',
+    'No AI yet: install Claude Code, or set ANTHROPIC_API_KEY in .env.':
+      'ИИ пока нет: установите Claude Code или задайте ANTHROPIC_API_KEY в .env.',
+    'Goes to {list}.': 'Получатели: {list}.',
+    'Nobody gets it yet.': 'Пока никто не получает.',
+    'Sent by itself': 'Отправляется автоматически',
+    'Sent by hand only': 'Только вручную',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

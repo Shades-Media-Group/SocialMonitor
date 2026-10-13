@@ -270,6 +270,9 @@ function migrate(db: DatabaseSync) {
   if (!has('brands', 'trackers'))
     db.exec("ALTER TABLE brands ADD COLUMN trackers TEXT NOT NULL DEFAULT '[]'")
   // The brand's reply target in hours: open comments older than it count as overdue.
+  // Whether Claude sorts this brand's comments and describes its posts after each update.
+  if (!has('brands', 'ai_sort'))
+    db.exec('ALTER TABLE brands ADD COLUMN ai_sort INTEGER NOT NULL DEFAULT 1')
   if (!has('brands', 'reply_target_hours'))
     db.exec('ALTER TABLE brands ADD COLUMN reply_target_hours REAL NOT NULL DEFAULT 24')
   // Each person's own view choices (filters, layouts, period, theme), kept across sign-ins.

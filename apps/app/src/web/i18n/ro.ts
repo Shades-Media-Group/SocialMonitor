@@ -644,6 +644,51 @@ export const ro: Dict = {
     'What people say about your brand, sorted.': 'Ce spun oamenii despre brandul tău, sortat.',
     'Free and open source. Built by Shades Media Group.':
       'Gratuit și open source. Creat de Shades Media Group.',
+    'Day {n}': 'Ziua {n}',
+    'Answering and updates': 'Răspunsuri și actualizări',
+    'Find a post by its words or hashtags': 'Caută o postare după cuvinte sau hashtaguri',
+    'Two posts, day by day': 'Două postări, zi de zi',
+    'How the post grew, day by day': 'Cum a crescut postarea, zi de zi',
+    'Pick a post in the table to see it, or two to compare them.':
+      'Alege o postare din tabel ca s-o vezi, sau două ca să le compari.',
+    Difference: 'Diferență',
+    'Trend: {metric} at each update': 'Tendință: {metric} la fiecare actualizare',
+    Pick: 'Alege',
+    Trend: 'Tendință',
+    'Pick {post}': 'Alege {post}',
+    Statistics: 'Statistici',
+    'Every hour': 'În fiecare oră',
+    'Every 2 hours': 'La fiecare 2 ore',
+    'Every 6 hours': 'La fiecare 6 ore',
+    'New posts and fresh numbers, read by themselves. More choices in Settings.':
+      'Postări noi și cifre proaspete, citite singure. Mai multe opțiuni în Setări.',
+    'Claude sorts new comments after each update.':
+      'Claude sortează comentariile noi după fiecare actualizare.',
+    'The AI is off for {brand}.': 'AI-ul este oprit pentru {brand}.',
+    'Update by itself': 'Actualizare automată',
+    'Off: nothing runs until someone presses Update.':
+      'Oprit: nimic nu pornește până nu apasă cineva Actualizează.',
+    On: 'Pornit',
+    'How often': 'Cât de des',
+    'What it reads': 'Ce citește',
+    'Only posts it has not seen yet.': 'Doar postările pe care nu le-a văzut încă.',
+    'New posts, plus older ones due for fresh numbers: weekly for a month, then monthly.':
+      'Postări noi, plus cele mai vechi care trebuie reîmprospătate: săptămânal o lună, apoi lunar.',
+    'The latest 15 posts on each network again, with all their comments.':
+      'Ultimele 15 postări din fiecare rețea din nou, cu toate comentariile.',
+    'New posts': 'Postări noi',
+    'Sort with Claude': 'Sortare cu Claude',
+    'After each update, Claude describes new posts and sorts new comments, reading the thread, emoji and pictures. Off: comments stay unsorted until someone rates them.':
+      'După fiecare actualizare, Claude descrie postările noi și sortează comentariile noi, citind firul, emoji-urile și pozele. Oprit: comentariile rămân nesortate până le evaluează cineva.',
+    'On this computer': 'Pe acest computer',
+    'Claude Code': 'Claude Code',
+    'Anthropic API key': 'Cheie API Anthropic',
+    'No AI yet: install Claude Code, or set ANTHROPIC_API_KEY in .env.':
+      'Încă fără AI: instalează Claude Code sau setează ANTHROPIC_API_KEY în .env.',
+    'Goes to {list}.': 'Se trimite la {list}.',
+    'Nobody gets it yet.': 'Încă nu-l primește nimeni.',
+    'Sent by itself': 'Se trimite singur',
+    'Sent by hand only': 'Doar trimis manual',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

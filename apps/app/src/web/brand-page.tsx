@@ -11,6 +11,8 @@ import { Reports } from './views/reports.tsx'
 import { Schedules } from './views/schedules.tsx'
 import { About } from './views/about.tsx'
 import { Calendar } from './views/calendar.tsx'
+import { Stats } from './views/stats.tsx'
+import { BrandSettings } from './views/brand-settings.tsx'
 
 /** One brand: its name and what it is, its own menu, and a network switch that filters every tab. */
 export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
@@ -32,7 +34,11 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
   })
 
   const hasFilters =
-    tab === 'overview' || tab === 'posts' || tab === 'comments' || tab === 'calendar'
+    tab === 'overview' ||
+    tab === 'posts' ||
+    tab === 'stats' ||
+    tab === 'comments' ||
+    tab === 'calendar'
   const TAB_NAME = Object.fromEntries(TABS) as Record<Tab, string>
 
   return (
@@ -69,7 +75,7 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
                   ))}
               </div>
             )}
-            {(tab === 'overview' || tab === 'posts') && (
+            {(tab === 'overview' || tab === 'posts' || tab === 'stats') && (
               <select
                 class="g-select sm-select-sm"
                 aria-label={t('Period')}
@@ -117,12 +123,16 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
           <Comments {...view} />
         ) : tab === 'posts' ? (
           <Posts {...view} />
+        ) : tab === 'stats' ? (
+          <Stats {...view} />
         ) : tab === 'reports' ? (
           <Reports {...view} />
         ) : tab === 'calendar' ? (
           <Calendar {...view} />
         ) : tab === 'schedules' ? (
           <Schedules {...view} />
+        ) : tab === 'settings' && brand.my_role === 'admin' ? (
+          <BrandSettings {...view} />
         ) : (
           <About {...view} />
         )}

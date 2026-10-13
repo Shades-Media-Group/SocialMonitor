@@ -170,6 +170,8 @@ const visible = <T>(c: Signed, rows: T[], brandOfRow: (row: T) => number | numbe
 
 export const routes: Route[] = [
   r('GET', '/api/settings', 'user', ({ db }) => readSettings(db)),
+  // Which AI sorts comments on this computer: Claude Code, an API key, or none yet.
+  r('GET', '/api/ai', 'user', ({ db }) => ({ engine: pickEngine(getSettings(db)) })),
   r('PATCH', '/api/settings', 'super', (c) => writeSettings(c.db, b(c))),
   r(
     'GET',
@@ -272,6 +274,7 @@ export const routes: Route[] = [
       description?: string | null
       notes?: string | null
       reply_target_hours?: number
+      ai_sort?: boolean
     }
     const brandId = id(c.params.id)
     const { links, ...details } = x
@@ -295,6 +298,9 @@ export const routes: Route[] = [
     }),
   ),
   // A post's numbers over time, for its evolution chart.
+  r('GET', '/api/post-history', byBrand, ({ db, query }) =>
+    store.brandHistory(db, id(query.get('brand') ?? '0'), net(query.get('network'))),
+  ),
   r('GET', '/api/post-metrics', scoped, ({ db, query }) =>
     store.postMetrics(db, id(query.get('post')!)),
   ),

@@ -179,8 +179,11 @@ async function execute(db: DB, runId: number, scope: RunScope) {
     const posts = new Map(touched.map((t) => [t.postId, t]))
     for (const p of pendingPosts(db))
       if (brands.has(p.brandId) && !posts.has(p.postId)) posts.set(p.postId, p)
-    if (!stopped())
-      await aiStep(db, [...posts.values()], log, (done, total) =>
+    // Brands whose admins turned the AI off keep their comments unsorted.
+    const off = aiOff(db)
+    const todo = [...posts.values()].filter((p) => !off.has(p.brandId))
+    if (!stopped() && todo.length)
+      await aiStep(db, todo, log, (done, total) =>
         store.setProgress(db, runId, { step: 'sort', done, total }),
       )
   } catch (e) {
@@ -325,9 +328,18 @@ const pendingPosts = (db: DB) =>
     )
     .all() as { postId: number; brand: string; brandId: number }[]
 
+/** Brands whose admins turned the AI sort off. */
+const aiOff = (db: DB) =>
+  new Set(
+    (db.prepare('SELECT id FROM brands WHERE ai_sort = 0').all() as { id: number }[]).map(
+      (b) => b.id,
+    ),
+  )
+
 /** Sorts every comment the current sort has not read and describes every post without a description. Returns how many comments it sorted. */
 export async function sortPending(db: DB) {
-  const rows = pendingPosts(db)
+  const off = aiOff(db)
+  const rows = pendingPosts(db).filter((p) => !off.has(p.brandId))
   const left = () =>
     (db.prepare(`SELECT count(*) AS n FROM comments c WHERE ${store.STALE}`).get() as { n: number })
       .n

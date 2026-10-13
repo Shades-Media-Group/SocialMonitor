@@ -645,6 +645,51 @@ export const fr: Dict = {
     'What people say about your brand, sorted.': 'Ce que les gens disent de votre marque, trié.',
     'Free and open source. Built by Shades Media Group.':
       'Gratuit et open source. Créé par Shades Media Group.',
+    'Day {n}': 'Jour {n}',
+    'Answering and updates': 'Réponses et mises à jour',
+    'Find a post by its words or hashtags': 'Trouver une publication par ses mots ou hashtags',
+    'Two posts, day by day': 'Deux publications, jour après jour',
+    'How the post grew, day by day': 'Comment la publication a grandi, jour après jour',
+    'Pick a post in the table to see it, or two to compare them.':
+      'Choisissez une publication dans le tableau pour la voir, ou deux pour les comparer.',
+    Difference: 'Écart',
+    'Trend: {metric} at each update': 'Tendance : {metric} à chaque mise à jour',
+    Pick: 'Choisir',
+    Trend: 'Tendance',
+    'Pick {post}': 'Choisir {post}',
+    Statistics: 'Statistiques',
+    'Every hour': 'Toutes les heures',
+    'Every 2 hours': 'Toutes les 2 heures',
+    'Every 6 hours': 'Toutes les 6 heures',
+    'New posts and fresh numbers, read by themselves. More choices in Settings.':
+      'Nouvelles publications et chiffres frais, lus tout seuls. Plus de choix dans Paramètres.',
+    'Claude sorts new comments after each update.':
+      'Claude trie les nouveaux commentaires après chaque mise à jour.',
+    'The AI is off for {brand}.': 'L’IA est désactivée pour {brand}.',
+    'Update by itself': 'Mise à jour automatique',
+    'Off: nothing runs until someone presses Update.':
+      'Désactivé : rien ne tourne tant que personne n’appuie sur Mettre à jour.',
+    On: 'Activé',
+    'How often': 'À quelle fréquence',
+    'What it reads': 'Ce qui est lu',
+    'Only posts it has not seen yet.': 'Seulement les publications pas encore vues.',
+    'New posts, plus older ones due for fresh numbers: weekly for a month, then monthly.':
+      'Nouvelles publications, plus les anciennes à rafraîchir : chaque semaine pendant un mois, puis chaque mois.',
+    'The latest 15 posts on each network again, with all their comments.':
+      'Les 15 dernières publications de chaque réseau à nouveau, avec tous leurs commentaires.',
+    'New posts': 'Nouvelles publications',
+    'Sort with Claude': 'Trier avec Claude',
+    'After each update, Claude describes new posts and sorts new comments, reading the thread, emoji and pictures. Off: comments stay unsorted until someone rates them.':
+      'Après chaque mise à jour, Claude décrit les nouvelles publications et trie les nouveaux commentaires, en lisant le fil, les emoji et les images. Désactivé : les commentaires restent non triés jusqu’à ce que quelqu’un les note.',
+    'On this computer': 'Sur cet ordinateur',
+    'Claude Code': 'Claude Code',
+    'Anthropic API key': 'Clé API Anthropic',
+    'No AI yet: install Claude Code, or set ANTHROPIC_API_KEY in .env.':
+      'Pas encore d’IA : installez Claude Code ou définissez ANTHROPIC_API_KEY dans .env.',
+    'Goes to {list}.': 'Envoyé à {list}.',
+    'Nobody gets it yet.': 'Personne ne le reçoit encore.',
+    'Sent by itself': 'Envoyé tout seul',
+    'Sent by hand only': 'Envoyé à la main seulement',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

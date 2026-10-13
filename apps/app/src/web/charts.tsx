@@ -545,3 +545,123 @@ export function LineChart({
     </figure>
   )
 }
+
+/** One post's readings over time: days since it went out, and the figure at each reading. */
+export interface Growth {
+  key: 'b0' | 'b1'
+  name: string
+  points: { day: number; at: string; value: number }[]
+}
+
+/**
+ * How one or two posts grew, against the days since each went out, so two posts compare at the
+ * same age. Readings come at uneven times, so the x axis is continuous.
+ */
+export function GrowthChart({ series, label }: { series: Growth[]; label: string }) {
+  const [ref, W] = useWidth()
+  const [hover, setHover] = useState<number | null>(null)
+  const H2 = 260
+  const pad = { l: 44, r: 16, t: 16, b: 28 }
+  const iw = W - pad.l - pad.r
+  const ih = H2 - pad.t - pad.b
+  const all = series.flatMap((s) => s.points)
+  const maxDay = Math.max(1, ...all.map((p) => p.day))
+  const max = niceMax(Math.max(1, ...all.map((p) => p.value)))
+  const x = (d: number) => pad.l + (d / maxDay) * iw
+  const y = (v: number) => pad.t + ih - (v / max) * ih
+  const path = (ps: Growth['points']) =>
+    ps.map((p, i) => `${i ? 'L' : 'M'}${x(p.day).toFixed(1)} ${y(p.value).toFixed(1)}`).join('')
+  const ticks = Math.max(2, Math.min(8, Math.floor(W / 90)))
+  const step = Math.max(1, Math.ceil(maxDay / ticks))
+  // The reading of each post nearest the pointer, by day.
+  const near = (s: Growth) =>
+    hover === null || !s.points.length
+      ? null
+      : s.points.reduce((a, b) => (Math.abs(b.day - hover) < Math.abs(a.day - hover) ? b : a))
+  return (
+    <figure class="sm-chart sm-line sm-growth">
+      {series.length > 1 && <Legend items={series} />}
+      <div class="sm-chart__plot" ref={ref}>
+        <svg
+          viewBox={`0 0 ${W} ${H2}`}
+          role="img"
+          aria-label={label}
+          onMouseLeave={() => setHover(null)}
+          onMouseMove={(e) => {
+            const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect()
+            const d = ((e.clientX - r.left - pad.l) / iw) * maxDay
+            setHover(Math.max(0, Math.min(maxDay, d)))
+          }}
+        >
+          {[0, max / 2, max].map((v) => (
+            <g>
+              <line class="sm-grid" x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} />
+              <text class="sm-axis" x={pad.l - 8} y={y(v) + 4} text-anchor="end">
+                {fmt(v)}
+              </text>
+            </g>
+          ))}
+          {Array.from({ length: Math.floor(maxDay / step) + 1 }, (_, i) => i * step).map((d) => (
+            <text class="sm-axis" x={x(d)} y={H2 - 8} text-anchor="middle">
+              {t('Day {n}', { n: d })}
+            </text>
+          ))}
+          {series.map((s) => (
+            <g class={`sm-growth__s sm-c-${s.key}`}>
+              <path class="sm-growth__line" d={path(s.points)} />
+              {s.points.map((p) => (
+                <circle class="sm-growth__pt" cx={x(p.day)} cy={y(p.value)} r={2.5} />
+              ))}
+            </g>
+          ))}
+          {hover !== null && (
+            <g>
+              <line class="sm-line__cross" x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + ih} />
+              {series.map((s) => {
+                const p = near(s)
+                return p ? (
+                  <circle
+                    class={`sm-growth__dot sm-c-${s.key}`}
+                    cx={x(p.day)}
+                    cy={y(p.value)}
+                    r={4.5}
+                  />
+                ) : null
+              })}
+            </g>
+          )}
+        </svg>
+        {hover !== null && (
+          <div class="sm-tip" style={{ left: `clamp(120px, ${x(hover)}px, calc(100% - 120px))` }}>
+            <b>{t('Day {n}', { n: Math.round(hover) })}</b>
+            {series.map((s) => {
+              const p = near(s)
+              return p ? (
+                <span>
+                  <i class={`sm-swatch sm-c-${s.key}`} aria-hidden="true" />{' '}
+                  {series.length > 1 ? `${s.name} · ` : ''}
+                  {label} <b class="g-num">{fmt(p.value)}</b>{' '}
+                  <small>{dayLabel(p.at.slice(0, 10))}</small>
+                </span>
+              ) : null
+            })}
+          </div>
+        )}
+      </div>
+      <table class="sm-sr">
+        <caption>{label}</caption>
+        <tbody>
+          {series.flatMap((s) =>
+            s.points.map((p) => (
+              <tr>
+                <th>{s.name}</th>
+                <td>{p.at.slice(0, 10)}</td>
+                <td>{p.value}</td>
+              </tr>
+            )),
+          )}
+        </tbody>
+      </table>
+    </figure>
+  )
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { IconName } from 'shades-gradient'
 import type { AppState } from './app.tsx'
-import { TABS } from './app.tsx'
+import { tabsFor } from './app.tsx'
 import type { BrandRow } from './api.ts'
 import { LANGS, lang, setLang, t } from './i18n.ts'
 import { Icon } from './ui.tsx'
@@ -52,7 +52,7 @@ export function Palette({
   }
   const all: Command[] = [
     ...(brand
-      ? TABS.filter(([k]) => k !== 'schedules' || brand.my_role === 'admin').map(([k, text]) => ({
+      ? tabsFor(brand.my_role).map(([k, text]) => ({
           group: brand.name,
           label: t(text),
           icon: ICON[k]!,

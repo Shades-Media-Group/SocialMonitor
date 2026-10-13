@@ -4617,3 +4617,83 @@ a.sm-person[href]:hover .sm-person__name {
   margin: 0 0 10px;
   font-size: 12px;
 }
+
+/* Statistics: one or two posts' growth, and every post with its trend. */
+.sm-stats {
+  display: grid;
+  gap: 16px;
+}
+.sm-stats .sm-search {
+  flex: 1 1 240px;
+  max-width: 360px;
+}
+.sm-stats__none {
+  padding: 24px 16px;
+}
+.sm-growth .sm-legend {
+  padding: 4px 16px 0;
+}
+.sm-growth__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.sm-growth__pt,
+.sm-growth__dot {
+  stroke: var(--c-card);
+  stroke-width: 2;
+}
+.sm-stats__cmp {
+  margin-top: 4px;
+}
+.sm-stats__cmp th[scope='row'] {
+  background: none;
+  font-weight: 500;
+  text-align: left;
+}
+.sm-stats .sm-swatch {
+  display: inline-block;
+  vertical-align: middle;
+}
+.sm-setnets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.sm-setnets .g-check {
+  gap: 6px;
+}
+.sm-stats__pick {
+  width: 44px;
+  white-space: nowrap;
+}
+.sm-stats__pick input {
+  margin: 0 6px 0 0;
+  vertical-align: middle;
+  accent-color: var(--g-text);
+}
+.sm-stats__table tr.is-picked > td {
+  background: var(--c-hover);
+}
+.sm-sortbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.sm-sortbtn:hover {
+  color: var(--g-text);
+}
+th[aria-sort] .sm-sortbtn {
+  color: var(--g-text);
+  font-weight: 650;
+}
+th[aria-sort='descending'] .sm-sortbtn::after {
+  content: ' ↓';
+}
+th[aria-sort='ascending'] .sm-sortbtn::after {
+  content: ' ↑';
+}

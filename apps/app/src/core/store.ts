@@ -88,9 +88,11 @@ export function updateBrand(
     description?: string | null
     notes?: string | null
     reply_target_hours?: number
+    ai_sort?: boolean
   },
 ) {
-  const { reply_target_hours: hours, ...text } = f
+  const { reply_target_hours: hours, ai_sort: ai, ...text } = f
+  if (ai !== undefined) db.prepare('UPDATE brands SET ai_sort = ? WHERE id = ?').run(ai ? 1 : 0, id)
   if (hours !== undefined) {
     if (!Number.isFinite(hours) || hours <= 0 || hours > 24 * 30)
       throw new Error('The reply target is between 1 hour and 30 days.')
@@ -263,6 +265,23 @@ export function duePosts(db: DB, profileId: number, cap = 20) {
 }
 
 /** A post's numbers over time, oldest first. */
+/** Every reading of every post of a brand, oldest first: the history behind the Statistics tab. */
+export const brandHistory = (db: DB, brandId: number, network?: Network) =>
+  all<{
+    post_id: number
+    at: string
+    likes: number | null
+    comments: number | null
+    shares: number | null
+    views: number | null
+  }>(
+    db,
+    `SELECT m.post_id, m.at, m.likes, m.comments, m.shares, m.views FROM post_metrics m
+       JOIN posts p ON p.id = m.post_id JOIN profiles pr ON pr.id = p.profile_id
+     WHERE pr.brand_id = ?${network ? ' AND p.network = ?' : ''} ORDER BY m.post_id, m.at`,
+    ...(network ? [brandId, network] : [brandId]),
+  )
+
 export const postMetrics = (db: DB, postId: number) =>
   all<{
     at: string

@@ -22,21 +22,30 @@ import { People } from './people.tsx'
 export const TABS = [
   ['overview', 'Overview'],
   ['posts', 'Posts'],
+  ['stats', 'Statistics'],
   ['comments', 'Comments'],
   ['calendar', 'Calendar'],
   ['reports', 'Reports'],
   ['schedules', 'Schedules'],
   ['about', 'About'],
+  ['settings', 'Settings'],
 ] as const
+/** Tabs only a brand's admins (and super admins) see. */
+const ADMIN_TABS: string[] = ['schedules', 'settings']
+/** The tabs someone with this role on a brand sees. */
+export const tabsFor = (role: string | null | undefined) =>
+  TABS.filter(([k]) => role === 'admin' || !ADMIN_TABS.includes(k))
 export type Tab = (typeof TABS)[number][0]
 const TAB_ICON: Record<Tab, IconName> = {
   overview: 'grid',
   comments: 'chat',
   posts: 'image',
+  stats: 'arrowOutward',
   calendar: 'calendar',
   reports: 'file',
   schedules: 'schedule',
   about: 'info',
+  settings: 'settings',
 }
 
 /** Where the app is: the brand list, a new brand, or one brand's tab. Kept in the URL hash. */
@@ -421,21 +430,19 @@ function Dashboard({ me }: { me: Me }) {
                   </a>
                   {open && route.page === 'brand' && (
                     <div class="sm-nav__sub">
-                      {TABS.filter(([k]) => k !== 'schedules' || b.my_role === 'admin').map(
-                        ([k, text]) => (
-                          <a
-                            class="sm-nav__item"
-                            href={`#/b/${b.id}/${k}`}
-                            aria-current={route.tab === k ? 'page' : undefined}
-                          >
-                            <Icon name={TAB_ICON[k]} size={15} />
-                            <span class="sm-nav__name">{t(text)}</span>
-                            {k === 'comments' && (
-                              <span class="sm-nav__num g-num">{fmt(b.counts.total ?? 0)}</span>
-                            )}
-                          </a>
-                        ),
-                      )}
+                      {tabsFor(b.my_role).map(([k, text]) => (
+                        <a
+                          class="sm-nav__item"
+                          href={`#/b/${b.id}/${k}`}
+                          aria-current={route.tab === k ? 'page' : undefined}
+                        >
+                          <Icon name={TAB_ICON[k]} size={15} />
+                          <span class="sm-nav__name">{t(text)}</span>
+                          {k === 'comments' && (
+                            <span class="sm-nav__num g-num">{fmt(b.counts.total ?? 0)}</span>
+                          )}
+                        </a>
+                      ))}
                     </div>
                   )}
                 </div>

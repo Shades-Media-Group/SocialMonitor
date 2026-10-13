@@ -249,16 +249,12 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
             </Row>
           ))}
           <TikTokConnect brand={brand} edit={edit} notify={notify} />
-          {edit && (
-            <Row
-              label={t('Automatic updates')}
-              hint={t(
-                'New posts and fresh numbers, read by themselves. More choices on Schedules.',
-              )}
-            >
-              <AutoUpdate brand={brand} />
-            </Row>
-          )}
+          <Row
+            label={t('Automatic updates')}
+            hint={t('New posts and fresh numbers, read by themselves. More choices in Settings.')}
+          >
+            <AutoUpdate brand={brand} />
+          </Row>
         </section>
 
         <section class="sm-box">
@@ -483,12 +479,12 @@ function TikTokConnect({
             </button>
           )}
         </span>
-      ) : edit ? (
+      ) : (
         <span class="sm-connected">
           <button
             class="g-btn"
             type="button"
-            disabled={!state.ready}
+            disabled={!edit || !state.ready}
             onClick={async () => {
               setError(null)
               try {
@@ -513,8 +509,6 @@ function TikTokConnect({
           )}
           {error && <small class="g-error">{error}</small>}
         </span>
-      ) : (
-        <span class="sm-quiet">{t('Not connected.')}</span>
       )}
     </Row>
   )

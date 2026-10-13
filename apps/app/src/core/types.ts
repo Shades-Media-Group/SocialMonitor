@@ -30,6 +30,8 @@ export interface Brand {
   alert_auto: 0 | 1
   alert_lang: string
   alert_sent_at: string | null
+  /** 1: Claude sorts its comments and describes its posts after each update; 0: left to people. */
+  ai_sort: 0 | 1
   created_at: string
 }
 
