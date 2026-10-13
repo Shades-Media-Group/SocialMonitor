@@ -760,12 +760,20 @@ code {
 .btn--primary {
   background: var(--red-ground);
   color: #fff;
-  box-shadow: 0 10px 24px -10px rgba(249, 0, 10, 0.6);
 }
 .btn--primary:hover {
   background: #c80009;
+}
+
+/* The red glow belongs to the hero's one call to action only; every other primary button is
+   flat (Gradient's rule: effects are seasoning). */
+.hero .btn--primary {
+  box-shadow: 0 10px 24px -10px rgba(249, 0, 10, 0.6);
+}
+.hero .btn--primary:hover {
   box-shadow: 0 14px 30px -10px rgba(249, 0, 10, 0.7);
 }
+
 .btn--dark {
   background: var(--ink);
   color: var(--paper);
