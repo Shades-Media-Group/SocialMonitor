@@ -2,6 +2,7 @@ import { autoSendBad } from './alerts.ts'
 import { saveImage } from './media.ts'
 import { fillTikTok } from './fill.ts'
 import { officialFigures } from './tiktok-api.ts'
+import { metaCollect, metaConnected } from './meta-api.ts'
 import type { Page } from 'playwright'
 import { join } from 'node:path'
 import type { DB } from './db.ts'
@@ -112,7 +113,9 @@ async function execute(db: DB, runId: number, scope: RunScope) {
           total,
         })
       progress()
-      const waitUntil = gapUntil(db, p)
+      // A Page connected through Meta is read through its API: no browser, no signed-in gap.
+      const viaMeta = metaConnected(db, brand.id, p.network)
+      const waitUntil = viaMeta ? null : gapUntil(db, p)
       const readComments = !waitUntil
       if (waitUntil) {
         const at = new Date(waitUntil).toLocaleTimeString('en-GB', {
@@ -127,7 +130,8 @@ async function execute(db: DB, runId: number, scope: RunScope) {
         )
       }
       try {
-        page ??= (await openBrowser()).pages()[0] ?? (await (await openBrowser()).newPage())
+        if (!viaMeta)
+          page ??= (await openBrowser()).pages()[0] ?? (await (await openBrowser()).newPage())
         log(`${brand.name}: reading ${p.network} @${p.handle}.`)
         const opt = {
           range: scope.range,
@@ -144,7 +148,9 @@ async function execute(db: DB, runId: number, scope: RunScope) {
           step: progress,
           stopped,
         }
-        const posts = await collectors[p.network].collect(page, p, opt)
+        const posts =
+          (viaMeta ? await metaCollect(db, p, opt) : null) ??
+          (await collectors[p.network].collect(page!, p, opt))
         if (p.network === 'tiktok')
           await officialFigures(db, p, posts, log).catch((e: Error) =>
             log(`TikTok connection: ${e.message}`),

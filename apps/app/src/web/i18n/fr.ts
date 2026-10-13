@@ -692,6 +692,21 @@ export const fr: Dict = {
       'Choisissez des publications dans le tableau pour les comparer, jusqu’à {n}.',
     Clear: 'Effacer',
     'Last problem': 'Dernier problème',
+    'Your Facebook Page': 'Votre page Facebook',
+    'Connect the Page you manage, and the Instagram account linked to it, to read their posts and comments through Meta, with no signed-in browser. SocialMonitor only reads; it never posts.':
+      'Connectez la page que vous gérez et le compte Instagram qui lui est lié pour lire leurs publications et commentaires via Meta, sans navigateur connecté. SocialMonitor lit seulement ; il ne publie jamais.',
+    'and Instagram @{name}': 'et Instagram @{name}',
+    'No Instagram account is linked to this Page.':
+      'Aucun compte Instagram n’est lié à cette page.',
+    'Connect with Facebook': 'Connecter avec Facebook',
+    'Add META_APP_ID and META_APP_SECRET to .env first.':
+      'Ajoutez d’abord META_APP_ID et META_APP_SECRET dans .env.',
+    'This address cannot receive Facebook sign-ins.':
+      'Cette adresse ne peut pas recevoir de connexions Facebook.',
+    'The Facebook connection expired: connect again on the About tab.':
+      'La connexion Facebook a expiré : reconnectez-la dans l’onglet À propos.',
+    'This Facebook sign-in expired. Try again.': 'Cette connexion Facebook a expiré. Réessayez.',
+    'Facebook and Instagram connected.': 'Facebook et Instagram connectés.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

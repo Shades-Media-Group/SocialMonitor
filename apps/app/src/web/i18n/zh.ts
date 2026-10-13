@@ -659,6 +659,19 @@ export const zh: Dict = {
       '在表格中选择帖子进行对比，最多 {n} 篇。',
     Clear: '清除',
     'Last problem': '最近的问题',
+    'Your Facebook Page': '你的 Facebook 主页',
+    'Connect the Page you manage, and the Instagram account linked to it, to read their posts and comments through Meta, with no signed-in browser. SocialMonitor only reads; it never posts.':
+      '连接你管理的主页及其关联的 Instagram 账号，通过 Meta 读取帖子和评论，无需登录浏览器。SocialMonitor 只读取，从不发布。',
+    'and Instagram @{name}': '以及 Instagram @{name}',
+    'No Instagram account is linked to this Page.': '此主页未关联 Instagram 账号。',
+    'Connect with Facebook': '通过 Facebook 连接',
+    'Add META_APP_ID and META_APP_SECRET to .env first.':
+      '请先在 .env 中添加 META_APP_ID 和 META_APP_SECRET。',
+    'This address cannot receive Facebook sign-ins.': '此地址无法接收 Facebook 登录。',
+    'The Facebook connection expired: connect again on the About tab.':
+      'Facebook 连接已过期：请在“关于”标签页重新连接。',
+    'This Facebook sign-in expired. Try again.': '此 Facebook 登录已过期，请重试。',
+    'Facebook and Instagram connected.': 'Facebook 和 Instagram 已连接。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

@@ -249,6 +249,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
             </Row>
           ))}
           <TikTokConnect brand={brand} edit={edit} notify={notify} />
+          <MetaConnect brand={brand} edit={edit} notify={notify} />
           <Row
             label={t('Automatic updates')}
             hint={t('New posts and fresh numbers, read by themselves. More choices in Settings.')}
@@ -506,6 +507,99 @@ function TikTokConnect({
           {!state.ready && (
             <small class="sm-quiet">
               {t('Add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET to .env first.')}
+            </small>
+          )}
+          {error && <small class="g-error">{error}</small>}
+        </span>
+      )}
+    </Row>
+  )
+}
+
+type MetaAccount = { name: string; username: string | null; connected_at: string } | null
+
+/** The brand's own Facebook Page and its Instagram, read through Meta's API once connected. */
+function MetaConnect({
+  brand,
+  edit,
+  notify,
+}: {
+  brand: BrandView['brand']
+  edit: boolean
+  notify: (text: string) => void
+}) {
+  const [state, setState] = useState<{
+    ready: boolean
+    facebook: MetaAccount
+    instagram: MetaAccount
+  } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const load = () =>
+    api
+      .get<NonNullable<typeof state>>(`/api/brands/${brand.id}/meta`)
+      .then(setState)
+      .catch(() => setState(null))
+  useEffect(() => {
+    void load()
+    const back = new URLSearchParams(location.search).get('meta')
+    if (back === 'connected') notify(t('Facebook and Instagram connected.'))
+    else if (back) setError(back)
+  }, [brand.id])
+  if (!state) return null
+  const fb = state.facebook
+  return (
+    <Row
+      label={t('Your Facebook Page')}
+      hint={t(
+        'Connect the Page you manage, and the Instagram account linked to it, to read their posts and comments through Meta, with no signed-in browser. SocialMonitor only reads; it never posts.',
+      )}
+    >
+      {fb ? (
+        <span class="sm-connected">
+          <span>
+            <b>{fb.name}</b>
+            <small>
+              {state.instagram?.username
+                ? t('and Instagram @{name}', { name: state.instagram.username })
+                : t('No Instagram account is linked to this Page.')}
+            </small>
+          </span>
+          {edit && (
+            <button
+              class="sm-textbtn"
+              type="button"
+              onClick={async () => {
+                await api.del(`/api/brands/${brand.id}/meta`)
+                await load()
+              }}
+            >
+              {t('Disconnect')}
+            </button>
+          )}
+        </span>
+      ) : (
+        <span class="sm-connected">
+          <button
+            class="g-btn"
+            type="button"
+            disabled={!edit || !state.ready}
+            onClick={async () => {
+              setError(null)
+              try {
+                const r = await api.post<{ url: string }>(`/api/brands/${brand.id}/meta/connect`, {
+                  origin: location.origin,
+                })
+                location.href = r.url
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
+          >
+            <NetworkMark network="facebook" size={14} /> {t('Connect with Facebook')}
+          </button>
+          {!state.ready && (
+            <small class="sm-quiet">
+              {t('Add META_APP_ID and META_APP_SECRET to .env first.')}
             </small>
           )}
           {error && <small class="g-error">{error}</small>}

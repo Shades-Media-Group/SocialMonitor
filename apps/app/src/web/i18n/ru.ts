@@ -689,6 +689,21 @@ export const ru: Dict = {
       'Выберите посты в таблице для сравнения, до {n}.',
     Clear: 'Сбросить',
     'Last problem': 'Последняя проблема',
+    'Your Facebook Page': 'Ваша страница Facebook',
+    'Connect the Page you manage, and the Instagram account linked to it, to read their posts and comments through Meta, with no signed-in browser. SocialMonitor only reads; it never posts.':
+      'Подключите страницу, которой управляете, и связанный с ней Instagram, чтобы читать посты и комментарии через Meta, без входа в браузере. SocialMonitor только читает и никогда не публикует.',
+    'and Instagram @{name}': 'и Instagram @{name}',
+    'No Instagram account is linked to this Page.': 'К этой странице не привязан Instagram.',
+    'Connect with Facebook': 'Подключить через Facebook',
+    'Add META_APP_ID and META_APP_SECRET to .env first.':
+      'Сначала добавьте META_APP_ID и META_APP_SECRET в .env.',
+    'This address cannot receive Facebook sign-ins.':
+      'Этот адрес не может принимать вход через Facebook.',
+    'The Facebook connection expired: connect again on the About tab.':
+      'Подключение Facebook истекло: подключите снова на вкладке «О бренде».',
+    'This Facebook sign-in expired. Try again.':
+      'Этот вход через Facebook истёк. Попробуйте снова.',
+    'Facebook and Instagram connected.': 'Facebook и Instagram подключены.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

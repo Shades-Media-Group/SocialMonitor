@@ -691,6 +691,22 @@ export const ro: Dict = {
       'Alege postări din tabel ca să le compari, până la {n}.',
     Clear: 'Golește',
     'Last problem': 'Ultima problemă',
+    'Your Facebook Page': 'Pagina ta de Facebook',
+    'Connect the Page you manage, and the Instagram account linked to it, to read their posts and comments through Meta, with no signed-in browser. SocialMonitor only reads; it never posts.':
+      'Conectează pagina pe care o administrezi și contul Instagram legat de ea, ca postările și comentariile să fie citite prin Meta, fără browser autentificat. SocialMonitor doar citește; nu publică niciodată.',
+    'and Instagram @{name}': 'și Instagram @{name}',
+    'No Instagram account is linked to this Page.':
+      'Niciun cont Instagram nu e legat de această pagină.',
+    'Connect with Facebook': 'Conectează cu Facebook',
+    'Add META_APP_ID and META_APP_SECRET to .env first.':
+      'Adaugă mai întâi META_APP_ID și META_APP_SECRET în .env.',
+    'This address cannot receive Facebook sign-ins.':
+      'Această adresă nu poate primi autentificări Facebook.',
+    'The Facebook connection expired: connect again on the About tab.':
+      'Conexiunea Facebook a expirat: conectează din nou în fila Despre.',
+    'This Facebook sign-in expired. Try again.':
+      'Această autentificare Facebook a expirat. Încearcă din nou.',
+    'Facebook and Instagram connected.': 'Facebook și Instagram conectate.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

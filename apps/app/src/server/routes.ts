@@ -38,6 +38,7 @@ import {
   finishSignIn,
   tiktokReady,
 } from '../core/tiktok-api.ts'
+import * as meta from '../core/meta-api.ts'
 import { deleteSaved, getSaved, listSaved, readSaved, saveReport } from '../core/saved.ts'
 import { draftReply, pickEngine, translate } from '../core/analyze.ts'
 import { getSettings } from '../core/settings.ts'
@@ -689,6 +690,29 @@ export const routes: Route[] = [
       c.query.get('state') ?? '',
     )
     return { __redirect: `/b/${brandId}/about?tiktok=connected` }
+  }),
+  // A brand's own Facebook Page and its Instagram, connected through Facebook's sign-in.
+  r('GET', '/api/brands/:id/meta', seeBrand, (c) => ({
+    ready: meta.metaReady(),
+    ...meta.connection(c.db, id(c.params.id)),
+  })),
+  r('POST', '/api/brands/:id/meta/connect', adminBrand, (c) => ({
+    url: meta.authorizeUrl(id(c.params.id), String((b(c) as { origin?: string }).origin ?? '')),
+  })),
+  r(
+    'DELETE',
+    '/api/brands/:id/meta',
+    adminBrand,
+    (c) => void meta.disconnect(c.db, id(c.params.id)),
+  ),
+  // Facebook returns here through the website's hand-back page; the state proves who asked.
+  r('GET', '/api/auth/meta/callback', 'public', async (c) => {
+    const err = c.query.get('error_description') ?? c.query.get('error')
+    if (err) return { __redirect: `/?meta=${encodeURIComponent(err)}` }
+    const r = await meta.finishSignIn(c.db, c.query.get('code') ?? '', c.query.get('state') ?? '')
+    return {
+      __redirect: `/b/${r.brandId}/about?meta=${r.error ? encodeURIComponent(r.error) : 'connected'}`,
+    }
   }),
   r('PUT', '/api/brands/:id/alerts', adminBrand, (c) => {
     const x = b(c) as { emails?: unknown; auto?: unknown }
