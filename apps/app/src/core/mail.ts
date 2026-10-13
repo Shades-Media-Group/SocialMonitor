@@ -51,12 +51,13 @@ function build(
   heading: string,
   lead: string | undefined,
   body: Block[],
+  preheader = lead ?? heading,
 ): Mail {
   const l = mailLang(lang)
   const m = renderEmail({
     lang: l,
     subject,
-    preheader: lead ?? heading,
+    preheader,
     heading,
     lead,
     blocks: body,
@@ -72,16 +73,26 @@ const action = (lang: string, label: string, link: string, note: string) => [
   ui.note(`${mailText(lang, 'orCopy')} ${link}`),
 ]
 
-/** The six-digit sign-in code, on Gradient's ink pass so mail apps offer to copy it. */
+/**
+ * The six-digit sign-in code, on Gradient's ink pass so mail apps offer to copy it. The subject
+ * leads with the code and the preheader says how long it works (gradient/docs/guides/email.md).
+ */
 export const codeMail = (lang: string, code: string): Mail =>
-  build(lang, mailText(lang, 'codeSubject', { code }), mailText(lang, 'codeHeading'), undefined, [
-    ui.code(
-      mailText(lang, 'codeLabel'),
-      code,
-      mailText(lang, 'codeValid'),
-      mailText(lang, 'codeStub'),
-    ),
-  ])
+  build(
+    lang,
+    mailText(lang, 'codeSubject', { code }),
+    mailText(lang, 'codeHeading'),
+    undefined,
+    [
+      ui.code(
+        mailText(lang, 'codeLabel'),
+        code,
+        mailText(lang, 'codeValid'),
+        mailText(lang, 'codeStub'),
+      ),
+    ],
+    `${mailText(lang, 'codeLabel')}: ${code} · ${mailText(lang, 'codeValid')}`,
+  )
 
 /** An invitation to choose a first password, or a reset; `forgot` when the person asked for it. */
 export function linkMail(

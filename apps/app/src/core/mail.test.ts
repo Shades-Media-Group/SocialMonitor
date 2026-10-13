@@ -11,6 +11,8 @@ describe('emails in Gradient’s design', () => {
     expect(m.html).toContain('socialmonitor.shades.md/email/logo.png')
     expect(m.text).toContain('716428')
     expect(m.text).toContain('change your password')
+    // Gmail's preview line says how long the code works.
+    expect(m.html).toContain('Sign-in code: 716428 · Works for 10 minutes')
   })
 
   it('writes an invitation and a reset with a button and the link spelled out', () => {
