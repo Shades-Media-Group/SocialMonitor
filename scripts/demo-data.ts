@@ -65,6 +65,11 @@ interface PostIn {
   cs: C[]
   /** The brand's own top-level comments: [hours, text]. */
   own?: [number, string][]
+  /**
+   * How its numbers moved after it went out. Default: most of it in the first 48 hours, then
+   * flat. 'wave': picked up again this week and still growing. 'climb': comments keep coming.
+   */
+  grow?: 'wave' | 'climb'
 }
 
 // The eight newest posts each use a different photo, so the Posts grid never repeats one side
@@ -1237,7 +1242,8 @@ const POSTS: PostIn[] = [
     likes: 58,
     shares: 140,
     views: null,
-    extra: 21,
+    extra: 64,
+    grow: 'climb',
     own: [
       [
         2.2,
@@ -1859,10 +1865,11 @@ const POSTS: PostIn[] = [
     img: 'hands',
     caption: 'Follow your rider in 3 taps, no calls, no guessing ⏱️ #foodtok #Tavelo',
     description: 'A short demonstration of following a rider live on the map in the Tavelo app.',
-    likes: 1240,
-    shares: 140,
-    views: 27300,
-    extra: 5,
+    likes: 6200,
+    shares: 830,
+    views: 96400,
+    extra: 18,
+    grow: 'wave',
     cs: [
       [
         1,
@@ -2323,9 +2330,23 @@ async function main() {
   const all = posts.flatMap((p) => p.rows)
   const done = new Set<Row>()
   const finished = new Set<Row>()
-  const growth = (p: PostWork, t: number) => 1 - Math.exp(-Math.max(0, t - p.at0) / (20 * H))
-  const scaled = (p: PostWork, v: number | null, t: number) =>
-    v === null ? null : Math.max(1, Math.round(v * growth(p, t)))
+  /** A post's numbers at time t, on its growth curve (see PostIn.grow). */
+  const WAVE = NOW - 2.5 * 86400_000
+  function numbers(p: PostWork, t: number) {
+    const age = Math.max(0, t - p.at0)
+    const fast = 1 - Math.exp(-age / (18 * H))
+    const g = p.grow === 'wave' ? 0.45 * fast + 0.55 / (1 + Math.exp(-(t - WAVE) / (30 * H))) : fast
+    const at = (v: number | null) => (v === null ? null : Math.max(1, Math.round(v * g)))
+    const kept = p.rows.filter((r) => r.at <= t).length
+    const total = p.rows.length + (p.extra ?? 0)
+    const c = p.grow === 'climb' ? Math.min(1, age / (lastRun - p.at0)) ** 0.6 : g
+    return {
+      likes: at(p.likes),
+      comments: Math.max(kept, Math.round(total * c)),
+      shares: at(p.shares),
+      views: at(p.views),
+    }
+  }
   const NAME: Record<Net, string> = {
     instagram: 'instagram',
     facebook: 'facebook',
@@ -2345,7 +2366,7 @@ async function main() {
       for (const p of posts.filter((x) => x.net === net && x.at0 <= T)) {
         const fresh = p.rows.filter((r) => r.at <= T && !done.has(r))
         if (p.id && !fresh.length) continue
-        const kept = p.rows.filter((r) => r.at <= T).length
+        const now = numbers(p, T)
         const { post } = store.savePost(db, profiles[net], {
           ext_id: p.ext,
           url: p.url,
@@ -2353,10 +2374,10 @@ async function main() {
           kind: p.kind,
           caption: p.caption,
           thumb_url: p.thumb,
-          likes: scaled(p, p.likes, T),
-          comments_count: Math.max(kept, scaled(p, kept + (p.extra ?? 0), T) ?? 0),
-          shares: scaled(p, p.shares, T),
-          views: scaled(p, p.views, T),
+          likes: now.likes,
+          comments_count: now.comments,
+          shares: now.shares,
+          views: now.views,
           comments: fresh.map((r) => ({
             ext_id: r.ext,
             parent_ext_id: r.parent,
@@ -2453,18 +2474,44 @@ async function main() {
     )
   }
 
-  // Final counts, as the newest update read them.
+  // Each post's history: re-read at every update in its first week (plus a few readings a day),
+  // weekly up to 30 days, monthly after, as the app's re-check tiers do. A row only when a number
+  // changed; the post keeps the numbers of its newest reading.
+  db.exec('DELETE FROM post_metrics')
+  const DAY = 86400_000
+  const insert = db.prepare(
+    'INSERT INTO post_metrics (post_id, at, likes, comments, shares, views) VALUES (?, ?, ?, ?, ?, ?)',
+  )
   for (const p of posts) {
-    const kept = p.rows.length
+    const extra = [1, 3].map((h) => p.at0 + h * H)
+    for (let d = 0; d < 7; d++)
+      for (const at of ['08:00', '12:30', '17:00', '21:00']) {
+        const [h, m] = at.split(':').map(Number)
+        const t = new Date(p.at0)
+        t.setDate(t.getDate() + d)
+        t.setHours(h!, m!, 0, 0)
+        extra.push(t.getTime() + Math.floor(rand() * 9 * 60_000))
+      }
+    const times = [...new Set([...runs.map((r) => r.t), ...extra])]
+      .filter((t) => t > p.at0 + 20 * 60_000 && t <= lastRun)
+      .sort((a, b) => a - b)
+    let last = -Infinity
+    let prev = ''
+    let read = p.at0
+    for (const t of times) {
+      const age = t - p.at0
+      if (age >= 30 * DAY ? t - last < 30 * DAY : age >= 7 * DAY && t - last < 7 * DAY) continue
+      last = read = t
+      const n = numbers(p, t)
+      const key = JSON.stringify(n)
+      if (key === prev) continue
+      prev = key
+      insert.run(p.id!, iso(t), n.likes, n.comments, n.shares, n.views)
+    }
+    const n = numbers(p, read)
     db.prepare(
-      'UPDATE posts SET likes = ?, comments_count = ?, shares = ?, views = ? WHERE id = ?',
-    ).run(
-      scaled(p, p.likes, lastRun),
-      Math.max(kept, scaled(p, kept + (p.extra ?? 0), lastRun) ?? 0),
-      scaled(p, p.shares, lastRun),
-      scaled(p, p.views, lastRun),
-      p.id!,
-    )
+      'UPDATE posts SET likes = ?, comments_count = ?, shares = ?, views = ?, metrics_at = ? WHERE id = ?',
+    ).run(n.likes, n.comments, n.shares, n.views, iso(read), p.id!)
   }
 
   // Freshness: every profile read in the last update; the signed-in read before the 4-hour gap.

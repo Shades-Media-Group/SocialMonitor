@@ -170,12 +170,16 @@ const SHOTS: Shot[] = [
   { name: 'home', hash: '#/', prefs: { 'home.tab': 'brands' } },
   { name: 'overview', hash: `#/b/${brandId}/overview` },
   { name: 'comments', hash: `#/b/${brandId}/comments`, prefs: { 'comments.filter': 'reply' } },
-  { name: 'posts', hash: `#/b/${brandId}/posts`, prefs: { 'posts.look.v2': 'table' } },
+  {
+    name: 'posts',
+    hash: `#/b/${brandId}/posts`,
+    prefs: { 'posts.look.v2': 'table', 'posts.sort': 'new' },
+  },
   { name: 'reports', hash: `#/b/${brandId}/reports` },
   {
     name: 'posts-grid',
     hash: `#/b/${brandId}/posts`,
-    prefs: { 'posts.look.v2': 'grid' },
+    prefs: { 'posts.look.v2': 'grid', 'posts.sort': 'new' },
     // The pictures, not the tables above them.
     then: async (page) => {
       await page
@@ -212,6 +216,33 @@ const SHOTS: Shot[] = [
       await page.waitForTimeout(600)
     },
   },
+  {
+    name: 'posts-growing',
+    hash: `#/b/${brandId}/posts`,
+    prefs: { 'posts.look.v2': 'table', 'posts.sort': 'growth' },
+    then: async (page) => {
+      await page.locator('.sm-ctable__row').first().scrollIntoViewIfNeeded()
+      await page.waitForTimeout(300)
+    },
+  },
+  // The post viewer on the post growing most this week, with its evolution chart.
+  ...[false, true].map((phone) => ({
+    name: phone ? 'viewer-phone' : 'viewer',
+    hash: `#/b/${brandId}/posts`,
+    prefs: { 'posts.look.v2': 'table', 'posts.sort': 'growth' },
+    phone,
+    then: async (page: Page) => {
+      await page.locator('.sm-ctable__row').first().click()
+      await page.waitForSelector('.sm-evo')
+      // The dialog focuses its close button; a screenshot shouldn't show the focus ring.
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+      // On a phone the picture comes first; bring the whole chart above the sticky footer.
+      if (phone)
+        await page.locator('.sm-evo').evaluate((el) => el.scrollIntoView({ block: 'start' }))
+      await page.waitForTimeout(800)
+      await page.mouse.move(2, 2)
+    },
+  })),
   { name: 'overview-phone', hash: `#/b/${brandId}/overview`, phone: true },
   {
     name: 'comments-phone',
