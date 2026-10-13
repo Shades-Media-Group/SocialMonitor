@@ -54,7 +54,7 @@ Set it as `SOCIALMONITOR_VAULT_KEY` in the service's environment (a systemd cred
 
 ## Sign-in email and sessions
 
-Set the `SMTP_*` keys and `SOCIALMONITOR_JWT_SECRET` as in [people and sign-in](people.md), in the service's environment rather than in `.env`. Then open the dashboard at the server's own screen once to create the first account.
+Set the `SMTP_*` keys and `SOCIALMONITOR_JWT_SECRET` as in [people and sign-in](people.md), in the service's environment rather than in `.env`. Then open the dashboard at the server's own screen once to create the first account, or set the `SOCIALMONITOR_ADMIN_*` keys from [the first account](people.md#the-first-account) so the first start creates it. After that start, remove `SOCIALMONITOR_ADMIN_PASSWORD` from the environment: the account exists and its password is kept hashed in the database.
 
 ## Sign in to the networks
 

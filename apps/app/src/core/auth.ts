@@ -258,6 +258,35 @@ export const readPrefs = (db: DB, id: number) =>
 export const setLang = (db: DB, id: number, lang: string) =>
   db.prepare('UPDATE users SET lang = ? WHERE id = ?').run(lang, id)
 
+/**
+ * The super admin from .env, so a fresh install can skip the setup screen. Creates the account
+ * only when SOCIALMONITOR_ADMIN_EMAIL and SOCIALMONITOR_ADMIN_PASSWORD are set and no one has that
+ * email yet; an existing account is never changed. Bad values are logged, never thrown, and the
+ * password is never logged.
+ */
+export function seedAdmin(
+  db: DB,
+  env: Record<string, string | undefined> = process.env,
+  log: (line: string) => void = console.log,
+) {
+  const email = env.SOCIALMONITOR_ADMIN_EMAIL?.trim()
+  const password = env.SOCIALMONITOR_ADMIN_PASSWORD
+  if (!email || !password || findByEmail(db, email)) return
+  try {
+    const user = createUser(db, {
+      email,
+      username: env.SOCIALMONITOR_ADMIN_USERNAME || null,
+      name: env.SOCIALMONITOR_ADMIN_NAME,
+      password,
+      super: true,
+      verified: true,
+    })
+    log(`Created the super admin ${user.email} from .env.`)
+  } catch (e) {
+    log(`The super admin in .env was not created: ${e instanceof Error ? e.message : String(e)}`)
+  }
+}
+
 export const touch = (db: DB, id: number) =>
   db.prepare('UPDATE users SET last_seen_at = ? WHERE id = ?').run(now(), id)
 

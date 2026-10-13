@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
 import { HttpError, routes } from './routes.ts'
 import { authRoutes } from './auth-routes.ts'
-import { SESSION_COOKIE, readCookie, readSession } from '../core/auth.ts'
+import { SESSION_COOKIE, readCookie, readSession, seedAdmin } from '../core/auth.ts'
 import { seedFromFile } from './seed.ts'
 import { isLocal, publicHost, refuseRemote } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
@@ -36,6 +36,7 @@ const ORIGINS = new Set(
 )
 
 const db = openDb()
+seedAdmin(db)
 seedFromFile(db)
 closeStaleRuns(db)
 startScheduler(db)

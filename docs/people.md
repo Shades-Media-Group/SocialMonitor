@@ -6,6 +6,17 @@ Everyone signs in to SocialMonitor, on the computer it runs on and through the t
 
 Open the dashboard on the computer SocialMonitor runs on. It asks you to create the first account, which becomes the **super admin**. Through the tunnel this screen is refused, so nobody on the internet can claim an empty install.
 
+To skip that screen, on a server for example, name the super admin in `.env` before the first start:
+
+```bash
+SOCIALMONITOR_ADMIN_EMAIL=you@yourdomain.com
+SOCIALMONITOR_ADMIN_USERNAME=you                # optional
+SOCIALMONITOR_ADMIN_NAME="Your Name"            # optional
+SOCIALMONITOR_ADMIN_PASSWORD=                   # at least 10 characters
+```
+
+On start, SocialMonitor creates that account as a verified super admin if no one has that email yet, and logs one line saying so. An account that already exists is never changed: its password, role and username stay as they are. Values it can't use (a bad email, a short password) are logged and the server starts anyway. Once the account exists, delete the `SOCIALMONITOR_ADMIN_PASSWORD` line from `.env`: the password now lives hashed in the database, and changing it is done in the dashboard.
+
 ## Roles
 
 | Role             | Sees                      | Can                                                                                                                                       |
