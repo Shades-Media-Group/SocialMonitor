@@ -199,7 +199,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   const [step, setStep] = useState<'signin' | 'code' | 'forgot' | 'sent'>('signin')
   const [f, setF] = useState({
     login: lastLogin(),
-    keep: false,
+    keep: true,
     password: '',
     code: '',
     name: '',
