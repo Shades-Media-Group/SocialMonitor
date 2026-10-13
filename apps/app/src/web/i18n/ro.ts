@@ -647,10 +647,7 @@ export const ro: Dict = {
     'Day {n}': 'Ziua {n}',
     'Answering and updates': 'Răspunsuri și actualizări',
     'Find a post by its words or hashtags': 'Caută o postare după cuvinte sau hashtaguri',
-    'Two posts, day by day': 'Două postări, zi de zi',
     'How the post grew, day by day': 'Cum a crescut postarea, zi de zi',
-    'Pick a post in the table to see it, or two to compare them.':
-      'Alege o postare din tabel ca s-o vezi, sau două ca să le compari.',
     Difference: 'Diferență',
     'Trend: {metric} at each update': 'Tendință: {metric} la fiecare actualizare',
     Pick: 'Alege',
@@ -689,6 +686,10 @@ export const ro: Dict = {
     'Nobody gets it yet.': 'Încă nu-l primește nimeni.',
     'Sent by itself': 'Se trimite singur',
     'Sent by hand only': 'Doar trimis manual',
+    '{n} posts, day by day': '{n} postări, zi de zi',
+    'Pick posts in the table to compare them, up to {n}.':
+      'Alege postări din tabel ca să le compari, până la {n}.',
+    Clear: 'Golește',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

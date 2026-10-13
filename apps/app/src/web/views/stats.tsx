@@ -19,6 +19,9 @@ type Reading = {
 }
 type SortKey = 'posted' | Metric | 'rate' | 'grew'
 
+/** As many posts as there are series colours. */
+const MAX = 6
+
 /** The figure a post shows now, from its own row. */
 const now = (p: PostRow, m: Metric) =>
   m === 'comments' ? p.comments_count : m === 'views' ? p.views : m === 'likes' ? p.likes : p.shares
@@ -86,8 +89,8 @@ export function Stats({ brand, network, days, version }: BrandView) {
     setPicked((list) => {
       const base = list.length ? list : top ? [top.id] : []
       if (base.includes(id)) return base.filter((x) => x !== id)
-      // Two at most: a third pick replaces the older one.
-      return [...base, id].slice(-2)
+      // Up to six, one per colour; past that the oldest pick makes room.
+      return [...base, id].slice(-MAX)
     })
 
   /**
@@ -113,7 +116,7 @@ export function Stats({ brand, network, days, version }: BrandView) {
       : pts
   }
   const series: Growth[] = shown.map((p, i) => ({
-    key: i ? 'b1' : 'b0',
+    key: `b${i}`,
     name: name(p),
     points: line(p),
   }))
@@ -138,7 +141,6 @@ export function Stats({ brand, network, days, version }: BrandView) {
       </button>
     </th>
   )
-  const [a, b] = shown
 
   return (
     <div class="sm-stats">
@@ -157,10 +159,18 @@ export function Stats({ brand, network, days, version }: BrandView) {
       <section class="sm-box">
         <header class="sm-box__head">
           <h2>
-            {shown.length > 1 ? t('Two posts, day by day') : t('How the post grew, day by day')}
+            {shown.length > 1
+              ? t('{n} posts, day by day', { n: shown.length })
+              : t('How the post grew, day by day')}
           </h2>
           <span class="sm-box__meta">
-            {t('Pick a post in the table to see it, or two to compare them.')}
+            {t('Pick posts in the table to compare them, up to {n}.', { n: MAX })}
+            {picked.length > 1 && ' '}
+            {picked.length > 1 && (
+              <button class="sm-textbtn" type="button" onClick={() => setPicked([])}>
+                {t('Clear')}
+              </button>
+            )}
           </span>
         </header>
         {series.some((s) => s.points.length > 1) ? (
@@ -170,55 +180,66 @@ export function Stats({ brand, network, days, version }: BrandView) {
             {t('Its history builds up with each update that reads it again.')}
           </p>
         )}
-        {a && b && (
-          <table class="sm-dtable sm-stats__cmp">
-            <thead>
-              <tr>
-                <th />
-                <th class="sm-num">
-                  <i class="sm-swatch sm-c-b0" aria-hidden="true" /> {name(a).slice(0, 40)}
-                </th>
-                <th class="sm-num">
-                  <i class="sm-swatch sm-c-b1" aria-hidden="true" /> {name(b).slice(0, 40)}
-                </th>
-                <th class="sm-num">{t('Difference')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {METRICS.map(([k, label]) => {
-                const va = now(a, k)
-                const vb = now(b, k)
-                return (
-                  <tr>
-                    <th scope="row">{label}</th>
-                    <td class="sm-num g-num">{fmt(va)}</td>
-                    <td class="sm-num g-num">{fmt(vb)}</td>
-                    <td class="sm-num g-num">
-                      {va == null || vb == null
-                        ? '–'
-                        : `${vb - va > 0 ? '+' : ''}${fmt(vb - va)}${va ? ` (${vb - va > 0 ? '+' : ''}${Math.round(((vb - va) / va) * 100)}%)` : ''}`}
-                    </td>
-                  </tr>
-                )
-              })}
-              <tr>
-                <th scope="row">{t('Engagement')}</th>
-                <td class="sm-num g-num">{pct(rate(a))}</td>
-                <td class="sm-num g-num">{pct(rate(b))}</td>
-                <td class="sm-num g-num">
-                  {rate(a) == null || rate(b) == null
-                    ? '–'
-                    : `${rate(b)! - rate(a)! > 0 ? '+' : ''}${((rate(b)! - rate(a)!) * 100).toFixed(1)} pt`}
-                </td>
-              </tr>
-              <tr>
-                <th scope="row">{t('Published')}</th>
-                <td class="sm-num">{when(a.posted_at)}</td>
-                <td class="sm-num">{when(b.posted_at)}</td>
-                <td />
-              </tr>
-            </tbody>
-          </table>
+        {shown.length > 1 && (
+          <div class="sm-scroll">
+            <table class="sm-dtable sm-stats__cmp">
+              <thead>
+                <tr>
+                  <th />
+                  {shown.map((p, i) => (
+                    <th class="sm-num" title={name(p)}>
+                      <i class={`sm-swatch sm-c-b${i}`} aria-hidden="true" />{' '}
+                      {name(p).slice(0, shown.length > 3 ? 24 : 40)}
+                    </th>
+                  ))}
+                  {shown.length === 2 && <th class="sm-num">{t('Difference')}</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ...METRICS.map(([k, label]) => ({
+                    label,
+                    of: (p: PostRow) => now(p, k),
+                    show: fmt,
+                  })),
+                  { label: t('Engagement'), of: rate, show: pct },
+                ].map(({ label, of, show }) => {
+                  const vals = shown.map(of)
+                  // The most in the row stands out, so the leader reads at a glance.
+                  const best = Math.max(...vals.map((v) => v ?? -Infinity))
+                  const [va, vb] = vals
+                  return (
+                    <tr>
+                      <th scope="row">{label}</th>
+                      {vals.map((v) => (
+                        <td
+                          class={`sm-num g-num${shown.length > 1 && v === best && v != null ? ' sm-stats__best' : ''}`}
+                        >
+                          {show(v)}
+                        </td>
+                      ))}
+                      {shown.length === 2 && (
+                        <td class="sm-num g-num">
+                          {va == null || vb == null
+                            ? '–'
+                            : of === rate
+                              ? `${vb - va > 0 ? '+' : ''}${((vb - va) * 100).toFixed(1)} pt`
+                              : `${vb - va > 0 ? '+' : ''}${fmt(vb - va)}${va ? ` (${vb - va > 0 ? '+' : ''}${Math.round(((vb - va) / va) * 100)}%)` : ''}`}
+                        </td>
+                      )}
+                    </tr>
+                  )
+                })}
+                <tr>
+                  <th scope="row">{t('Published')}</th>
+                  {shown.map((p) => (
+                    <td class="sm-num">{when(p.posted_at)}</td>
+                  ))}
+                  {shown.length === 2 && <td />}
+                </tr>
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 

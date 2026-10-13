@@ -645,10 +645,7 @@ export const ru: Dict = {
     'Day {n}': 'День {n}',
     'Answering and updates': 'Ответы и обновления',
     'Find a post by its words or hashtags': 'Найти пост по словам или хэштегам',
-    'Two posts, day by day': 'Два поста, день за днём',
     'How the post grew, day by day': 'Как рос пост, день за днём',
-    'Pick a post in the table to see it, or two to compare them.':
-      'Выберите пост в таблице, чтобы увидеть его, или два, чтобы сравнить.',
     Difference: 'Разница',
     'Trend: {metric} at each update': 'Тренд: {metric} при каждом обновлении',
     Pick: 'Выбрать',
@@ -687,6 +684,10 @@ export const ru: Dict = {
     'Nobody gets it yet.': 'Пока никто не получает.',
     'Sent by itself': 'Отправляется автоматически',
     'Sent by hand only': 'Только вручную',
+    '{n} posts, day by day': '{n} постов, день за днём',
+    'Pick posts in the table to compare them, up to {n}.':
+      'Выберите посты в таблице для сравнения, до {n}.',
+    Clear: 'Сбросить',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

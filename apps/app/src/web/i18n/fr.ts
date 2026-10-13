@@ -648,10 +648,7 @@ export const fr: Dict = {
     'Day {n}': 'Jour {n}',
     'Answering and updates': 'Réponses et mises à jour',
     'Find a post by its words or hashtags': 'Trouver une publication par ses mots ou hashtags',
-    'Two posts, day by day': 'Deux publications, jour après jour',
     'How the post grew, day by day': 'Comment la publication a grandi, jour après jour',
-    'Pick a post in the table to see it, or two to compare them.':
-      'Choisissez une publication dans le tableau pour la voir, ou deux pour les comparer.',
     Difference: 'Écart',
     'Trend: {metric} at each update': 'Tendance : {metric} à chaque mise à jour',
     Pick: 'Choisir',
@@ -690,6 +687,10 @@ export const fr: Dict = {
     'Nobody gets it yet.': 'Personne ne le reçoit encore.',
     'Sent by itself': 'Envoyé tout seul',
     'Sent by hand only': 'Envoyé à la main seulement',
+    '{n} posts, day by day': '{n} publications, jour après jour',
+    'Pick posts in the table to compare them, up to {n}.':
+      'Choisissez des publications dans le tableau pour les comparer, jusqu’à {n}.',
+    Clear: 'Effacer',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

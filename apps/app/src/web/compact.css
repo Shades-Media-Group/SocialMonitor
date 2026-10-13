@@ -4647,10 +4647,14 @@ a.sm-person[href]:hover .sm-person__name {
 .sm-stats__cmp {
   margin-top: 4px;
 }
-.sm-stats__cmp th[scope='row'] {
+.sm-shell .sm-stats__cmp tbody th[scope='row'] {
   background: none;
   font-weight: 500;
   text-align: left;
+}
+.sm-stats__best {
+  color: var(--g-text);
+  font-weight: 700;
 }
 .sm-stats .sm-swatch {
   display: inline-block;

@@ -548,7 +548,8 @@ export function LineChart({
 
 /** One post's readings over time: days since it went out, and the figure at each reading. */
 export interface Growth {
-  key: 'b0' | 'b1'
+  /** The series colour, in fixed order: b0 to b5. */
+  key: string
   name: string
   points: { day: number; at: string; value: number }[]
 }

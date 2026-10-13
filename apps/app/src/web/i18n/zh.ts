@@ -617,10 +617,7 @@ export const zh: Dict = {
     'Day {n}': '第 {n} 天',
     'Answering and updates': '回复与更新',
     'Find a post by its words or hashtags': '按文字或话题标签查找帖子',
-    'Two posts, day by day': '两篇帖子，逐日对比',
     'How the post grew, day by day': '帖子逐日增长情况',
-    'Pick a post in the table to see it, or two to compare them.':
-      '在表格中选一篇帖子查看，或选两篇进行对比。',
     Difference: '差异',
     'Trend: {metric} at each update': '趋势：每次更新时的{metric}',
     Pick: '选择',
@@ -657,6 +654,10 @@ export const zh: Dict = {
     'Nobody gets it yet.': '目前还没有接收人。',
     'Sent by itself': '自动发送',
     'Sent by hand only': '仅手动发送',
+    '{n} posts, day by day': '{n} 篇帖子，逐日对比',
+    'Pick posts in the table to compare them, up to {n}.':
+      '在表格中选择帖子进行对比，最多 {n} 篇。',
+    Clear: '清除',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',
