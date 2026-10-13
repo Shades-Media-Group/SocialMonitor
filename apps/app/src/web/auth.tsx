@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { api } from './api.ts'
-import { Logo } from './ui.tsx'
+import { Icon, Logo } from './ui.tsx'
 import { t } from './i18n.ts'
 
 export interface Me {
@@ -24,6 +24,60 @@ export interface AuthInfo {
 export function linkFromHash() {
   const [, kind, token] = location.hash.split('/')
   return (kind === 'invite' || kind === 'reset') && token ? { kind, token } : null
+}
+
+/** The last email or username signed in with on this browser, to fill in next time. */
+const LAST = 'sm-last-login'
+const lastLogin = () => {
+  try {
+    return localStorage.getItem(LAST) ?? ''
+  } catch {
+    return ''
+  }
+}
+const keepLogin = (login: string) => {
+  try {
+    localStorage.setItem(LAST, login)
+  } catch {
+    /* private window: nothing to remember */
+  }
+}
+
+/** A password field with a show/hide button and a Caps Lock warning. */
+function Password({
+  label,
+  inputRef,
+  ...input
+}: { label: string; inputRef?: (el: HTMLInputElement | null) => void } & Record<string, unknown>) {
+  const [shown, setShown] = useState(false)
+  const [caps, setCaps] = useState(false)
+  const check = (e: KeyboardEvent) => setCaps(e.getModifierState?.('CapsLock') ?? false)
+  return (
+    <label class="sm-auth__field">
+      <span>{label}</span>
+      <span class="sm-auth__pass">
+        <input
+          class="g-input"
+          ref={inputRef}
+          {...input}
+          type={shown ? 'text' : 'password'}
+          onKeyUp={check}
+          onKeyDown={check}
+          onBlur={() => setCaps(false)}
+        />
+        <button
+          type="button"
+          class="sm-auth__eye"
+          aria-label={shown ? t('Hide the password') : t('Show the password')}
+          aria-pressed={shown}
+          onClick={() => setShown(!shown)}
+        >
+          <Icon name={shown ? 'visibilityOff' : 'visibility'} size={18} />
+        </button>
+      </span>
+      {caps && <small role="status">{t('Caps Lock is on.')}</small>}
+    </label>
+  )
 }
 
 /** Focuses a field when it first appears. Stable, so it runs once per mount. */
@@ -79,7 +133,8 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   const link = linkFromHash()
   const [step, setStep] = useState<'signin' | 'code' | 'forgot' | 'sent'>('signin')
   const [f, setF] = useState({
-    login: '',
+    login: lastLogin(),
+    keep: false,
     password: '',
     code: '',
     name: '',
@@ -89,6 +144,9 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   const [ticket, setTicket] = useState<{ ticket: string; to: string; mail: boolean } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [resent, setResent] = useState(false)
+  // The cursor starts where typing begins: the password when the login is remembered.
+  const [known] = useState(() => !!f.login)
   const set = (k: keyof typeof f) => (e: Event) => setF({ ...f, [k]: value(e) })
 
   const go = (fn: () => Promise<void>) => async (e: Event) => {
@@ -256,7 +314,13 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
           key="code"
           class="sm-auth__form"
           onSubmit={go(async () => {
-            onIn(await api.post<Me>('/api/auth/code', { ticket: ticket.ticket, code: f.code }))
+            onIn(
+              await api.post<Me>('/api/auth/code', {
+                ticket: ticket.ticket,
+                code: f.code,
+                keep: f.keep,
+              }),
+            )
           })}
         >
           <Field
@@ -271,12 +335,37 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             inputRef={focus}
           />
           {err}
-          {submit(t('Sign in'))}
+          {resent && !error && (
+            <p class="sm-auth__note" role="status">
+              {t('A new code is on its way.')}
+            </p>
+          )}
+          <div class="sm-auth__row">
+            {submit(t('Verify'))}
+            <button
+              class="g-btn g-btn--ghost"
+              type="button"
+              disabled={busy}
+              onClick={go(async () => {
+                setTicket(
+                  await api.post<{ ticket: string; to: string; mail: boolean }>(
+                    '/api/auth/resend',
+                    { ticket: ticket.ticket },
+                  ),
+                )
+                setF({ ...f, code: '' })
+                setResent(true)
+              })}
+            >
+              {t('Send a new code')}
+            </button>
+          </div>
           <button
             class="sm-textbtn"
             type="button"
             onClick={() => {
               setStep('signin')
+              setResent(false)
               setF({ ...f, code: '' })
             }}
           >
@@ -325,7 +414,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
     )
 
   return (
-    <Frame title={t('Sign in')}>
+    <Frame title={t('Sign in to SocialMonitor')}>
       <form
         key="signin"
         class="sm-auth__form"
@@ -337,7 +426,9 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
               password: f.password,
             },
           )
+          keepLogin(f.login.trim())
           setTicket(r)
+          setResent(false)
           setF({ ...f, password: '', code: '' })
           setStep('code')
         })}
@@ -348,17 +439,26 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
           autocomplete="username"
           value={f.login}
           onInput={set('login')}
+          inputRef={known ? undefined : focus}
         />
-        <Field
+        <Password
           label={t('Password')}
-          type="password"
           required
           autocomplete="current-password"
           value={f.password}
           onInput={set('password')}
+          inputRef={known ? focus : undefined}
         />
+        <label class="sm-auth__check">
+          <input
+            type="checkbox"
+            checked={f.keep}
+            onChange={(e) => setF({ ...f, keep: (e.target as HTMLInputElement).checked })}
+          />
+          {t('Keep me signed in')}
+        </label>
         {err}
-        {submit(t('Continue'))}
+        {submit(t('Sign in'))}
         <button class="sm-textbtn" type="button" onClick={() => setStep('forgot')}>
           {t('Forgot your password?')}
         </button>

@@ -1761,6 +1761,61 @@ a .sm-hit {
   color: var(--g-text-3);
   font-size: 13px;
 }
+.sm-auth__field > span.sm-auth__pass {
+  position: relative;
+  display: block;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.sm-auth__pass .g-input {
+  width: 100%;
+  padding-right: 48px;
+}
+.sm-auth__eye {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--g-text-2);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+.sm-auth__eye:hover {
+  color: var(--g-text);
+}
+.sm-auth__eye:focus-visible {
+  outline: 2px solid var(--g-text);
+  outline-offset: 1px;
+}
+.sm-auth__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.sm-auth__check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--g-text);
+}
+.sm-auth__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sm-auth__note {
+  margin: 0;
+  color: var(--g-text-2);
+  font-size: 14px;
+}
 .sm-auth__foot {
   margin-top: 32px;
   color: var(--g-text-3);

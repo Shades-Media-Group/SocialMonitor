@@ -630,6 +630,17 @@ export const ro: Dict = {
     'Its history builds up with each update that reads it again.':
       'Istoricul se adună la fiecare actualizare care o citește din nou.',
     '{n} in {days}': '{n} în {days}',
+    "That email or username and password don't match.":
+      'Emailul sau numele de utilizator și parola nu se potrivesc.',
+    'Sign in to SocialMonitor': 'Intră în SocialMonitor',
+    'Keep me signed in': 'Ține-mă conectat',
+    'Show the password': 'Arată parola',
+    'Hide the password': 'Ascunde parola',
+    'Caps Lock is on.': 'Caps Lock este activ.',
+    Verify: 'Verifică',
+    'Send a new code': 'Trimite un cod nou',
+    'A new code is on its way.': 'Un cod nou este pe drum.',
+    'That code has expired. Sign in again.': 'Codul a expirat. Autentifică-te din nou.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',
@@ -689,7 +700,6 @@ export const ro: Dict = {
     'SocialMonitor is already set up.': 'SocialMonitor este deja configurat.',
     'Create the first account on the computer SocialMonitor runs on.':
       'Creează primul cont pe calculatorul pe care rulează SocialMonitor.',
-    'Wrong email, username or password.': 'Email, nume de utilizator sau parolă greșite.',
     'Your current password is not right.': 'Parola actuală nu este corectă.',
     'Only super admins make super admins.':
       'Doar super administratorii numesc super administratori.',

@@ -25,8 +25,9 @@ const base = () => {
   )
 }
 
-const signIn = (c: Ctx, user: User) => {
-  c.cookies.push(auth.sessionCookie(auth.signSession(user), c.secure))
+const signIn = (c: Ctx, user: User, keep = false) => {
+  const seconds = keep ? auth.KEEP_DAYS * 86400 : undefined
+  c.cookies.push(auth.sessionCookie(auth.signSession(user, seconds), c.secure, seconds))
   auth.touch(c.db, user.id)
 }
 
@@ -57,6 +58,18 @@ async function invite(c: Ctx & { user: User }, user: User) {
     lang,
   )
   if (kind === 'invite') auth.setLang(c.db, user.id, lang)
+}
+
+/** Emails a six-digit code for signing in; the ticket names it without revealing it. */
+async function sendCode(userId: number, email: string, lang: ReturnType<typeof langOf>, c: Ctx) {
+  const t = auth.issue(c.db, userId, 'code')
+  await sendMail(
+    email,
+    mailText(lang, 'codeSubject', { code: t.secret }),
+    mailText(lang, 'codeBody', { code: t.secret }),
+    lang,
+  )
+  return { ticket: t.id, to: mask(email), mail: mailReady() }
 }
 
 /** Someone who manages people: a super admin, or the admin of at least one brand. */
@@ -134,18 +147,21 @@ export const authRoutes = [
     if (!u || !ok || u.disabled || !u.verified_at) {
       auth.noteFailure(account)
       auth.noteFailure(`ip:${c.ip}`)
-      throw new HttpError(401, 'Wrong email, username or password.')
+      throw new HttpError(401, "That email or username and password don't match.")
     }
-    const t = auth.issue(c.db, u.id, 'code')
     const lang = langOf(c)
     auth.setLang(c.db, u.id, lang)
-    await sendMail(
-      u.email,
-      mailText(lang, 'codeSubject', { code: t.secret }),
-      mailText(lang, 'codeBody', { code: t.secret }),
-      lang,
-    )
-    return { ticket: t.id, to: mask(u.email), mail: mailReady() }
+    return sendCode(u.id, u.email, lang, c)
+  }),
+
+  // A new code for the same sign-in, when the first one did not arrive. The old one stops working.
+  r('POST', '/api/auth/resend', 'public', async (c) => {
+    const owner = auth.ticketOwner(c.db, String(b(c).ticket ?? ''))
+    if (!owner) throw new Error('That code has expired. Sign in again.')
+    auth.checkRate(`resend:${owner}`, 3)
+    auth.noteFailure(`resend:${owner}`)
+    const u = auth.findByEmail(c.db, owner)!
+    return sendCode(u.id, u.email, langOf(c), c)
   }),
 
   r('POST', '/api/auth/code', 'public', (c) => {
@@ -161,7 +177,7 @@ export const authRoutes = [
       throw e
     }
     const user = auth.getUser(c.db, userId)!
-    signIn(c, user)
+    signIn(c, user, b(c).keep === true)
     return me(c, user)
   }),
 

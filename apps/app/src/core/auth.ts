@@ -41,6 +41,8 @@ export interface Membership {
 }
 
 const SESSION_HOURS = 12
+/** "Keep me signed in": a session that outlives the browser, for this many days. */
+export const KEEP_DAYS = 30
 const CODE_MINUTES = 10
 const INVITE_HOURS = 72
 const RESET_MINUTES = 30

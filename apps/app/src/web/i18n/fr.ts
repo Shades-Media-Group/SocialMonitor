@@ -631,6 +631,17 @@ export const fr: Dict = {
     'Its history builds up with each update that reads it again.':
       'Son historique se construit à chaque mise à jour qui la relit.',
     '{n} in {days}': '{n} en {days}',
+    "That email or username and password don't match.":
+      'L’e-mail ou le nom d’utilisateur et le mot de passe ne correspondent pas.',
+    'Sign in to SocialMonitor': 'Se connecter à SocialMonitor',
+    'Keep me signed in': 'Rester connecté',
+    'Show the password': 'Afficher le mot de passe',
+    'Hide the password': 'Masquer le mot de passe',
+    'Caps Lock is on.': 'Verr. Maj est activé.',
+    Verify: 'Vérifier',
+    'Send a new code': 'Envoyer un nouveau code',
+    'A new code is on its way.': 'Un nouveau code est en route.',
+    'That code has expired. Sign in again.': 'Ce code a expiré. Reconnectez-vous.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',
@@ -690,7 +701,6 @@ export const fr: Dict = {
     'SocialMonitor is already set up.': 'SocialMonitor est déjà configuré.',
     'Create the first account on the computer SocialMonitor runs on.':
       'Créez le premier compte sur l’ordinateur où tourne SocialMonitor.',
-    'Wrong email, username or password.': 'E-mail, nom d’utilisateur ou mot de passe incorrect.',
     'Your current password is not right.': 'Votre mot de passe actuel est incorrect.',
     'Only super admins make super admins.':
       'Seuls les super administrateurs nomment des super administrateurs.',

@@ -628,6 +628,17 @@ export const ru: Dict = {
     'Its history builds up with each update that reads it again.':
       'История копится с каждым обновлением, которое снова его читает.',
     '{n} in {days}': '{n} за {days}',
+    "That email or username and password don't match.":
+      'Email или имя пользователя и пароль не совпадают.',
+    'Sign in to SocialMonitor': 'Вход в SocialMonitor',
+    'Keep me signed in': 'Не выходить',
+    'Show the password': 'Показать пароль',
+    'Hide the password': 'Скрыть пароль',
+    'Caps Lock is on.': 'Включён Caps Lock.',
+    Verify: 'Подтвердить',
+    'Send a new code': 'Отправить новый код',
+    'A new code is on its way.': 'Новый код уже в пути.',
+    'That code has expired. Sign in again.': 'Срок действия кода истёк. Войдите снова.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',
@@ -688,7 +699,6 @@ export const ru: Dict = {
     'SocialMonitor is already set up.': 'SocialMonitor уже настроен.',
     'Create the first account on the computer SocialMonitor runs on.':
       'Создайте первый аккаунт на компьютере, где работает SocialMonitor.',
-    'Wrong email, username or password.': 'Неверный email, имя пользователя или пароль.',
     'Your current password is not right.': 'Текущий пароль указан неверно.',
     'Only super admins make super admins.':
       'Назначать суперадминистраторов могут только суперадминистраторы.',
