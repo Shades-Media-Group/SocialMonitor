@@ -1,4 +1,5 @@
 import { chromium } from 'playwright'
+import type { Page } from 'playwright'
 import { SESSION_COOKIE } from './auth.ts'
 
 /**
@@ -33,6 +34,7 @@ export async function brandPdf(uiOrigin: string, brandId: number, query: string,
     })
     await page.waitForSelector('body[data-ready="1"]', { timeout: 20000 })
     await page.emulateMedia({ media: 'print' })
+    await shrinkImages(page)
     return await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -41,4 +43,52 @@ export async function brandPdf(uiOrigin: string, brandId: number, query: string,
   } finally {
     await browser.close()
   }
+}
+
+/**
+ * Pictures are kept at full size, but a PDF shows them a few centimetres wide. Each one is
+ * redrawn at twice its printed size as a JPEG, so the file stays small and still sharp.
+ */
+async function shrinkImages(page: Page) {
+  await page.evaluate(async () => {
+    const imgs = [...document.images]
+    await Promise.all(imgs.map((img) => (img.complete ? null : img.decode().catch(() => null))))
+    for (const img of imgs) {
+      const w = Math.round(img.getBoundingClientRect().width * 2)
+      const h = Math.round(img.getBoundingClientRect().height * 2)
+      if (!w || !h || !img.naturalWidth) continue
+      // With object-fit: cover only the middle shows, so only that is kept; otherwise the whole
+      // picture is kept, in its own proportions.
+      const cover = getComputedStyle(img).objectFit === 'cover'
+      const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight)
+      if (scale >= 0.9) continue // already about the size it prints at
+      const sw = cover ? w / scale : img.naturalWidth
+      const sh = cover ? h / scale : img.naturalHeight
+      const canvas = document.createElement('canvas')
+      canvas.width = cover ? w : Math.round(img.naturalWidth * scale)
+      canvas.height = cover ? h : Math.round(img.naturalHeight * scale)
+      const ctx = canvas.getContext('2d')
+      if (!ctx) continue
+      // Stickers and logos can be see-through; JPEG has no transparency, so they sit on paper.
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      try {
+        ctx.drawImage(
+          img,
+          (img.naturalWidth - sw) / 2,
+          (img.naturalHeight - sh) / 2,
+          sw,
+          sh,
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        )
+        img.src = canvas.toDataURL('image/jpeg', 0.82)
+        await img.decode().catch(() => null)
+      } catch {
+        /* a picture from elsewhere can't be redrawn; it stays as it is */
+      }
+    }
+  })
 }
