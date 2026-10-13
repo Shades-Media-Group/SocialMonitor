@@ -33,7 +33,7 @@ type Key =
 
 const TEXT: Record<MailLang, Record<Key, string>> = {
   en: {
-    codeSubject: 'Your SocialMonitor code: {code}',
+    codeSubject: '{code} is your SocialMonitor sign-in code',
     codeHeading: 'Your sign-in code',
     codeLabel: 'Sign-in code',
     codeValid: 'Works for 10 minutes',
@@ -61,7 +61,7 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     credit: 'SocialMonitor · Free and open source · Built by Shades Media Group',
   },
   ro: {
-    codeSubject: 'Codul tău SocialMonitor: {code}',
+    codeSubject: '{code} este codul tău de conectare SocialMonitor',
     codeHeading: 'Codul tău de conectare',
     codeLabel: 'Cod de conectare',
     codeValid: 'Valabil 10 minute',
@@ -89,7 +89,7 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     credit: 'SocialMonitor · Gratuit și open source · Creat de Shades Media Group',
   },
   ru: {
-    codeSubject: 'Ваш код SocialMonitor: {code}',
+    codeSubject: '{code} — ваш код для входа в SocialMonitor',
     codeHeading: 'Ваш код для входа',
     codeLabel: 'Код для входа',
     codeValid: 'Действует 10 минут',
@@ -117,7 +117,7 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     credit: 'SocialMonitor · Бесплатно и с открытым кодом · Создано Shades Media Group',
   },
   fr: {
-    codeSubject: 'Votre code SocialMonitor : {code}',
+    codeSubject: '{code} est votre code de connexion SocialMonitor',
     codeHeading: 'Votre code de connexion',
     codeLabel: 'Code de connexion',
     codeValid: 'Valable 10 minutes',
@@ -147,7 +147,7 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     credit: 'SocialMonitor · Gratuit et open source · Créé par Shades Media Group',
   },
   zh: {
-    codeSubject: '你的 SocialMonitor 验证码：{code}',
+    codeSubject: '{code} 是你的 SocialMonitor 登录验证码',
     codeHeading: '你的登录验证码',
     codeLabel: '登录验证码',
     codeValid: '10 分钟内有效',

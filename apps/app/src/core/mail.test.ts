@@ -6,7 +6,7 @@ const link = 'https://app.example.test/#/reset/abc.def'
 describe('emails in Gradient’s design', () => {
   it('puts the code in the subject, on the pass and in the text twin', () => {
     const m = codeMail('en', '716428')
-    expect(m.subject).toBe('Your SocialMonitor code: 716428')
+    expect(m.subject).toBe('716428 is your SocialMonitor sign-in code')
     expect(m.html).toContain('716428')
     expect(m.html).toContain('socialmonitor.shades.md/email/logo.png')
     expect(m.text).toContain('716428')
@@ -30,8 +30,10 @@ describe('emails in Gradient’s design', () => {
   })
 
   it('speaks the reader’s language and falls back to English', () => {
-    expect(codeMail('ro', '111111').subject).toBe('Codul tău SocialMonitor: 111111')
-    expect(codeMail('xx', '111111').subject).toBe('Your SocialMonitor code: 111111')
+    expect(codeMail('ro', '111111').subject).toBe(
+      '111111 este codul tău de conectare SocialMonitor',
+    )
+    expect(codeMail('xx', '111111').subject).toBe('111111 is your SocialMonitor sign-in code')
     expect(badMail('fr', 'Tavelo', 12, 'https://app.example.test').subject).toBe(
       'Tavelo : 12 commentaires négatifs',
     )
