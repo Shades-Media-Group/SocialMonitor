@@ -3,7 +3,19 @@ import type { IconName } from 'shades-gradient'
 import type { AppState } from './app.tsx'
 import type { CommentRow, Network, PostRow } from './api.ts'
 import { api } from './api.ts'
-import { Head, Icon, NetworkMark, Row, Scroller, ago, count, fmt, short, when } from './ui.tsx'
+import {
+  Head,
+  Icon,
+  NetworkMark,
+  Row,
+  Scroller,
+  ago,
+  count,
+  fmt,
+  short,
+  when,
+  navigate,
+} from './ui.tsx'
 import { usePref } from './prefs.ts'
 import { MoodStrip, PostDrawer } from './social.tsx'
 import { CommentList } from './views/comments.tsx'
@@ -362,9 +374,9 @@ export function Home({
                         .at(-1)
                       const trouble = b.profiles.some((p) => p.last_status === 'error')
                       return (
-                        <tr onClick={() => (location.hash = `#/b/${b.id}/overview`)}>
+                        <tr onClick={() => navigate(`/b/${b.id}/overview`)}>
                           <td>
-                            <a class="sm-brandcell" href={`#/b/${b.id}/overview`}>
+                            <a class="sm-brandcell" href={`/b/${b.id}/overview`}>
                               <span class="sm-nav__initial" aria-hidden="true">
                                 {b.name.slice(0, 1).toUpperCase()}
                               </span>
@@ -432,7 +444,7 @@ function NewBrand({ reload, notify }: Pick<AppState, 'reload' | 'notify'>) {
       if (industry.trim()) await api.patch(`/api/brands/${b.id}`, { industry })
       await reload()
       notify(t('{name} added. Press Update to read it.', { name }))
-      location.hash = `#/b/${b.id}/overview`
+      navigate(`/b/${b.id}/overview`)
     } catch (err) {
       setError((err as Error).message)
     }
@@ -475,7 +487,7 @@ function NewBrand({ reload, notify }: Pick<AppState, 'reload' | 'notify'>) {
           <button class="g-btn g-btn--primary g-btn--sm" type="submit">
             {t('Add brand')}
           </button>
-          <a class="g-btn g-btn--ghost g-btn--sm" href="#/">
+          <a class="g-btn g-btn--ghost g-btn--sm" href="/">
             {t('Cancel')}
           </a>
         </div>

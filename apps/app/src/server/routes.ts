@@ -676,13 +676,13 @@ export const routes: Route[] = [
   // TikTok returns here through the website's hand-back page; the state proves who asked.
   r('GET', '/api/auth/tiktok/callback', 'public', async (c) => {
     const err = c.query.get('error')
-    if (err) return { __redirect: `/#/?tiktok=${encodeURIComponent(err)}` }
+    if (err) return { __redirect: `/?tiktok=${encodeURIComponent(err)}` }
     const { brandId } = await finishSignIn(
       c.db,
       c.query.get('code') ?? '',
       c.query.get('state') ?? '',
     )
-    return { __redirect: `/#/b/${brandId}/about?tiktok=connected` }
+    return { __redirect: `/b/${brandId}/about?tiktok=connected` }
   }),
   r('PUT', '/api/brands/:id/alerts', adminBrand, (c) => {
     const x = b(c) as { emails?: unknown; auto?: unknown }

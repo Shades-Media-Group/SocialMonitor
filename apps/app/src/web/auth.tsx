@@ -1,7 +1,7 @@
 import { useId, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { api } from './api.ts'
-import { Icon, Logo } from './ui.tsx'
+import { Icon, Logo, navigate } from './ui.tsx'
 import { t } from './i18n.ts'
 
 export interface Me {
@@ -20,9 +20,11 @@ export interface AuthInfo {
   mail: boolean
 }
 
-/** A link from an email: #/invite/<token> or #/reset/<token>. */
-export function linkFromHash() {
-  const [, kind, token] = location.hash.split('/')
+/** A link from an email: /invite/<token> or /reset/<token> (older emails: #/invite/<token>). */
+export function linkFromPath() {
+  const [, kind, token] = (
+    location.hash.startsWith('#/') ? location.hash.slice(1) : location.pathname
+  ).split('/')
   return (kind === 'invite' || kind === 'reset') && token ? { kind, token } : null
 }
 
@@ -195,7 +197,7 @@ const value = (e: Event) => (e.target as HTMLInputElement).value
  * emailed code, a forgotten password, and the links people get by email.
  */
 export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => void }) {
-  const link = linkFromHash()
+  const link = linkFromPath()
   const [step, setStep] = useState<'signin' | 'code' | 'forgot' | 'sent'>('signin')
   const [f, setF] = useState({
     login: lastLogin(),
@@ -270,7 +272,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             ...(link.kind === 'invite' ? { name: f.name, username: f.username } : {}),
           })
           setF({ ...f, login: r.email, password: '' })
-          location.hash = '#/'
+          navigate('/')
           setStep('signin')
           setError(null)
         })}

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { IconName } from 'shades-gradient'
 import type { AppState } from './app.tsx'
-import { tabsFor } from './app.tsx'
+import { TAB_ICON, tabsFor } from './app.tsx'
 import type { BrandRow } from './api.ts'
 import { LANGS, lang, setLang, t } from './i18n.ts'
-import { Icon } from './ui.tsx'
+import { Icon, navigate } from './ui.tsx'
 import { flushPrefs, setPref } from './prefs.ts'
 
 interface Command {
@@ -15,7 +15,7 @@ interface Command {
   run: () => void
 }
 
-const go = (hash: string) => () => (location.hash = hash)
+const go = (path: string) => () => navigate(path)
 
 /**
  * Search and jump, from anywhere with ⌘K (Ctrl+K): every brand and its sections, people,
@@ -41,22 +41,13 @@ export function Palette({
   const input = useRef<HTMLInputElement>(null)
   useEffect(() => input.current?.focus(), [])
 
-  const ICON: Record<string, IconName> = {
-    overview: 'grid',
-    comments: 'chat',
-    posts: 'image',
-    calendar: 'calendar',
-    reports: 'file',
-    schedules: 'schedule',
-    about: 'info',
-  }
   const all: Command[] = [
     ...(brand
       ? tabsFor(brand.my_role).map(([k, text]) => ({
           group: brand.name,
           label: t(text),
-          icon: ICON[k]!,
-          run: go(`#/b/${brand.id}/${k}`),
+          icon: TAB_ICON[k],
+          run: go(`/b/${brand.id}/${k}`),
         }))
       : []),
     ...(brand?.my_role === 'admin'
@@ -75,14 +66,14 @@ export function Palette({
       label: b.name,
       hint: b.industry ?? undefined,
       icon: 'grid' as IconName,
-      run: go(`#/b/${b.id}/overview`),
+      run: go(`/b/${b.id}/overview`),
     })),
-    { group: t('Go to'), label: t('All brands'), icon: 'home', run: go('#/') },
+    { group: t('Go to'), label: t('All brands'), icon: 'home', run: go('/') },
     ...(manages
-      ? [{ group: t('Go to'), label: t('People'), icon: 'group' as IconName, run: go('#/people') }]
+      ? [{ group: t('Go to'), label: t('People'), icon: 'group' as IconName, run: go('/people') }]
       : []),
     ...(me.super
-      ? [{ group: t('Go to'), label: t('Add a brand'), icon: 'add' as IconName, run: go('#/new') }]
+      ? [{ group: t('Go to'), label: t('Add a brand'), icon: 'add' as IconName, run: go('/new') }]
       : []),
     { group: t('Go to'), label: t('Settings'), icon: 'settings', run: openSettings },
     ...LANGS.filter(([l]) => l !== lang).map(([l, name]) => ({

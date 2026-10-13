@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { accessMail, badMail, codeMail, linkMail } from './mail.ts'
 
-const link = 'https://app.example.test/#/reset/abc.def'
+const link = 'https://app.example.test/reset/abc.def'
 
 describe('emails in Gradient’s design', () => {
   it('puts the code in the subject, on the pass and in the text twin', () => {

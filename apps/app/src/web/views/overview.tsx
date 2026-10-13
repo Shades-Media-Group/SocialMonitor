@@ -2,7 +2,17 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { CommentRow, Network, PostRow, Profile } from '../api.ts'
 import { api } from '../api.ts'
-import { Icon, NETWORK_NAME, NetworkMark, Scroller, ago, fmt, short, when } from '../ui.tsx'
+import {
+  Icon,
+  NETWORK_NAME,
+  NetworkMark,
+  Scroller,
+  ago,
+  fmt,
+  short,
+  when,
+  navigate,
+} from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { brandCategories } from '../rate.tsx'
 import { Heatmap, LineChart } from '../charts.tsx'
@@ -366,7 +376,7 @@ export function Overview(v: BrandView) {
           <section class="sm-box sm-box--table">
             <header class="sm-box__head">
               <h2>{t('Accounts')}</h2>
-              <a class="sm-box__link" href={`#/b/${brand.id}/about`}>
+              <a class="sm-box__link" href={`/b/${brand.id}/about`}>
                 {t('Edit links')}
               </a>
             </header>
@@ -468,7 +478,7 @@ export function Overview(v: BrandView) {
             <section class="sm-box sm-box--table">
               <header class="sm-box__head">
                 <h2>{t('Words you watch')}</h2>
-                <a class="sm-box__link" href={`#/b/${brand.id}/about`}>
+                <a class="sm-box__link" href={`/b/${brand.id}/about`}>
                   {t('Edit')}
                 </a>
               </header>
@@ -490,7 +500,7 @@ export function Overview(v: BrandView) {
                         class="sm-ctable__row"
                         onClick={() => {
                           sessionStorage.setItem('sm-q', w.term)
-                          location.hash = `#/b/${brand.id}/comments`
+                          navigate(`/b/${brand.id}/comments`)
                         }}
                       >
                         <td>
@@ -523,7 +533,7 @@ export function Overview(v: BrandView) {
           head={
             <header class="sm-box__head">
               <h2>{reply.length ? t('Answer first') : t('Newest comments')}</h2>
-              <a class="sm-box__link" href={`#/b/${brand.id}/comments`}>
+              <a class="sm-box__link" href={`/b/${brand.id}/comments`}>
                 {t('All comments')}
               </a>
             </header>
@@ -544,7 +554,7 @@ export function Overview(v: BrandView) {
         <section class="sm-box sm-box--table sm-span-12">
           <header class="sm-box__head">
             <h2>{t('Posts')}</h2>
-            <a class="sm-box__link" href={`#/b/${brand.id}/posts`}>
+            <a class="sm-box__link" href={`/b/${brand.id}/posts`}>
               {t('All {n} posts', { n: fmt(s.posts) })}
             </a>
           </header>

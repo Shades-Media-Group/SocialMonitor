@@ -47,7 +47,7 @@ const mask = (email: string) =>
 async function invite(c: Ctx & { user: User }, user: User) {
   const kind = user.verified_at ? 'reset' : 'invite'
   const t = auth.issue(c.db, user.id, kind)
-  const link = `${base()}/#/${kind === 'invite' ? 'invite' : 'reset'}/${t.id}.${t.secret}`
+  const link = `${base()}/${kind === 'invite' ? 'invite' : 'reset'}/${t.id}.${t.secret}`
   const from = c.user.name || c.user.email
   // A new person reads the email in the inviter's language; someone set up, in their own.
   const lang = kind === 'invite' ? langOf(c) : user.lang
@@ -204,7 +204,7 @@ export const authRoutes = [
     if (u && !u.disabled && u.verified_at) {
       const t = auth.issue(c.db, u.id, 'reset')
       const lang = langOf(c)
-      await sendMail(u.email, linkMail(lang, 'forgot', `${base()}/#/reset/${t.id}.${t.secret}`))
+      await sendMail(u.email, linkMail(lang, 'forgot', `${base()}/reset/${t.id}.${t.secret}`))
     }
     return { ok: true }
   }),

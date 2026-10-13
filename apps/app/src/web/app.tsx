@@ -16,7 +16,7 @@ import { Home } from './home.tsx'
 import { BrandPage } from './brand-page.tsx'
 import { PrintBad, PrintReport } from './print.tsx'
 import type { AuthInfo, Me } from './auth.tsx'
-import { AuthScreen, linkFromHash } from './auth.tsx'
+import { AuthScreen, linkFromPath } from './auth.tsx'
 import { People } from './people.tsx'
 
 export const TABS = [
@@ -36,7 +36,7 @@ const ADMIN_TABS: string[] = ['schedules', 'settings']
 export const tabsFor = (role: string | null | undefined) =>
   TABS.filter(([k]) => role === 'admin' || !ADMIN_TABS.includes(k))
 export type Tab = (typeof TABS)[number][0]
-const TAB_ICON: Record<Tab, IconName> = {
+export const TAB_ICON: Record<Tab, IconName> = {
   overview: 'grid',
   comments: 'chat',
   posts: 'image',
@@ -48,7 +48,7 @@ const TAB_ICON: Record<Tab, IconName> = {
   settings: 'settings',
 }
 
-/** Where the app is: the brand list, a new brand, or one brand's tab. Kept in the URL hash. */
+/** Where the app is: the brand list, a new brand, or one brand's tab. Kept in the address path. */
 export type Route =
   | { page: 'home' }
   | { page: 'new' }
@@ -57,11 +57,12 @@ export type Route =
   | { page: 'people' }
 
 export function readRoute(): Route {
-  const [, a, b, c] = location.hash.split('/')
+  // Old bookmarks and links used #/b/1/overview; they move to the clean address.
+  if (location.hash.startsWith('#/')) history.replaceState(null, '', location.hash.slice(1))
+  const [, a, b, c] = location.pathname.split('/')
   if (a === 'new') return { page: 'new' }
   if (a === 'people') return { page: 'people' }
-  if (a === 'print' && Number(b?.split('?')[0]) > 0)
-    return { page: 'print', brandId: Number(b!.split('?')[0]) }
+  if (a === 'print' && Number(b) > 0) return { page: 'print', brandId: Number(b) }
   if (a === 'b' && Number(b) > 0) {
     const tab = (TABS.some(([t]) => t === c) ? c : 'overview') as Tab
     return { page: 'brand', brandId: Number(b), tab }
@@ -112,7 +113,7 @@ export interface BrandView extends AppState {
 /** Signs in first, then shows the dashboard. Any 401 from the server comes back here. */
 export function App() {
   const [info, setInfo] = useState<AuthInfo | null>(null)
-  const [link, setLink] = useState(linkFromHash)
+  const [link, setLink] = useState(linkFromPath)
   const check = () =>
     api
       .get<AuthInfo>('/api/auth/me')
@@ -121,12 +122,12 @@ export function App() {
   useEffect(() => {
     check()
     const out = () => check()
-    const onHash = () => setLink(linkFromHash())
+    const onHash = () => setLink(linkFromPath())
     addEventListener('sm-signed-out', out)
-    addEventListener('hashchange', onHash)
+    addEventListener('popstate', onHash)
     return () => {
       removeEventListener('sm-signed-out', out)
-      removeEventListener('hashchange', onHash)
+      removeEventListener('popstate', onHash)
     }
   }, [])
   if (!info) return null
@@ -182,8 +183,8 @@ function Dashboard({ me }: { me: Me }) {
       setRoute(readRoute())
       scrollTo({ top: 0 })
     }
-    addEventListener('hashchange', onHash)
-    return () => removeEventListener('hashchange', onHash)
+    addEventListener('popstate', onHash)
+    return () => removeEventListener('popstate', onHash)
   }, [reload])
 
   // Live: the server says when anything changed (an update's progress, Claude, another tab).
@@ -254,7 +255,7 @@ function Dashboard({ me }: { me: Me }) {
 
   if (route.page === 'print')
     return loaded && brand ? (
-      location.hash.includes('kind=bad') ? (
+      new URLSearchParams(location.search).get('kind') === 'bad' ? (
         <PrintBad brand={brand} />
       ) : (
         <PrintReport brand={brand} />
@@ -300,12 +301,12 @@ function Dashboard({ me }: { me: Me }) {
     <div class={`sm-shell${navOpen ? ' is-nav-open' : ''}`}>
       <aside class="sm-nav" aria-label={t('Navigation')}>
         <div class="sm-rail">
-          <a class="sm-rail__logo" href="#/" aria-label={t('SocialMonitor, all brands')}>
+          <a class="sm-rail__logo" href="/" aria-label={t('SocialMonitor, all brands')}>
             <Mark />
           </a>
           <a
             class="sm-rail__btn"
-            href="#/"
+            href="/"
             aria-current={route.page === 'home' ? 'page' : undefined}
             title={t('All brands')}
           >
@@ -322,7 +323,7 @@ function Dashboard({ me }: { me: Me }) {
           {manages && (
             <a
               class="sm-rail__btn"
-              href="#/people"
+              href="/people"
               aria-current={route.page === 'people' ? 'page' : undefined}
               title={t('People')}
             >
@@ -375,7 +376,7 @@ function Dashboard({ me }: { me: Me }) {
             {me.super && (
               <a
                 class="sm-navpanel__icon"
-                href="#/new"
+                href="/new"
                 aria-label={t('Add a brand')}
                 title={t('Add a brand')}
               >
@@ -394,7 +395,7 @@ function Dashboard({ me }: { me: Me }) {
           <nav class="sm-nav__list" onClick={() => setNavOpen(false)}>
             <a
               class="sm-nav__item"
-              href="#/"
+              href="/"
               aria-current={route.page === 'home' ? 'page' : undefined}
             >
               <Icon name="grid" size={15} />
@@ -409,7 +410,7 @@ function Dashboard({ me }: { me: Me }) {
                 <div class={`sm-nav__brand${open ? ' is-open' : ''}`}>
                   <a
                     class="sm-nav__item"
-                    href={`#/b/${b.id}/overview`}
+                    href={`/b/${b.id}/overview`}
                     aria-current={
                       open && route.page === 'brand' && route.tab === 'overview'
                         ? 'page'
@@ -433,7 +434,7 @@ function Dashboard({ me }: { me: Me }) {
                       {tabsFor(b.my_role).map(([k, text]) => (
                         <a
                           class="sm-nav__item"
-                          href={`#/b/${b.id}/${k}`}
+                          href={`/b/${b.id}/${k}`}
                           aria-current={route.tab === k ? 'page' : undefined}
                         >
                           <Icon name={TAB_ICON[k]} size={15} />
@@ -622,7 +623,7 @@ function RunNotice({
         </button>
       </div>
       {brandId && (
-        <a class="sm-run__link" href={`#/b/${brandId}/reports`} onClick={onClose}>
+        <a class="sm-run__link" href={`/b/${brandId}/reports`} onClick={onClose}>
           {t('Open the report')}
         </a>
       )}

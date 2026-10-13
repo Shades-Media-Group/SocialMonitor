@@ -96,7 +96,7 @@ function Change({
  * Sets data-ready on <body> once everything has loaded, so the PDF never catches a half page.
  */
 export function PrintReport({ brand }: { brand: BrandRow }) {
-  const q = new URLSearchParams(location.hash.split('?')[1] ?? '')
+  const q = new URLSearchParams(location.search)
   const days = Number(q.get('days') ?? 30)
   const network = (q.get('network') ?? '') as Network | ''
   const n = network ? `&network=${network}` : ''
@@ -425,7 +425,7 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
  * days, or only those an update just read (`since`).
  */
 export function PrintBad({ brand }: { brand: BrandRow }) {
-  const q = new URLSearchParams(location.hash.split('?')[1] ?? '')
+  const q = new URLSearchParams(location.search)
   const days = Number(q.get('days') ?? 0)
   const since = q.get('since')
   const network = (q.get('network') ?? '') as Network | ''

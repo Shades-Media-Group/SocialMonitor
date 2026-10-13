@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { Network, Tracker } from '../api.ts'
 import { api } from '../api.ts'
-import { Icon, NETWORK_NAME, NetworkMark, Row, fmt } from '../ui.tsx'
+import { Icon, NETWORK_NAME, NetworkMark, Row, fmt, navigate } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
 import { AutoUpdate } from '../auto-update.tsx'
 import type { Category } from '../rate.tsx'
@@ -386,7 +386,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
                   await api.del(`/api/brands/${brand.id}`)
                   await reload()
                   notify(t('{name} and everything kept for it are deleted.', { name: brand.name }))
-                  location.hash = '#/'
+                  navigate('/')
                 }}
               >
                 {t('Delete everything')}
@@ -445,7 +445,8 @@ function TikTokConnect({
       .catch(() => setState(null))
   useEffect(() => {
     void load()
-    if (location.hash.includes('tiktok=connected')) notify(t('TikTok connected.'))
+    if (new URLSearchParams(location.search).get('tiktok') === 'connected')
+      notify(t('TikTok connected.'))
   }, [brand.id])
   if (!state) return null
   const a = state.account

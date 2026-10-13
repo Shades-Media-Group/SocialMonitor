@@ -28,7 +28,7 @@ export async function brandPdf(uiOrigin: string, brandId: number, query: string,
         /* no storage */
       }
     })
-    await page.goto(`${uiOrigin}/#/print/${brandId}${query ? `?${query}` : ''}`, {
+    await page.goto(`${uiOrigin}/print/${brandId}${query ? `?${query}` : ''}`, {
       waitUntil: 'networkidle',
     })
     await page.waitForSelector('body[data-ready="1"]', { timeout: 20000 })

@@ -8,6 +8,24 @@ import { lang, locale, noun, t } from './i18n.ts'
 
 const MARK_FILLS = ['var(--sm-red)', 'var(--sm-rose)', 'var(--sm-ink)']
 
+/** Goes to a dashboard address without reloading; the shell listens for popstate. */
+export function navigate(path: string) {
+  history.pushState(null, '', path)
+  dispatchEvent(new PopStateEvent('popstate'))
+}
+
+// In-app links (href="/…") move without a reload. New tabs, modifier keys, downloads and other
+// sites behave as links normally do.
+addEventListener('click', (e) => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+    return
+  const a = (e.target as Element | null)?.closest?.('a')
+  if (!a || a.target || a.hasAttribute('download') || a.origin !== location.origin) return
+  if (a.pathname.startsWith('/api/') || a.pathname.startsWith('/media/')) return
+  e.preventDefault()
+  navigate(a.pathname + a.search)
+})
+
 export function Logo() {
   const h = 22
   const scale = h / WORDMARK.capHeight / 1.9
