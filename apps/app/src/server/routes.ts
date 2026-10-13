@@ -559,9 +559,16 @@ export const routes: Route[] = [
     },
     ({ db, params }) => void deleteSaved(db, id(params.id)),
   ),
-  r('GET', '/api/compare', 'user', (c) =>
-    compare(c.db, Number(c.query.get('days') ?? 30) || 0, visibleBrands(c.db, c.user)),
-  ),
+  // Brands side by side; ?brands=1,2 narrows to those, never past the ones this person sees.
+  r('GET', '/api/compare', 'user', (c) => {
+    const seen = visibleBrands(c.db, c.user)
+    const want = (c.query.get('brands') ?? '')
+      .split(',')
+      .map(Number)
+      .filter((n) => n > 0)
+    const only = want.length ? want.filter((n) => !seen || seen.includes(n)) : seen
+    return compare(c.db, Number(c.query.get('days') ?? 30) || 0, only)
+  }),
   r('GET', '/api/brands/:id/export.xlsx', seeBrand, (c) => {
     const { db, params, query } = c
     const brand = store.getBrand(db, id(params.id))

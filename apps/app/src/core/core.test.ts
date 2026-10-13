@@ -7,12 +7,13 @@ import {
   parseProfile,
   savePost,
   setVerdict,
+  setSentiment,
   listProfiles,
 } from './store.ts'
 import { parseVerdicts } from './analyze.ts'
 import { nextRun } from './schedule.ts'
 import { exportAll, importAll } from './transfer.ts'
-import { watched } from './insights.ts'
+import { compare, watched } from './insights.ts'
 import { badCount, setAlerts } from './alerts.ts'
 import { knownPostIds } from './store.ts'
 import { setTrackers } from './store.ts'
@@ -409,5 +410,71 @@ describe('post history and re-check tiers', () => {
         .sort(),
     ).toEqual(['fresh', 'month', 'old'])
     expect(duePosts(db, profile!.id, 1)).toHaveLength(1)
+  })
+})
+
+describe('brands compared', () => {
+  it('sums each brand in the window and keeps to the brands asked for', () => {
+    const db = openDb(':memory:')
+    const a = addBrand(db, 'Alpha', ['https://www.tiktok.com/@alpha'])
+    const b = addBrand(db, 'Beta', ['https://www.tiktok.com/@beta'])
+    const today = new Date().toISOString()
+    const c = (ext_id: string, author: string, text: string, posted_at = today) => ({
+      ext_id,
+      parent_ext_id: null,
+      author,
+      text,
+      likes: 0,
+      posted_at,
+    })
+    const post = (brandId: number, ext_id: string, comments: ReturnType<typeof c>[]) =>
+      savePost(db, listProfiles(db, brandId)[0]!, {
+        ext_id,
+        url: 'u',
+        posted_at: today,
+        kind: 'video',
+        caption: '',
+        thumb_url: null,
+        likes: 10,
+        comments_count: comments.length,
+        shares: 0,
+        views: 200,
+        comments,
+      })
+    post(a.id, 'a1', [
+      c('1', 'x', 'broken'),
+      c('2', 'y', 'love it'),
+      c('3', 'z', 'how much?'),
+      c('4', 'alpha', 'thanks'),
+      c('old', 'w', 'long ago', '2020-01-01T00:00:00Z'),
+    ])
+    post(b.id, 'b1', [c('5', 'v', 'meh')])
+    const id = (ext: string) => listComments(db).find((r) => r.ext_id === ext)!.id
+    setVerdict(db, id('1'), 'complaint', true, '')
+    setVerdict(db, id('2'), 'praise', false, '')
+    setVerdict(db, id('3'), 'question', true, '')
+    setSentiment(db, id('1'), 'negative', null, 'ai')
+    setSentiment(db, id('2'), 'positive', null, 'ai')
+
+    const [alpha, ...rest] = compare(db, 7, [a.id])
+    expect(rest).toEqual([])
+    expect(alpha).toMatchObject({
+      name: 'Alpha',
+      comments: 3, // the brand's own reply and the old comment stay out
+      complaints: 1,
+      questions: 1,
+      praise: 1,
+      positive_share: 0.5,
+      negative_share: 0.5,
+      posts: 1,
+      likes: 10,
+      reach: 200,
+      engagement_rate: (10 + 5) / 200,
+      share_of_voice: 1,
+    })
+    expect(alpha!.per_day).toHaveLength(7)
+    expect(alpha!.per_day.at(-1)).toEqual({ day: today.slice(0, 10), n: 3 })
+    expect(compare(db, 7, []).length).toBe(0)
+    expect(compare(db, 7).map((r) => r.share_of_voice)).toEqual([0.75, 0.25])
   })
 })

@@ -4749,3 +4749,46 @@ th[aria-sort='ascending'] .sm-sortbtn::after {
   min-width: 0;
 }
 
+/* Brands as lines, one colour each. */
+.sm-mline {
+  display: grid;
+  gap: 10px;
+}
+.sm-mline path.sm-mline__path {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.sm-mline circle.sm-mline__dot {
+  stroke: var(--c-card, var(--g-surface));
+  stroke-width: 2;
+}
+
+/* Brands compared: figures down the side, brands across, the leader of each row in bold. */
+.sm-cmp th[scope='row'] {
+  padding: 7px 8px 7px 0;
+  border-bottom: 1px solid var(--g-line);
+  color: var(--g-text-2);
+  font-size: 13px;
+  font-weight: 400;
+}
+.sm-cmp tr:last-child th[scope='row'] {
+  border-bottom: 0;
+}
+.sm-shell .sm-body .sm-cmp th[scope='row'] {
+  background: none;
+}
+.sm-cmp td {
+  color: var(--g-text-2);
+}
+.sm-cmp td b {
+  color: var(--g-text);
+  font-weight: 700;
+}
+.sm-cmp__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}

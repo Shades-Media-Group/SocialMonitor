@@ -666,3 +666,124 @@ export function GrowthChart({ series, label }: { series: Growth[]; label: string
     </figure>
   )
 }
+
+/** One line per brand. */
+export interface BrandSeries {
+  name: string
+  /** A categorical colour, b0 to b5. */
+  tone: string
+  values: number[]
+}
+
+/**
+ * Brands side by side over the same days: one line each in the brand's colour, a legend, a
+ * crosshair and every brand's figure on hover. `percent` reads values as shares of 1.
+ */
+export function BrandLines({
+  days,
+  series,
+  label,
+  percent = false,
+}: {
+  days: string[]
+  series: BrandSeries[]
+  label: string
+  percent?: boolean
+}) {
+  const [ref, W] = useWidth()
+  const [hover, setHover] = useState<number | null>(null)
+  const H2 = 240
+  const pad = { l: 40, r: 12, t: 16, b: 26 }
+  const iw = W - pad.l - pad.r
+  const ih = H2 - pad.t - pad.b
+  const max = percent ? 1 : niceMax(Math.max(1, ...series.flatMap((s) => s.values)))
+  const n = Math.max(1, days.length - 1)
+  const x = (i: number) => pad.l + (i / n) * iw
+  const y = (v: number) => pad.t + ih - (v / max) * ih
+  const path = (vs: number[]) =>
+    vs.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join('')
+  const every = Math.ceil(days.length / Math.max(2, Math.floor(W / 110)))
+  const show = (v: number) => (percent ? `${Math.round(v * 100)}%` : fmt(v))
+  return (
+    <figure class="sm-chart sm-line sm-mline">
+      <Legend items={series.map((s) => ({ key: s.tone, name: s.name }))} />
+      <div class="sm-chart__plot" ref={ref}>
+        <svg
+          viewBox={`0 0 ${W} ${H2}`}
+          role="img"
+          aria-label={label}
+          onMouseLeave={() => setHover(null)}
+          onMouseMove={(e) => {
+            const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect()
+            const i = Math.round(((e.clientX - r.left - pad.l) / iw) * n)
+            setHover(Math.max(0, Math.min(days.length - 1, i)))
+          }}
+        >
+          {[0, max / 2, max].map((v) => (
+            <g>
+              <line class="sm-grid" x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} />
+              <text class="sm-axis" x={pad.l - 8} y={y(v) + 4} text-anchor="end">
+                {show(v)}
+              </text>
+            </g>
+          ))}
+          {days.map((d, i) =>
+            i % every === 0 ? (
+              <text class="sm-axis" x={x(i)} y={H2 - 6} text-anchor="middle">
+                {dayLabel(d)}
+              </text>
+            ) : null,
+          )}
+          {series.map((s) => (
+            <path class={`sm-mline__path sm-c-${s.tone}`} d={path(s.values)} />
+          ))}
+          {hover !== null && (
+            <g>
+              <line class="sm-line__cross" x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + ih} />
+              {series.map((s) => (
+                <circle
+                  class={`sm-mline__dot sm-c-${s.tone}`}
+                  cx={x(hover)}
+                  cy={y(s.values[hover] ?? 0)}
+                  r={3.5}
+                />
+              ))}
+            </g>
+          )}
+        </svg>
+        {hover !== null && (
+          <div class="sm-tip" style={{ left: `clamp(110px, ${x(hover)}px, calc(100% - 110px))` }}>
+            <b>{dayLabel(days[hover]!)}</b>
+            {series.map((s) => (
+              <span>
+                <i class={`sm-swatch sm-c-${s.tone}`} aria-hidden="true" /> {s.name}{' '}
+                <b class="g-num">{show(s.values[hover] ?? 0)}</b>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <table class="sm-sr">
+        <caption>{label}</caption>
+        <thead>
+          <tr>
+            <th>{t('Day')}</th>
+            {series.map((s) => (
+              <th>{s.name}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {days.map((d, i) => (
+            <tr>
+              <td>{d}</td>
+              {series.map((s) => (
+                <td>{show(s.values[i] ?? 0)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </figure>
+  )
+}
