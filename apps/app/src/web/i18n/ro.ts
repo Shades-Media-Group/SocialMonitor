@@ -707,6 +707,18 @@ export const ro: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Această autentificare Facebook a expirat. Încearcă din nou.',
     'Facebook and Instagram connected.': 'Facebook și Instagram conectate.',
+    'This week': 'Săptămâna aceasta',
+    'Written {when}': 'Scris {when}',
+    'Writing…': 'Se scrie…',
+    'Write it again': 'Scrie din nou',
+    'Write it now': 'Scrie acum',
+    'Claude writes a few lines on the week at the end of the next update.':
+      'Claude scrie câteva rânduri despre săptămână la finalul următoarei actualizări.',
+    'The AI is off for this brand. Turn it on in Settings first.':
+      'AI-ul este oprit pentru acest brand. Pornește-l mai întâi din Setări.',
+    'Nothing to sum up: no comments in the last two weeks.':
+      'Nimic de rezumat: niciun comentariu în ultimele două săptămâni.',
+    'Claude did not write a summary. Try again.': 'Claude nu a scris un rezumat. Încearcă din nou.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

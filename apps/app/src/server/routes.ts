@@ -42,6 +42,7 @@ import * as meta from '../core/meta-api.ts'
 import { deleteSaved, getSaved, listSaved, readSaved, saveReport } from '../core/saved.ts'
 import { draftReply, pickEngine, translate } from '../core/analyze.ts'
 import { getSettings } from '../core/settings.ts'
+import { latestSummary, refreshSummary } from '../core/summary.ts'
 import type { User } from '../core/auth.ts'
 import { roleFor, signSession, visibleBrands } from '../core/auth.ts'
 
@@ -471,6 +472,18 @@ export const routes: Route[] = [
           .get(brandId, network ?? null, network ?? null) as { n: number }
       ).n,
     }
+  }),
+  // The weekly summary Claude wrote at the end of an update, and writing it again on request.
+  r('GET', '/api/brands/:id/week', seeBrand, ({ db, params }) => ({
+    summary: latestSummary(db, id(params.id)),
+  })),
+  r('POST', '/api/brands/:id/week', adminBrand, async ({ db, params }) => {
+    const brandId = id(params.id)
+    if (store.getBrand(db, brandId)?.ai_sort === 0)
+      throw new Error('The AI is off for this brand. Turn it on in Settings first.')
+    const summary = await refreshSummary(db, brandId, true)
+    if (!summary) throw new Error('Nothing to sum up: no comments in the last two weeks.')
+    return { summary }
   }),
   r('GET', '/api/brands/:id/insights', seeBrand, ({ db, params, query }) => {
     const s = {

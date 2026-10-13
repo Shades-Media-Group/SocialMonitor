@@ -707,6 +707,18 @@ export const fr: Dict = {
       'La connexion Facebook a expiré : reconnectez-la dans l’onglet À propos.',
     'This Facebook sign-in expired. Try again.': 'Cette connexion Facebook a expiré. Réessayez.',
     'Facebook and Instagram connected.': 'Facebook et Instagram connectés.',
+    'This week': 'Cette semaine',
+    'Written {when}': 'Rédigé {when}',
+    'Writing…': 'Rédaction…',
+    'Write it again': 'Réécrire',
+    'Write it now': 'Rédiger maintenant',
+    'Claude writes a few lines on the week at the end of the next update.':
+      'Claude rédige quelques lignes sur la semaine à la fin de la prochaine mise à jour.',
+    'The AI is off for this brand. Turn it on in Settings first.':
+      'L’IA est désactivée pour cette marque. Activez-la d’abord dans les Réglages.',
+    'Nothing to sum up: no comments in the last two weeks.':
+      'Rien à résumer : aucun commentaire ces deux dernières semaines.',
+    'Claude did not write a summary. Try again.': 'Claude n’a pas rédigé de résumé. Réessayez.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

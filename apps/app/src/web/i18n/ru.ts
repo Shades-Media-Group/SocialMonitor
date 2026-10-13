@@ -704,6 +704,18 @@ export const ru: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Этот вход через Facebook истёк. Попробуйте снова.',
     'Facebook and Instagram connected.': 'Facebook и Instagram подключены.',
+    'This week': 'Эта неделя',
+    'Written {when}': 'Написано {when}',
+    'Writing…': 'Пишется…',
+    'Write it again': 'Написать заново',
+    'Write it now': 'Написать сейчас',
+    'Claude writes a few lines on the week at the end of the next update.':
+      'Claude напишет несколько строк о неделе в конце следующего обновления.',
+    'The AI is off for this brand. Turn it on in Settings first.':
+      'ИИ выключен для этого бренда. Сначала включите его в настройках.',
+    'Nothing to sum up: no comments in the last two weeks.':
+      'Нечего подытожить: за последние две недели комментариев нет.',
+    'Claude did not write a summary. Try again.': 'Claude не написал сводку. Попробуйте снова.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

@@ -672,6 +672,17 @@ export const zh: Dict = {
       'Facebook 连接已过期：请在“关于”标签页重新连接。',
     'This Facebook sign-in expired. Try again.': '此 Facebook 登录已过期，请重试。',
     'Facebook and Instagram connected.': 'Facebook 和 Instagram 已连接。',
+    'This week': '本周',
+    'Written {when}': '撰写于 {when}',
+    'Writing…': '正在撰写…',
+    'Write it again': '重新撰写',
+    'Write it now': '立即撰写',
+    'Claude writes a few lines on the week at the end of the next update.':
+      '下次更新结束时，Claude 会就本周写几句总结。',
+    'The AI is off for this brand. Turn it on in Settings first.':
+      '此品牌的 AI 已关闭。请先在设置中开启。',
+    'Nothing to sum up: no comments in the last two weeks.': '没有可总结的内容：最近两周没有评论。',
+    'Claude did not write a summary. Try again.': 'Claude 未能写出总结，请重试。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

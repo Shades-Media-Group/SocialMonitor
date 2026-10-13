@@ -4701,3 +4701,20 @@ th[aria-sort='descending'] .sm-sortbtn::after {
 th[aria-sort='ascending'] .sm-sortbtn::after {
   content: ' ↑';
 }
+
+/* The weekly summary at the top of the Overview: a heading, its dates and a few plain lines. */
+.sm-week__meta {
+  align-items: baseline;
+  gap: 12px;
+}
+.sm-week__text {
+  display: grid;
+  gap: 8px;
+  max-width: 76ch;
+}
+.sm-week__text p {
+  margin: 0;
+  color: var(--g-text);
+  font-size: 14px;
+  line-height: 1.55;
+}

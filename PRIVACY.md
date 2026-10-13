@@ -13,6 +13,7 @@ Shades Media Group receives nothing. Everything SocialMonitor collects stays on 
 - **Posts and comments** from the public profiles you add, read through a browser profile on your computer. These include the names and words of the people who comment.
 - **It stores them** in a database in the `data/` folder, on your computer only.
 - **To describe posts and sort comments,** their text and each post's cover picture are sent to Claude through the Claude Code or Anthropic API key you configure. [Anthropic's privacy policy](https://www.anthropic.com/legal/privacy) covers that step.
+- **To sum up each brand's week,** once a day after an update, Claude gets that week's comment counts against the week before and the text of a few top complaints and questions, clipped. Brands with the AI turned off are left out.
 - **Sign-in emails,** if you set up email, carry only a code or a link to the people you invite, through the mail server you configure.
 - **People's accounts** (names, emails, usernames and hashed passwords) stay in the database on your computer.
 - **Reports and exports** are files you save; they go wherever you put them.

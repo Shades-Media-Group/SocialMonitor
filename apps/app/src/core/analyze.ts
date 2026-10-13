@@ -306,3 +306,30 @@ export async function describePost(
       : await viaApi(DESCRIBE(brand), input, pics)
   return clip(text, 300)
 }
+
+const SUMMARY = (brand: string, about: string) =>
+  `Brand: ${brand}${about ? ` (${about})` : ''}. Below are the numbers and the top comments from its social media this week and the week before.
+Write for the brand's social media manager, in English, in plain sentences: no headings, lists, markdown or emoji.
+Three short paragraphs, at most 120 words in all: what people said this week; what changed against the week before, with the numbers given; what to answer first, and why. Use only the facts below and never invent a number. Output only the paragraphs.`
+
+/** The summary's paragraphs, with any markdown, bullets or headings the model added taken out. */
+export function parseSummary(text: string): string[] {
+  return text
+    .split('\n')
+    .map((l) =>
+      l
+        .replace(/^\s*(#+|[-*•]|\d+[.)])\s+/, '')
+        .replace(/\*\*|__/g, '')
+        .trim(),
+    )
+    .filter(Boolean)
+    .slice(0, 4)
+    .map((p) => clip(p, 600))
+}
+
+/** A few lines on the brand's week, from compact numbers and clipped comments: never raw rows. */
+export async function writeSummary(engine: Engine, brand: string, about: string, input: string) {
+  const prompt = SUMMARY(brand, clip(about, 240))
+  const text = engine === 'claude' ? await viaClaude(prompt, input) : await viaApi(prompt, input)
+  return parseSummary(text)
+}
