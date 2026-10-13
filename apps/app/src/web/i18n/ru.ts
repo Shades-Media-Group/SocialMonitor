@@ -704,6 +704,12 @@ export const ru: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Этот вход через Facebook истёк. Попробуйте снова.',
     'Facebook and Instagram connected.': 'Facebook и Instagram подключены.',
+    'Saved views': 'Сохранённые виды',
+    'Save this view…': 'Сохранить этот вид…',
+    'Name this view': 'Название вида',
+    'Name this view, e.g. TikTok complaints': 'Название, например: жалобы в TikTok',
+    'Save view': 'Сохранить вид',
+    'View saved: {name}': 'Вид сохранён: {name}',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'preact/hooks'
+import { createPortal } from 'preact/compat'
 import type { ComponentChildren } from 'preact'
 import type { IconName } from 'shades-gradient'
 import type { BrandView } from '../app.tsx'
-import type { BrandRow, CommentRow, PostRow } from '../api.ts'
+import type { BrandRow, CommentRow, Network, PostRow } from '../api.ts'
 import { api } from '../api.ts'
 import {
   Icon,
@@ -419,8 +420,42 @@ export function CommentList({
 }
 
 type Filter = 'all' | 'reply' | 'urgent' | 'complaint' | 'question' | 'praise'
+type Look = 'list' | 'feed' | 'table'
 
-export function Comments({ brand, network, version, mode, notify, brands, reload }: BrandView) {
+/** A named set of filters, kept with the account, so it follows the person to every brand. */
+export interface SavedView {
+  name: string
+  filter: Filter
+  sentiment: string
+  category: string
+  q: string
+  look: Look
+  network: Network | ''
+  days: number
+}
+const SAME: (keyof SavedView)[] = [
+  'filter',
+  'sentiment',
+  'category',
+  'q',
+  'look',
+  'network',
+  'days',
+]
+
+export function Comments({
+  brand,
+  network,
+  days,
+  setNetwork,
+  setDays,
+  viewSlot,
+  version,
+  mode,
+  notify,
+  brands,
+  reload,
+}: BrandView) {
   const [filter, setFilter] = usePref<Filter>('comments.filter', 'all')
   const [sentiment, setSentiment] = usePref('comments.sentiment', '')
   const [category, setCategory] = useState('')
@@ -432,7 +467,9 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
   })
   const [rows, setRows] = useState<CommentRow[] | null>(null)
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
-  const [look, setLook] = usePref<'list' | 'feed' | 'table'>('comments.look', 'list')
+  const [look, setLook] = usePref<Look>('comments.look', 'list')
+  const [views, setViews] = usePref<SavedView[]>('comments.views', [])
+  const [naming, setNaming] = useState<string | null>(null)
   const [openComment, setOpenComment] = useState<CommentRow | null>(null)
   const [posts, setPosts] = useState<Map<number, PostRow>>(new Map())
   useEffect(() => {
@@ -453,7 +490,41 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
   if (q.trim()) query.set('q', q.trim())
   if (sentiment) query.set('sentiment', sentiment)
   if (category) query.set('category', category)
+  // By day, so the address stays the same while the page is open.
+  if (days) query.set('from', new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10))
   const qs = query.toString()
+
+  const current: SavedView = {
+    name: '',
+    filter,
+    sentiment,
+    category,
+    q: q.trim(),
+    look,
+    network,
+    days,
+  }
+  const active = views.find((v) => SAME.every((k) => v[k] === current[k]))
+  const openView = (v: SavedView) => {
+    setFilter(v.filter)
+    setSentiment(v.sentiment)
+    setCategory(v.category)
+    setQ(v.q)
+    setLook(v.look)
+    setNetwork(v.network)
+    setDays(v.days)
+    sessionStorage.removeItem('sm-post')
+    setPostId(null)
+  }
+  const saveView = (e: Event) => {
+    e.preventDefault()
+    const name = (naming ?? '').trim().slice(0, 60)
+    if (!name) return
+    // The same name replaces the older view; at most 20 are kept, newest first.
+    setViews([{ ...current, name }, ...views.filter((v) => v.name !== name)].slice(0, 20))
+    setNaming(null)
+    notify(t('View saved: {name}', { name }))
+  }
 
   useEffect(() => {
     const p = new URLSearchParams(qs)
@@ -576,7 +647,7 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
           value={q}
           onInput={(e) => setQ((e.target as HTMLInputElement).value)}
         />
-        <Segmented<'list' | 'feed' | 'table'>
+        <Segmented<Look>
           label={t('Layout')}
           value={look}
           onChange={setLook}
@@ -601,6 +672,57 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
           </Menu>
         </span>
       </div>
+
+      {viewSlot &&
+        createPortal(
+          <Menu
+            label={t('Saved views')}
+            items={[
+              ...views.map((v) => ({
+                label: v.name,
+                checked: v === active,
+                onSelect: () => openView(v),
+                remove: {
+                  label: t('Delete {name}', { name: v.name }),
+                  onSelect: () => setViews(views.filter((x) => x !== v)),
+                },
+              })),
+              {
+                label: t('Save this view…'),
+                divider: views.length > 0,
+                onSelect: () => setNaming(active?.name ?? ''),
+              },
+            ]}
+          >
+            <span class="sm-viewname">{active?.name ?? t('Saved views')}</span>
+            <Icon name="chevronDown" size={14} />
+          </Menu>,
+          viewSlot,
+        )}
+      {naming !== null && (
+        <form class="sm-saveview" onSubmit={saveView}>
+          <input
+            class="g-input sm-select-sm"
+            aria-label={t('Name this view')}
+            placeholder={t('Name this view, e.g. TikTok complaints')}
+            maxLength={60}
+            value={naming}
+            ref={(el) => el?.focus()}
+            onInput={(e) => setNaming((e.target as HTMLInputElement).value)}
+            onKeyDown={(e) => e.key === 'Escape' && setNaming(null)}
+          />
+          <button class="g-btn g-btn--sm" type="submit" disabled={!naming.trim()}>
+            {t('Save view')}
+          </button>
+          <button
+            class="g-btn g-btn--ghost g-btn--sm"
+            type="button"
+            onClick={() => setNaming(null)}
+          >
+            {t('Cancel')}
+          </button>
+        </form>
+      )}
 
       {postId && (
         <p class="sm-quiet">

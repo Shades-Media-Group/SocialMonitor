@@ -707,6 +707,12 @@ export const ro: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Această autentificare Facebook a expirat. Încearcă din nou.',
     'Facebook and Instagram connected.': 'Facebook și Instagram conectate.',
+    'Saved views': 'Vederi salvate',
+    'Save this view…': 'Salvează această vedere…',
+    'Name this view': 'Numește această vedere',
+    'Name this view, e.g. TikTok complaints': 'Numele vederii, de ex. Reclamații TikTok',
+    'Save view': 'Salvează vederea',
+    'View saved: {name}': 'Vedere salvată: {name}',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

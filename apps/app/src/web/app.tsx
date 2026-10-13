@@ -108,6 +108,10 @@ export interface BrandView extends AppState {
   network: Network | ''
   /** The window, in days back from today; 0 is all time. */
   days: number
+  setNetwork: (n: Network | '') => void
+  setDays: (d: number) => void
+  /** A place in the page header's filter row a tab can fill, such as Comments' saved views. */
+  viewSlot?: HTMLElement | null
 }
 
 /** Signs in first, then shows the dashboard. Any 401 from the server comes back here. */

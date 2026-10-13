@@ -1072,6 +1072,32 @@ body:has(.sm-shell) {
   color: var(--g-text-3);
   cursor: default;
 }
+.sm-menu button[aria-checked='true'] {
+  font-weight: 600;
+}
+/* A row with its own delete button at the end, such as a saved view. */
+.sm-menu__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+.sm-menu .sm-menu__remove {
+  justify-content: center;
+  width: 30px;
+  padding: 0;
+  color: var(--g-text-3);
+}
+.sm-menu .sm-menu__remove:hover,
+.sm-menu .sm-menu__remove:focus-visible {
+  background: var(--g-red-50);
+  color: var(--g-red-600);
+}
+/* Separates the menu's actions from its list. */
+.sm-menu__line {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--c-card-line, var(--g-line));
+}
 .sm-shell .sm-c__links {
   align-items: center;
   gap: 6px;
@@ -4701,3 +4727,25 @@ th[aria-sort='descending'] .sm-sortbtn::after {
 th[aria-sort='ascending'] .sm-sortbtn::after {
   content: ' ↑';
 }
+
+/* Saved views: the menu's button names the view showing; naming one happens in a line below. */
+.sm-slot {
+  display: contents;
+}
+.sm-viewname {
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-saveview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.sm-saveview .g-input {
+  flex: 0 1 320px;
+  min-width: 0;
+}
+

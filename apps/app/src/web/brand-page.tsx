@@ -1,3 +1,4 @@
+import { useState } from 'preact/hooks'
 import type { AppState, BrandView, Tab } from './app.tsx'
 import { TABS } from './app.tsx'
 import type { BrandRow, Network } from './api.ts'
@@ -19,14 +20,21 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
   const { brand, tab } = props
   // Kept with the account: the network per brand, and one period for every brand.
   const [network, setNetwork] = usePref<Network | ''>(`net:${brand.id}`, '')
-  const [days, setDays] = usePref<number>('days', 30)
+  const [shared, setShared] = usePref<number>('days', 30)
+  // Comments keep their own period, all time unless chosen, so the list never hides old ones.
+  const [commentDays, setCommentDays] = usePref<number>('comments.days', 0)
+  const [days, setDays] = tab === 'comments' ? [commentDays, setCommentDays] : [shared, setShared]
 
+  const [slot, setSlot] = useState<HTMLElement | null>(null)
   const nets = brand.profiles.map((p) => p.network)
   const view: BrandView = {
     ...props,
     brand,
     network: nets.includes(network as Network) ? network : '',
     days,
+    setNetwork,
+    setDays,
+    viewSlot: slot,
   }
   const exportQuery = new URLSearchParams({
     days: String(days),
@@ -75,7 +83,7 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
                   ))}
               </div>
             )}
-            {(tab === 'overview' || tab === 'posts' || tab === 'stats') && (
+            {(tab === 'overview' || tab === 'posts' || tab === 'stats' || tab === 'comments') && (
               <select
                 class="g-select sm-select-sm"
                 aria-label={t('Period')}
@@ -90,6 +98,7 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
               </select>
             )}
             <span class="sm-pagehead__spacer" />
+            {tab === 'comments' && <span class="sm-slot" ref={setSlot} />}
             <Menu
               label={t('Export')}
               items={[
