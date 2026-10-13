@@ -641,6 +641,9 @@ export const ro: Dict = {
     'Send a new code': 'Trimite un cod nou',
     'A new code is on its way.': 'Un cod nou este pe drum.',
     'That code has expired. Sign in again.': 'Codul a expirat. Autentifică-te din nou.',
+    'What people say about your brand, sorted.': 'Ce spun oamenii despre brandul tău, sortat.',
+    'Free and open source. Built by Shades Media Group.':
+      'Gratuit și open source. Creat de Shades Media Group.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

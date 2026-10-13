@@ -51,7 +51,7 @@ export function SettingsSheet({
     if (t === 'auto') delete document.documentElement.dataset.theme
     else document.documentElement.dataset.theme = t
     try {
-      localStorage.setItem('sm-theme', t === 'auto' ? '' : t)
+      localStorage.setItem('sm-theme', t)
     } catch {
       /* private mode */
     }

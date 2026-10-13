@@ -34,54 +34,57 @@
   }
 }
 
-html,
-body {
-  background: var(--g-bg);
-  color: var(--g-text);
-}
-body {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
-}
-::selection {
-  background: var(--g-accent-soft);
-  color: var(--g-text);
-}
-:focus-visible {
-  outline: none;
-  box-shadow: var(--g-focus);
-}
-/* Controls that carry their own shadow keep the focus ring on top of it. */
-.sm-seg button:focus-visible,
-.sm-run:focus-visible {
-  box-shadow: var(--g-focus);
-}
-* {
-  scrollbar-color: var(--g-line-strong) transparent;
-  scrollbar-width: thin;
-}
-a {
-  color: inherit;
-  text-underline-offset: 3px;
-}
-h1,
-h2,
-h3 {
-  margin: 0;
-  font-family: var(--g-font-display);
-  font-weight: 600;
-  text-wrap: balance;
-}
-h2 {
-  font-size: 20px;
-  letter-spacing: -0.01em;
-}
-h3 {
-  font-size: 15px;
-}
-p {
-  margin: 0;
+/* Element defaults, in Gradient's base layer so its components (sign-in, fields) still win. */
+@layer base {
+  html,
+  body {
+    background: var(--g-bg);
+    color: var(--g-text);
+  }
+  body {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  ::selection {
+    background: var(--g-accent-soft);
+    color: var(--g-text);
+  }
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--g-focus);
+  }
+  /* Controls that carry their own shadow keep the focus ring on top of it. */
+  .sm-seg button:focus-visible,
+  .sm-run:focus-visible {
+    box-shadow: var(--g-focus);
+  }
+  * {
+    scrollbar-color: var(--g-line-strong) transparent;
+    scrollbar-width: thin;
+  }
+  a {
+    color: inherit;
+    text-underline-offset: 3px;
+  }
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    font-family: var(--g-font-display);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  h2 {
+    font-size: 20px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: 15px;
+  }
+  p {
+    margin: 0;
+  }
 }
 
 .sm-app {
@@ -1717,38 +1720,7 @@ a .sm-hit {
 }
 
 /* Signing in: one narrow column on the paper, the mark, a real heading, labelled fields. */
-.sm-auth {
-  display: grid;
-  align-content: start;
-  gap: 20px;
-  width: min(400px, 100% - 2 * var(--sm-gutter));
-  min-height: 100vh;
-  margin: 0 auto;
-  padding: 14vh 0 48px;
-  box-sizing: border-box;
-}
-.sm-auth h1 {
-  margin: 16px 0 0;
-  font-size: 44px;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-}
-.sm-auth__lead {
-  margin: 0;
-  color: var(--g-text-2);
-  font-size: 17px;
-}
-.sm-auth__form {
-  display: grid;
-  gap: 16px;
-  margin-top: 8px;
-}
-.sm-auth__form > .g-btn {
-  justify-self: start;
-}
-.sm-auth__form > .sm-textbtn {
-  justify-self: start;
-}
+/* A labelled field in Settings (password change). */
 .sm-auth__field {
   display: grid;
   gap: 6px;
@@ -1757,69 +1729,16 @@ a .sm-hit {
   font-size: 14px;
   font-weight: 600;
 }
-.sm-auth__field > small {
-  color: var(--g-text-3);
-  font-size: 13px;
+
+/* Sign-in: Gradient's g-auth. The mark's ink quarter turns paper on the brand panel. */
+.g-auth-brand .sm-logo {
+  --sm-ink: var(--g-on-inverse);
+  color: var(--g-on-inverse);
 }
-.sm-auth__field > span.sm-auth__pass {
-  position: relative;
-  display: block;
-  font-size: inherit;
-  font-weight: inherit;
-}
-.sm-auth__pass .g-input {
-  width: 100%;
-  padding-right: 48px;
-}
-.sm-auth__eye {
-  position: absolute;
-  top: 50%;
-  right: 6px;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  color: var(--g-text-2);
-  transform: translateY(-50%);
-  cursor: pointer;
-}
-.sm-auth__eye:hover {
-  color: var(--g-text);
-}
-.sm-auth__eye:focus-visible {
-  outline: 2px solid var(--g-text);
-  outline-offset: 1px;
-}
-.sm-auth__check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  cursor: pointer;
-}
-.sm-auth__check input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: var(--g-text);
-}
-.sm-auth__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.sm-auth__note {
-  margin: 0;
-  color: var(--g-text-2);
-  font-size: 14px;
-}
-.sm-auth__foot {
-  margin-top: 32px;
-  color: var(--g-text-3);
-  font-size: 13px;
+@media (max-width: 820px) {
+  .g-auth-brand > .sm-logo {
+    margin-bottom: 44px;
+  }
 }
 
 /* People */

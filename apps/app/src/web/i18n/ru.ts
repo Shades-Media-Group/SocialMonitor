@@ -639,6 +639,9 @@ export const ru: Dict = {
     'Send a new code': 'Отправить новый код',
     'A new code is on its way.': 'Новый код уже в пути.',
     'That code has expired. Sign in again.': 'Срок действия кода истёк. Войдите снова.',
+    'What people say about your brand, sorted.': 'Что люди говорят о вашем бренде, по полочкам.',
+    'Free and open source. Built by Shades Media Group.':
+      'Бесплатно и с открытым кодом. Сделано в Shades Media Group.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

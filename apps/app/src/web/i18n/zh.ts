@@ -612,6 +612,8 @@ export const zh: Dict = {
     'Send a new code': '发送新验证码',
     'A new code is on its way.': '新验证码已发送。',
     'That code has expired. Sign in again.': '验证码已过期。请重新登录。',
+    'What people say about your brand, sorted.': '人们如何评价你的品牌，分门别类。',
+    'Free and open source. Built by Shades Media Group.': '免费开源。由Shades Media Group打造。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

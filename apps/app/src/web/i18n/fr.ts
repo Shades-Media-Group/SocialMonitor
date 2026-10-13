@@ -642,6 +642,9 @@ export const fr: Dict = {
     'Send a new code': 'Envoyer un nouveau code',
     'A new code is on its way.': 'Un nouveau code est en route.',
     'That code has expired. Sign in again.': 'Ce code a expiré. Reconnectez-vous.',
+    'What people say about your brand, sorted.': 'Ce que les gens disent de votre marque, trié.',
+    'Free and open source. Built by Shades Media Group.':
+      'Gratuit et open source. Créé par Shades Media Group.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',
