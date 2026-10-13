@@ -30,7 +30,7 @@ import {
 } from '../core/insights.ts'
 import { workbook } from '../core/xlsx.ts'
 import { brandPdf, uiOrigin } from '../core/pdf.ts'
-import { badPdf, sendBad, setAlerts } from '../core/alerts.ts'
+import { badPdf, sendBad, setAlerts, setNotify } from '../core/alerts.ts'
 import {
   authorizeUrl,
   connection,
@@ -718,6 +718,10 @@ export const routes: Route[] = [
     const x = b(c) as { emails?: unknown; auto?: unknown }
     return setAlerts(c.db, id(c.params.id), x.emails, x.auto, c.user.lang)
   }),
+  // Instant-alert triggers and the summary email; both go to the report's addresses.
+  r('PUT', '/api/brands/:id/notify', adminBrand, (c) =>
+    setNotify(c.db, id(c.params.id), b(c) as Parameters<typeof setNotify>[2]),
+  ),
   r('GET', '/api/brands/:id/bad.pdf', seeBrand, async (c) => {
     const out = await badPdf(
       c.db,

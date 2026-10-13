@@ -27,6 +27,24 @@ type Key =
   | 'badSubject'
   | 'badHeading'
   | 'badLead'
+  | 'instantSubject'
+  | 'instantHeading'
+  | 'instantLead'
+  | 'instantUrgent'
+  | 'instantRun'
+  | 'instantWatched'
+  | 'instantMore'
+  | 'digestWeekSubject'
+  | 'digestMonthSubject'
+  | 'digestWeekHeading'
+  | 'digestMonthHeading'
+  | 'digestLead'
+  | 'digestNew'
+  | 'digestComplaints'
+  | 'digestQuestions'
+  | 'digestPraise'
+  | 'digestReply'
+  | 'digestPdf'
   | 'open'
   | 'orCopy'
   | 'credit'
@@ -56,6 +74,24 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     badSubject: '{brand}: {n} negative comments',
     badHeading: '{n} negative comments',
     badLead: 'The attached PDF lists {n} negative comments about {brand}, grouped by kind.',
+    instantSubject: '{brand}: {n} comments need you now',
+    instantHeading: '{n} comments need you now',
+    instantLead: 'The last update of {brand} found these. Each comment is sent once.',
+    instantUrgent: 'Urgent',
+    instantRun: '{n} negative comments since the last alert',
+    instantWatched: 'Words to watch: {terms}',
+    instantMore: 'And {n} more in SocialMonitor.',
+    digestWeekSubject: '{brand}: last week in comments',
+    digestMonthSubject: '{brand}: last month in comments',
+    digestWeekHeading: 'Last week',
+    digestMonthHeading: 'Last month',
+    digestLead: 'What people said about {brand} in the last {days} days.',
+    digestNew: 'New comments',
+    digestComplaints: 'Complaints',
+    digestQuestions: 'Questions',
+    digestPraise: 'Praise',
+    digestReply: 'Still need an answer',
+    digestPdf: 'The full brand report is attached as a PDF.',
     open: 'Open SocialMonitor',
     orCopy: 'Or copy this link:',
     credit: 'SocialMonitor · Free and open source · Built by Shades Media Group',
@@ -84,6 +120,25 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     badSubject: '{brand}: {n} comentarii negative',
     badHeading: '{n} comentarii negative',
     badLead: 'PDF-ul atașat cuprinde {n} comentarii negative despre {brand}, grupate pe tipuri.',
+    instantSubject: '{brand}: {n} comentarii au nevoie de tine acum',
+    instantHeading: '{n} comentarii au nevoie de tine acum',
+    instantLead:
+      'Ultima actualizare pentru {brand} le-a găsit. Fiecare comentariu se trimite o singură dată.',
+    instantUrgent: 'Urgente',
+    instantRun: '{n} comentarii negative de la ultima alertă',
+    instantWatched: 'Cuvinte urmărite: {terms}',
+    instantMore: 'Și încă {n} în SocialMonitor.',
+    digestWeekSubject: '{brand}: comentariile săptămânii trecute',
+    digestMonthSubject: '{brand}: comentariile lunii trecute',
+    digestWeekHeading: 'Săptămâna trecută',
+    digestMonthHeading: 'Luna trecută',
+    digestLead: 'Ce au spus oamenii despre {brand} în ultimele {days} zile.',
+    digestNew: 'Comentarii noi',
+    digestComplaints: 'Plângeri',
+    digestQuestions: 'Întrebări',
+    digestPraise: 'Laude',
+    digestReply: 'Încă așteaptă un răspuns',
+    digestPdf: 'Raportul complet al brandului e atașat ca PDF.',
     open: 'Deschide SocialMonitor',
     orCopy: 'Sau copiază acest link:',
     credit: 'SocialMonitor · Gratuit și open source · Creat de Shades Media Group',
@@ -112,6 +167,24 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     badSubject: '{brand}: негативных комментариев: {n}',
     badHeading: 'Негативных комментариев: {n}',
     badLead: 'В приложенном PDF {n} негативных комментариев о {brand}, сгруппированных по видам.',
+    instantSubject: '{brand}: комментариев, которым нужно внимание: {n}',
+    instantHeading: 'Комментариев, которым нужно внимание: {n}',
+    instantLead: 'Их нашло последнее обновление {brand}. Каждый комментарий отправляется один раз.',
+    instantUrgent: 'Срочные',
+    instantRun: 'Негативных комментариев с прошлого оповещения: {n}',
+    instantWatched: 'Отслеживаемые слова: {terms}',
+    instantMore: 'И ещё {n} в SocialMonitor.',
+    digestWeekSubject: '{brand}: комментарии за прошлую неделю',
+    digestMonthSubject: '{brand}: комментарии за прошлый месяц',
+    digestWeekHeading: 'Прошлая неделя',
+    digestMonthHeading: 'Прошлый месяц',
+    digestLead: 'Что люди говорили о {brand} за последние дни: {days}.',
+    digestNew: 'Новые комментарии',
+    digestComplaints: 'Жалобы',
+    digestQuestions: 'Вопросы',
+    digestPraise: 'Похвала',
+    digestReply: 'Ещё ждут ответа',
+    digestPdf: 'Полный отчёт по бренду приложен в PDF.',
     open: 'Открыть SocialMonitor',
     orCopy: 'Или скопируйте ссылку:',
     credit: 'SocialMonitor · Бесплатно и с открытым кодом · Создано Shades Media Group',
@@ -142,6 +215,25 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     badSubject: '{brand} : {n} commentaires négatifs',
     badHeading: '{n} commentaires négatifs',
     badLead: 'Le PDF joint liste {n} commentaires négatifs sur {brand}, classés par type.',
+    instantSubject: '{brand} : {n} commentaires ont besoin de vous',
+    instantHeading: '{n} commentaires ont besoin de vous',
+    instantLead:
+      'La dernière mise à jour de {brand} les a trouvés. Chaque commentaire n’est envoyé qu’une fois.',
+    instantUrgent: 'Urgents',
+    instantRun: '{n} commentaires négatifs depuis la dernière alerte',
+    instantWatched: 'Mots à suivre : {terms}',
+    instantMore: 'Et {n} autres dans SocialMonitor.',
+    digestWeekSubject: '{brand} : la semaine dernière en commentaires',
+    digestMonthSubject: '{brand} : le mois dernier en commentaires',
+    digestWeekHeading: 'La semaine dernière',
+    digestMonthHeading: 'Le mois dernier',
+    digestLead: 'Ce que les gens ont dit de {brand} ces {days} derniers jours.',
+    digestNew: 'Nouveaux commentaires',
+    digestComplaints: 'Plaintes',
+    digestQuestions: 'Questions',
+    digestPraise: 'Éloges',
+    digestReply: 'Attendent encore une réponse',
+    digestPdf: 'Le rapport complet de la marque est joint en PDF.',
     open: 'Ouvrir SocialMonitor',
     orCopy: 'Ou copiez ce lien :',
     credit: 'SocialMonitor · Gratuit et open source · Créé par Shades Media Group',
@@ -169,6 +261,24 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     badSubject: '{brand}：{n} 条负面评论',
     badHeading: '{n} 条负面评论',
     badLead: '附件 PDF 列出了关于 {brand} 的 {n} 条负面评论，按类型分组。',
+    instantSubject: '{brand}：{n} 条评论需要你立即处理',
+    instantHeading: '{n} 条评论需要你立即处理',
+    instantLead: '这些评论由 {brand} 的最近一次更新发现。每条评论只发送一次。',
+    instantUrgent: '紧急',
+    instantRun: '自上次提醒以来的 {n} 条负面评论',
+    instantWatched: '关注词：{terms}',
+    instantMore: '另有 {n} 条，请在 SocialMonitor 中查看。',
+    digestWeekSubject: '{brand}：上周评论回顾',
+    digestMonthSubject: '{brand}：上月评论回顾',
+    digestWeekHeading: '上周',
+    digestMonthHeading: '上月',
+    digestLead: '过去 {days} 天里人们对 {brand} 的评价。',
+    digestNew: '新评论',
+    digestComplaints: '投诉',
+    digestQuestions: '提问',
+    digestPraise: '好评',
+    digestReply: '仍待回复',
+    digestPdf: '完整的品牌报告已作为 PDF 附上。',
     open: '打开 SocialMonitor',
     orCopy: '或复制这个链接：',
     credit: 'SocialMonitor · 免费、开源 · 由 Shades Media Group 打造',

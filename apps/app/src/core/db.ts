@@ -283,6 +283,21 @@ function migrate(db: DatabaseSync) {
   // Each brand's own positive and negative categories.
   if (!has('brands', 'categories'))
     db.exec("ALTER TABLE brands ADD COLUMN categories TEXT NOT NULL DEFAULT '[]'")
+  // Instant alerts to the report's addresses: which triggers are on, and since when comments
+  // count (set when a trigger is switched on, so old comments never flood the first alert).
+  if (!has('brands', 'instant_urgent')) {
+    db.exec('ALTER TABLE brands ADD COLUMN instant_urgent INTEGER NOT NULL DEFAULT 0')
+    db.exec('ALTER TABLE brands ADD COLUMN instant_bad INTEGER NOT NULL DEFAULT 0')
+    db.exec('ALTER TABLE brands ADD COLUMN instant_watched INTEGER NOT NULL DEFAULT 0')
+    db.exec('ALTER TABLE brands ADD COLUMN instant_since TEXT')
+  }
+  // When a comment went out in an instant alert: each comment is sent once.
+  if (!has('comments', 'alerted_at')) db.exec('ALTER TABLE comments ADD COLUMN alerted_at TEXT')
+  // The summary email: off, weekly or monthly, and when the last one went out.
+  if (!has('brands', 'digest')) {
+    db.exec("ALTER TABLE brands ADD COLUMN digest TEXT NOT NULL DEFAULT 'off'")
+    db.exec('ALTER TABLE brands ADD COLUMN digest_sent_at TEXT')
+  }
 }
 
 export const now = () => new Date().toISOString()
