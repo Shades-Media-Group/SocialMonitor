@@ -857,6 +857,9 @@
   white-space: nowrap;
 }
 .sm-toolbar__end {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
   margin-left: auto;
 }
 .sm-select-sm,
