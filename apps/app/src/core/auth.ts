@@ -593,7 +593,7 @@ export function listPeople(db: DB, viewer: User) {
 const hash = (s: string) => createHash('sha256').update(s).digest('hex')
 
 /** Issues a code (six digits) or a link secret; the database keeps only its hash. */
-export function issue(db: DB, userId: number, purpose: 'code' | 'invite' | 'reset') {
+export function issue(db: DB, userId: number, purpose: Purpose) {
   db.prepare('DELETE FROM tokens WHERE (user_id = ? AND purpose = ?) OR expires_at < ?').run(
     userId,
     purpose,
@@ -619,26 +619,47 @@ export function issue(db: DB, userId: number, purpose: 'code' | 'invite' | 'rese
 }
 
 /** Uses up a one-time secret and returns its user; wrong guesses count toward a limit. */
-export function consume(db: DB, id: string, secret: string, purpose: 'code' | 'invite' | 'reset') {
+export const consume = (db: DB, id: string, secret: string, purpose: Purpose) =>
+  spend(db, id, purpose, (t) =>
+    timingSafeEqual(
+      Buffer.from(hash(`${id}:${String(secret).trim()}`)),
+      Buffer.from(t.secret_hash),
+    ),
+  )
+
+type Purpose = 'code' | 'invite' | 'reset'
+interface TokenRow {
+  user_id: number
+  secret_hash: string
+  tries: number
+  expires_at: string
+}
+/**
+ * A one-time token passes `check` (a code, or the sign-in ticket with an authenticator code,
+ * passkey or recovery code): it is used up and its user returned. A failed check counts toward
+ * MAX_TRIES, after which the token is gone. With keep, a passing token stays for one more step.
+ */
+export function spend(
+  db: DB,
+  id: string,
+  purpose: Purpose,
+  check: (t: TokenRow) => boolean,
+  keep = false,
+) {
   const t = db
     .prepare('SELECT * FROM tokens WHERE id = ? AND purpose = ?')
-    .get(String(id), purpose) as
-    { user_id: number; secret_hash: string; tries: number; expires_at: string } | undefined
+    .get(String(id), purpose) as TokenRow | undefined
   const expired =
     purpose === 'code'
       ? 'That code has expired. Sign in again.'
       : 'This link has expired. Ask for a new one.'
   if (!t || t.expires_at < now()) throw new Error(expired)
-  const ok = timingSafeEqual(
-    Buffer.from(hash(`${id}:${String(secret).trim()}`)),
-    Buffer.from(t.secret_hash),
-  )
-  if (!ok) {
+  if (!check(t)) {
     if (t.tries + 1 >= MAX_TRIES) db.prepare('DELETE FROM tokens WHERE id = ?').run(id)
     else db.prepare('UPDATE tokens SET tries = tries + 1 WHERE id = ?').run(id)
     throw new Error(purpose === 'code' ? 'That code is not right.' : 'This link is not valid.')
   }
-  db.prepare('DELETE FROM tokens WHERE id = ?').run(id)
+  if (!keep) db.prepare('DELETE FROM tokens WHERE id = ?').run(id)
   return t.user_id
 }
 
@@ -664,12 +685,14 @@ const DUMMY = hashPassword('not a real password, only for timing')
 export const checkAnyPassword = (password: string, stored: string | null | undefined) =>
   checkPassword(password, stored ?? DUMMY) && !!stored
 
-/** The account a sign-in code belongs to, to count wrong codes against it. */
+/** The account a sign-in ticket belongs to, to count wrong codes against it. */
 export const ticketOwner = (db: DB, ticket: string) =>
-  (
-    db
-      .prepare(
-        "SELECT u.email FROM tokens t JOIN users u ON u.id = t.user_id WHERE t.id = ? AND t.purpose = 'code'",
-      )
-      .get(String(ticket)) as { email: string } | undefined
-  )?.email
+  db
+    .prepare(
+      "SELECT u.id, u.email FROM tokens t JOIN users u ON u.id = t.user_id WHERE t.id = ? AND t.purpose = 'code'",
+    )
+    .get(String(ticket)) as { id: number; email: string } | undefined
+
+/** Marks the password as just entered again in this session, for changes to signing in. */
+export const confirmSession = (db: DB, id: string) =>
+  db.prepare('UPDATE sessions SET confirmed_at = ? WHERE id = ?').run(now(), id)

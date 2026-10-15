@@ -769,6 +769,40 @@ export const fr: Dict = {
     'This device': 'Cet appareil',
     'Sign out {device}': 'Déconnecter {device}',
     'That device is already signed out.': 'Cet appareil est déjà déconnecté.',
+    'Enter your password again to change how you sign in.':
+      'Saisissez à nouveau votre mot de passe pour changer votre façon de vous connecter.',
+    'Setting up took too long. Start again.': 'La configuration a pris trop de temps. Recommencez.',
+    'Add a passkey or an authenticator app first.':
+      "Ajoutez d'abord une clé d'accès ou une application d'authentification.",
+    'Use your authenticator app': "Utiliser votre application d'authentification",
+    'Use a recovery code': 'Utiliser un code de récupération',
+    'Enter the code from your app': 'Saisissez le code de votre application',
+    'Enter a recovery code': 'Saisissez un code de récupération',
+    'Six-digit code': 'Code à six chiffres',
+    'Recovery code': 'Code de récupération',
+    'Each recovery code works once.': "Chaque code de récupération ne fonctionne qu'une fois.",
+    'Email me a code instead': "M'envoyer plutôt un code par e-mail",
+    'QR code for your authenticator app': "Code QR pour votre application d'authentification",
+    'Keep these somewhere safe. Each works once, and they are shown only now.':
+      "Conservez-les en lieu sûr. Chacun ne fonctionne qu'une fois, et ils ne sont affichés que maintenant.",
+    'I saved them': 'Je les ai enregistrés',
+    'Authenticator app': "Application d'authentification",
+    'On. Sign in with a code from the app instead of email.':
+      "Activée. Connectez-vous avec un code de l'application plutôt que par e-mail.",
+    'Codes from an authenticator app on your phone or computer.':
+      "Des codes d'une application d'authentification sur votre téléphone ou ordinateur.",
+    'Authenticator app turned on.': "Application d'authentification activée.",
+    'Scan this with the app, or enter this key by hand:':
+      "Scannez-le avec l'application, ou saisissez cette clé à la main :",
+    'Code from the app': "Code de l'application",
+    'Turn on': 'Activer',
+    'Turn off': 'Désactiver',
+    'Authenticator app turned off.': "Application d'authentification désactivée.",
+    'Set up': 'Configurer',
+    'Recovery codes': 'Codes de récupération',
+    '{n} of 10 left, for when you have neither your passkey nor your app.':
+      "Il en reste {n} sur 10, pour quand vous n'avez ni votre clé d'accès ni votre application.",
+    'Make new codes': 'Générer de nouveaux codes',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

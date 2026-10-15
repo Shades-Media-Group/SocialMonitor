@@ -13,6 +13,15 @@ export interface Me {
   memberships: { brand_id: number; role: 'viewer' | 'admin' }[]
   prefs?: Record<string, unknown>
 }
+/** What the password step answers: a ticket, and the second steps besides the emailed code. */
+interface Ticket {
+  ticket: string
+  to: string
+  mail: boolean
+  second?: { totp: boolean; recovery: boolean }
+}
+type Second = 'totp' | 'recovery'
+
 export interface AuthInfo {
   user: Me | null
   setup: boolean
@@ -198,7 +207,8 @@ const value = (e: Event) => (e.target as HTMLInputElement).value
  */
 export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => void }) {
   const link = linkFromPath()
-  const [step, setStep] = useState<'signin' | 'code' | 'forgot' | 'sent'>('signin')
+  const [step, setStep] = useState<'signin' | 'code' | 'second' | 'forgot' | 'sent'>('signin')
+  const [second, setSecond] = useState<Second>('totp')
   const [f, setF] = useState({
     login: lastLogin(),
     keep: true,
@@ -208,7 +218,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
     username: '',
     email: '',
   })
-  const [ticket, setTicket] = useState<{ ticket: string; to: string; mail: boolean } | null>(null)
+  const [ticket, setTicket] = useState<Ticket | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [resent, setResent] = useState(false)
@@ -373,6 +383,87 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
       </Frame>
     )
 
+  if (step === 'second' && ticket?.second) {
+    const s = ticket.second
+    const others: [Second, string][] = (
+      [
+        ['totp', t('Use your authenticator app')],
+        ['recovery', t('Use a recovery code')],
+      ] as [Second, string][]
+    ).filter(([k]) => k !== second && s[k])
+    return (
+      <Frame
+        title={second === 'totp' ? t('Enter the code from your app') : t('Enter a recovery code')}
+        busy={busy}
+        onSubmit={go(async () => {
+          onIn(
+            await api.post<Me>('/api/auth/code', {
+              ticket: ticket.ticket,
+              [second]: f.code,
+              keep: f.keep,
+            }),
+          )
+        })}
+      >
+        {who}
+        {second === 'totp' ? (
+          <Field
+            key="totp"
+            label={t('Six-digit code')}
+            required
+            inputMode="numeric"
+            autocomplete="one-time-code"
+            pattern="[0-9 ]{6,7}"
+            maxLength={7}
+            value={f.code}
+            onInput={set('code')}
+            inputRef={focus}
+          />
+        ) : (
+          <Field
+            key="recovery"
+            label={t('Recovery code')}
+            hint={t('Each recovery code works once.')}
+            required
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck={false}
+            value={f.code}
+            onInput={set('code')}
+            inputRef={focus}
+          />
+        )}
+        {err}
+        {submit(t('Verify'))}
+        {others.map(([k, text]) => (
+          <button
+            class="g-btn g-btn--ghost"
+            type="button"
+            onClick={() => {
+              setSecond(k)
+              setError(null)
+              setF({ ...f, code: '' })
+            }}
+          >
+            {text}
+          </button>
+        ))}
+        <button
+          class="g-btn g-btn--ghost"
+          type="button"
+          disabled={busy}
+          onClick={go(async () => {
+            setTicket(await api.post<Ticket>('/api/auth/resend', { ticket: ticket.ticket }))
+            setF({ ...f, code: '' })
+            setStep('code')
+          })}
+        >
+          {t('Email me a code instead')}
+        </button>
+      </Frame>
+    )
+  }
+
   if (step === 'code' && ticket)
     return (
       <Frame
@@ -419,11 +510,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
           type="button"
           disabled={busy}
           onClick={go(async () => {
-            setTicket(
-              await api.post<{ ticket: string; to: string; mail: boolean }>('/api/auth/resend', {
-                ticket: ticket.ticket,
-              }),
-            )
+            setTicket(await api.post<Ticket>('/api/auth/resend', { ticket: ticket.ticket }))
             setF({ ...f, code: '' })
             setResent(true)
           })}
@@ -479,7 +566,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
       title={t('Sign in to SocialMonitor')}
       busy={busy}
       onSubmit={go(async () => {
-        const r = await api.post<{ ticket: string; to: string; mail: boolean }>('/api/auth/login', {
+        const r = await api.post<Ticket>('/api/auth/login', {
           login: f.login,
           password: f.password,
         })
@@ -487,7 +574,8 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
         setTicket(r)
         setResent(false)
         setF({ ...f, password: '', code: '' })
-        setStep('code')
+        if (r.second) setSecond(r.second.totp ? 'totp' : 'recovery')
+        setStep(r.second ? 'second' : 'code')
       })}
     >
       <Field

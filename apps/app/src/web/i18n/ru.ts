@@ -766,6 +766,41 @@ export const ru: Dict = {
     'This device': 'Это устройство',
     'Sign out {device}': 'Выйти на {device}',
     'That device is already signed out.': 'Это устройство уже вышло из аккаунта.',
+    'Enter your password again to change how you sign in.':
+      'Введите пароль ещё раз, чтобы изменить способ входа.',
+    'Setting up took too long. Start again.':
+      'Настройка заняла слишком много времени. Начните заново.',
+    'Add a passkey or an authenticator app first.':
+      'Сначала добавьте ключ доступа или приложение-аутентификатор.',
+    'Use your authenticator app': 'Использовать приложение-аутентификатор',
+    'Use a recovery code': 'Использовать код восстановления',
+    'Enter the code from your app': 'Введите код из приложения',
+    'Enter a recovery code': 'Введите код восстановления',
+    'Six-digit code': 'Шестизначный код',
+    'Recovery code': 'Код восстановления',
+    'Each recovery code works once.': 'Каждый код восстановления работает один раз.',
+    'Email me a code instead': 'Прислать код по почте',
+    'QR code for your authenticator app': 'QR-код для приложения-аутентификатора',
+    'Keep these somewhere safe. Each works once, and they are shown only now.':
+      'Сохраните их в надёжном месте. Каждый работает один раз, и они показываются только сейчас.',
+    'I saved them': 'Я их сохранил',
+    'Authenticator app': 'Приложение-аутентификатор',
+    'On. Sign in with a code from the app instead of email.':
+      'Включено. Входите с кодом из приложения вместо почты.',
+    'Codes from an authenticator app on your phone or computer.':
+      'Коды из приложения-аутентификатора на телефоне или компьютере.',
+    'Authenticator app turned on.': 'Приложение-аутентификатор включено.',
+    'Scan this with the app, or enter this key by hand:':
+      'Отсканируйте код приложением или введите этот ключ вручную:',
+    'Code from the app': 'Код из приложения',
+    'Turn on': 'Включить',
+    'Turn off': 'Выключить',
+    'Authenticator app turned off.': 'Приложение-аутентификатор выключено.',
+    'Set up': 'Настроить',
+    'Recovery codes': 'Коды восстановления',
+    '{n} of 10 left, for when you have neither your passkey nor your app.':
+      'Осталось {n} из 10 — на случай, когда нет ни ключа доступа, ни приложения.',
+    'Make new codes': 'Создать новые коды',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

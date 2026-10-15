@@ -4,6 +4,7 @@ import { api } from './api.ts'
 import { NETWORK_NAME, Row, Segmented, Sheet, ago, count, when } from './ui.tsx'
 import { JsonPanel } from './json.tsx'
 import { Accounts } from './accounts.tsx'
+import { TwoStep } from './security.tsx'
 import type { Lang } from './i18n.ts'
 import { LANGS, lang, locale, setLang, t } from './i18n.ts'
 import { flushPrefs, setPref } from './prefs.ts'
@@ -134,6 +135,7 @@ export function SettingsSheet({
         />
       </Row>
       <Account me={me} notify={notify} />
+      <TwoStep open={open} notify={notify} />
       <Row label={t('Devices')}>
         <Devices open={open} notify={notify} />
       </Row>

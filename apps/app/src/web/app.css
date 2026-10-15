@@ -2451,3 +2451,30 @@ td.sm-hot {
     display: none;
   }
 }
+
+/* Two-step sign-in in Settings: the authenticator's QR code and recovery codes. */
+.sm-security__setup,
+.sm-security__codes {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+.sm-qr {
+  width: 168px;
+  height: 168px;
+  border-radius: var(--g-radius-md);
+}
+.sm-security__key,
+.sm-security__list code {
+  font: 13px/1.5 var(--g-font-code);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.sm-security__list {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 6px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

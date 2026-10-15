@@ -769,6 +769,40 @@ export const ro: Dict = {
     'This device': 'Acest dispozitiv',
     'Sign out {device}': 'Deconectează {device}',
     'That device is already signed out.': 'Dispozitivul acesta este deja deconectat.',
+    'Enter your password again to change how you sign in.':
+      'Introdu din nou parola ca să schimbi felul în care te conectezi.',
+    'Setting up took too long. Start again.': 'Configurarea a durat prea mult. Începe din nou.',
+    'Add a passkey or an authenticator app first.':
+      'Adaugă mai întâi o cheie de acces sau o aplicație de autentificare.',
+    'Use your authenticator app': 'Folosește aplicația de autentificare',
+    'Use a recovery code': 'Folosește un cod de recuperare',
+    'Enter the code from your app': 'Introdu codul din aplicație',
+    'Enter a recovery code': 'Introdu un cod de recuperare',
+    'Six-digit code': 'Cod din șase cifre',
+    'Recovery code': 'Cod de recuperare',
+    'Each recovery code works once.': 'Fiecare cod de recuperare merge o singură dată.',
+    'Email me a code instead': 'Trimite-mi un cod pe email',
+    'QR code for your authenticator app': 'Cod QR pentru aplicația de autentificare',
+    'Keep these somewhere safe. Each works once, and they are shown only now.':
+      'Păstrează-le într-un loc sigur. Fiecare merge o singură dată și sunt afișate doar acum.',
+    'I saved them': 'Le-am salvat',
+    'Authenticator app': 'Aplicație de autentificare',
+    'On. Sign in with a code from the app instead of email.':
+      'Pornită. Conectează-te cu un cod din aplicație în loc de email.',
+    'Codes from an authenticator app on your phone or computer.':
+      'Coduri dintr-o aplicație de autentificare de pe telefon sau calculator.',
+    'Authenticator app turned on.': 'Aplicația de autentificare e pornită.',
+    'Scan this with the app, or enter this key by hand:':
+      'Scanează codul cu aplicația sau introdu manual această cheie:',
+    'Code from the app': 'Codul din aplicație',
+    'Turn on': 'Pornește',
+    'Turn off': 'Oprește',
+    'Authenticator app turned off.': 'Aplicația de autentificare e oprită.',
+    'Set up': 'Configurează',
+    'Recovery codes': 'Coduri de recuperare',
+    '{n} of 10 left, for when you have neither your passkey nor your app.':
+      'Au rămas {n} din 10, pentru când nu ai nici cheia de acces, nici aplicația.',
+    'Make new codes': 'Generează coduri noi',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

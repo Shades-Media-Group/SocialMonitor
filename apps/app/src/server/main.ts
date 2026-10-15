@@ -200,7 +200,8 @@ const server = createServer(async (req, res) => {
     send(res, 404, { error: 'No such endpoint.' })
   } catch (e) {
     const status = e instanceof HttpError ? e.status : 400
-    send(res, status, { error: e instanceof Error ? e.message : String(e) })
+    const extra = e instanceof HttpError ? e.extra : undefined
+    send(res, status, { ...extra, error: e instanceof Error ? e.message : String(e) })
   }
 })
 

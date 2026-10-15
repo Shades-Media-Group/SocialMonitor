@@ -3,6 +3,7 @@ import type { Role, User } from '../core/auth.ts'
 import { accessMail, codeMail, linkMail, mailReady, sendMail } from '../core/mail.ts'
 import { mailLang, mailText } from '../core/mail-text.ts'
 import * as store from '../core/store.ts'
+import * as tf from '../core/two-factor.ts'
 import { securityEvent } from '../core/security-events.ts'
 import { publicHost } from './access.ts'
 import type { Ctx } from './routes.ts'
@@ -74,6 +75,45 @@ async function sendCode(userId: number, email: string, lang: ReturnType<typeof l
   await sendMail(email, codeMail(lang, t.secret))
   return { ticket: t.id, to: mask(email), mail: mailReady() }
 }
+
+/** Which second steps this person can use instead of the emailed code. */
+const secondSteps = (c: Ctx, userId: number) => {
+  const f = tf.factors(c.db, userId)
+  return { totp: f.totp, recovery: f.recovery > 0 }
+}
+
+/**
+ * Checks the second step in a request: an authenticator code (`totp`) or a recovery code
+ * (`recovery`). False when none was given or it is wrong.
+ */
+async function secondStep(c: Ctx, userId: number, x: Record<string, unknown>) {
+  if (typeof x.totp === 'string') return tf.checkTotp(c.db, userId, x.totp)
+  if (typeof x.recovery === 'string') {
+    const ok = tf.useRecoveryCode(c.db, userId, x.recovery)
+    if (ok)
+      securityEvent(c.db, {
+        type: 'recovery_code_used',
+        ...who(c, userId),
+        detail: { left: tf.recoveryLeft(c.db, userId) },
+      })
+    return ok
+  }
+  return false
+}
+const stepName = (x: Record<string, unknown>) =>
+  typeof x.totp === 'string' ? 'totp' : typeof x.recovery === 'string' ? 'recovery' : 'code'
+
+/** Changing how someone signs in needs their password, entered in the last 15 minutes. */
+const CONFIRM_MINUTES = 15
+const confirmed = (c: Ctx & { user: User }) => {
+  const at = c.session?.confirmed_at ?? c.session?.created_at
+  if (!at || Date.now() - Date.parse(at) > CONFIRM_MINUTES * 60_000)
+    throw new HttpError(403, 'Enter your password again to change how you sign in.', {
+      confirm: true,
+    })
+}
+/** Authenticator secrets waiting for their first code, by person. */
+const pendingTotp = new Map<number, { secret: string; at: number }>()
 
 /** Someone who manages people: a super admin, or the admin of at least one brand. */
 const manager = (c: Ctx & { user: User }) => {
@@ -157,6 +197,12 @@ export const authRoutes = [
     auth.upgradeHash(c.db, u.id, password, u.pass_hash)
     const lang = langOf(c)
     auth.setLang(c.db, u.id, lang)
+    // With an authenticator or a passkey, the ticket waits for that; the emailed code is sent
+    // only when asked for ("Email me a code instead").
+    if (tf.hasSecondFactor(c.db, u.id)) {
+      const t = auth.issue(c.db, u.id, 'code')
+      return { ticket: t.id, to: mask(u.email), mail: mailReady(), second: secondSteps(c, u.id) }
+    }
     return sendCode(u.id, u.email, lang, c)
   }),
 
@@ -164,27 +210,104 @@ export const authRoutes = [
   r('POST', '/api/auth/resend', 'public', async (c) => {
     const owner = auth.ticketOwner(c.db, String(b(c).ticket ?? ''))
     if (!owner) throw new Error('That code has expired. Sign in again.')
-    auth.checkRate(`resend:${owner}`, 3)
-    auth.noteFailure(`resend:${owner}`)
-    const u = auth.findByEmail(c.db, owner)!
-    return sendCode(u.id, u.email, langOf(c), c)
+    auth.checkRate(`resend:${owner.email}`, 3)
+    auth.noteFailure(`resend:${owner.email}`)
+    return sendCode(owner.id, owner.email, langOf(c), c)
   }),
 
-  r('POST', '/api/auth/code', 'public', (c) => {
-    const ticket = String(b(c).ticket ?? '')
+  // The second step: the emailed code, an authenticator code or a recovery code.
+  r('POST', '/api/auth/code', 'public', async (c) => {
+    const x = b(c)
+    const ticket = String(x.ticket ?? '')
     // Wrong codes count against the account too, so new tickets don't buy new guesses.
     const owner = auth.ticketOwner(c.db, ticket)
-    if (owner) auth.checkRate(`login:${owner}`)
+    if (owner) auth.checkRate(`login:${owner.email}`)
+    const via = stepName(x)
     let userId: number
     try {
-      userId = auth.consume(c.db, ticket, String(b(c).code ?? ''), 'code')
+      if (via === 'code') userId = auth.consume(c.db, ticket, String(x.code ?? ''), 'code')
+      else {
+        const ok = owner ? await secondStep(c, owner.id, x) : false
+        userId = auth.spend(c.db, ticket, 'code', () => ok)
+      }
     } catch (e) {
-      if (owner) auth.noteFailure(`login:${owner}`)
+      if (owner) auth.noteFailure(`login:${owner.email}`)
       throw e
     }
     const user = auth.getUser(c.db, userId)!
-    signIn(c, user, b(c).keep === true)
+    signIn(c, user, x.keep === true, via)
     return me(c, user)
+  }),
+
+  // The password again, before changing passkeys, the authenticator or recovery codes.
+  r('POST', '/api/auth/confirm', 'user', (c) => {
+    if (!c.session) throw new HttpError(403, 'Sign in first.')
+    const account = `login:${c.user.email}`
+    auth.checkRate(account)
+    auth.checkRate(`ip:${c.ip}`, 20)
+    const row = auth.findLogin(c.db, c.user.email)
+    if (!auth.checkPassword(String(b(c).password ?? ''), row?.pass_hash ?? null)) {
+      auth.noteFailure(account)
+      auth.noteFailure(`ip:${c.ip}`)
+      throw new HttpError(403, 'Your current password is not right.')
+    }
+    auth.confirmSession(c.db, c.session.id)
+  }),
+
+  // How this person can sign in.
+  r('GET', '/api/auth/security', 'user', (c) => {
+    const f = tf.factors(c.db, c.user.id)
+    return { totp: f.totp, recovery: f.recovery }
+  }),
+
+  // An authenticator app: a new secret, then its first code turns it on.
+  r('POST', '/api/auth/totp/start', 'user', (c) => {
+    confirmed(c)
+    const secret = tf.newTotpSecret()
+    pendingTotp.set(c.user.id, { secret, at: Date.now() })
+    return { secret, uri: tf.otpauthUri(secret, c.user.email) }
+  }),
+  r('POST', '/api/auth/totp', 'user', (c) => {
+    confirmed(c)
+    const p = pendingTotp.get(c.user.id)
+    if (!p || Date.now() - p.at > 10 * 60_000)
+      throw new Error('Setting up took too long. Start again.')
+    const account = `login:${c.user.email}`
+    auth.checkRate(account)
+    if (!tf.enableTotp(c.db, c.user.id, p.secret, String(b(c).code ?? ''))) {
+      auth.noteFailure(account)
+      throw new Error('That code is not right.')
+    }
+    pendingTotp.delete(c.user.id)
+    securityEvent(c.db, {
+      type: 'second_factor_added',
+      ...who(c, c.user.id),
+      detail: { method: 'totp' },
+    })
+    // The first second step comes with recovery codes.
+    const recovery =
+      tf.recoveryLeft(c.db, c.user.id) === 0 ? tf.newRecoveryCodes(c.db, c.user.id) : null
+    return { recovery }
+  }),
+  r('DELETE', '/api/auth/totp', 'user', (c) => {
+    confirmed(c)
+    tf.disableTotp(c.db, c.user.id)
+    if (!tf.hasSecondFactor(c.db, c.user.id)) tf.dropRecoveryCodes(c.db, c.user.id)
+    securityEvent(c.db, {
+      type: 'second_factor_removed',
+      ...who(c, c.user.id),
+      detail: { method: 'totp' },
+    })
+  }),
+
+  // Ten new recovery codes; the old ones stop working.
+  r('POST', '/api/auth/recovery', 'user', (c) => {
+    confirmed(c)
+    if (!tf.hasSecondFactor(c.db, c.user.id))
+      throw new Error('Add a passkey or an authenticator app first.')
+    const codes = tf.newRecoveryCodes(c.db, c.user.id)
+    securityEvent(c.db, { type: 'recovery_codes_new', ...who(c, c.user.id) })
+    return { codes }
   }),
 
   r('POST', '/api/auth/logout', 'public', (c) => {

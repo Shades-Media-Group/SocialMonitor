@@ -231,3 +231,17 @@ describe('sessions', () => {
     expect(auth.device(client.ua)).toEqual({ browser: 'Chrome', os: 'macOS' })
   })
 })
+
+describe('sign-in tickets', () => {
+  it('passes a ticket on a right second step, and voids it after five wrong ones', () => {
+    const db = openDb(':memory:')
+    const u = auth.createUser(db, { email: 'k@example.com' })
+    const t = auth.issue(db, u.id, 'code')
+    expect(auth.ticketOwner(db, t.id)).toEqual({ id: u.id, email: 'k@example.com' })
+    expect(auth.spend(db, t.id, 'code', () => true)).toBe(u.id)
+    expect(() => auth.spend(db, t.id, 'code', () => true)).toThrow(/expired/)
+    const t2 = auth.issue(db, u.id, 'code')
+    for (let i = 0; i < 5; i++) expect(() => auth.spend(db, t2.id, 'code', () => false)).toThrow()
+    expect(() => auth.spend(db, t2.id, 'code', () => true)).toThrow(/expired/)
+  })
+})

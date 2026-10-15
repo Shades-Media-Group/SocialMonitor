@@ -210,6 +210,27 @@ CREATE TABLE IF NOT EXISTS sessions (
   confirmed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
+-- Single-use recovery codes for the second step of signing in, as SHA-256 hashes.
+CREATE TABLE IF NOT EXISTS recovery_codes (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code_hash TEXT NOT NULL,
+  used_at TEXT,
+  PRIMARY KEY (user_id, code_hash)
+);
+-- Passkeys (WebAuthn credentials). id is the credential id (base64url); rp_id the host it was
+-- made on (localhost or the tunnel's), since a passkey works only there.
+CREATE TABLE IF NOT EXISTS passkeys (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  public_key TEXT NOT NULL,
+  counter INTEGER NOT NULL DEFAULT 0,
+  transports TEXT NOT NULL DEFAULT '[]',
+  rp_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  last_used_at TEXT
+);
+CREATE INDEX IF NOT EXISTS passkeys_user ON passkeys(user_id);
 `
 
 export type DB = DatabaseSync
@@ -320,6 +341,11 @@ function migrate(db: DatabaseSync) {
     db.exec("ALTER TABLE users ADD COLUMN prefs TEXT NOT NULL DEFAULT '{}'")
   // The language a person reads the dashboard in, for the emails they get.
   if (!has('users', 'lang')) db.exec("ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'en'")
+  // An authenticator app: its secret (base32) and the last step used, so each code works once.
+  if (!has('users', 'totp_secret')) {
+    db.exec('ALTER TABLE users ADD COLUMN totp_secret TEXT')
+    db.exec('ALTER TABLE users ADD COLUMN totp_step INTEGER')
+  }
   // Each brand's own positive and negative categories.
   if (!has('brands', 'categories'))
     db.exec("ALTER TABLE brands ADD COLUMN categories TEXT NOT NULL DEFAULT '[]'")

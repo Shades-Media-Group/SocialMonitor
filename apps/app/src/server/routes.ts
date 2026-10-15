@@ -56,9 +56,12 @@ import { roleFor, signSession, visibleBrands } from '../core/auth.ts'
 
 export class HttpError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  /** More for the client to act on, sent beside the error message. */
+  extra?: Record<string, unknown>
+  constructor(status: number, message: string, extra?: Record<string, unknown>) {
     super(message)
     this.status = status
+    this.extra = extra
   }
 }
 
