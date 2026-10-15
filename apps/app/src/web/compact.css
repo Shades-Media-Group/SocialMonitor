@@ -4218,6 +4218,74 @@ a.sm-person[href]:hover .sm-person__name {
   font-weight: 600;
 }
 
+/* The brand's own look, when its admins set one: its logo in place of SocialMonitor's, and its
+   accent on the rule over the facts and on the report's label. Text sits on the accent only
+   where it reads (sm-pr--ontext); otherwise the label keeps a small accent mark. */
+.sm-pr__logo {
+  display: block;
+  width: auto;
+  max-width: 200px;
+  height: auto;
+  max-height: 34px;
+  object-fit: contain;
+}
+.sm-pr--accent .sm-pr__meta {
+  border-top: 2px solid var(--pr-accent);
+}
+.sm-pr--accent .sm-pr__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sm-pr--accent .sm-pr__kind::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--pr-accent);
+  content: '';
+}
+.sm-pr--ontext .sm-pr__kind {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--pr-accent);
+  color: var(--pr-on-accent);
+}
+.sm-pr--ontext .sm-pr__kind::before {
+  content: none;
+}
+.sm-pr--accent .sm-pr__words li {
+  background: color-mix(in srgb, var(--pr-accent) calc(var(--w) * 22%), #fff);
+  color: #16181d;
+}
+.sm-pr__foot .sm-mark {
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+
+/* Report branding in a brand's Settings: the logo as it will print, the colour and its value. */
+.sm-brandlogo {
+  align-items: center;
+}
+.sm-brandlogo img {
+  max-width: 160px;
+  max-height: 32px;
+  object-fit: contain;
+}
+.sm-colorpick {
+  width: 36px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--g-radius-xs, 6px);
+  background: var(--c-card);
+  cursor: pointer;
+}
+.sm-hexinput.g-input {
+  width: 110px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Controls grouped at the toolbar's end sit on one line, evenly spaced. */
 .sm-toolbar__group {
   display: inline-flex;

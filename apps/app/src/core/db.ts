@@ -283,6 +283,11 @@ function migrate(db: DatabaseSync) {
   // Each brand's own positive and negative categories.
   if (!has('brands', 'categories'))
     db.exec("ALTER TABLE brands ADD COLUMN categories TEXT NOT NULL DEFAULT '[]'")
+  // The brand's own logo (a /media/ path) and accent colour on its PDF reports. Empty: none.
+  if (!has('brands', 'report_logo')) {
+    db.exec('ALTER TABLE brands ADD COLUMN report_logo TEXT')
+    db.exec('ALTER TABLE brands ADD COLUMN report_color TEXT')
+  }
 }
 
 export const now = () => new Date().toISOString()

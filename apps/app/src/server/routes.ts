@@ -44,6 +44,7 @@ import { draftReply, pickEngine, translate } from '../core/analyze.ts'
 import { getSettings } from '../core/settings.ts'
 import type { User } from '../core/auth.ts'
 import { roleFor, signSession, visibleBrands } from '../core/auth.ts'
+import { setBranding } from '../core/branding.ts'
 
 export class HttpError extends Error {
   status: number
@@ -518,6 +519,10 @@ export const routes: Route[] = [
       watched: watched(db, s, JSON.parse(brand?.trackers ?? '[]') as Tracker[]),
     }
   }),
+  // The brand's own logo and accent colour on its PDF reports.
+  r('PUT', '/api/brands/:id/report-branding', adminBrand, (c) =>
+    setBranding(c.db, id(c.params.id), b(c) as { logo?: unknown; color?: unknown }),
+  ),
   r('GET', '/api/brands/:id/daily', seeBrand, ({ db, params, query }) => {
     const day = (k: string, fallback: string) => {
       const v = query.get(k) ?? fallback

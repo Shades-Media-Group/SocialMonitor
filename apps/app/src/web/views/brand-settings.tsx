@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { Network, Schedule } from '../api.ts'
 import { api } from '../api.ts'
 import { BadReport } from '../bad-report.tsx'
 import { t } from '../i18n.ts'
 import { NETWORK_NAME, NetworkMark, Row, Segmented, when } from '../ui.tsx'
+import { textOn, validColor } from '../../core/color.ts'
 
 type Range = 'new' | 'due' | 'all'
 
@@ -249,6 +250,8 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
         </Row>
       </section>
 
+      <ReportBranding brand={brand} reload={reload} notify={notify} />
+
       <BadReport
         brand={brand}
         network=""
@@ -258,5 +261,132 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
         reload={reload}
       />
     </div>
+  )
+}
+
+/**
+ * The brand's own look on its PDF reports: its logo at the top in place of SocialMonitor's,
+ * and an accent colour for the rules and the report's label. Empty, reports look as before.
+ */
+function ReportBranding({ brand, reload, notify }: Pick<BrandView, 'brand' | 'reload' | 'notify'>) {
+  const file = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const [hex, setHex] = useState(brand.report_color ?? '')
+  useEffect(() => setHex(brand.report_color ?? ''), [brand.report_color])
+
+  const save = async (body: { logo?: string | null; color?: string | null }, done: string) => {
+    setBusy(true)
+    try {
+      await api.put(`/api/brands/${brand.id}/report-branding`, body)
+      await reload()
+      notify(done)
+    } catch (e) {
+      notify((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  const upload = (f: File) => {
+    if (f.size > 1024 * 1024) return notify(t('The logo is larger than 1 MB.'))
+    const r = new FileReader()
+    r.onload = () => void save({ logo: String(r.result) }, t('Logo saved.'))
+    r.readAsDataURL(f)
+  }
+  const setColor = (v: string) => {
+    const c = validColor(v)
+    if (v.trim() && !c) return notify(t('The colour is a hex value like #1a6bd6.'))
+    if (c !== brand.report_color) void save({ color: c }, c ? t('Saved.') : t('Colour removed.'))
+  }
+  const color = brand.report_color
+
+  return (
+    <section class="sm-box">
+      <header class="sm-box__head">
+        <h2>{t('Report branding')}</h2>
+      </header>
+      <Row
+        label={t('Logo')}
+        hint={t(
+          'PNG, JPG or SVG, up to 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.',
+        )}
+      >
+        <span class="sm-inline sm-brandlogo">
+          {brand.report_logo && (
+            <img src={brand.report_logo} alt={t('{brand} logo', { brand: brand.name })} />
+          )}
+          <button
+            class="g-btn g-btn--sm"
+            type="button"
+            disabled={busy}
+            onClick={() => file.current?.click()}
+          >
+            {brand.report_logo ? t('Replace') : t('Upload logo')}
+          </button>
+          {brand.report_logo && (
+            <button
+              class="g-btn g-btn--ghost g-btn--sm"
+              type="button"
+              disabled={busy}
+              onClick={() => void save({ logo: null }, t('Logo removed.'))}
+            >
+              {t('Remove')}
+            </button>
+          )}
+          <input
+            ref={file}
+            type="file"
+            accept="image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg"
+            hidden
+            onChange={(e) => {
+              const f = (e.target as HTMLInputElement).files?.[0]
+              if (f) upload(f)
+              ;(e.target as HTMLInputElement).value = ''
+            }}
+          />
+        </span>
+      </Row>
+      <Row
+        label={t('Accent colour')}
+        hint={
+          !color
+            ? t('None: reports keep their usual ink.')
+            : textOn(color)
+              ? t("Used for the rule under the brand's name and the report's label.")
+              : t(
+                  "No text reads well on this colour, so it marks only the rule under the brand's name.",
+                )
+        }
+      >
+        <span class="sm-inline">
+          <input
+            class="sm-colorpick"
+            type="color"
+            value={color ?? '#16181d'}
+            disabled={busy}
+            aria-label={t('Pick a colour')}
+            onChange={(e) => setColor((e.target as HTMLInputElement).value)}
+          />
+          <input
+            class="g-input sm-hexinput"
+            value={hex}
+            placeholder="#1a6bd6"
+            disabled={busy}
+            aria-label={t('Colour as a hex value')}
+            onInput={(e) => setHex((e.target as HTMLInputElement).value)}
+            onChange={(e) => setColor((e.target as HTMLInputElement).value)}
+          />
+          {color && (
+            <button
+              class="g-btn g-btn--ghost g-btn--sm"
+              type="button"
+              disabled={busy}
+              onClick={() => setColor('')}
+            >
+              {t('Remove')}
+            </button>
+          )}
+        </span>
+      </Row>
+    </section>
   )
 }

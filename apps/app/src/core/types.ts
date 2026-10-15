@@ -32,6 +32,9 @@ export interface Brand {
   alert_sent_at: string | null
   /** 1: Claude sorts its comments and describes its posts after each update; 0: left to people. */
   ai_sort: 0 | 1
+  /** The brand's logo on its PDF reports, a /media/ path, and its accent colour (#rrggbb). */
+  report_logo: string | null
+  report_color: string | null
   created_at: string
 }
 
