@@ -575,18 +575,6 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             {text}
           </button>
         ))}
-        <button
-          class="g-btn g-btn--ghost"
-          type="button"
-          disabled={busy}
-          onClick={go(async () => {
-            setTicket(await api.post<Ticket>('/api/auth/resend', { ticket: ticket.ticket }))
-            setF({ ...f, code: '' })
-            setStep('code')
-          })}
-        >
-          {t('Email me a code instead')}
-        </button>
       </Frame>
     )
   }

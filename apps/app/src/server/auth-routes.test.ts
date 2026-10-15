@@ -284,6 +284,25 @@ describe('signing in with a second step', () => {
     })
     expect(me).toMatchObject({ email: u.email, needs_second: false })
   })
+
+  it('never lets an emailed code stand in for the second step', async () => {
+    const { db, u } = setup()
+    const secret = tf.newTotpSecret()
+    tf.enableTotp(db, u.id, secret, tf.totp(tf.fromBase32(secret), tf.stepAt() - 1))
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const call = browser(db)
+    const t = await call('POST', '/api/auth/login', {
+      login: u.email,
+      password: 'first password here',
+    })
+    await expect(call('POST', '/api/auth/resend', { ticket: t.ticket })).rejects.toThrow(
+      'Use a recovery code',
+    )
+    expect(log).not.toHaveBeenCalled() // no code was emailed
+    await expect(
+      call('POST', '/api/auth/code', { ticket: t.ticket, code: '123456' }),
+    ).rejects.toThrow('Use a recovery code')
+  })
 })
 
 describe('changing how someone signs in', () => {

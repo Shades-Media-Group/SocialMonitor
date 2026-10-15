@@ -1091,6 +1091,8 @@ export const ru: Dict = {
     "Don't remember it? Send me a code instead": 'Не помните его? Пришлите мне код',
     'That code is not right.': 'Код неверный.',
     'Not base32.': 'Это не base32.',
+    'This account signs in with its passkey or authenticator. Lost it? Use a recovery code.':
+      'Этот аккаунт входит с помощью ключа доступа или приложения-аутентификатора. Потеряли его? Используйте код восстановления.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

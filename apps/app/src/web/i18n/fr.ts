@@ -1099,6 +1099,8 @@ export const fr: Dict = {
       'Vous ne vous en souvenez pas ? Envoyez-moi un code',
     'That code is not right.': 'Ce code n’est pas bon.',
     'Not base32.': 'Ce n’est pas du base32.',
+    'This account signs in with its passkey or authenticator. Lost it? Use a recovery code.':
+      'Ce compte se connecte avec sa clé d’accès ou son application d’authentification. Perdue ? Utilisez un code de secours.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

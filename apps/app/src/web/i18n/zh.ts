@@ -1035,6 +1035,8 @@ export const zh: Dict = {
     "Don't remember it? Send me a code instead": '不记得了？改为给我发送验证码',
     'That code is not right.': '验证码不正确。',
     'Not base32.': '不是 base32 格式。',
+    'This account signs in with its passkey or authenticator. Lost it? Use a recovery code.':
+      '此账号使用通行密钥或身份验证器登录。丢失了？请使用恢复码。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

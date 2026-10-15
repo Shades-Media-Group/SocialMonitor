@@ -290,8 +290,8 @@ export const authRoutes = [
     auth.upgradeHash(c.db, u.id, password, u.pass_hash)
     const lang = langOf(c)
     auth.setLang(c.db, u.id, lang)
-    // With an authenticator or a passkey, the ticket waits for that; the emailed code is sent
-    // only when asked for ("Email me a code instead").
+    // With an authenticator or a passkey, the ticket waits for that (or a recovery code). The
+    // emailed code is never offered then: the mailbox alone must not stand in for the second step.
     if (tf.hasSecondFactor(c.db, u.id)) {
       const t = auth.issue(c.db, u.id, 'code')
       return {
@@ -308,6 +308,11 @@ export const authRoutes = [
   r('POST', '/api/auth/resend', 'public', async (c) => {
     const owner = auth.ticketOwner(c.db, String(b(c).ticket ?? ''))
     if (!owner) throw new Error('That code has expired. Sign in again.')
+    if (tf.hasSecondFactor(c.db, owner.id))
+      throw new HttpError(
+        403,
+        'This account signs in with its passkey or authenticator. Lost it? Use a recovery code.',
+      )
     auth.checkRate(`resend:${owner.email}`, 3)
     auth.noteFailure(`resend:${owner.email}`)
     return sendCode(owner.id, owner.email, langOf(c), c)
@@ -323,6 +328,12 @@ export const authRoutes = [
     const via = stepName(x)
     let userId: number
     try {
+      // An emailed code never completes the sign-in of an account with a second step.
+      if (via === 'code' && owner && tf.hasSecondFactor(c.db, owner.id))
+        throw new HttpError(
+          403,
+          'This account signs in with its passkey or authenticator. Lost it? Use a recovery code.',
+        )
       if (via === 'code') userId = auth.consume(c.db, ticket, String(x.code ?? ''), 'code')
       else {
         const ok = owner ? await secondStep(c, owner.id, x, `ticket:${ticket}`) : false

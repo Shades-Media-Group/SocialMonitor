@@ -1092,6 +1092,8 @@ export const ro: Dict = {
     "Don't remember it? Send me a code instead": 'Nu ți-o amintești? Trimite-mi un cod',
     'That code is not right.': 'Codul nu este corect.',
     'Not base32.': 'Nu este base32.',
+    'This account signs in with its passkey or authenticator. Lost it? Use a recovery code.':
+      'Acest cont se conectează cu cheia de acces sau aplicația de autentificare. Ai pierdut-o? Folosește un cod de recuperare.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',
