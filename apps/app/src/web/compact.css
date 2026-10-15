@@ -4749,6 +4749,18 @@ th[aria-sort='ascending'] .sm-sortbtn::after {
   min-width: 0;
 }
 
+/* Share of voice: the second list in the box sits under its own small heading. */
+.sm-voice__sub {
+  margin: 18px 0 10px;
+  color: var(--g-text-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.sm-voice__sub + .sm-netbars + .sm-legend {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
 /* Brands as lines, one colour each. */
 .sm-mline {
   display: grid;

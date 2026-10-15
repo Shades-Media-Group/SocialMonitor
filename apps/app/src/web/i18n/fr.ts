@@ -725,6 +725,34 @@ export const fr: Dict = {
     'Side by side': 'Côte à côte',
     'The leader of each row is in bold': 'Le meilleur de chaque ligne est en gras',
     'Comments per week': 'Commentaires par semaine',
+    '{name} added. The next update reads it.': '{name} ajouté. La prochaine mise à jour le lira.',
+    'Remove {name}? Its posts and comments are deleted too.':
+      'Retirer {name} ? Ses publications et commentaires seront aussi supprimés.',
+    Rivals: 'Concurrents',
+    'Read with every update, compared on Share of voice':
+      'Lus à chaque mise à jour, comparés dans Part de voix',
+    'New rival': 'Nouveau concurrent',
+    'Add rival': 'Ajouter le concurrent',
+    'Five rivals at most: remove one to add another.':
+      'Cinq concurrents au plus : retirez-en un pour en ajouter un autre.',
+    'Engagement per post': 'Interactions par publication',
+    'No rivals yet.': "Aucun concurrent pour l'instant.",
+    'Add the brands you compete with in Settings, then press Update.':
+      'Ajoutez dans Paramètres les marques avec lesquelles vous êtes en concurrence, puis appuyez sur Mettre à jour.',
+    'Open Settings': 'Ouvrir les paramètres',
+    "Ask one of this brand's admins to add the brands it competes with.":
+      "Demandez à un administrateur de cette marque d'ajouter ses concurrents.",
+    'Little to go on for {names}: fewer than {n} comments in this period, so their shares can swing on a few people.':
+      'Peu de données pour {names} : moins de {n} commentaires sur la période, leurs parts peuvent donc varier à cause de quelques personnes.',
+    'Of all comments under their posts': 'Sur tous les commentaires sous leurs publications',
+    'How people feel': 'Ce que ressentent les gens',
+    'Share of voice over time': 'Part de voix dans le temps',
+    'Rivals belong to one of your brands.': "Les concurrents appartiennent à l'une de vos marques.",
+    'Name the rival.': 'Nommez le concurrent.',
+    'Add at least one profile link.': 'Ajoutez au moins un lien de profil.',
+    'A brand watches five rivals at most.': 'Une marque suit cinq concurrents au plus.',
+    'There is already a brand with this name.': 'Une marque porte déjà ce nom.',
+    'No such rival.': "Ce concurrent n'existe pas.",
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

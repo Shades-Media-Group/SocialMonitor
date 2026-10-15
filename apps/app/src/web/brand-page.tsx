@@ -14,6 +14,7 @@ import { About } from './views/about.tsx'
 import { Calendar } from './views/calendar.tsx'
 import { Stats } from './views/stats.tsx'
 import { BrandSettings } from './views/brand-settings.tsx'
+import { Voice } from './views/voice.tsx'
 
 /** One brand: its name and what it is, its own menu, and a network switch that filters every tab. */
 export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
@@ -45,6 +46,7 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
     tab === 'overview' ||
     tab === 'posts' ||
     tab === 'stats' ||
+    tab === 'voice' ||
     tab === 'comments' ||
     tab === 'calendar'
   const TAB_NAME = Object.fromEntries(TABS) as Record<Tab, string>
@@ -83,7 +85,11 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
                   ))}
               </div>
             )}
-            {(tab === 'overview' || tab === 'posts' || tab === 'stats' || tab === 'comments') && (
+            {(tab === 'overview' ||
+              tab === 'posts' ||
+              tab === 'stats' ||
+              tab === 'voice' ||
+              tab === 'comments') && (
               <select
                 class="g-select sm-select-sm"
                 aria-label={t('Period')}
@@ -134,6 +140,8 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
           <Posts {...view} />
         ) : tab === 'stats' ? (
           <Stats {...view} />
+        ) : tab === 'voice' ? (
+          <Voice {...view} />
         ) : tab === 'reports' ? (
           <Reports {...view} />
         ) : tab === 'calendar' ? (

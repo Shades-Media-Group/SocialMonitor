@@ -5,6 +5,7 @@ import { api } from '../api.ts'
 import { BadReport } from '../bad-report.tsx'
 import { t } from '../i18n.ts'
 import { NETWORK_NAME, NetworkMark, Row, Segmented, when } from '../ui.tsx'
+import { Rivals } from './rivals.tsx'
 
 type Range = 'new' | 'due' | 'all'
 
@@ -248,6 +249,8 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
           </span>
         </Row>
       </section>
+
+      <Rivals brand={brand} notify={notify} />
 
       <BadReport
         brand={brand}

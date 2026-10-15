@@ -725,6 +725,35 @@ export const ro: Dict = {
     'Side by side': 'Alături',
     'The leader of each row is in bold': 'Liderul fiecărui rând e îngroșat',
     'Comments per week': 'Comentarii pe săptămână',
+    '{name} added. The next update reads it.':
+      '{name} a fost adăugat. Următoarea actualizare îl citește.',
+    'Remove {name}? Its posts and comments are deleted too.':
+      'Elimini {name}? Postările și comentariile lui se șterg și ele.',
+    Rivals: 'Concurenți',
+    'Read with every update, compared on Share of voice':
+      'Citiți la fiecare actualizare, comparați în Cota de voce',
+    'New rival': 'Concurent nou',
+    'Add rival': 'Adaugă concurentul',
+    'Five rivals at most: remove one to add another.':
+      'Cel mult cinci concurenți: elimină unul ca să adaugi altul.',
+    'Engagement per post': 'Interacțiuni pe postare',
+    'No rivals yet.': 'Niciun concurent încă.',
+    'Add the brands you compete with in Settings, then press Update.':
+      'Adaugă în Setări brandurile cu care concurezi, apoi apasă Actualizează.',
+    'Open Settings': 'Deschide Setările',
+    "Ask one of this brand's admins to add the brands it competes with.":
+      'Roagă un administrator al acestui brand să adauge concurenții.',
+    'Little to go on for {names}: fewer than {n} comments in this period, so their shares can swing on a few people.':
+      'Puține date pentru {names}: sub {n} comentarii în această perioadă, așa că procentele pot varia din cauza câtorva oameni.',
+    'Of all comments under their posts': 'Din toate comentariile de sub postările lor',
+    'How people feel': 'Ce simt oamenii',
+    'Share of voice over time': 'Cota de voce în timp',
+    'Rivals belong to one of your brands.': 'Concurenții aparțin unuia dintre brandurile tale.',
+    'Name the rival.': 'Numește concurentul.',
+    'Add at least one profile link.': 'Adaugă cel puțin un link de profil.',
+    'A brand watches five rivals at most.': 'Un brand urmărește cel mult cinci concurenți.',
+    'There is already a brand with this name.': 'Există deja un brand cu acest nume.',
+    'No such rival.': 'Acest concurent nu există.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

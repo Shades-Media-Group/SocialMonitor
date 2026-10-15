@@ -6,6 +6,7 @@ import { usePref } from './prefs.ts'
 import { BrandLines } from './charts.tsx'
 import { JsonPanel } from './json.tsx'
 import { t } from './i18n.ts'
+import { bucket } from './trend.ts'
 
 /** One brand's figures for the period, as /api/compare sends them. */
 export interface CompareRow {
@@ -17,6 +18,8 @@ export interface CompareRow {
   praise: number
   positive_share: number | null
   negative_share: number | null
+  neutral_share: number | null
+  interactions_per_post: number | null
   posts: number
   likes: number
   reach: number
@@ -27,12 +30,13 @@ export interface CompareRow {
   per_day: { day: string; n: number }[]
 }
 
-const pct = (x: number | null) => (x == null ? '–' : `${Math.round(x * 100)}%`)
+export const pct = (x: number | null) => (x == null ? '–' : `${Math.round(x * 100)}%`)
 const pct1 = (x: number | null) => (x == null ? '–' : `${(x * 100).toFixed(1)}%`)
 
 type Key = Exclude<keyof CompareRow, 'id' | 'name' | 'per_day'>
 /** Each row of the table: its name, the figure, whether more is better, and how it reads. */
-export const METRICS: [string, Key, 'high' | 'low', (v: number | null) => string][] = [
+export type Metric = [string, Key, 'high' | 'low' | 'none', (v: number | null) => string]
+export const METRICS: Metric[] = [
   [t('Comments'), 'comments', 'high', fmt],
   [t('Complaints'), 'complaints', 'low', fmt],
   [t('Questions'), 'questions', 'high', fmt],
@@ -49,20 +53,15 @@ export const METRICS: [string, Key, 'high' | 'low', (v: number | null) => string
 ]
 
 /** The best value in a row, or null when there is no contest (one brand, or all the same). */
-export function leader(values: (number | null)[], better: 'high' | 'low') {
+export function leader(values: (number | null)[], better: Metric[2]) {
+  if (better === 'none') return null
   const known = values.filter((v): v is number => v != null)
   if (known.length < 2 || known.every((v) => v === known[0])) return null
   return better === 'high' ? Math.max(...known) : Math.min(...known)
 }
 
 /** Brands across, figures down; the leader of each row in bold. */
-export function CompareTable({
-  rows,
-  only = METRICS,
-}: {
-  rows: CompareRow[]
-  only?: typeof METRICS
-}) {
+export function CompareTable({ rows, only = METRICS }: { rows: CompareRow[]; only?: Metric[] }) {
   return (
     <div class="sm-scroll">
       <table class="sm-dtable sm-cmp">
@@ -100,16 +99,6 @@ export function CompareTable({
       </table>
     </div>
   )
-}
-
-/** Days into weeks when the period is long, so a year reads as 52 points instead of 365. */
-export function bucket(perDay: { day: string; n: number }[], size: number) {
-  const out = { days: [] as string[], values: [] as number[] }
-  for (let i = 0; i < perDay.length; i += size) {
-    out.days.push(perDay[i]!.day)
-    out.values.push(perDay.slice(i, i + size).reduce((a, d) => a + d.n, 0))
-  }
-  return out
 }
 
 /** Two to four brands you can see, side by side over the same period. */
