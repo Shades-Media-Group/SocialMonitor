@@ -759,6 +759,47 @@ export const ro: Dict = {
       'Un brand păstrează cel mult 100 de răspunsuri salvate.',
     'No such saved reply.': 'Nu există acest răspuns salvat.',
     'Choose off, weekly or monthly.': 'Alege oprit, săptămânal sau lunar.',
+    'Fans and critics': 'Fani și critici',
+    Fans: 'Fani',
+    Critics: 'Critici',
+    '{name} on the network': '{name} pe rețea',
+    'Show their comments': 'Arată comentariile lor',
+    '{n}% positive': '{n}% pozitive',
+    '{n}% negative': '{n}% negative',
+    'Followers unknown': 'Urmăritori necunoscuți',
+    'Comments per week': 'Comentarii pe săptămână',
+    'People who praise the brand twice or more show here.':
+      'Aici apar oamenii care laudă brandul de cel puțin două ori.',
+    'People who complain twice or more show here.':
+      'Aici apar oamenii care se plâng de cel puțin două ori.',
+    'Comments by {name}.': 'Comentariile lui {name}.',
+    'Show everyone': 'Arată pe toată lumea',
+    'Best hours to post': 'Cele mai bune ore pentru postare',
+    'Engagement by the hour a post went out, your time':
+      'Implicarea după ora la care a ieșit postarea, ora ta',
+    'Interactions per post by the hour it went out, your time':
+      'Interacțiuni pe postare după ora la care a ieșit, ora ta',
+    'From {n}. Hours with fewer than {min} posts are left out.':
+      'Din {n}. Orele cu mai puțin de {min} postări sunt lăsate deoparte.',
+    'Too few posts to tell yet: this needs 12 posts, with {min} or more in at least two hours. There are {n} here.':
+      'Prea puține postări deocamdată: e nevoie de 12 postări, cu cel puțin {min} în cel puțin două ore. Aici sunt {n}.',
+    'New ideas are ready.': 'Ideile noi sunt gata.',
+    'Ideas for the next post': 'Idei pentru următoarea postare',
+    'Suggested {when}': 'Sugerate {when}',
+    'Asking Claude…': 'Îl întreb pe Claude…',
+    'Suggest new ideas': 'Sugerează idei noi',
+    'Suggest ideas': 'Sugerează idei',
+    'Claude reads the posts that did best and worst and what people ask for in comments, then suggests what to post next.':
+      'Claude citește postările care au mers cel mai bine și cel mai slab și ce cer oamenii în comentarii, apoi sugerează ce să postezi în continuare.',
+    'A brand admin can ask Claude for ideas here.':
+      'Un administrator al brandului îi poate cere aici idei lui Claude.',
+    'Days and hours are in the time of the computer SocialMonitor runs on.':
+      'Zilele și orele sunt în ora calculatorului pe care rulează SocialMonitor.',
+    'Ideas need at least 5 posts from the last 90 days. Run an update.':
+      'Ideile au nevoie de cel puțin 5 postări din ultimele 90 de zile. Rulează o actualizare.',
+    'Claude answered without ideas. Try again.': 'Claude a răspuns fără idei. Încearcă din nou.',
+    'No AI to ask: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.':
+      'Nu e niciun AI de întrebat: conectează-te la Claude Code sau setează ANTHROPIC_API_KEY în .env.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

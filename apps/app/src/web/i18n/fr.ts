@@ -759,6 +759,47 @@ export const fr: Dict = {
       'Une marque garde au plus 100 réponses enregistrées.',
     'No such saved reply.': 'Cette réponse enregistrée n’existe pas.',
     'Choose off, weekly or monthly.': 'Choisissez désactivé, hebdomadaire ou mensuel.',
+    'Fans and critics': 'Fans et critiques',
+    Fans: 'Fans',
+    Critics: 'Critiques',
+    '{name} on the network': '{name} sur le réseau',
+    'Show their comments': 'Voir ses commentaires',
+    '{n}% positive': '{n} % positifs',
+    '{n}% negative': '{n} % négatifs',
+    'Followers unknown': 'Abonnés inconnus',
+    'Comments per week': 'Commentaires par semaine',
+    'People who praise the brand twice or more show here.':
+      'Les personnes qui félicitent la marque au moins deux fois apparaissent ici.',
+    'People who complain twice or more show here.':
+      'Les personnes qui se plaignent au moins deux fois apparaissent ici.',
+    'Comments by {name}.': 'Commentaires de {name}.',
+    'Show everyone': 'Voir tout le monde',
+    'Best hours to post': 'Meilleures heures pour publier',
+    'Engagement by the hour a post went out, your time':
+      'Engagement selon l’heure de publication, à votre heure',
+    'Interactions per post by the hour it went out, your time':
+      'Interactions par publication selon l’heure de publication, à votre heure',
+    'From {n}. Hours with fewer than {min} posts are left out.':
+      'Sur {n}. Les heures avec moins de {min} publications sont écartées.',
+    'Too few posts to tell yet: this needs 12 posts, with {min} or more in at least two hours. There are {n} here.':
+      'Trop peu de publications pour le dire : il en faut 12, dont au moins {min} sur au moins deux heures. Il y en a {n} ici.',
+    'New ideas are ready.': 'Les nouvelles idées sont prêtes.',
+    'Ideas for the next post': 'Idées pour la prochaine publication',
+    'Suggested {when}': 'Suggérées {when}',
+    'Asking Claude…': 'Claude réfléchit…',
+    'Suggest new ideas': 'Suggérer de nouvelles idées',
+    'Suggest ideas': 'Suggérer des idées',
+    'Claude reads the posts that did best and worst and what people ask for in comments, then suggests what to post next.':
+      'Claude lit les publications qui ont le mieux et le moins bien marché et ce que les gens demandent en commentaire, puis suggère quoi publier ensuite.',
+    'A brand admin can ask Claude for ideas here.':
+      'Un administrateur de la marque peut demander des idées à Claude ici.',
+    'Days and hours are in the time of the computer SocialMonitor runs on.':
+      'Les jours et heures suivent l’heure de l’ordinateur où tourne SocialMonitor.',
+    'Ideas need at least 5 posts from the last 90 days. Run an update.':
+      'Les idées demandent au moins 5 publications des 90 derniers jours. Lancez une mise à jour.',
+    'Claude answered without ideas. Try again.': 'Claude a répondu sans idées. Réessayez.',
+    'No AI to ask: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.':
+      'Aucune IA à qui demander : connectez-vous à Claude Code, ou définissez ANTHROPIC_API_KEY dans .env.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

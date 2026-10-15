@@ -451,6 +451,12 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
       .catch(() => {})
   }, [brand.id, version])
   const [postId, setPostId] = useState(() => sessionStorage.getItem('sm-post'))
+  // A fan or critic clicked on the overview arrives as a filter to their comments.
+  const [author, setAuthor] = useState(() => {
+    const v = sessionStorage.getItem('sm-author') ?? ''
+    sessionStorage.removeItem('sm-author')
+    return v
+  })
   const [tick, setTick] = useState(0)
   const [badOpen, setBadOpen] = useState(false)
 
@@ -462,6 +468,7 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
   if (q.trim()) query.set('q', q.trim())
   if (sentiment) query.set('sentiment', sentiment)
   if (category) query.set('category', category)
+  if (author) query.set('author', author)
   const qs = query.toString()
 
   useEffect(() => {
@@ -623,6 +630,15 @@ export function Comments({ brand, network, version, mode, notify, brands, reload
             }}
           >
             {t('Show every post')}
+          </button>
+        </p>
+      )}
+
+      {author && (
+        <p class="sm-quiet">
+          {t('Comments by {name}.', { name: author })}{' '}
+          <button class="sm-textbtn" type="button" onClick={() => setAuthor('')}>
+            {t('Show everyone')}
           </button>
         </p>
       )}

@@ -113,6 +113,8 @@ export interface Comment {
   author_avatar: string | null
   author_url: string | null
   media_url: string | null
+  /** The commenter's followers when the network showed them; null is unknown, never a guess. */
+  author_followers: number | null
 }
 
 /** A word the brand watches for in comments. */
@@ -149,6 +151,7 @@ export interface CollectedComment {
   author_avatar?: string | null
   author_url?: string | null
   media_url?: string | null
+  author_followers?: number | null
 }
 
 export interface RunScope {

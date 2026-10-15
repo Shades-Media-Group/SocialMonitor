@@ -18,6 +18,7 @@ import { JsonPanel } from '../json.tsx'
 import { locale, t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
 import { MoodStrip, PostCard, PostDrawer } from '../social.tsx'
+import { BestHours, PostIdeas } from '../ideas.tsx'
 
 const KIND: Record<string, string> = {
   video: 'Video',
@@ -171,6 +172,7 @@ function WhatWorks({ rows }: { rows: PostRow[] }) {
             ))}
           </ul>
         </section>
+        <BestHours rows={rows} />
       </div>
       <Scroller
         fit="column"
@@ -193,7 +195,16 @@ function WhatWorks({ rows }: { rows: PostRow[] }) {
 }
 
 /** The posts: a table to compare them, or a contact sheet of the real pictures. */
-export function Posts({ brand, network, version, mode, openUpdate, days, brands }: BrandView) {
+export function Posts({
+  brand,
+  network,
+  version,
+  mode,
+  openUpdate,
+  days,
+  brands,
+  notify,
+}: BrandView) {
   const [all, setAll] = useState<PostRow[] | null>(null)
   const [sort, setSort] = usePref<'new' | 'top' | 'growth'>('posts.sort', 'new')
   const [look, setLook] = usePref<'table' | 'grid'>('posts.look.v2', 'table')
@@ -279,6 +290,7 @@ export function Posts({ brand, network, version, mode, openUpdate, days, brands 
         </span>
       </div>
       {rows.length > 1 && <WhatWorks rows={rows} />}
+      <PostIdeas brand={brand} notify={notify} />
       {!rows.length ? (
         <Empty title={t('No posts in this period.')}>{t('Choose a longer period above.')}</Empty>
       ) : look === 'table' ? (

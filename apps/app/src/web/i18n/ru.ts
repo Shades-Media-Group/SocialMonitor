@@ -756,6 +756,47 @@ export const ru: Dict = {
       'У бренда может быть не больше 100 сохранённых ответов.',
     'No such saved reply.': 'Такого сохранённого ответа нет.',
     'Choose off, weekly or monthly.': 'Выберите: выкл., еженедельно или ежемесячно.',
+    'Fans and critics': 'Поклонники и критики',
+    Fans: 'Поклонники',
+    Critics: 'Критики',
+    '{name} on the network': '{name} в соцсети',
+    'Show their comments': 'Показать их комментарии',
+    '{n}% positive': '{n}% положительных',
+    '{n}% negative': '{n}% отрицательных',
+    'Followers unknown': 'Подписчики неизвестны',
+    'Comments per week': 'Комментарии в неделю',
+    'People who praise the brand twice or more show here.':
+      'Здесь появятся люди, которые хвалят бренд два раза и больше.',
+    'People who complain twice or more show here.':
+      'Здесь появятся люди, которые жалуются два раза и больше.',
+    'Comments by {name}.': 'Комментарии {name}.',
+    'Show everyone': 'Показать всех',
+    'Best hours to post': 'Лучшие часы для публикации',
+    'Engagement by the hour a post went out, your time':
+      'Вовлечённость по часу публикации, по вашему времени',
+    'Interactions per post by the hour it went out, your time':
+      'Взаимодействия на пост по часу публикации, по вашему времени',
+    'From {n}. Hours with fewer than {min} posts are left out.':
+      'По {n}. Часы, где меньше {min} постов, не учитываются.',
+    'Too few posts to tell yet: this needs 12 posts, with {min} or more in at least two hours. There are {n} here.':
+      'Пока слишком мало постов: нужно 12 постов, и хотя бы в двух часах по {min} и больше. Сейчас здесь {n}.',
+    'New ideas are ready.': 'Новые идеи готовы.',
+    'Ideas for the next post': 'Идеи для следующего поста',
+    'Suggested {when}': 'Предложено {when}',
+    'Asking Claude…': 'Спрашиваю Claude…',
+    'Suggest new ideas': 'Предложить новые идеи',
+    'Suggest ideas': 'Предложить идеи',
+    'Claude reads the posts that did best and worst and what people ask for in comments, then suggests what to post next.':
+      'Claude читает самые удачные и самые слабые посты и то, о чём люди просят в комментариях, и предлагает, что опубликовать дальше.',
+    'A brand admin can ask Claude for ideas here.':
+      'Администратор бренда может попросить здесь идеи у Claude.',
+    'Days and hours are in the time of the computer SocialMonitor runs on.':
+      'Дни и часы указаны по времени компьютера, на котором работает SocialMonitor.',
+    'Ideas need at least 5 posts from the last 90 days. Run an update.':
+      'Для идей нужно хотя бы 5 постов за последние 90 дней. Запустите обновление.',
+    'Claude answered without ideas. Try again.': 'Claude ответил без идей. Попробуйте ещё раз.',
+    'No AI to ask: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.':
+      'Некого спросить: войдите в Claude Code или задайте ANTHROPIC_API_KEY в .env.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

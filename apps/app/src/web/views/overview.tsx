@@ -21,6 +21,7 @@ import { locale, t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
 import { MoodStrip, PostDrawer } from '../social.tsx'
 import { CommentList } from './comments.tsx'
+import { FansAndCritics } from '../fans.tsx'
 import type { ProfileStat } from '../social.tsx'
 
 interface Insights {
@@ -725,41 +726,7 @@ export function Overview(v: BrandView) {
           </section>
         </div>
 
-        <Scroller
-          fit="column"
-          class="sm-span-4"
-          head={
-            <header class="sm-box__head">
-              <h2>{t('Most active people')}</h2>
-            </header>
-          }
-        >
-          <table class="sm-dtable">
-            <tbody>
-              {(ins?.authors ?? []).map((a) => (
-                <tr>
-                  <td>
-                    <a class="sm-person" href={a.url ?? undefined} target="_blank" rel="noreferrer">
-                      {a.avatar ? (
-                        <img class="sm-person__face" src={a.avatar} alt="" loading="lazy" />
-                      ) : (
-                        <NetworkMark network={a.network} size={13} />
-                      )}
-                      <span class="sm-person__name">{a.author}</span>
-                    </a>
-                  </td>
-                  <td class="sm-num">
-                    {a.complaints > 0 && (
-                      <span class="sm-dot sm-c-complaint" title={t('Complaints')} />
-                    )}
-                    {a.praise > 0 && <span class="sm-dot sm-c-praise" title={t('Praise')} />}
-                  </td>
-                  <td class="sm-num g-num">{a.n}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Scroller>
+        <FansAndCritics brandId={brand.id} network={network} days={days} version={version} />
       </div>
 
       <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />

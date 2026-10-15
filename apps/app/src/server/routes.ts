@@ -17,6 +17,7 @@ import {
   heatmap,
   daily,
   bestTimes,
+  fansAndCritics,
   profileStats,
   topAuthors,
   topWords,
@@ -49,6 +50,7 @@ import {
   listReplies,
   updateReply,
 } from '../core/replies.ts'
+import { latestIdeas, suggestIdeas } from '../core/ideas.ts'
 import { getSettings } from '../core/settings.ts'
 import { latestSummary, refreshSummary } from '../core/summary.ts'
 import type { User } from '../core/auth.ts'
@@ -334,6 +336,7 @@ export const routes: Route[] = [
       threads: query.get('threads') === '1',
       from: query.get('from') ?? undefined,
       readSince: query.get('since') ?? undefined,
+      author: query.get('author') ?? undefined,
       search: query.get('q') ?? undefined,
       sentiment: (['positive', 'negative', 'neutral', 'none'] as const).find(
         (v) => v === query.get('sentiment'),
@@ -547,6 +550,27 @@ export const routes: Route[] = [
       words: topWords(db, s, brand?.name ?? ''),
       watched: watched(db, s, JSON.parse(brand?.trackers ?? '[]') as Tracker[]),
     }
+  }),
+  // The brand's fans and critics in the window, with their reach where a network shows it.
+  r('GET', '/api/brands/:id/people', seeBrand, ({ db, params, query }) =>
+    fansAndCritics(db, {
+      brandId: id(params.id),
+      network: net(query.get('network')),
+      days: Number(query.get('days') ?? 30) || 0,
+    }),
+  ),
+  // Ideas for the next post: the latest kept, and new ones on an admin's request.
+  r(
+    'GET',
+    '/api/brands/:id/ideas',
+    seeBrand,
+    ({ db, params }) => latestIdeas(db, id(params.id)) ?? { ideas: [], created_at: null },
+  ),
+  r('POST', '/api/brands/:id/ideas', adminBrand, ({ db, params }) => {
+    const engine = pickEngine(getSettings(db))
+    if (!engine)
+      throw new Error('No AI to ask: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.')
+    return suggestIdeas(db, id(params.id), engine)
   }),
   r('GET', '/api/brands/:id/daily', seeBrand, ({ db, params, query }) => {
     const day = (k: string, fallback: string) => {
