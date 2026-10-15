@@ -2,78 +2,181 @@ import { createPublicKey, verify } from 'node:crypto'
 import type { IncomingMessage } from 'node:http'
 
 /**
- * Remote access, for running the dashboard behind a Cloudflare Tunnel. The dashboard has no
- * login of its own, so requests that do not come from this computer are accepted only with a
- * valid Cloudflare Access token: Access checks who you are, and this checks Access.
+ * Remote access, for running the dashboard behind a Cloudflare Tunnel with Cloudflare Access in
+ * front. Access checks who you are, and this checks Access: every request that came through the
+ * tunnel must carry a valid Access token, or it is refused. Requests made on this computer pass.
  *
  *   SOCIALMONITOR_PUBLIC_HOST   the tunnel's hostname, e.g. socialmonitor-app.example.com
- *   SOCIALMONITOR_ACCESS_TEAM   the Zero Trust team domain, e.g. myteam.cloudflareaccess.com
- *   SOCIALMONITOR_ACCESS_AUD    the Access application's audience tag
+ *   CF_ACCESS_TEAM              the Zero Trust team, e.g. myteam (or myteam.cloudflareaccess.com)
+ *   CF_ACCESS_AUD               the Access application's audience tag
+ *
+ * SOCIALMONITOR_ACCESS_TEAM and SOCIALMONITOR_ACCESS_AUD, the older names, still work.
  */
-const LOCAL = /^(127\.0\.0\.1|localhost)(:\d+)?$/
+type Env = Record<string, string | undefined>
+type Headers = Record<string, string | string[] | undefined>
 
-export const publicHost = () => process.env.SOCIALMONITOR_PUBLIC_HOST?.trim().toLowerCase() || null
+export const publicHost = (env: Env = process.env) =>
+  env.SOCIALMONITOR_PUBLIC_HOST?.trim().toLowerCase() || null
 
-/** True when the request was made on this computer, not through the tunnel. */
-export function isLocal(req: IncomingMessage) {
-  return LOCAL.test(req.headers.host ?? '') && !req.headers['cf-connecting-ip']
+const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1'])
+const one = (h: string | string[] | undefined) => (Array.isArray(h) ? h[0] : h)?.trim() || ''
+
+/** The team's domain and the audience tag, or null when Access is not set up. */
+export function accessConfig(env: Env = process.env) {
+  const team = (env.CF_ACCESS_TEAM ?? env.SOCIALMONITOR_ACCESS_TEAM)?.trim().toLowerCase()
+  const aud = (env.CF_ACCESS_AUD ?? env.SOCIALMONITOR_ACCESS_AUD)?.trim()
+  if (!team || !aud) return null
+  return { team: team.includes('.') ? team : `${team}.cloudflareaccess.com`, aud }
 }
 
-let certs: { keys: (JsonWebKey & { kid: string })[]; at: number } | null = null
-async function signingKeys(team: string) {
-  if (!certs || Date.now() - certs.at > 3600_000) {
-    const r = await fetch(`https://${team}/cdn-cgi/access/certs`)
-    if (!r.ok) throw new Error('Could not load Cloudflare Access keys.')
-    certs = {
-      keys: ((await r.json()) as { keys: (JsonWebKey & { kid: string })[] }).keys,
-      at: Date.now(),
+/**
+ * The Host headers this server answers to: this computer on its own port, the dev UI that
+ * proxies to it, and the tunnel's hostname. Any other name is a DNS-rebinding page or a
+ * misrouted hostname, and gets nothing.
+ */
+export function allowedHosts(port: number, env: Env = process.env) {
+  const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`])
+  const ui = env.SOCIALMONITOR_UI?.trim()
+  if (ui) {
+    try {
+      const h = new URL(ui).host.toLowerCase()
+      hosts.add(h)
+      hosts.add(h.replace('127.0.0.1', 'localhost'))
+    } catch {
+      /* not a URL: ignored */
     }
   }
-  return certs.keys
+  const pub = publicHost(env)
+  if (pub) hosts.add(pub)
+  return hosts
+}
+
+/** Signs that a request came through Cloudflare rather than from this computer. */
+export const tunneled = (headers: Headers, peer: string | undefined, env: Env = process.env) =>
+  !LOOPBACK.has(peer ?? '') ||
+  !!headers['cf-connecting-ip'] ||
+  !!headers['cf-ray'] ||
+  !!headers['cf-access-jwt-assertion'] ||
+  (!!publicHost(env) && one(headers.host).toLowerCase() === publicHost(env))
+
+// --- Access tokens -----------------------------------------------------------------------
+
+type Jwk = JsonWebKey & { kid: string }
+const jwks = new Map<string, { keys: Jwk[]; at: number }>()
+
+/** The team's signing keys, kept an hour; fetched again for an unknown key, at most once a minute. */
+async function signingKey(team: string, kid: string, fetcher: typeof fetch) {
+  const load = async () => {
+    const r = await fetcher(`https://${team}/cdn-cgi/access/certs`)
+    if (!r.ok) throw new Error('Could not load Cloudflare Access keys.')
+    const keys = ((await r.json()) as { keys?: Jwk[] }).keys ?? []
+    jwks.set(team, { keys, at: Date.now() })
+    return keys
+  }
+  const cached = jwks.get(team)
+  let keys = cached && Date.now() - cached.at < 3600_000 ? cached.keys : await load()
+  if (!keys.some((k) => k.kid === kid) && Date.now() - (jwks.get(team)?.at ?? 0) > 60_000)
+    keys = await load()
+  return keys.find((k) => k.kid === kid)
 }
 
 const b64 = (s: string) => Buffer.from(s, 'base64url')
+const SKEW = 30 // seconds of clock difference allowed on exp and nbf
 
-/** Checks the Cf-Access-Jwt-Assertion header: RS256 signature, audience, issuer and expiry. */
-async function validAccessToken(token: string | undefined) {
-  const team = process.env.SOCIALMONITOR_ACCESS_TEAM?.trim()
-  const aud = process.env.SOCIALMONITOR_ACCESS_AUD?.trim()
-  if (!token || !team || !aud) return false
-  const [h, p, s] = token.split('.')
-  if (!h || !p || !s) return false
-  const header = JSON.parse(b64(h).toString('utf8')) as { kid?: string; alg?: string }
-  if (header.alg !== 'RS256') return false
-  const jwk = (await signingKeys(team)).find((k) => k.kid === header.kid)
-  if (!jwk) return false
-  const ok = verify(
-    'RSA-SHA256',
-    Buffer.from(`${h}.${p}`),
-    createPublicKey({ key: jwk, format: 'jwk' }),
-    b64(s),
-  )
-  if (!ok) return false
-  const claims = JSON.parse(b64(p).toString('utf8')) as {
-    aud?: string | string[]
-    iss?: string
-    exp?: number
+/** Checks a Cf-Access-Jwt-Assertion: RS256 signature by the team's key, audience, issuer, exp and nbf. */
+export async function validAccessToken(
+  token: string | undefined,
+  config: { team: string; aud: string } | null,
+  fetcher: typeof fetch = fetch,
+) {
+  if (!token || !config) return false
+  try {
+    const [h, p, s] = token.split('.')
+    if (!h || !p || !s) return false
+    const header = JSON.parse(b64(h).toString('utf8')) as { kid?: string; alg?: string }
+    if (header.alg !== 'RS256' || !header.kid) return false
+    const jwk = await signingKey(config.team, header.kid, fetcher)
+    if (!jwk) return false
+    const key = createPublicKey({ key: jwk, format: 'jwk' })
+    if (!verify('RSA-SHA256', Buffer.from(`${h}.${p}`), key, b64(s))) return false
+    const c = JSON.parse(b64(p).toString('utf8')) as {
+      aud?: string | string[]
+      iss?: string
+      exp?: number
+      nbf?: number
+    }
+    const t = Date.now() / 1000
+    const auds = Array.isArray(c.aud) ? c.aud : [c.aud]
+    return (
+      auds.includes(config.aud) &&
+      c.iss === `https://${config.team}` &&
+      typeof c.exp === 'number' &&
+      c.exp + SKEW > t &&
+      (c.nbf === undefined || c.nbf - SKEW <= t)
+    )
+  } catch {
+    return false
   }
-  const auds = Array.isArray(claims.aud) ? claims.aud : [claims.aud]
-  return (
-    auds.includes(aud) &&
-    claims.iss === `https://${team}` &&
-    !!claims.exp &&
-    claims.exp * 1000 > Date.now()
-  )
 }
 
-/** Null when the request may proceed; otherwise why it is refused. */
-export async function refuseRemote(req: IncomingMessage): Promise<string | null> {
-  if (isLocal(req)) return null
-  const host = publicHost()
-  if (!host || (req.headers.host ?? '').toLowerCase() !== host)
-    return 'This dashboard only answers on this computer.'
-  const token = req.headers['cf-access-jwt-assertion']
-  return (await validAccessToken(Array.isArray(token) ? token[0] : token).catch(() => false))
-    ? null
-    : 'Sign in through Cloudflare Access first.'
+// --- The gate ------------------------------------------------------------------------------
+
+export type Gate =
+  | { ok: false; status: number; error: string }
+  /** `local`: made on this computer. `access`: came through the tunnel with a valid Access token. */
+  | { ok: true; local: boolean; access: boolean }
+
+let warned = false
+
+/**
+ * Decides whether a request may go on, before any routing. A Host outside the allow-list gets
+ * 421. A request from this computer with no tunnel signs passes as local. Anything that came
+ * through the tunnel passes only on the public hostname with a valid Access token; without
+ * Access configured, it is refused (fail closed) and the log says why once.
+ */
+export async function gate(
+  req: Pick<IncomingMessage, 'headers'> & { socket: { remoteAddress?: string } },
+  port: number,
+  env: Env = process.env,
+  fetcher: typeof fetch = fetch,
+): Promise<Gate> {
+  const host = one(req.headers.host).toLowerCase()
+  if (!allowedHosts(port, env).has(host))
+    return { ok: false, status: 421, error: 'This dashboard does not answer to that address.' }
+  if (!tunneled(req.headers, req.socket.remoteAddress, env))
+    return { ok: true, local: true, access: false }
+  const config = accessConfig(env)
+  if (!config) {
+    if (!warned) {
+      warned = true
+      console.warn(
+        'A request came through the tunnel, but Cloudflare Access is not set up: set CF_ACCESS_TEAM and CF_ACCESS_AUD. Tunnel requests are refused until then.',
+      )
+    }
+    return { ok: false, status: 403, error: 'Remote access is not set up on this computer.' }
+  }
+  if (host !== publicHost(env))
+    return { ok: false, status: 403, error: 'This dashboard only answers on this computer.' }
+  return (await validAccessToken(one(req.headers['cf-access-jwt-assertion']), config, fetcher))
+    ? { ok: true, local: false, access: true }
+    : { ok: false, status: 403, error: 'Sign in through Cloudflare Access first.' }
+}
+
+/**
+ * Who is asking, and from which country. cf-connecting-ip and cf-ipcountry are believed only on
+ * a request whose Access token was valid; anything else gets the socket's own address.
+ */
+export function clientOf(
+  headers: Headers,
+  peer: string | undefined,
+  access: boolean,
+): { ip: string; country: string | null } {
+  const sock = (peer ?? '').replace(/^::ffff:/, '')
+  if (!access) return { ip: sock, country: null }
+  const ip = one(headers['cf-connecting-ip'])
+  const country = one(headers['cf-ipcountry']).toUpperCase()
+  return {
+    ip: /^[0-9a-f.:]{2,45}$/i.test(ip) ? ip : sock,
+    country: /^[A-Z]{2}$/.test(country) && country !== 'XX' ? country : null,
+  }
 }

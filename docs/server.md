@@ -44,13 +44,19 @@ Put the token it prints in `.env` as `CLAUDE_CODE_OAUTH_TOKEN=…` and restart S
 
 ## Protect the saved accounts
 
-On macOS the encryption key for saved accounts lives in the Keychain. On Windows and Linux it falls back to `data/vault.key`, next to the database, so give the server its own key instead and keep it out of `data/`:
+The encryption key for saved accounts lives in the operating system's secret store, never next to the database:
+
+- **macOS:** the Keychain.
+- **Windows:** protected with DPAPI for the Windows user, in `%LOCALAPPDATA%\SocialMonitor\vault.key.dpapi`. Only that user on that PC can unlock it.
+- **Any server:** `SOCIALMONITOR_VAULT_KEY` in the service's environment wins over both.
+
+A `data/vault.key` from an older version is moved into the secret store the first time it is read, then deleted, so accounts you saved stay readable. Where no secret store works (Linux, or a Windows startup task that runs before anyone signs in and can't use DPAPI), SocialMonitor falls back to `data/vault.key` and says so loudly, in its log and in Settings. Give the server its own key instead:
 
 ```bash
 openssl rand -hex 32    # once; store the result in the server's secret store
 ```
 
-Set it as `SOCIALMONITOR_VAULT_KEY` in the service's environment (a systemd credential, a Windows service variable), not in `.env` inside the repository. Use full-disk encryption on the server too: it holds every account you save.
+Set it as `SOCIALMONITOR_VAULT_KEY` in the service's environment (a systemd credential, a Windows service variable), not in `.env` inside the repository. If you switch to it on a computer that already saved accounts, enter them again. Use full-disk encryption on the server too: it holds every account you save.
 
 ## Sign-in email and sessions
 

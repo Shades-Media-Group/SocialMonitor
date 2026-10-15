@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { accessMail, badMail, codeMail, digestMail, instantMail, linkMail } from './mail.ts'
+import {
+  accessMail,
+  badMail,
+  codeMail,
+  deviceName,
+  digestMail,
+  instantMail,
+  linkMail,
+  securityMail,
+} from './mail.ts'
+import type { SecurityKind } from './mail.ts'
 
 const link = 'https://app.example.test/reset/abc.def'
 
@@ -85,5 +95,71 @@ describe('emails in Gradient’s design', () => {
     expect(badMail('fr', 'Tavelo', 12, 'https://app.example.test').subject).toBe(
       'Tavelo : 12 commentaires négatifs',
     )
+  })
+
+  const facts = {
+    at: '2026-10-15T20:43:00.000Z',
+    ip: '203.0.113.7',
+    country: 'MD',
+    ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+    who: 'Ana Popescu',
+    by: 'Ion <b>Rusu</b>',
+  }
+  const app = 'https://app.example.test'
+
+  it('writes each security alert: what happened, when, from where, and what to do', () => {
+    const subjects: Record<SecurityKind, string> = {
+      newDevice: 'New sign-in to your SocialMonitor account',
+      password: 'Your SocialMonitor password was changed',
+      factorAdded: 'A second factor was added to your SocialMonitor account',
+      factorRemoved: 'A second factor was removed from your SocialMonitor account',
+      failed: 'Five failed sign-ins to your SocialMonitor account',
+      newAdmin: 'You are now an admin in SocialMonitor',
+      newAdminOthers: 'Ana Popescu is now an admin in SocialMonitor',
+    }
+    for (const [kind, subject] of Object.entries(subjects) as [SecurityKind, string][]) {
+      const m = securityMail('en', kind, facts, app)
+      expect(m.subject).toBe(subject)
+      expect(m.text).toContain('15 October 2026 at 20:43 UTC')
+      expect(m.html).toContain(`href="${app}/"`)
+      expect(m.text).toContain(app)
+      // What to do if it wasn't them, every time.
+      expect(m.text).toMatch(/If (this wasn’t you|you didn’t expect this)/)
+    }
+    const d = securityMail('en', 'newDevice', facts, app)
+    expect(d.text).toContain('203.0.113.7, Moldova')
+    expect(d.text).toContain('Chrome · macOS')
+    expect(d.text).toContain('change your password now')
+    const f = securityMail('en', 'failed', facts, app)
+    expect(f.text).toContain('paused for 15 minutes')
+    const a = securityMail('en', 'newAdminOthers', { ...facts, brand: 'Tavelo' }, app)
+    expect(a.text).toContain('made Ana Popescu an admin of Tavelo')
+    expect(a.html).not.toContain('<b>Rusu</b>')
+    expect(a.text).toContain('open Activity')
+    expect(securityMail('en', 'newAdmin', facts, app).text).toContain('made you a super admin')
+    expect(securityMail('en', 'factorAdded', { ...facts, method: 'passkey' }, app).text).toContain(
+      'passkey',
+    )
+  })
+
+  it('writes security alerts in the reader’s language, with unknowns named', () => {
+    const m = securityMail('ro', 'password', { at: facts.at }, app)
+    expect(m.subject).toBe('Parola ta SocialMonitor a fost schimbată')
+    expect(m.text).toContain('Necunoscut')
+    expect(m.text).toContain('UTC')
+    for (const lang of ['ru', 'fr', 'zh'])
+      expect(securityMail(lang, 'newDevice', facts, app).subject).not.toBe(
+        securityMail('en', 'newDevice', facts, app).subject,
+      )
+  })
+
+  it('names the device from a user agent', () => {
+    expect(deviceName(facts.ua)).toBe('Chrome · macOS')
+    expect(
+      deviceName(
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Version/18.0 Safari/604.1',
+      ),
+    ).toBe('Safari · iOS')
+    expect(deviceName('curl/8.7.1')).toBe('')
   })
 })

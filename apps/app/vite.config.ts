@@ -6,7 +6,8 @@ import preact from '@preact/preset-vite'
 export default defineConfig({
   root: 'src/web',
   plugins: [preact()],
-  build: { outDir: '../../dist', emptyOutDir: true },
+  // The server's CSP allows fonts and scripts from this origin only, never data: URLs.
+  build: { outDir: '../../dist', emptyOutDir: true, assetsInlineLimit: 0 },
   server: {
     host: '127.0.0.1',
     port: 4400,

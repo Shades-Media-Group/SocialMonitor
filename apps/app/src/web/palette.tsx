@@ -70,7 +70,15 @@ export function Palette({
     })),
     { group: t('Go to'), label: t('All brands'), icon: 'home', run: go('/') },
     ...(manages
-      ? [{ group: t('Go to'), label: t('People'), icon: 'group' as IconName, run: go('/people') }]
+      ? [
+          { group: t('Go to'), label: t('People'), icon: 'group' as IconName, run: go('/people') },
+          {
+            group: t('Go to'),
+            label: t('Activity'),
+            icon: 'lock' as IconName,
+            run: go('/activity'),
+          },
+        ]
       : []),
     ...(me.super
       ? [{ group: t('Go to'), label: t('Add a brand'), icon: 'add' as IconName, run: go('/new') }]

@@ -224,6 +224,27 @@ CREATE TABLE IF NOT EXISTS post_ideas (
   ideas TEXT NOT NULL,
   created_at TEXT NOT NULL
 );
+-- The audit log (core/audit.ts): who did what, when, from where. Only ever added to. No foreign
+-- keys, so removing a person or a brand never touches the history. Never a secret or comment text.
+CREATE TABLE IF NOT EXISTS audit (
+  id INTEGER PRIMARY KEY,
+  at TEXT NOT NULL,
+  actor INTEGER,
+  event TEXT NOT NULL,
+  target TEXT,
+  brand_id INTEGER,
+  ip TEXT,
+  ua TEXT,
+  detail TEXT NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS audit_actor ON audit(actor, event);
+CREATE INDEX IF NOT EXISTS audit_brand ON audit(brand_id);
+CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit
+BEGIN SELECT RAISE(ABORT, 'The audit log is append-only.'); END;
+-- Rows leave only after a year (366 days), through purgeAudit.
+CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit
+WHEN old.at >= strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-366 days')
+BEGIN SELECT RAISE(ABORT, 'Audit rows are kept for a year.'); END;
 `
 
 export type DB = DatabaseSync

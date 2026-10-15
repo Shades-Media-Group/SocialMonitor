@@ -19,6 +19,7 @@ import type { AuthInfo, Me } from './auth.tsx'
 import { AuthScreen, linkFromPath } from './auth.tsx'
 import { People } from './people.tsx'
 import { Compare } from './compare.tsx'
+import { Activity } from './activity.tsx'
 
 export const TABS = [
   ['overview', 'Overview'],
@@ -59,6 +60,7 @@ export type Route =
   | { page: 'print'; brandId: number }
   | { page: 'people' }
   | { page: 'compare' }
+  | { page: 'activity' }
 
 export function readRoute(): Route {
   // Old bookmarks and links used #/b/1/overview; they move to the clean address.
@@ -67,6 +69,7 @@ export function readRoute(): Route {
   if (a === 'new') return { page: 'new' }
   if (a === 'people') return { page: 'people' }
   if (a === 'compare') return { page: 'compare' }
+  if (a === 'activity') return { page: 'activity' }
   if (a === 'print' && Number(b) > 0) return { page: 'print', brandId: Number(b) }
   if (a === 'b' && Number(b) > 0) {
     const tab = (TABS.some(([t]) => t === c) ? c : 'overview') as Tab
@@ -299,16 +302,19 @@ function Dashboard({ me }: { me: Me }) {
           </button>
         ))}
       </div>
-      {canRun && route.page !== 'people' && (!brand || brand.my_role === 'admin') && (
-        <button
-          class="g-btn g-btn--primary g-btn--sm"
-          type="button"
-          disabled={!brands.length || !!running}
-          onClick={() => setUpdate({ open: true, brandId: brand?.id })}
-        >
-          {t('Update')}
-        </button>
-      )}
+      {canRun &&
+        route.page !== 'people' &&
+        route.page !== 'activity' &&
+        (!brand || brand.my_role === 'admin') && (
+          <button
+            class="g-btn g-btn--primary g-btn--sm"
+            type="button"
+            disabled={!brands.length || !!running}
+            onClick={() => setUpdate({ open: true, brandId: brand?.id })}
+          >
+            {t('Update')}
+          </button>
+        )}
     </>
   )
   const page = { ...state, actions }
@@ -344,6 +350,16 @@ function Dashboard({ me }: { me: Me }) {
               title={t('People')}
             >
               <Icon name="group" size={18} />
+            </a>
+          )}
+          {manages && (
+            <a
+              class="sm-rail__btn"
+              href="/activity"
+              aria-current={route.page === 'activity' ? 'page' : undefined}
+              title={t('Activity')}
+            >
+              <Icon name="lock" size={18} />
             </a>
           )}
           <span class="sm-rail__spacer" />
@@ -514,6 +530,8 @@ function Dashboard({ me }: { me: Me }) {
           <People {...page} />
         ) : route.page === 'compare' ? (
           <Compare {...page} />
+        ) : route.page === 'activity' && manages ? (
+          <Activity {...page} />
         ) : route.page === 'brand' && brand ? (
           <BrandPage {...page} brand={brand} tab={route.tab} />
         ) : (

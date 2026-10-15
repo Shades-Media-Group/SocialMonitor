@@ -139,7 +139,7 @@ export async function finishSignIn(db: DB, code: string, state: string) {
     t.access_token,
   )
   store(db, p.brandId, t, user.user)
-  return { brandId: p.brandId, user: user.user }
+  return { brandId: p.brandId, userId: p.userId, user: user.user }
 }
 
 /** A working access token for the brand's TikTok, refreshed when it has run out. */

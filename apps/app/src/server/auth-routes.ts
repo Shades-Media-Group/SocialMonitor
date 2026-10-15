@@ -3,9 +3,10 @@ import type { Role, User } from '../core/auth.ts'
 import { accessMail, codeMail, linkMail, mailReady, sendMail } from '../core/mail.ts'
 import { mailLang, mailText } from '../core/mail-text.ts'
 import * as store from '../core/store.ts'
-import { publicHost } from './access.ts'
+import { audit } from '../core/audit.ts'
+import { appUrl, securityEvent, signInFailed, signedIn } from '../core/security-events.ts'
 import type { Ctx } from './routes.ts'
-import { HttpError, r } from './routes.ts'
+import { HttpError, by, r } from './routes.ts'
 
 /**
  * Signing in, invitations and the people who may use the dashboard. A password, then a code
@@ -16,14 +17,28 @@ const b = (c: Ctx) => c.body as Record<string, unknown>
 const langOf = (c: Ctx) => mailLang(b(c).lang)
 
 /** Where links in emails point: the tunnel's address when there is one, else this computer. */
-const base = () => {
-  const host = publicHost()
-  if (host) return `https://${host}`
-  return (
-    process.env.SOCIALMONITOR_UI ??
-    `http://127.0.0.1:${process.env.SOCIALMONITOR_API_PORT ?? process.env.PORT ?? 4400}`
+const base = () => appUrl()
+/** Alerts go out after the reply; a failure is logged, never thrown at the person. */
+const later = (p: Promise<unknown>) =>
+  void p.catch((e: unknown) =>
+    console.warn(`A security event failed: ${e instanceof Error ? e.message : String(e)}`),
   )
-}
+/** Security-relevant facts about the request, for securityEvent. */
+const from = (c: Ctx) => ({ ip: c.ip, ua: c.ua, country: c.country })
+/** Tells the person and the super admins about a new admin. */
+const newAdmin = (c: Ctx & { user: User }, userId: number, brandId: number | null) =>
+  later(
+    securityEvent(c.db, {
+      type: 'new_admin',
+      userId,
+      ...from(c),
+      detail: {
+        byId: c.user.id,
+        by: c.user.name || c.user.email,
+        ...(brandId ? { brandId, brand: store.getBrand(c.db, brandId)?.name } : {}),
+      },
+    }),
+  )
 
 const signIn = (c: Ctx, user: User, keep = false) => {
   const seconds = keep ? auth.KEEP_DAYS * 86400 : undefined
@@ -59,6 +74,7 @@ async function invite(c: Ctx & { user: User }, user: User) {
 async function sendCode(userId: number, email: string, lang: ReturnType<typeof langOf>, c: Ctx) {
   const t = auth.issue(c.db, userId, 'code')
   await sendMail(email, codeMail(lang, t.secret))
+  audit(c.db, { ...by(c), actor: userId, event: 'code.sent', target: email })
   return { ticket: t.id, to: mask(email), mail: mailReady() }
 }
 
@@ -137,6 +153,14 @@ export const authRoutes = [
     if (!u || !ok || u.disabled || !u.verified_at) {
       auth.noteFailure(account)
       auth.noteFailure(`ip:${c.ip}`)
+      later(
+        signInFailed(c.db, {
+          userId: u?.id ?? null,
+          email: u?.email ?? null,
+          step: 'password',
+          ...from(c),
+        }),
+      )
       throw new HttpError(401, "That email or username and password don't match.")
     }
     const lang = langOf(c)
@@ -163,11 +187,16 @@ export const authRoutes = [
     try {
       userId = auth.consume(c.db, ticket, String(b(c).code ?? ''), 'code')
     } catch (e) {
-      if (owner) auth.noteFailure(`login:${owner}`)
+      if (owner) {
+        auth.noteFailure(`login:${owner}`)
+        const u = auth.findByEmail(c.db, owner)
+        later(signInFailed(c.db, { userId: u?.id ?? null, email: owner, step: 'code', ...from(c) }))
+      }
       throw e
     }
     const user = auth.getUser(c.db, userId)!
     signIn(c, user, b(c).keep === true)
+    later(signedIn(c.db, { userId: user.id, keep: b(c).keep === true, ...from(c) }))
     return me(c, user)
   }),
 
@@ -177,6 +206,7 @@ export const authRoutes = [
   r('POST', '/api/auth/logout-everywhere', 'user', (c) => {
     auth.endSessions(c.db, c.user.id)
     c.cookies.push(auth.sessionCookie('', c.secure, 0))
+    audit(c.db, { ...by(c), event: 'logout.everywhere', target: c.user.email })
   }),
 
   // Invitation and reset links: "<id>.<secret>" from the email.
@@ -190,7 +220,18 @@ export const authRoutes = [
       ...(purpose === 'invite' && x.name !== undefined ? { name: String(x.name) } : {}),
       ...(purpose === 'invite' && x.username ? { username: String(x.username) } : {}),
     })
-    return { email: auth.getUser(c.db, userId)!.email }
+    const email = auth.getUser(c.db, userId)!.email
+    if (purpose === 'reset')
+      later(
+        securityEvent(c.db, {
+          type: 'password_changed',
+          userId,
+          ...from(c),
+          detail: { via: 'reset link' },
+        }),
+      )
+    else audit(c.db, { ...by(c), actor: userId, event: 'invite.accepted', target: email })
+    return { email }
   }),
 
   r('POST', '/api/auth/forgot', 'public', async (c) => {
@@ -223,7 +264,10 @@ export const authRoutes = [
       ...(x.password !== undefined ? { password: String(x.password) } : {}),
     })
     const user = auth.getUser(c.db, c.user.id)!
-    if (x.password !== undefined) signIn(c, user) // the old sessions just ended; keep this one
+    if (x.password !== undefined) {
+      signIn(c, user) // the old sessions just ended; keep this one
+      later(securityEvent(c.db, { type: 'password_changed', userId: user.id, ...from(c) }))
+    }
     return me(c, user)
   }),
 
@@ -247,8 +291,28 @@ export const authRoutes = [
     let user = auth.findByEmail(c.db, email)
     const isNew = !user
     if (!user) user = auth.createUser(c.db, { email, name: String(x.name ?? '') })
+    const wasSuper = !!user.super
+    const wasAdmin = new Set(
+      auth
+        .memberships(c.db, user.id)
+        .filter((m) => m.role === 'admin')
+        .map((m) => m.brand_id),
+    )
     if (wantSuper) auth.updateUser(c.db, user.id, { super: true })
     for (const m of ms) if (m.role) auth.setMembership(c.db, user.id, m.brand_id, m.role)
+    if (wantSuper && !wasSuper) newAdmin(c, user.id, null)
+    for (const m of ms)
+      if (m.role === 'admin' && !wasAdmin.has(m.brand_id)) newAdmin(c, user.id, m.brand_id)
+    // One row per brand, so each brand's admins see who joined it.
+    const granted = ms.filter((m) => m.role)
+    for (const m of wantSuper ? [{ brand_id: null, role: null }] : granted)
+      audit(c.db, {
+        ...by(c),
+        event: 'person.invited',
+        target: email,
+        brandId: m.brand_id,
+        detail: { role: wantSuper ? 'super' : m.role, existing: !isNew },
+      })
     if (isNew) await invite(c, user)
     else
       await sendMail(
@@ -285,9 +349,32 @@ export const authRoutes = [
       ...(x.super !== undefined ? { super: !!x.super } : {}),
       ...(x.disabled !== undefined ? { disabled: !!x.disabled } : {}),
     })
+    if (x.super !== undefined && !!x.super !== !!u.super) {
+      audit(c.db, { ...by(c), event: 'person.role', target: u.email, detail: { super: !!x.super } })
+      if (x.super) newAdmin(c, u.id, null)
+    }
+    if (x.disabled !== undefined && !!x.disabled !== !!u.disabled)
+      audit(c.db, {
+        ...by(c),
+        event: x.disabled ? 'person.disabled' : 'person.enabled',
+        target: u.email,
+      })
     for (const m of (x.memberships ?? []) as { brand_id: unknown; role: unknown }[]) {
-      adminOf(c, Number(m.brand_id))
-      auth.setMembership(c.db, u.id, Number(m.brand_id), role(m.role))
+      const brandId = Number(m.brand_id)
+      adminOf(c, brandId)
+      const before = auth.roleFor(c.db, { ...u, super: 0 }, brandId)
+      const next = role(m.role)
+      auth.setMembership(c.db, u.id, brandId, next)
+      if (before !== next) {
+        audit(c.db, {
+          ...by(c),
+          event: 'person.role',
+          target: u.email,
+          brandId,
+          detail: { from: before, to: next },
+        })
+        if (next === 'admin') newAdmin(c, u.id, brandId)
+      }
     }
     return auth.listPeople(c.db, c.user).find((p) => p.id === u.id) ?? { removed: true }
   }),
@@ -296,7 +383,10 @@ export const authRoutes = [
     const u = target(c, c.params.id)
     if (u.id === c.user.id) throw new Error("You can't remove yourself.")
     if (u.super && supers(c) <= 1) throw new Error('Keep at least one super admin.')
+    const brands = auth.memberships(c.db, u.id)
     auth.deleteUser(c.db, u.id)
+    for (const m of brands.length ? brands : [{ brand_id: null }])
+      audit(c.db, { ...by(c), event: 'person.removed', target: u.email, brandId: m.brand_id })
   }),
 
   // Sends the invitation again, or a reset link to someone already set up.
