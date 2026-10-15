@@ -60,6 +60,20 @@ Set the `SMTP_*` keys and `SOCIALMONITOR_JWT_SECRET` as in [people and sign-in](
 
 "Sign in to networks" opens a browser window on the server itself, so do it once at the server's screen or over remote desktop. Through the tunnel the button is refused on purpose.
 
+## Lock down the server
+
+The tunnel only dials out, so nothing on the server needs to be reachable from the internet. Check these once, and again after any big update:
+
+- **Router:** no port forwards to the server, and UPnP off, so no program can open a port by itself.
+- **Windows Firewall:** on for every network profile (Domain, Private and Public).
+- **Remote Desktop:** off. If you need it, reach it only through Cloudflare Access for Infrastructure, never through an open port or a tunnel route.
+- **BitLocker:** on for the whole disk. Automatic sign-in is fine only together with BitLocker and a screen that locks.
+- **WSL:** `networkingMode` stays NAT (the default) in `.wslconfig`, never `mirrored`, so ports opened inside WSL stay on the PC.
+- **Docker Desktop:** Settings → General → "Expose daemon on tcp://localhost:2375 without TLS" stays off.
+- **Remote-desktop tools** (AnyDesk, Chrome Remote Desktop and the like): removed, or locked with two-factor sign-in and an allow-list of devices.
+
+Turn on the Cloudflare alerts in [remote access](remote-access.md#alerts) too.
+
 ## One tunnel per app
 
 SocialMonitor runs its own Cloudflare Tunnel, even when the server already runs tunnels for other apps. Revoking one tunnel then leaves the others up, and no tunnel can reach another app's ports. Set it up as in [remote access](remote-access.md):

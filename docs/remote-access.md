@@ -67,6 +67,19 @@ On **Pro or higher**, narrow the rule to the host, count over a minute and block
 
 Use IP, **10 requests per 1 minute**, Block for **10 minutes**. On Business, add `and http.request.method eq "POST"` and drop the exception for `/api/auth/me`.
 
+## Alerts
+
+In the Cloudflare dashboard, open Notifications → Add and turn on, by email:
+
+- **Tunnel Health Alert:** when the tunnel turns Degraded, Down or Inactive. Usually the computer is off or offline; sometimes it means something else took over the connection.
+- **Tunnel Creation or Deletion Event:** when any tunnel in the account is created or deleted, which you should only ever see after your own changes.
+
+Cloudflare has no alert for a new connector joining an existing tunnel, and a second connector is exactly what someone holding `data/tunnel/credentials.json` would add. Check now and then that the tunnel has one connector, from this computer: run `cloudflared tunnel info socialmonitor`, or look in Zero Trust → Networks → Tunnels. If you see one you don't know, delete the tunnel and run `yarn tunnel setup` again.
+
+## The computer behind the tunnel
+
+The tunnel is only as safe as the computer it runs on. Go through the checklist in [lock down the server](server.md#lock-down-the-server): no port forwards and UPnP off on the router, the firewall on, Remote Desktop off, BitLocker on, WSL in NAT mode, Docker's TCP daemon off, and remote-desktop tools removed or locked with two-factor sign-in.
+
 ## What stays local
 
 - The dashboard listens only on `127.0.0.1:4400`, never on a network address. The tunnel reaches it from inside your computer. Don't change that, and don't forward port 4400 on the router.
