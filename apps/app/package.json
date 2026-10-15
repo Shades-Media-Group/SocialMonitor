@@ -14,7 +14,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
     "fflate": "^0.8.3",
-    "nodemailer": "^7",
+    "nodemailer": "^10.0.13",
     "playwright": "^1.64.0",
     "zod": "^4.6.6"
   },
