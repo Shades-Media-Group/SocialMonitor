@@ -535,6 +535,7 @@ function Dashboard({ me }: { me: Me }) {
               <button
                 class="g-btn g-btn--primary"
                 type="button"
+                autofocus
                 onClick={() => {
                   later()
                   setSettingsOpen(true)

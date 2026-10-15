@@ -232,20 +232,19 @@ export function TwoStep({
   const localhost = `${location.protocol}//localhost${location.port ? `:${location.port}` : ''}`
   return (
     <>
-      {superAdmin && !protectedBy && (
-        <p class="g-error sm-security__ask" role="status">
-          {t(
-            'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.',
-          )}
-        </p>
-      )}
       <Row
         label={t('Passkeys')}
-        hint={
-          sec.passkeysHere
-            ? t('Sign in with your fingerprint, face or device PIN instead of a code.')
-            : t('Passkeys need a name, not a number: open {url} to add one.', { url: localhost })
-        }
+        hint={[
+          superAdmin && !protectedBy
+            ? t(
+                'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.',
+              )
+            : t('Sign in with your fingerprint, face or device PIN instead of a code.'),
+          !sec.passkeysHere &&
+            t('Passkeys need a name, not a number: open {url} to add one.', { url: localhost }),
+        ]
+          .filter(Boolean)
+          .join(' ')}
       >
         <div class="sm-accounts">
           {sec.passkeys.length > 0 && (
@@ -332,9 +331,11 @@ export function TwoStep({
       <Row
         label={t('Authenticator app')}
         hint={
-          sec.totp
-            ? t('On. Sign in with a code from the app instead of email.')
-            : t('Codes from an authenticator app on your phone or computer.')
+          setup
+            ? undefined
+            : sec.totp
+              ? t('On. Sign in with a code from the app instead of email.')
+              : t('Codes from an authenticator app on your phone or computer.')
         }
       >
         {setup ? (

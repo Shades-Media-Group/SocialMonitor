@@ -2458,6 +2458,7 @@ td.sm-hot {
   display: grid;
   gap: 12px;
   width: 100%;
+  min-width: 0;
 }
 .sm-qr {
   width: 168px;
@@ -2472,14 +2473,11 @@ td.sm-hot {
 }
 .sm-security__list {
   display: grid;
-  grid-template-columns: repeat(2, max-content);
-  gap: 6px 24px;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 6px 16px;
   margin: 0;
   padding: 0;
   list-style: none;
-}
-.sm-security__ask {
-  margin: 8px 0 0;
 }
 /* The ask to add a second step, for super admins without one. */
 .sm-ask {
@@ -2499,4 +2497,7 @@ td.sm-hot {
 }
 .sm-ask .sm-sheet__actions {
   margin-top: 8px;
+}
+.sm-accounts__do .sm-textbtn {
+  white-space: nowrap;
 }
