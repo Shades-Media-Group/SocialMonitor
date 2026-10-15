@@ -6,7 +6,16 @@ import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
 import { HttpError, routes } from './routes.ts'
 import { authRoutes } from './auth-routes.ts'
-import { SESSION_COOKIE, readCookie, readSession, seedAdmin } from '../core/auth.ts'
+import {
+  cookieAge,
+  cookieName,
+  getSession,
+  readCookie,
+  readSession,
+  rotateSession,
+  seedAdmin,
+  sessionCookie,
+} from '../core/auth.ts'
 import { seedFromFile } from './seed.ts'
 import { clientOf, gate, publicHost } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
@@ -120,7 +129,23 @@ const server = createServer(async (req, res) => {
   if (req.method === 'POST' && !/^application\/json\b/.test(req.headers['content-type'] ?? ''))
     return send(res, 415, { error: 'Send JSON.' })
   // Then the person: everything except the app's own files and the sign-in endpoints needs a session.
-  const user = readSession(db, readCookie(req.headers.cookie, SESSION_COOKIE))
+  const secure = !pass.local
+  // The visitor's address and country: Cloudflare's headers count only with a valid Access token.
+  const who = clientOf(req.headers, req.socket.remoteAddress, pass.access)
+  const ip = who.ip
+  const country = who.country
+  const client = { ua: String(req.headers['user-agent'] ?? '').slice(0, 300), ip, country }
+  const signed = readSession(db, readCookie(req.headers.cookie, cookieName(secure)), client)
+  const user = signed?.user ?? null
+  let session = signed?.session ?? null
+  const cookies: string[] = []
+  // A change of role gives the session a new id on its next request.
+  if (session?.rotate) {
+    const next = rotateSession(db, session)
+    session = getSession(db, next.id) ?? null
+    if (session) cookies.push(sessionCookie(next.token, secure, cookieAge(session)))
+  }
+  if (cookies.length) res.setHeader('set-cookie', cookies)
   const needsUser = url.pathname.startsWith('/api/') || url.pathname.startsWith('/media/')
   if (needsUser && !user && !url.pathname.startsWith('/api/auth/'))
     return send(res, 401, { error: 'Sign in first.', signin: true })
@@ -149,7 +174,6 @@ const server = createServer(async (req, res) => {
       if (r.method !== req.method) continue
       const m = r.path.exec(url.pathname)
       if (!m) continue
-      const who = clientOf(req.headers, req.socket.remoteAddress, pass.access)
       const ctx = {
         db,
         params: m.groups ?? {},
@@ -157,11 +181,14 @@ const server = createServer(async (req, res) => {
         body: req.method === 'GET' ? {} : await body(req),
         local: pass.local,
         user,
-        cookies: [] as string[],
-        secure: !pass.local,
-        ip: who.ip,
-        country: who.country,
-        ua: String(req.headers['user-agent'] ?? '').slice(0, 300),
+        cookies,
+        secure,
+        ip,
+        country,
+        ua: client.ua,
+        session,
+        client,
+        origin: origin ?? `${secure ? 'https' : 'http'}://${req.headers.host ?? HOST}`,
       }
       if (r.need !== 'public') {
         if (!user) throw new HttpError(401, 'Sign in first.')
@@ -193,7 +220,8 @@ const server = createServer(async (req, res) => {
     send(res, 404, { error: 'No such endpoint.' })
   } catch (e) {
     const status = e instanceof HttpError ? e.status : 400
-    send(res, status, { error: e instanceof Error ? e.message : String(e) })
+    const extra = e instanceof HttpError ? e.extra : undefined
+    send(res, status, { ...extra, error: e instanceof Error ? e.message : String(e) })
   }
 })
 

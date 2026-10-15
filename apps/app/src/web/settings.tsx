@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { AppState } from './app.tsx'
-import { api } from './api.ts'
-import { NETWORK_NAME, Row, Segmented, Sheet, count } from './ui.tsx'
+import { ApiError, api } from './api.ts'
+import type { Second, SecondOptions } from './auth.tsx'
+import { SecondFields, firstSecond, secondBody } from './auth.tsx'
+import { NETWORK_NAME, Row, Segmented, Sheet, ago, count, when } from './ui.tsx'
 import { JsonPanel } from './json.tsx'
 import { Accounts } from './accounts.tsx'
+import { TwoStep } from './security.tsx'
 import type { Lang } from './i18n.ts'
-import { LANGS, lang, setLang, t } from './i18n.ts'
+import { LANGS, lang, locale, setLang, t } from './i18n.ts'
 import { flushPrefs, setPref } from './prefs.ts'
 
 interface Settings {
@@ -134,6 +137,10 @@ export function SettingsSheet({
         />
       </Row>
       <Account me={me} notify={notify} />
+      <TwoStep open={open} notify={notify} superAdmin={me.super} />
+      <Row label={t('Devices')}>
+        <Devices open={open} notify={notify} />
+      </Row>
       {me.super && s && (
         <>
           <Row label={t('Gap')} hint={t('hours between updates that use a signed-in network')}>
@@ -248,12 +255,38 @@ export function SettingsSheet({
 
 /** The signed-in person: who they are, a new password, and signing out. */
 function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
-  const [pw, setPw] = useState<{ current: string; password: string } | null>(null)
+  const blank = { current: '', password: '', code: '' }
+  const [pw, setPw] = useState<typeof blank | null>(null)
+  const [ticket, setTicket] = useState<{ ticket: string; to: string; mail: boolean } | null>(null)
+  const [need, setNeed] = useState<SecondOptions | null>(null)
+  const [mode, setMode] = useState<Second>('totp')
+  const [factor, setFactor] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const close = () => {
+    setPw(null)
+    setTicket(null)
+    setNeed(null)
+    setError(null)
+  }
   const out = (path: string) => () =>
     api
       .post(path)
       .then(() => dispatchEvent(new Event('sm-signed-out')))
       .catch((e: Error) => notify(e.message))
+  const field = (key: keyof typeof blank, label: string, input: Record<string, unknown>) =>
+    pw && (
+      <label class="sm-auth__field">
+        <span>{label}</span>
+        <input
+          class="g-input"
+          required
+          {...input}
+          value={pw[key]}
+          onInput={(e) => setPw({ ...pw, [key]: (e.target as HTMLInputElement).value })}
+        />
+      </label>
+    )
   return (
     <Row
       label={t('You')}
@@ -264,49 +297,107 @@ function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
         {pw ? (
           <form
             class="sm-account__pw"
+            aria-busy={busy}
             onSubmit={async (e) => {
               e.preventDefault()
+              setError(null)
+              setBusy(true)
               try {
-                await api.patch('/api/auth/me', pw)
-                setPw(null)
+                await api.post('/api/auth/password', {
+                  password: pw.password,
+                  ...(ticket ? { ticket: ticket.ticket, code: pw.code } : { current: pw.current }),
+                  ...(need ? await secondBody(need, mode, factor) : {}),
+                })
+                close()
                 notify(t('Password changed. Other devices are signed out.'))
               } catch (err) {
-                notify((err as Error).message)
+                const ask =
+                  err instanceof ApiError ? (err.data.second as SecondOptions | undefined) : null
+                if (ask) {
+                  if (!need) setMode(firstSecond(ask))
+                  setError(need ? (err as Error).message : null)
+                  setNeed(ask)
+                  setFactor('')
+                } else setError((err as Error).message)
+              } finally {
+                setBusy(false)
               }
             }}
           >
-            <label class="sm-auth__field">
-              <span>{t('Current password')}</span>
-              <input
-                class="g-input"
-                type="password"
-                required
-                autocomplete="current-password"
-                value={pw.current}
-                onInput={(e) => setPw({ ...pw, current: (e.target as HTMLInputElement).value })}
-              />
-            </label>
-            <label class="sm-auth__field">
-              <span>{t('New password')}</span>
-              <input
-                class="g-input"
-                type="password"
-                required
-                minLength={10}
-                autocomplete="new-password"
-                value={pw.password}
-                onInput={(e) => setPw({ ...pw, password: (e.target as HTMLInputElement).value })}
-              />
-            </label>
+            {ticket ? (
+              <>
+                <p class="sm-quiet">
+                  {ticket.mail
+                    ? t('We sent a six-digit code to {to}. It works for 10 minutes.', {
+                        to: ticket.to,
+                      })
+                    : t(
+                        'Email is not set up, so the code was printed in the console of the computer SocialMonitor runs on.',
+                      )}
+                </p>
+                {field('code', t('Code'), {
+                  inputMode: 'numeric',
+                  autocomplete: 'one-time-code',
+                  pattern: '[0-9]{6}',
+                  maxLength: 6,
+                })}
+              </>
+            ) : (
+              <>
+                {field('current', t('Current password'), {
+                  type: 'password',
+                  autocomplete: 'current-password',
+                })}
+                <div>
+                  <button
+                    class="sm-textbtn"
+                    type="button"
+                    onClick={async () => {
+                      setError(null)
+                      try {
+                        setTicket(await api.post('/api/auth/password/code'))
+                      } catch (err) {
+                        setError((err as Error).message)
+                      }
+                    }}
+                  >
+                    {t("Don't remember it? Send me a code instead")}
+                  </button>
+                </div>
+              </>
+            )}
+            {field('password', t('New password'), {
+              type: 'password',
+              minLength: 10,
+              autocomplete: 'new-password',
+            })}
+            {need && (
+              <>
+                <p class="sm-quiet">
+                  {t(
+                    'This account has two-step sign-in. Confirm it is you to change the password.',
+                  )}
+                </p>
+                <SecondFields
+                  plain
+                  s={need}
+                  mode={mode}
+                  setMode={setMode}
+                  value={factor}
+                  setValue={setFactor}
+                />
+              </>
+            )}
+            {error && (
+              <p class="g-error" role="alert">
+                {error}
+              </p>
+            )}
             <div class="sm-inline">
-              <button class="g-btn g-btn--sm" type="submit">
+              <button class="g-btn g-btn--sm" type="submit" disabled={busy}>
                 {t('Change password')}
               </button>
-              <button
-                class="g-btn g-btn--ghost g-btn--sm"
-                type="button"
-                onClick={() => setPw(null)}
-              >
+              <button class="g-btn g-btn--ghost g-btn--sm" type="button" onClick={close}>
                 {t('Cancel')}
               </button>
             </div>
@@ -316,19 +407,114 @@ function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
             <button class="g-btn g-btn--sm" type="button" onClick={out('/api/auth/logout')}>
               {t('Sign out')}
             </button>
-            <button
-              class="g-btn g-btn--ghost g-btn--sm"
-              type="button"
-              onClick={() => setPw({ current: '', password: '' })}
-            >
+            <button class="g-btn g-btn--ghost g-btn--sm" type="button" onClick={() => setPw(blank)}>
               {t('Change password')}
-            </button>
-            <button class="sm-textbtn" type="button" onClick={out('/api/auth/logout-everywhere')}>
-              {t('Sign out everywhere')}
             </button>
           </div>
         )}
       </div>
     </Row>
+  )
+}
+
+interface Device {
+  id: string
+  browser: string | null
+  os: string | null
+  country: string | null
+  local: boolean
+  created_at: string
+  seen_at: string
+  current: boolean
+}
+
+const regions = (() => {
+  try {
+    return new Intl.DisplayNames(locale, { type: 'region' })
+  } catch {
+    return null
+  }
+})()
+/** Where a session was last used: this computer, or the country Cloudflare reported. */
+function place(d: Device) {
+  if (d.local) return t('This computer')
+  if (!d.country || d.country === 'XX' || d.country === 'T1') return null
+  try {
+    return regions?.of(d.country) ?? d.country
+  } catch {
+    return d.country
+  }
+}
+
+/** The browsers this person is signed in on: sign one out, or all of them. */
+function Devices({ open, notify }: { open: boolean; notify: (s: string) => void }) {
+  const [list, setList] = useState<Device[] | null>(null)
+  const load = () =>
+    api
+      .get<Device[]>('/api/auth/sessions')
+      .then(setList)
+      .catch(() => setList(null))
+  useEffect(() => {
+    if (open) load()
+  }, [open])
+  const end = (d: Device) =>
+    api
+      .del(`/api/auth/sessions/${d.id}`)
+      .then(() => {
+        if (d.current) dispatchEvent(new Event('sm-signed-out'))
+        else void load()
+      })
+      .catch((e: Error) => notify(e.message))
+  if (!list) return null
+  return (
+    <div class="sm-accounts">
+      <ul class="sm-accounts__list">
+        {list.map((d) => {
+          const name =
+            d.browser && d.os
+              ? t('{browser} on {os}', { browser: d.browser, os: d.os })
+              : (d.browser ?? d.os ?? t('Unknown browser'))
+          const where = place(d)
+          return (
+            <li>
+              <div class="sm-accounts__who">
+                <strong>{name}</strong>
+                <span class="sm-quiet" title={t('Signed in {when}', { when: when(d.created_at) })}>
+                  {[where, d.current ? t('This device') : ago(d.seen_at)]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
+              </div>
+              <div class="sm-accounts__do">
+                <button
+                  class="sm-textbtn"
+                  type="button"
+                  aria-label={t('Sign out {device}', { device: name })}
+                  onClick={() => end(d)}
+                >
+                  {t('Sign out')}
+                </button>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+      {list.length > 1 && (
+        <div>
+          <button
+            class="sm-textbtn"
+            type="button"
+            onClick={() =>
+              api
+                .post('/api/auth/logout-everywhere')
+                .then(() => dispatchEvent(new Event('sm-signed-out')))
+                .catch((e: Error) => notify(e.message))
+            }
+          >
+            {t('Sign out everywhere')}
+          </button>
+        </div>
+      )}
+    </div>
   )
 }

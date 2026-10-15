@@ -245,6 +245,45 @@ BEGIN SELECT RAISE(ABORT, 'The audit log is append-only.'); END;
 CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit
 WHEN old.at >= strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-366 days')
 BEGIN SELECT RAISE(ABORT, 'Audit rows are kept for a year.'); END;
+-- Signed-in browsers. id is the SHA-256 of the random id in the cookie, never the id itself.
+-- version is users.session_version when it began; rotate asks for a new id on the next request
+-- (after a change of role); confirmed_at is when the password was last re-entered in it.
+CREATE TABLE IF NOT EXISTS sessions (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  version INTEGER NOT NULL,
+  keep INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  seen_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  ua TEXT NOT NULL DEFAULT '',
+  ip TEXT NOT NULL DEFAULT '',
+  country TEXT,
+  rotate INTEGER NOT NULL DEFAULT 0,
+  confirmed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
+-- Single-use recovery codes for the second step of signing in, as SHA-256 hashes.
+CREATE TABLE IF NOT EXISTS recovery_codes (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code_hash TEXT NOT NULL,
+  used_at TEXT,
+  PRIMARY KEY (user_id, code_hash)
+);
+-- Passkeys (WebAuthn credentials). id is the credential id (base64url); rp_id the host it was
+-- made on (localhost or the tunnel's), since a passkey works only there.
+CREATE TABLE IF NOT EXISTS passkeys (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  public_key TEXT NOT NULL,
+  counter INTEGER NOT NULL DEFAULT 0,
+  transports TEXT NOT NULL DEFAULT '[]',
+  rp_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  last_used_at TEXT
+);
+CREATE INDEX IF NOT EXISTS passkeys_user ON passkeys(user_id);
 `
 
 export type DB = DatabaseSync
@@ -360,6 +399,11 @@ function migrate(db: DatabaseSync) {
     db.exec(
       'ALTER TABLE brands ADD COLUMN competitor_of INTEGER REFERENCES brands(id) ON DELETE CASCADE',
     )
+  // An authenticator app: its secret (base32) and the last step used, so each code works once.
+  if (!has('users', 'totp_secret')) {
+    db.exec('ALTER TABLE users ADD COLUMN totp_secret TEXT')
+    db.exec('ALTER TABLE users ADD COLUMN totp_step INTEGER')
+  }
   // Each brand's own positive and negative categories.
   if (!has('brands', 'categories'))
     db.exec("ALTER TABLE brands ADD COLUMN categories TEXT NOT NULL DEFAULT '[]'")

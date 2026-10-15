@@ -1,6 +1,8 @@
 import { useId, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
-import { api } from './api.ts'
+import { startAuthentication } from '@simplewebauthn/browser'
+import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser'
+import { ApiError, api } from './api.ts'
 import { Icon, Logo, navigate } from './ui.tsx'
 import { t } from './i18n.ts'
 
@@ -12,7 +14,103 @@ export interface Me {
   super: boolean
   memberships: { brand_id: number; role: 'viewer' | 'admin' }[]
   prefs?: Record<string, unknown>
+  /** A super admin without a passkey or authenticator yet. */
+  needs_second?: boolean
 }
+/** What the password step answers: a ticket, and the second steps besides the emailed code. */
+interface Ticket {
+  ticket: string
+  to: string
+  mail: boolean
+  second?: SecondOptions
+}
+/** The second steps a person can use, as the server lists them. */
+export interface SecondOptions {
+  totp: boolean
+  recovery: boolean
+  passkey: PublicKeyCredentialRequestOptionsJSON | null
+}
+export type Second = 'passkey' | 'totp' | 'recovery'
+export const firstSecond = (s: SecondOptions): Second =>
+  s.passkey ? 'passkey' : s.totp ? 'totp' : 'recovery'
+/** What to send for the chosen second step; a passkey asks the browser first. */
+export const secondBody = async (s: SecondOptions, mode: Second, value: string) =>
+  mode === 'passkey' ? { passkey: await askPasskey(s.passkey!) } : { [mode]: value }
+
+/**
+ * The second step inside a password change or reset, when the account has one: the passkey
+ * prompt or a code field, and the other ways as quiet buttons. `plain` is Settings' look.
+ */
+export function SecondFields({
+  s,
+  mode,
+  setMode,
+  value,
+  setValue,
+  plain = false,
+}: {
+  s: SecondOptions
+  mode: Second
+  setMode: (m: Second) => void
+  value: string
+  setValue: (v: string) => void
+  plain?: boolean
+}) {
+  const label = mode === 'totp' ? t('Code from your authenticator app') : t('Recovery code')
+  const input = {
+    required: true,
+    autocomplete: mode === 'totp' ? 'one-time-code' : 'off',
+    inputMode: mode === 'totp' ? ('numeric' as const) : undefined,
+    value,
+    onInput: (e: Event) => setValue((e.target as HTMLInputElement).value),
+  }
+  const others = (
+    [
+      ['passkey', t('Use your passkey')],
+      ['totp', t('Use your authenticator app')],
+      ['recovery', t('Use a recovery code')],
+    ] as [Second, string][]
+  ).filter(([k]) => k !== mode && (k === 'passkey' ? !!s.passkey : s[k]))
+  const switches = others.map(([k, text]) => (
+    <button
+      class={plain ? 'sm-textbtn' : 'g-btn g-btn--ghost'}
+      type="button"
+      onClick={() => {
+        setMode(k)
+        setValue('')
+      }}
+    >
+      {text}
+    </button>
+  ))
+  return (
+    <>
+      {mode === 'passkey' ? (
+        <p class={plain ? 'sm-quiet' : 'g-hint'}>
+          {t('Your browser asks for your passkey when you save.')}
+        </p>
+      ) : plain ? (
+        <label class="sm-auth__field">
+          <span>{label}</span>
+          <input class="g-input" key={mode} ref={focus} {...input} />
+        </label>
+      ) : (
+        <Field key={mode} label={label} inputRef={focus} {...input} />
+      )}
+      {plain ? others.length > 0 && <div class="sm-inline">{switches}</div> : switches}
+    </>
+  )
+}
+
+/** The browser's passkey prompt; cancelling it reads as a plain sentence, not a DOMException. */
+export async function askPasskey(options: PublicKeyCredentialRequestOptionsJSON) {
+  try {
+    return await startAuthentication({ optionsJSON: options })
+  } catch {
+    throw new Error(t('The passkey was not used. Try again, or choose another way.'))
+  }
+}
+
 export interface AuthInfo {
   user: Me | null
   setup: boolean
@@ -198,7 +296,11 @@ const value = (e: Event) => (e.target as HTMLInputElement).value
  */
 export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => void }) {
   const link = linkFromPath()
-  const [step, setStep] = useState<'signin' | 'code' | 'forgot' | 'sent'>('signin')
+  const [step, setStep] = useState<'signin' | 'code' | 'second' | 'forgot' | 'reset'>('signin')
+  const [second, setSecond] = useState<Second>('totp')
+  // A password change on an account with two-step sign-in: what it can use, and the answer.
+  const [need, setNeed] = useState<SecondOptions | null>(null)
+  const [factor, setFactor] = useState('')
   const [f, setF] = useState({
     login: lastLogin(),
     keep: true,
@@ -208,7 +310,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
     username: '',
     email: '',
   })
-  const [ticket, setTicket] = useState<{ ticket: string; to: string; mail: boolean } | null>(null)
+  const [ticket, setTicket] = useState<Ticket | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [resent, setResent] = useState(false)
@@ -223,7 +325,14 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
     try {
       await fn()
     } catch (err) {
-      setError((err as Error).message)
+      const ask = err instanceof ApiError ? (err.data.second as SecondOptions | undefined) : null
+      if (ask) {
+        // The first time it is a question, not a mistake: the fields appear with a hint.
+        if (!need) setSecond(firstSecond(ask))
+        setError(need ? (err as Error).message : null)
+        setNeed(ask)
+        setFactor('')
+      } else setError((err as Error).message)
     } finally {
       setBusy(false)
     }
@@ -238,7 +347,23 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
       {text}
     </button>
   )
+  const withSecond = async () => (need ? secondBody(need, second, factor) : {})
+  const secondFields = need && (
+    <>
+      <p class="g-hint">
+        {t('This account has two-step sign-in. Confirm it is you to change the password.')}
+      </p>
+      <SecondFields
+        s={need}
+        mode={second}
+        setMode={setSecond}
+        value={factor}
+        setValue={setFactor}
+      />
+    </>
+  )
   const startAgain = () => {
+    setNeed(null)
     setStep('signin')
     setResent(false)
     setError(null)
@@ -270,7 +395,9 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
             kind: link.kind,
             password: f.password,
             ...(link.kind === 'invite' ? { name: f.name, username: f.username } : {}),
+            ...(await withSecond()),
           })
+          setNeed(null)
           setF({ ...f, login: r.email, password: '' })
           navigate('/')
           setStep('signin')
@@ -305,6 +432,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
           onInput={set('password')}
           inputRef={link.kind === 'invite' ? undefined : focus}
         />
+        {secondFields}
         {err}
         {submit(t('Save password'))}
       </Frame>
@@ -373,6 +501,96 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
       </Frame>
     )
 
+  if (step === 'second' && ticket?.second) {
+    const s = ticket.second
+    const others: [Second, string][] = (
+      [
+        ['passkey', t('Use your passkey')],
+        ['totp', t('Use your authenticator app')],
+        ['recovery', t('Use a recovery code')],
+      ] as [Second, string][]
+    ).filter(([k]) => k !== second && s[k])
+    return (
+      <Frame
+        title={
+          second === 'passkey'
+            ? t('Use your passkey')
+            : second === 'totp'
+              ? t('Enter the code from your app')
+              : t('Enter a recovery code')
+        }
+        busy={busy}
+        onSubmit={go(async () => {
+          onIn(
+            await api.post<Me>('/api/auth/code', {
+              ticket: ticket.ticket,
+              [second]: second === 'passkey' ? await askPasskey(s.passkey!) : f.code,
+              keep: f.keep,
+            }),
+          )
+        })}
+      >
+        {who}
+        {second === 'passkey' ? (
+          <p class="g-hint">{t('Your browser asks for the passkey you added for this account.')}</p>
+        ) : second === 'totp' ? (
+          <Field
+            key="totp"
+            label={t('Six-digit code')}
+            required
+            inputMode="numeric"
+            autocomplete="one-time-code"
+            pattern="[0-9 ]{6,7}"
+            maxLength={7}
+            value={f.code}
+            onInput={set('code')}
+            inputRef={focus}
+          />
+        ) : (
+          <Field
+            key="recovery"
+            label={t('Recovery code')}
+            hint={t('Each recovery code works once.')}
+            required
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck={false}
+            value={f.code}
+            onInput={set('code')}
+            inputRef={focus}
+          />
+        )}
+        {err}
+        {submit(second === 'passkey' ? t('Continue') : t('Verify'))}
+        {others.map(([k, text]) => (
+          <button
+            class="g-btn g-btn--ghost"
+            type="button"
+            onClick={() => {
+              setSecond(k)
+              setError(null)
+              setF({ ...f, code: '' })
+            }}
+          >
+            {text}
+          </button>
+        ))}
+        <button
+          class="g-btn g-btn--ghost"
+          type="button"
+          disabled={busy}
+          onClick={go(async () => {
+            setTicket(await api.post<Ticket>('/api/auth/resend', { ticket: ticket.ticket }))
+            setF({ ...f, code: '' })
+            setStep('code')
+          })}
+        >
+          {t('Email me a code instead')}
+        </button>
+      </Frame>
+    )
+  }
+
   if (step === 'code' && ticket)
     return (
       <Frame
@@ -419,11 +637,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
           type="button"
           disabled={busy}
           onClick={go(async () => {
-            setTicket(
-              await api.post<{ ticket: string; to: string; mail: boolean }>('/api/auth/resend', {
-                ticket: ticket.ticket,
-              }),
-            )
+            setTicket(await api.post<Ticket>('/api/auth/resend', { ticket: ticket.ticket }))
             setF({ ...f, code: '' })
             setResent(true)
           })}
@@ -433,43 +647,107 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
       </Frame>
     )
 
-  if (step === 'forgot' || step === 'sent')
+  if (step === 'forgot')
     return (
       <Frame
         title={t('Forgot your password')}
-        lead={
-          step === 'sent'
-            ? t(
-                'If that account exists, a link to choose a new password is on its way. It works for 30 minutes.',
-              )
-            : t('Give your email or username. We email you a link to choose a new password.')
-        }
+        lead={t('Give your email or username. We email you a code to choose a new password.')}
         busy={busy}
-        onSubmit={
-          step === 'forgot'
-            ? go(async () => {
-                await api.post('/api/auth/forgot', { login: f.login })
-                setStep('sent')
-              })
-            : undefined
-        }
+        onSubmit={go(async () => {
+          const r = await api.post<{ ticket: string; mail: boolean }>('/api/auth/forgot', {
+            login: f.login,
+          })
+          setTicket({ ticket: r.ticket, to: '', mail: r.mail })
+          setNeed(null)
+          setResent(false)
+          setF({ ...f, code: '', password: '' })
+          setStep('reset')
+        })}
       >
-        {step === 'forgot' && (
-          <>
-            <Field
-              label={t('Email or username')}
-              required
-              autocomplete="username"
-              value={f.login}
-              onInput={set('login')}
-              inputRef={focus}
-            />
-            {err}
-            {submit(t('Send link'))}
-          </>
-        )}
+        <Field
+          label={t('Email or username')}
+          required
+          autocomplete="username"
+          value={f.login}
+          onInput={set('login')}
+          inputRef={focus}
+        />
+        {err}
+        {submit(t('Send code'))}
         <button class="g-btn g-btn--ghost" type="button" onClick={startAgain}>
           {t('Back to sign in')}
+        </button>
+      </Frame>
+    )
+
+  if (step === 'reset' && ticket)
+    return (
+      <Frame
+        title={t('Choose a new password')}
+        busy={busy}
+        onSubmit={go(async () => {
+          onIn(
+            await api.post<Me>('/api/auth/reset', {
+              ticket: ticket.ticket,
+              code: f.code,
+              password: f.password,
+              keep: f.keep,
+              ...(await withSecond()),
+            }),
+          )
+        })}
+      >
+        {who}
+        <p class="g-hint">
+          {ticket.mail
+            ? t('If that account exists, we emailed it a six-digit code. It works for 10 minutes.')
+            : t(
+                'Email is not set up, so the code was printed in the console of the computer SocialMonitor runs on.',
+              )}
+        </p>
+        <Field
+          label={t('Code')}
+          required
+          inputMode="numeric"
+          autocomplete="one-time-code"
+          pattern="[0-9]{6}"
+          maxLength={6}
+          value={f.code}
+          onInput={set('code')}
+          inputRef={focus}
+        />
+        <Password
+          label={t('New password')}
+          hint={t('At least 10 characters.')}
+          required
+          minLength={10}
+          autocomplete="new-password"
+          value={f.password}
+          onInput={set('password')}
+        />
+        {secondFields}
+        {err}
+        {resent && !error && (
+          <p class="g-hint" role="status">
+            {t('A new code is on its way.')}
+          </p>
+        )}
+        {submit(t('Save password'))}
+        <button
+          class="g-btn g-btn--ghost"
+          type="button"
+          disabled={busy}
+          onClick={go(async () => {
+            const r = await api.post<{ ticket: string; mail: boolean }>('/api/auth/forgot', {
+              login: f.login,
+            })
+            setTicket({ ticket: r.ticket, to: '', mail: r.mail })
+            setNeed(null)
+            setF({ ...f, code: '' })
+            setResent(true)
+          })}
+        >
+          {t('Send a new code')}
         </button>
       </Frame>
     )
@@ -479,7 +757,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
       title={t('Sign in to SocialMonitor')}
       busy={busy}
       onSubmit={go(async () => {
-        const r = await api.post<{ ticket: string; to: string; mail: boolean }>('/api/auth/login', {
+        const r = await api.post<Ticket>('/api/auth/login', {
           login: f.login,
           password: f.password,
         })
@@ -487,7 +765,8 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
         setTicket(r)
         setResent(false)
         setF({ ...f, password: '', code: '' })
-        setStep('code')
+        if (r.second) setSecond(r.second.passkey ? 'passkey' : r.second.totp ? 'totp' : 'recovery')
+        setStep(r.second ? 'second' : 'code')
       })}
     >
       <Field

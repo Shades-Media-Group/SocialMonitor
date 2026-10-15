@@ -50,6 +50,15 @@ export interface RunRow {
 
 import { lang, t } from './i18n.ts'
 
+/** An error from the server, with whatever else it sent beside the message. */
+export class ApiError extends Error {
+  data: Record<string, unknown>
+  constructor(message: string, data: Record<string, unknown>) {
+    super(message)
+    this.data = data
+  }
+}
+
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(path, {
     method,
@@ -68,10 +77,11 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   if (res.status === 401 && !path.startsWith('/api/auth/'))
     dispatchEvent(new Event('sm-signed-out'))
   if (!res.ok)
-    throw new Error(
+    throw new ApiError(
       t((data as { error?: string }).error ?? 'The server answered {status}.', {
         status: res.status,
       }),
+      data as Record<string, unknown>,
     )
   return data as T
 }

@@ -996,6 +996,101 @@ export const ru: Dict = {
       'Эта панель отвечает только на этом компьютере.',
     'Sign in through Cloudflare Access first.': 'Сначала войдите через Cloudflare Access.',
     'Only admins read the activity log.': 'Журнал действий могут читать только администраторы.',
+    'That password has appeared in a data breach, so attackers try it first. Choose another one.':
+      'Этот пароль встречался в утечках данных, поэтому злоумышленники пробуют его первым. Выберите другой.',
+    Devices: 'Устройства',
+    'This computer': 'Этот компьютер',
+    '{browser} on {os}': '{browser} на {os}',
+    'Unknown browser': 'Неизвестный браузер',
+    'Signed in {when}': 'Вход выполнен {when}',
+    'This device': 'Это устройство',
+    'Sign out {device}': 'Выйти на {device}',
+    'That device is already signed out.': 'Это устройство уже вышло из аккаунта.',
+    'Enter your password again to change how you sign in.':
+      'Введите пароль ещё раз, чтобы изменить способ входа.',
+    'Setting up took too long. Start again.':
+      'Настройка заняла слишком много времени. Начните заново.',
+    'Add a passkey or an authenticator app first.':
+      'Сначала добавьте ключ доступа или приложение-аутентификатор.',
+    'Use your authenticator app': 'Использовать приложение-аутентификатор',
+    'Use a recovery code': 'Использовать код восстановления',
+    'Enter the code from your app': 'Введите код из приложения',
+    'Enter a recovery code': 'Введите код восстановления',
+    'Six-digit code': 'Шестизначный код',
+    'Recovery code': 'Код восстановления',
+    'Each recovery code works once.': 'Каждый код восстановления работает один раз.',
+    'Email me a code instead': 'Прислать код по почте',
+    'QR code for your authenticator app': 'QR-код для приложения-аутентификатора',
+    'Keep these somewhere safe. Each works once, and they are shown only now.':
+      'Сохраните их в надёжном месте. Каждый работает один раз, и они показываются только сейчас.',
+    'I saved them': 'Я их сохранил',
+    'Authenticator app': 'Приложение-аутентификатор',
+    'On. Sign in with a code from the app instead of email.':
+      'Включено. Входите с кодом из приложения вместо почты.',
+    'Codes from an authenticator app on your phone or computer.':
+      'Коды из приложения-аутентификатора на телефоне или компьютере.',
+    'Authenticator app turned on.': 'Приложение-аутентификатор включено.',
+    'Scan this with the app, or enter this key by hand:':
+      'Отсканируйте код приложением или введите этот ключ вручную:',
+    'Code from the app': 'Код из приложения',
+    'Turn on': 'Включить',
+    'Turn off': 'Выключить',
+    'Authenticator app turned off.': 'Приложение-аутентификатор выключено.',
+    'Set up': 'Настроить',
+    'Recovery codes': 'Коды восстановления',
+    '{n} of 10 left, for when you have neither your passkey nor your app.':
+      'Осталось {n} из 10 — на случай, когда нет ни ключа доступа, ни приложения.',
+    'Make new codes': 'Создать новые коды',
+    'Passkeys need a name such as localhost, not an IP address.':
+      'Ключам доступа нужно имя, например localhost, а не IP-адрес.',
+    'Adding the passkey took too long. Try again.':
+      'Добавление ключа доступа заняло слишком много времени. Попробуйте ещё раз.',
+    'The passkey could not be checked. Try again.':
+      'Не удалось проверить ключ доступа. Попробуйте ещё раз.',
+    'No such passkey.': 'Такого ключа доступа нет.',
+    'The passkey was not used. Try again, or choose another way.':
+      'Ключ доступа не был использован. Попробуйте ещё раз или выберите другой способ.',
+    'Use your passkey': 'Использовать ключ доступа',
+    'Your browser asks for the passkey you added for this account.':
+      'Браузер попросит ключ доступа, добавленный для этого аккаунта.',
+    Passkey: 'Ключ доступа',
+    Passkeys: 'Ключи доступа',
+    'The passkey was not added. Try again when you are ready.':
+      'Ключ доступа не добавлен. Попробуйте ещё раз, когда будете готовы.',
+    'Passkey added.': 'Ключ доступа добавлен.',
+    'Passkey removed.': 'Ключ доступа удалён.',
+    'Sign in with your fingerprint, face or device PIN instead of a code.':
+      'Входите по отпечатку пальца, лицу или PIN-коду устройства вместо кода.',
+    'Passkeys need a name, not a number: open {url} to add one.':
+      'Ключам доступа нужно имя, а не номер: откройте {url}, чтобы добавить ключ.',
+    'Last used {when}': 'Последнее использование: {when}',
+    'Added {when}': 'Добавлен {when}',
+    'made at another address': 'создан на другом адресе',
+    'Remove the passkey {name}': 'Удалить ключ доступа {name}',
+    Add: 'Добавить',
+    'Add a passkey': 'Добавить ключ доступа',
+    'Protect your super admin account': 'Защитите аккаунт суперадминистратора',
+    'You can change everything in SocialMonitor, so add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      'Вы можете изменить в SocialMonitor всё, поэтому добавьте ключ доступа или приложение-аутентификатор. До тех пор вы входите с кодом из письма.',
+    'Add one now': 'Добавить сейчас',
+    Later: 'Позже',
+    'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      'Как суперадминистратор, добавьте ключ доступа или приложение-аутентификатор. До тех пор вы входите с кодом из письма.',
+    'That code is not right, or it has expired.': 'Код неверный или срок его действия истёк.',
+    'This account has two-step sign-in. Confirm it is you to change the password.':
+      'В этом аккаунте включён двухэтапный вход. Подтвердите, что это вы, чтобы сменить пароль.',
+    'That second step is not right.': 'Второй шаг не пройден.',
+    'Code from your authenticator app': 'Код из приложения-аутентификатора',
+    'Your browser asks for your passkey when you save.':
+      'Браузер запросит ключ доступа при сохранении.',
+    'Give your email or username. We email you a code to choose a new password.':
+      'Укажите почту или имя пользователя. Мы пришлём код, чтобы вы выбрали новый пароль.',
+    'Send code': 'Отправить код',
+    'If that account exists, we emailed it a six-digit code. It works for 10 minutes.':
+      'Если такой аккаунт существует, мы отправили на его почту шестизначный код. Он действует 10 минут.',
+    "Don't remember it? Send me a code instead": 'Не помните его? Пришлите мне код',
+    'That code is not right.': 'Код неверный.',
+    'Not base32.': 'Это не base32.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

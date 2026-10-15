@@ -20,7 +20,7 @@ Use Node 22: `export PATH=$HOME/.nvm/versions/node/v22.23.1/bin:$PATH`; the shel
 
 - **Free forever:** no payments, plans, limits, accounts or upgrade prompts.
 - **The dashboard is never hosted.** It runs on the user's computer and binds to `127.0.0.1` only. Only the website is deployed.
-- **Data stays local:** the database, the browser profile and reports live in `data/` (git-ignored). No analytics or remote logging. The one outbound flow is text sent to Claude for sorting, and it must stay described exactly in PRIVACY.md and on the site.
+- **Data stays local:** the database, the browser profile and reports live in `data/` (git-ignored). No analytics or remote logging. The outbound flows are text sent to Claude for sorting and the five-character password prefix sent to Have I Been Pwned's range API; each must stay described exactly in PRIVACY.md and on the site.
 - **Manual by default:** nothing runs until the user presses Update or turns on a schedule.
 - **Token-lean storage:** the MCP tools and reports read compact rows (ids, short text, labels, counts), never raw page dumps.
 - **Credits:** in the product, "Free and open source. Built by Shades Media Group". In the README, "Built by Cristian Brinza | Shades Media Group".

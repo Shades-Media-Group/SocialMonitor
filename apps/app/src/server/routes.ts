@@ -60,7 +60,7 @@ import {
 import { latestIdeas, suggestIdeas } from '../core/ideas.ts'
 import { getSettings } from '../core/settings.ts'
 import { latestSummary, refreshSummary } from '../core/summary.ts'
-import type { User } from '../core/auth.ts'
+import type { Client, Session, User } from '../core/auth.ts'
 import { memberships, roleFor, signSession, visibleBrands } from '../core/auth.ts'
 import { audit, listAudit } from '../core/audit.ts'
 import type { AuditEvent } from '../core/audit.ts'
@@ -69,9 +69,12 @@ import * as campaigns from '../core/campaigns.ts'
 
 export class HttpError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  /** More for the client to act on, sent beside the error message. */
+  extra?: Record<string, unknown>
+  constructor(status: number, message: string, extra?: Record<string, unknown>) {
     super(message)
     this.status = status
+    this.extra = extra
   }
 }
 
@@ -94,6 +97,12 @@ export interface Ctx {
   country: string | null
   /** The browser's user agent, cut to 300 characters. */
   ua: string
+  /** The signed-in browser's session; null for render tokens and public requests. */
+  session: Session | null
+  /** The browser asking, for the devices list. */
+  client: Client
+  /** The page's origin (checked against the allowed ones), for passkeys. */
+  origin: string
 }
 type Signed = Ctx & { user: User }
 /**

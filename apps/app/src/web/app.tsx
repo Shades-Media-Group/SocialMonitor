@@ -5,7 +5,7 @@ import { LANGS, lang, setLang, t } from './i18n.ts'
 import { loadPrefs } from './prefs.ts'
 import type { BrandRow, Network, RunRow } from './api.ts'
 import { api } from './api.ts'
-import { Icon, Mark, Menu, ago, fmt } from './ui.tsx'
+import { Icon, Mark, Menu, Modal, ago, fmt } from './ui.tsx'
 import type { IconName } from 'shades-gradient'
 import { Palette } from './palette.tsx'
 import { UpdateSheet } from './update.tsx'
@@ -166,6 +166,22 @@ function Dashboard({ me }: { me: Me }) {
   const [route, setRoute] = useState<Route>(readRoute)
   const [update, setUpdate] = useState<{ open: boolean; brandId?: number }>({ open: false })
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // A super admin without a second step is asked to add one, once per sign-in (per tab).
+  const [askSecond, setAskSecond] = useState(() => {
+    try {
+      return !!me.needs_second && !sessionStorage.getItem('sm-asked-second')
+    } catch {
+      return !!me.needs_second
+    }
+  })
+  const later = () => {
+    setAskSecond(false)
+    try {
+      sessionStorage.setItem('sm-asked-second', '1')
+    } catch {
+      /* no storage: asked again next time */
+    }
+  }
   const [running, setRunning] = useState<RunRow | null>(null)
   const [version, setVersion] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
@@ -552,6 +568,34 @@ function Dashboard({ me }: { me: Me }) {
         {...state}
       />
       <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} {...state} />
+      {askSecond && (
+        <Modal title={t('Protect your super admin account')} onClose={later}>
+          <div class="sm-ask">
+            <h2>{t('Protect your super admin account')}</h2>
+            <p>
+              {t(
+                'You can change everything in SocialMonitor, so add a passkey or an authenticator app. Until then, you sign in with a code by email.',
+              )}
+            </p>
+            <div class="sm-sheet__actions">
+              <button
+                class="g-btn g-btn--primary"
+                type="button"
+                autofocus
+                onClick={() => {
+                  later()
+                  setSettingsOpen(true)
+                }}
+              >
+                {t('Add one now')}
+              </button>
+              <button class="g-btn g-btn--ghost" type="button" onClick={later}>
+                {t('Later')}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
       {palette && (
         <Palette
           {...state}

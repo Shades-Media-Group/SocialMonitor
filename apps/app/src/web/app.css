@@ -2464,3 +2464,53 @@ td.sm-hot {
   gap: 8px;
   padding-top: 12px;
 }
+
+/* Two-step sign-in in Settings: the authenticator's QR code and recovery codes. */
+.sm-security__setup,
+.sm-security__codes {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+.sm-qr {
+  width: 168px;
+  height: 168px;
+  border-radius: var(--g-radius-md);
+}
+.sm-security__key,
+.sm-security__list code {
+  font: 13px/1.5 var(--g-font-code);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.sm-security__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* The ask to add a second step, for super admins without one. */
+.sm-ask {
+  display: grid;
+  gap: 12px;
+  padding: 28px 28px 24px;
+}
+.sm-ask h2 {
+  margin: 0;
+  padding-right: 32px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.sm-ask p {
+  margin: 0;
+  color: var(--g-text-2);
+}
+.sm-ask .sm-sheet__actions {
+  margin-top: 8px;
+}
+.sm-accounts__do .sm-textbtn {
+  white-space: nowrap;
+}

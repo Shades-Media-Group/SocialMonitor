@@ -38,6 +38,9 @@ export const AUDIT_EVENTS = [
   'security.second_factor_removed',
   'security.failed_signins',
   'security.new_admin',
+  'session.revoked',
+  'security.recovery_used',
+  'security.recovery_new',
 ] as const
 export type AuditEvent = (typeof AUDIT_EVENTS)[number]
 

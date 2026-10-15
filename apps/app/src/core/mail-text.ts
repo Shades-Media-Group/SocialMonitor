@@ -10,6 +10,10 @@ type Key =
   | 'codeLabel'
   | 'codeValid'
   | 'codeStub'
+  | 'resetCodeSubject'
+  | 'resetCodeHeading'
+  | 'resetCodeLabel'
+  | 'resetCodeStub'
   | 'inviteSubject'
   | 'inviteHeading'
   | 'inviteLead'
@@ -88,6 +92,11 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeLabel: 'Sign-in code',
     codeValid: 'Works for 10 minutes',
     codeStub: 'If you did not just sign in, change your password: someone knows it.',
+    resetCodeSubject: '{code} is your SocialMonitor password code',
+    resetCodeHeading: 'Your code to change your password',
+    resetCodeLabel: 'Password code',
+    resetCodeStub:
+      'If you did not ask to change your password, ignore this email. Your password stays as it is.',
     inviteSubject: '{from} invited you to SocialMonitor',
     inviteHeading: 'You are invited',
     inviteLead: '{from} gave you access to SocialMonitor. Choose your password to start.',
@@ -172,6 +181,11 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeLabel: 'Cod de conectare',
     codeValid: 'Valabil 10 minute',
     codeStub: 'Dacă nu tocmai te-ai conectat, schimbă-ți parola: cineva o cunoaște.',
+    resetCodeSubject: '{code} este codul tău SocialMonitor pentru parolă',
+    resetCodeHeading: 'Codul tău pentru schimbarea parolei',
+    resetCodeLabel: 'Cod pentru parolă',
+    resetCodeStub:
+      'Dacă nu ai cerut să-ți schimbi parola, ignoră acest email. Parola rămâne aceeași.',
     inviteSubject: '{from} te-a invitat în SocialMonitor',
     inviteHeading: 'Ești invitat',
     inviteLead: '{from} ți-a dat acces la SocialMonitor. Alege-ți parola ca să începi.',
@@ -257,6 +271,11 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeLabel: 'Код для входа',
     codeValid: 'Действует 10 минут',
     codeStub: 'Если вы сейчас не входили, смените пароль: его кто-то знает.',
+    resetCodeSubject: '{code} — ваш код SocialMonitor для смены пароля',
+    resetCodeHeading: 'Ваш код для смены пароля',
+    resetCodeLabel: 'Код для пароля',
+    resetCodeStub:
+      'Если вы не просили сменить пароль, просто проигнорируйте это письмо. Пароль останется прежним.',
     inviteSubject: '{from} приглашает вас в SocialMonitor',
     inviteHeading: 'Вас пригласили',
     inviteLead: '{from} открыл(а) вам доступ к SocialMonitor. Придумайте пароль, чтобы начать.',
@@ -340,6 +359,11 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeValid: 'Valable 10 minutes',
     codeStub:
       'Si vous ne venez pas de vous connecter, changez votre mot de passe : quelqu’un le connaît.',
+    resetCodeSubject: '{code} est votre code SocialMonitor pour le mot de passe',
+    resetCodeHeading: 'Votre code pour changer de mot de passe',
+    resetCodeLabel: 'Code de mot de passe',
+    resetCodeStub:
+      'Si vous n’avez pas demandé à changer de mot de passe, ignorez cet e-mail. Votre mot de passe reste le même.',
     inviteSubject: '{from} vous invite sur SocialMonitor',
     inviteHeading: 'Vous êtes invité',
     inviteLead:
@@ -426,6 +450,10 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeLabel: '登录验证码',
     codeValid: '10 分钟内有效',
     codeStub: '如果不是你本人在登录，请修改密码：有人知道了它。',
+    resetCodeSubject: '{code} 是你的 SocialMonitor 密码验证码',
+    resetCodeHeading: '你的修改密码验证码',
+    resetCodeLabel: '密码验证码',
+    resetCodeStub: '如果你没有申请修改密码，请忽略此邮件。你的密码不会改变。',
     inviteSubject: '{from} 邀请你使用 SocialMonitor',
     inviteHeading: '你收到了邀请',
     inviteLead: '{from} 已为你开通 SocialMonitor 的访问权限。设置密码即可开始。',

@@ -1,10 +1,13 @@
 import * as auth from '../core/auth.ts'
 import type { Role, User } from '../core/auth.ts'
+import { randomBytes } from 'node:crypto'
 import { accessMail, codeMail, linkMail, mailReady, sendMail } from '../core/mail.ts'
 import { mailLang, mailText } from '../core/mail-text.ts'
 import * as store from '../core/store.ts'
 import { audit } from '../core/audit.ts'
 import { appUrl, securityEvent, signInFailed, signedIn } from '../core/security-events.ts'
+import * as tf from '../core/two-factor.ts'
+import * as pk from '../core/passkeys.ts'
 import type { Ctx } from './routes.ts'
 import { HttpError, by, r } from './routes.ts'
 
@@ -40,11 +43,24 @@ const newAdmin = (c: Ctx & { user: User }, userId: number, brandId: number | nul
     }),
   )
 
-const signIn = (c: Ctx, user: User, keep = false) => {
-  const seconds = keep ? auth.KEEP_DAYS * 86400 : undefined
-  c.cookies.push(auth.sessionCookie(auth.signSession(user, seconds), c.secure, seconds))
+/** What a security event needs to know about the request. */
+const who = (c: Ctx, userId: number) => ({ userId, ip: c.ip, ua: c.client.ua, country: c.country })
+
+/**
+ * Starts a session. Any session this browser already had ends, so the id always changes when
+ * someone signs in.
+ */
+const signIn = (c: Ctx, user: User, keep = false, method = 'password') => {
+  if (c.session) auth.deleteSession(c.db, c.session.id)
+  const newDevice = !auth.knownDevice(c.db, user.id, c.client.ua)
+  const s = auth.createSession(c.db, user, keep, c.client)
+  c.session = auth.getSession(c.db, s.id) ?? null
+  c.cookies.push(auth.sessionCookie(s.token, c.secure, s.maxAge))
   auth.touch(c.db, user.id)
+  // Logged, and alerted when it is a device or country this account hasn't used before.
+  later(signedIn(c.db, { userId: user.id, keep, method, newDevice, ...from(c) }))
 }
+const signOut = (c: Ctx) => c.cookies.push(auth.sessionCookie('', c.secure, 0))
 
 const me = (c: Ctx, user: User) => ({
   id: user.id,
@@ -54,6 +70,8 @@ const me = (c: Ctx, user: User) => ({
   super: !!user.super,
   memberships: auth.memberships(c.db, user.id),
   prefs: auth.readPrefs(c.db, user.id),
+  // Super admins are asked to add a passkey or an authenticator; until then, email codes only.
+  needs_second: !!user.super && !tf.hasSecondFactor(c.db, user.id),
 })
 
 const mask = (email: string) =>
@@ -77,6 +95,110 @@ async function sendCode(userId: number, email: string, lang: ReturnType<typeof l
   audit(c.db, { ...by(c), actor: userId, event: 'code.sent', target: email })
   return { ticket: t.id, to: mask(email), mail: mailReady() }
 }
+
+/** Which second steps this person can use instead of the emailed code. */
+const secondSteps = async (c: Ctx, userId: number, key: string) => {
+  const f = tf.factors(c.db, userId)
+  return {
+    totp: f.totp,
+    recovery: f.recovery > 0,
+    // Options for the browser to sign with a passkey made on this host, if there is one.
+    passkey: await pk.authenticationOptions(c.db, userId, pk.relyingParty(c.origin), key),
+  }
+}
+
+/**
+ * Checks the second step in a request: a passkey's answer (`passkey`, to the challenge stored
+ * under `key`), an authenticator code (`totp`) or a recovery code (`recovery`). False when none
+ * was given or it is wrong.
+ */
+async function secondStep(c: Ctx, userId: number, x: Record<string, unknown>, key: string) {
+  if (x.passkey && typeof x.passkey === 'object')
+    return pk.checkPasskey(
+      c.db,
+      userId,
+      pk.relyingParty(c.origin),
+      key,
+      x.passkey as Parameters<typeof pk.checkPasskey>[4],
+    )
+  if (typeof x.totp === 'string') return tf.checkTotp(c.db, userId, x.totp)
+  if (typeof x.recovery === 'string') {
+    const ok = tf.useRecoveryCode(c.db, userId, x.recovery)
+    if (ok)
+      securityEvent(c.db, {
+        type: 'recovery_code_used',
+        ...who(c, userId),
+        detail: { left: tf.recoveryLeft(c.db, userId) },
+      })
+    return ok
+  }
+  return false
+}
+const stepName = (x: Record<string, unknown>) =>
+  x.passkey
+    ? 'passkey'
+    : typeof x.totp === 'string'
+      ? 'totp'
+      : typeof x.recovery === 'string'
+        ? 'recovery'
+        : 'code'
+
+/**
+ * A password change or reset on an account with a passkey or an authenticator needs that too,
+ * so an emailed code alone can't take the account over. Without one in the request, the reply
+ * asks for it (403 with `second`: what this person can use) and nothing changes; a wrong one
+ * counts against the account and against `token`, the code that came with it.
+ */
+async function secondFor(
+  c: Ctx,
+  userId: number,
+  x: Record<string, unknown>,
+  key: string,
+  token?: string,
+) {
+  if (!tf.hasSecondFactor(c.db, userId)) return null
+  const via = stepName(x)
+  if (via !== 'code' && (await secondStep(c, userId, x, key))) return via
+  if (via !== 'code') {
+    auth.noteFailure(`login:${auth.getUser(c.db, userId)?.email ?? ''}`)
+    if (token) auth.failToken(c.db, token)
+  }
+  throw new HttpError(
+    403,
+    via === 'code'
+      ? 'This account has two-step sign-in. Confirm it is you to change the password.'
+      : 'That second step is not right.',
+    { second: await secondSteps(c, userId, key) },
+  )
+}
+
+/** Sets the new password: every other session ends, this browser gets a new one. */
+function newPassword(
+  c: Ctx,
+  userId: number,
+  password: string,
+  how: string,
+  second: string | null,
+  keep: boolean,
+) {
+  auth.updateUser(c.db, userId, { password })
+  const user = auth.getUser(c.db, userId)!
+  signIn(c, user, keep, how)
+  securityEvent(c.db, { type: 'password_changed', ...who(c, userId), detail: { how, second } })
+  return user
+}
+
+/** Changing how someone signs in needs their password, entered in the last 15 minutes. */
+const CONFIRM_MINUTES = 15
+const confirmed = (c: Ctx & { user: User }) => {
+  const at = c.session?.confirmed_at ?? c.session?.created_at
+  if (!at || Date.now() - Date.parse(at) > CONFIRM_MINUTES * 60_000)
+    throw new HttpError(403, 'Enter your password again to change how you sign in.', {
+      confirm: true,
+    })
+}
+/** Authenticator secrets waiting for their first code, by person. */
+const pendingTotp = new Map<number, { secret: string; at: number }>()
 
 /** Someone who manages people: a super admin, or the admin of at least one brand. */
 const manager = (c: Ctx & { user: User }) => {
@@ -123,16 +245,18 @@ export const authRoutes = [
   })),
 
   // The first account, made on the computer SocialMonitor runs on. It is the super admin.
-  r('POST', '/api/auth/setup', 'public', (c) => {
+  r('POST', '/api/auth/setup', 'public', async (c) => {
     if (auth.countUsers(c.db) > 0) throw new HttpError(403, 'SocialMonitor is already set up.')
     if (!c.local)
       throw new HttpError(403, 'Create the first account on the computer SocialMonitor runs on.')
     const x = b(c)
+    const password = await auth.newPassword(x.password)
+    if (auth.countUsers(c.db) > 0) throw new HttpError(403, 'SocialMonitor is already set up.')
     const user = auth.createUser(c.db, {
       email: String(x.email ?? ''),
       name: String(x.name ?? ''),
       username: (x.username as string) ?? null,
-      password: String(x.password ?? ''),
+      password,
       super: true,
       verified: true,
     })
@@ -163,8 +287,20 @@ export const authRoutes = [
       )
       throw new HttpError(401, "That email or username and password don't match.")
     }
+    auth.upgradeHash(c.db, u.id, password, u.pass_hash)
     const lang = langOf(c)
     auth.setLang(c.db, u.id, lang)
+    // With an authenticator or a passkey, the ticket waits for that; the emailed code is sent
+    // only when asked for ("Email me a code instead").
+    if (tf.hasSecondFactor(c.db, u.id)) {
+      const t = auth.issue(c.db, u.id, 'code')
+      return {
+        ticket: t.id,
+        to: mask(u.email),
+        mail: mailReady(),
+        second: await secondSteps(c, u.id, `ticket:${t.id}`),
+      }
+    }
     return sendCode(u.id, u.email, lang, c)
   }),
 
@@ -172,103 +308,335 @@ export const authRoutes = [
   r('POST', '/api/auth/resend', 'public', async (c) => {
     const owner = auth.ticketOwner(c.db, String(b(c).ticket ?? ''))
     if (!owner) throw new Error('That code has expired. Sign in again.')
-    auth.checkRate(`resend:${owner}`, 3)
-    auth.noteFailure(`resend:${owner}`)
-    const u = auth.findByEmail(c.db, owner)!
-    return sendCode(u.id, u.email, langOf(c), c)
+    auth.checkRate(`resend:${owner.email}`, 3)
+    auth.noteFailure(`resend:${owner.email}`)
+    return sendCode(owner.id, owner.email, langOf(c), c)
   }),
 
-  r('POST', '/api/auth/code', 'public', (c) => {
-    const ticket = String(b(c).ticket ?? '')
+  // The second step: the emailed code, an authenticator code or a recovery code.
+  r('POST', '/api/auth/code', 'public', async (c) => {
+    const x = b(c)
+    const ticket = String(x.ticket ?? '')
     // Wrong codes count against the account too, so new tickets don't buy new guesses.
     const owner = auth.ticketOwner(c.db, ticket)
-    if (owner) auth.checkRate(`login:${owner}`)
+    if (owner) auth.checkRate(`login:${owner.email}`)
+    const via = stepName(x)
     let userId: number
     try {
-      userId = auth.consume(c.db, ticket, String(b(c).code ?? ''), 'code')
+      if (via === 'code') userId = auth.consume(c.db, ticket, String(x.code ?? ''), 'code')
+      else {
+        const ok = owner ? await secondStep(c, owner.id, x, `ticket:${ticket}`) : false
+        userId = auth.spend(c.db, ticket, 'code', () => ok)
+      }
     } catch (e) {
       if (owner) {
-        auth.noteFailure(`login:${owner}`)
-        const u = auth.findByEmail(c.db, owner)
-        later(signInFailed(c.db, { userId: u?.id ?? null, email: owner, step: 'code', ...from(c) }))
+        auth.noteFailure(`login:${owner.email}`)
+        later(
+          signInFailed(c.db, {
+            userId: owner.id ?? null,
+            email: owner.email,
+            step: 'code',
+            ...from(c),
+          }),
+        )
       }
       throw e
     }
     const user = auth.getUser(c.db, userId)!
-    signIn(c, user, b(c).keep === true)
-    later(signedIn(c.db, { userId: user.id, keep: b(c).keep === true, ...from(c) }))
+    signIn(c, user, x.keep === true, via)
     return me(c, user)
   }),
 
+  // The password again, before changing passkeys, the authenticator or recovery codes.
+  r('POST', '/api/auth/confirm', 'user', (c) => {
+    if (!c.session) throw new HttpError(403, 'Sign in first.')
+    const account = `login:${c.user.email}`
+    auth.checkRate(account)
+    auth.checkRate(`ip:${c.ip}`, 20)
+    const row = auth.findLogin(c.db, c.user.email)
+    if (!auth.checkPassword(String(b(c).password ?? ''), row?.pass_hash ?? null)) {
+      auth.noteFailure(account)
+      auth.noteFailure(`ip:${c.ip}`)
+      throw new HttpError(403, 'Your current password is not right.')
+    }
+    auth.confirmSession(c.db, c.session.id)
+  }),
+
+  // How this person can sign in.
+  r('GET', '/api/auth/security', 'user', (c) => {
+    const f = tf.factors(c.db, c.user.id)
+    const rp = pk.relyingParty(c.origin)
+    return {
+      totp: f.totp,
+      recovery: f.recovery,
+      passkeys: pk.listPasskeys(c.db, c.user.id).map((p) => ({
+        id: p.id,
+        name: p.name,
+        created_at: p.created_at,
+        last_used_at: p.last_used_at,
+        here: p.rp_id === rp?.rpID,
+      })),
+      // Passkeys can be made here (not on a bare IP address such as 127.0.0.1).
+      passkeysHere: !!rp,
+    }
+  }),
+
+  // Passkeys: options for the browser, then its answer and a name.
+  r('POST', '/api/auth/passkeys/options', 'user', (c) => {
+    confirmed(c)
+    const rp = pk.relyingParty(c.origin)
+    if (!rp) throw new Error('Passkeys need a name such as localhost, not an IP address.')
+    return pk.registrationOptions(c.db, c.user, rp)
+  }),
+  r('POST', '/api/auth/passkeys', 'user', async (c) => {
+    confirmed(c)
+    const rp = pk.relyingParty(c.origin)
+    if (!rp) throw new Error('Passkeys need a name such as localhost, not an IP address.')
+    const x = b(c)
+    const name = String(x.name ?? '')
+    await pk.addPasskey(
+      c.db,
+      c.user.id,
+      rp,
+      x.response as Parameters<typeof pk.addPasskey>[3],
+      name,
+    )
+    securityEvent(c.db, {
+      type: 'second_factor_added',
+      ...who(c, c.user.id),
+      detail: { method: 'passkey', name: name.slice(0, 60) },
+    })
+    const recovery =
+      tf.recoveryLeft(c.db, c.user.id) === 0 ? tf.newRecoveryCodes(c.db, c.user.id) : null
+    return { recovery }
+  }),
+  r('DELETE', '/api/auth/passkeys/:id', 'user', (c) => {
+    confirmed(c)
+    if (!pk.deletePasskey(c.db, c.user.id, String(c.params.id)))
+      throw new HttpError(404, 'No such passkey.')
+    if (!tf.hasSecondFactor(c.db, c.user.id)) tf.dropRecoveryCodes(c.db, c.user.id)
+    securityEvent(c.db, {
+      type: 'second_factor_removed',
+      ...who(c, c.user.id),
+      detail: { method: 'passkey' },
+    })
+  }),
+
+  // An authenticator app: a new secret, then its first code turns it on.
+  r('POST', '/api/auth/totp/start', 'user', (c) => {
+    confirmed(c)
+    const secret = tf.newTotpSecret()
+    pendingTotp.set(c.user.id, { secret, at: Date.now() })
+    return { secret, uri: tf.otpauthUri(secret, c.user.email) }
+  }),
+  r('POST', '/api/auth/totp', 'user', (c) => {
+    confirmed(c)
+    const p = pendingTotp.get(c.user.id)
+    if (!p || Date.now() - p.at > 10 * 60_000)
+      throw new Error('Setting up took too long. Start again.')
+    const account = `login:${c.user.email}`
+    auth.checkRate(account)
+    if (!tf.enableTotp(c.db, c.user.id, p.secret, String(b(c).code ?? ''))) {
+      auth.noteFailure(account)
+      throw new Error('That code is not right.')
+    }
+    pendingTotp.delete(c.user.id)
+    securityEvent(c.db, {
+      type: 'second_factor_added',
+      ...who(c, c.user.id),
+      detail: { method: 'totp' },
+    })
+    // The first second step comes with recovery codes.
+    const recovery =
+      tf.recoveryLeft(c.db, c.user.id) === 0 ? tf.newRecoveryCodes(c.db, c.user.id) : null
+    return { recovery }
+  }),
+  r('DELETE', '/api/auth/totp', 'user', (c) => {
+    confirmed(c)
+    tf.disableTotp(c.db, c.user.id)
+    if (!tf.hasSecondFactor(c.db, c.user.id)) tf.dropRecoveryCodes(c.db, c.user.id)
+    securityEvent(c.db, {
+      type: 'second_factor_removed',
+      ...who(c, c.user.id),
+      detail: { method: 'totp' },
+    })
+  }),
+
+  // Ten new recovery codes; the old ones stop working.
+  r('POST', '/api/auth/recovery', 'user', (c) => {
+    confirmed(c)
+    if (!tf.hasSecondFactor(c.db, c.user.id))
+      throw new Error('Add a passkey or an authenticator app first.')
+    const codes = tf.newRecoveryCodes(c.db, c.user.id)
+    securityEvent(c.db, { type: 'recovery_codes_new', ...who(c, c.user.id) })
+    return { codes }
+  }),
+
   r('POST', '/api/auth/logout', 'public', (c) => {
-    c.cookies.push(auth.sessionCookie('', c.secure, 0))
+    if (c.session) auth.deleteSession(c.db, c.session.id)
+    signOut(c)
   }),
   r('POST', '/api/auth/logout-everywhere', 'user', (c) => {
     auth.endSessions(c.db, c.user.id)
-    c.cookies.push(auth.sessionCookie('', c.secure, 0))
-    audit(c.db, { ...by(c), event: 'logout.everywhere', target: c.user.email })
+    securityEvent(c.db, { type: 'sessions_ended', ...who(c, c.user.id) })
+    signOut(c)
+  }),
+
+  // The browsers this person is signed in on.
+  r('GET', '/api/auth/sessions', 'user', (c) =>
+    auth.listSessions(c.db, c.user.id).map((s) => ({
+      id: s.id,
+      ...auth.device(s.ua),
+      country: s.country,
+      local: !s.country && /^(::1|127\.|::ffff:127\.)/.test(s.ip),
+      created_at: s.created_at,
+      seen_at: s.seen_at,
+      current: s.id === c.session?.id,
+    })),
+  ),
+  r('DELETE', '/api/auth/sessions/:id', 'user', (c) => {
+    const s = auth.getSession(c.db, String(c.params.id))
+    if (!s || s.user_id !== c.user.id)
+      throw new HttpError(404, 'That device is already signed out.')
+    auth.deleteSession(c.db, s.id)
+    securityEvent(c.db, {
+      type: 'session_revoked',
+      ...who(c, c.user.id),
+      detail: auth.device(s.ua),
+    })
+    if (s.id === c.session?.id) signOut(c)
   }),
 
   // Invitation and reset links: "<id>.<secret>" from the email.
-  r('POST', '/api/auth/accept', 'public', (c) => {
-    const [tid, secret] = String(b(c).token ?? '').split('.')
-    const purpose = b(c).kind === 'reset' ? 'reset' : 'invite'
-    const userId = auth.consume(c.db, tid ?? '', secret ?? '', purpose)
+  // Invitation links, and reset links sent before resets used codes.
+  r('POST', '/api/auth/accept', 'public', async (c) => {
     const x = b(c)
-    auth.updateUser(c.db, userId, {
-      password: String(x.password ?? ''),
-      ...(purpose === 'invite' && x.name !== undefined ? { name: String(x.name) } : {}),
-      ...(purpose === 'invite' && x.username ? { username: String(x.username) } : {}),
-    })
-    const email = auth.getUser(c.db, userId)!.email
-    if (purpose === 'reset')
-      later(
-        securityEvent(c.db, {
-          type: 'password_changed',
-          userId,
-          ...from(c),
-          detail: { via: 'reset link' },
-        }),
-      )
-    else audit(c.db, { ...by(c), actor: userId, event: 'invite.accepted', target: email })
-    return { email }
+    const password = await auth.newPassword(x.password)
+    const [tid = '', secret = ''] = String(x.token ?? '').split('.')
+    const purpose = x.kind === 'reset' ? 'reset' : 'invite'
+    const userId = auth.consume(c.db, tid, secret, purpose, purpose === 'reset')
+    if (purpose === 'reset') {
+      const how = await secondFor(c, userId, x, `reset:${tid}`, tid)
+      auth.dropToken(c.db, tid)
+      auth.updateUser(c.db, userId, { password })
+      securityEvent(c.db, {
+        type: 'password_changed',
+        ...who(c, userId),
+        detail: { how: 'reset link', second: how },
+      })
+    } else {
+      auth.updateUser(c.db, userId, {
+        password,
+        ...(x.name !== undefined ? { name: String(x.name) } : {}),
+        ...(x.username ? { username: String(x.username) } : {}),
+      })
+      audit(c.db, {
+        ...from(c),
+        actor: userId,
+        event: 'invite.accepted',
+        target: auth.getUser(c.db, userId)!.email,
+      })
+    }
+    return { email: auth.getUser(c.db, userId)!.email }
   }),
 
-  r('POST', '/api/auth/forgot', 'public', async (c) => {
+  // A forgotten password: a six-digit code by email. The answer is the same whether or not the
+  // account exists, and so is its timing, since the email goes out after the reply.
+  r('POST', '/api/auth/forgot', 'public', (c) => {
     const login = String(b(c).login ?? '').trim()
-    // Its own limit, so asking for links can't lock anyone out of signing in.
+    // Its own limit, so asking for codes can't lock anyone out of signing in.
     auth.checkRate(`forgot:${login}`, 3)
     auth.checkRate(`ip:${c.ip}`, 20)
     auth.noteFailure(`forgot:${login}`)
     auth.noteFailure(`ip:${c.ip}`)
     const u = auth.findLogin(c.db, login)
     if (u && !u.disabled && u.verified_at) {
-      const t = auth.issue(c.db, u.id, 'reset')
-      const lang = langOf(c)
-      await sendMail(u.email, linkMail(lang, 'forgot', `${base()}/reset/${t.id}.${t.secret}`))
+      const t = auth.issue(c.db, u.id, 'reset', true)
+      void sendMail(u.email, codeMail(langOf(c), t.secret, 'reset')).catch((e: unknown) =>
+        console.error(`A password code could not be sent: ${String(e)}`),
+      )
+      return { ticket: t.id, mail: mailReady() }
     }
-    return { ok: true }
+    return { ticket: randomBytes(16).toString('base64url'), mail: mailReady() }
+  }),
+
+  // The code and a new password together; with a second step set up, that too. Signs in.
+  r('POST', '/api/auth/reset', 'public', async (c) => {
+    const x = b(c)
+    const ticket = String(x.ticket ?? '')
+    const owner = auth.resetOwner(c.db, ticket)
+    auth.checkRate(`ip:${c.ip}`, 20)
+    if (owner) auth.checkRate(`login:${owner.email}`)
+    const password = await auth.newPassword(x.password)
+    let userId: number
+    try {
+      userId = auth.checkResetCode(c.db, ticket, String(x.code ?? ''), true)
+    } catch (e) {
+      auth.noteFailure(`ip:${c.ip}`)
+      if (owner) auth.noteFailure(`login:${owner.email}`)
+      throw e
+    }
+    const u = auth.getUser(c.db, userId)
+    if (!u || u.disabled || !u.verified_at) {
+      auth.dropToken(c.db, ticket)
+      throw new Error('That code is not right, or it has expired.')
+    }
+    const how = await secondFor(c, userId, x, `reset:${ticket}`, ticket)
+    auth.dropToken(c.db, ticket)
+    return me(c, newPassword(c, userId, password, 'reset code', how, x.keep === true))
+  }),
+
+  // Changing the password while signed in: with the current one, or with a code by email.
+  r('POST', '/api/auth/password/code', 'user', async (c) => {
+    auth.checkRate(`forgot:${c.user.email}`, 3)
+    auth.noteFailure(`forgot:${c.user.email}`)
+    const t = auth.issue(c.db, c.user.id, 'reset', true)
+    await sendMail(c.user.email, codeMail(langOf(c), t.secret, 'reset'))
+    return { ticket: t.id, to: mask(c.user.email), mail: mailReady() }
+  }),
+  r('POST', '/api/auth/password', 'user', async (c) => {
+    const x = b(c)
+    const account = `login:${c.user.email}`
+    auth.checkRate(account)
+    const password = await auth.newPassword(x.password)
+    const ticket = typeof x.ticket === 'string' ? x.ticket : null
+    if (ticket) {
+      try {
+        if (auth.resetOwner(c.db, ticket)?.id !== c.user.id)
+          throw new Error('That code is not right, or it has expired.')
+        auth.checkResetCode(c.db, ticket, String(x.code ?? ''), true)
+      } catch (e) {
+        auth.noteFailure(account)
+        throw e
+      }
+    } else {
+      const row = auth.findLogin(c.db, c.user.email)
+      if (!auth.checkPassword(String(x.current ?? ''), row?.pass_hash ?? null)) {
+        auth.noteFailure(account)
+        throw new HttpError(403, 'Your current password is not right.')
+      }
+    }
+    const how = await secondFor(c, c.user.id, x, `change:${c.user.id}`, ticket ?? undefined)
+    if (ticket) auth.dropToken(c.db, ticket)
+    const user = newPassword(
+      c,
+      c.user.id,
+      password,
+      ticket ? 'emailed code' : 'current password',
+      how,
+      !!c.session?.keep,
+    )
+    return me(c, user)
   }),
 
   r('PATCH', '/api/auth/me', 'user', (c) => {
     const x = b(c)
-    if (x.password !== undefined) {
-      const row = auth.findLogin(c.db, c.user.email)
-      if (!auth.checkPassword(String(x.current ?? ''), row?.pass_hash ?? null))
-        throw new HttpError(403, 'Your current password is not right.')
-    }
     if (x.prefs !== undefined) auth.savePrefs(c.db, c.user.id, x.prefs)
     auth.updateUser(c.db, c.user.id, {
       ...(x.name !== undefined ? { name: String(x.name) } : {}),
       ...(x.username !== undefined ? { username: (x.username as string) || null } : {}),
-      ...(x.password !== undefined ? { password: String(x.password) } : {}),
     })
-    const user = auth.getUser(c.db, c.user.id)!
-    if (x.password !== undefined) {
-      signIn(c, user) // the old sessions just ended; keep this one
-      later(securityEvent(c.db, { type: 'password_changed', userId: user.id, ...from(c) }))
-    }
-    return me(c, user)
+    return me(c, auth.getUser(c.db, c.user.id)!)
   }),
 
   // People

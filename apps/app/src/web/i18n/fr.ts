@@ -1004,6 +1004,101 @@ export const fr: Dict = {
       'Ce tableau de bord ne répond que sur cet ordinateur.',
     'Sign in through Cloudflare Access first.': 'Connectez-vous d’abord via Cloudflare Access.',
     'Only admins read the activity log.': 'Seuls les administrateurs lisent le journal d’activité.',
+    'That password has appeared in a data breach, so attackers try it first. Choose another one.':
+      "Ce mot de passe figure dans une fuite de données, les attaquants l'essaient donc en premier. Choisissez-en un autre.",
+    Devices: 'Appareils',
+    'This computer': 'Cet ordinateur',
+    '{browser} on {os}': '{browser} sur {os}',
+    'Unknown browser': 'Navigateur inconnu',
+    'Signed in {when}': 'Connecté le {when}',
+    'This device': 'Cet appareil',
+    'Sign out {device}': 'Déconnecter {device}',
+    'That device is already signed out.': 'Cet appareil est déjà déconnecté.',
+    'Enter your password again to change how you sign in.':
+      'Saisissez à nouveau votre mot de passe pour changer votre façon de vous connecter.',
+    'Setting up took too long. Start again.': 'La configuration a pris trop de temps. Recommencez.',
+    'Add a passkey or an authenticator app first.':
+      "Ajoutez d'abord une clé d'accès ou une application d'authentification.",
+    'Use your authenticator app': "Utiliser votre application d'authentification",
+    'Use a recovery code': 'Utiliser un code de récupération',
+    'Enter the code from your app': 'Saisissez le code de votre application',
+    'Enter a recovery code': 'Saisissez un code de récupération',
+    'Six-digit code': 'Code à six chiffres',
+    'Recovery code': 'Code de récupération',
+    'Each recovery code works once.': "Chaque code de récupération ne fonctionne qu'une fois.",
+    'Email me a code instead': "M'envoyer plutôt un code par e-mail",
+    'QR code for your authenticator app': "Code QR pour votre application d'authentification",
+    'Keep these somewhere safe. Each works once, and they are shown only now.':
+      "Conservez-les en lieu sûr. Chacun ne fonctionne qu'une fois, et ils ne sont affichés que maintenant.",
+    'I saved them': 'Je les ai enregistrés',
+    'Authenticator app': "Application d'authentification",
+    'On. Sign in with a code from the app instead of email.':
+      "Activée. Connectez-vous avec un code de l'application plutôt que par e-mail.",
+    'Codes from an authenticator app on your phone or computer.':
+      "Des codes d'une application d'authentification sur votre téléphone ou ordinateur.",
+    'Authenticator app turned on.': "Application d'authentification activée.",
+    'Scan this with the app, or enter this key by hand:':
+      "Scannez-le avec l'application, ou saisissez cette clé à la main :",
+    'Code from the app': "Code de l'application",
+    'Turn on': 'Activer',
+    'Turn off': 'Désactiver',
+    'Authenticator app turned off.': "Application d'authentification désactivée.",
+    'Set up': 'Configurer',
+    'Recovery codes': 'Codes de récupération',
+    '{n} of 10 left, for when you have neither your passkey nor your app.':
+      "Il en reste {n} sur 10, pour quand vous n'avez ni votre clé d'accès ni votre application.",
+    'Make new codes': 'Générer de nouveaux codes',
+    'Passkeys need a name such as localhost, not an IP address.':
+      "Les clés d'accès ont besoin d'un nom comme localhost, pas d'une adresse IP.",
+    'Adding the passkey took too long. Try again.':
+      "L'ajout de la clé d'accès a pris trop de temps. Réessayez.",
+    'The passkey could not be checked. Try again.':
+      "La clé d'accès n'a pas pu être vérifiée. Réessayez.",
+    'No such passkey.': "Cette clé d'accès n'existe pas.",
+    'The passkey was not used. Try again, or choose another way.':
+      "La clé d'accès n'a pas été utilisée. Réessayez, ou choisissez un autre moyen.",
+    'Use your passkey': "Utiliser votre clé d'accès",
+    'Your browser asks for the passkey you added for this account.':
+      "Votre navigateur demande la clé d'accès ajoutée pour ce compte.",
+    Passkey: "Clé d'accès",
+    Passkeys: "Clés d'accès",
+    'The passkey was not added. Try again when you are ready.':
+      "La clé d'accès n'a pas été ajoutée. Réessayez quand vous êtes prêt.",
+    'Passkey added.': "Clé d'accès ajoutée.",
+    'Passkey removed.': "Clé d'accès supprimée.",
+    'Sign in with your fingerprint, face or device PIN instead of a code.':
+      "Connectez-vous avec votre empreinte, votre visage ou le code de l'appareil au lieu d'un code.",
+    'Passkeys need a name, not a number: open {url} to add one.':
+      "Les clés d'accès ont besoin d'un nom, pas d'un numéro : ouvrez {url} pour en ajouter une.",
+    'Last used {when}': 'Utilisée pour la dernière fois {when}',
+    'Added {when}': 'Ajoutée {when}',
+    'made at another address': 'créée à une autre adresse',
+    'Remove the passkey {name}': "Supprimer la clé d'accès {name}",
+    Add: 'Ajouter',
+    'Add a passkey': "Ajouter une clé d'accès",
+    'Protect your super admin account': 'Protégez votre compte de super admin',
+    'You can change everything in SocialMonitor, so add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      "Vous pouvez tout modifier dans SocialMonitor : ajoutez donc une clé d'accès ou une application d'authentification. D'ici là, vous vous connectez avec un code reçu par e-mail.",
+    'Add one now': 'En ajouter un maintenant',
+    Later: 'Plus tard',
+    'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      "En tant que super admin, ajoutez une clé d'accès ou une application d'authentification. D'ici là, vous vous connectez avec un code reçu par e-mail.",
+    'That code is not right, or it has expired.': "Ce code n'est pas bon, ou il a expiré.",
+    'This account has two-step sign-in. Confirm it is you to change the password.':
+      "Ce compte a la connexion en deux étapes. Confirmez que c'est bien vous pour changer le mot de passe.",
+    'That second step is not right.': "Cette deuxième étape n'est pas bonne.",
+    'Code from your authenticator app': "Code de votre application d'authentification",
+    'Your browser asks for your passkey when you save.':
+      "Votre navigateur demande votre clé d'accès à l'enregistrement.",
+    'Give your email or username. We email you a code to choose a new password.':
+      "Indiquez votre e-mail ou votre nom d'utilisateur. Nous vous envoyons un code pour choisir un nouveau mot de passe.",
+    'Send code': 'Envoyer le code',
+    'If that account exists, we emailed it a six-digit code. It works for 10 minutes.':
+      'Si ce compte existe, nous lui avons envoyé un code à six chiffres. Il est valable 10 minutes.',
+    "Don't remember it? Send me a code instead":
+      'Vous ne vous en souvenez pas ? Envoyez-moi un code',
+    'That code is not right.': 'Ce code n’est pas bon.',
+    'Not base32.': 'Ce n’est pas du base32.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

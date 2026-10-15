@@ -998,6 +998,100 @@ export const ro: Dict = {
     'This dashboard only answers on this computer.': 'Acest panou răspunde doar pe acest computer.',
     'Sign in through Cloudflare Access first.': 'Autentifică-te mai întâi prin Cloudflare Access.',
     'Only admins read the activity log.': 'Doar administratorii pot citi jurnalul de activitate.',
+    'That password has appeared in a data breach, so attackers try it first. Choose another one.':
+      'Parola aceasta a apărut într-o scurgere de date, așa că atacatorii o încearcă primii. Alege alta.',
+    Devices: 'Dispozitive',
+    'This computer': 'Acest calculator',
+    '{browser} on {os}': '{browser} pe {os}',
+    'Unknown browser': 'Browser necunoscut',
+    'Signed in {when}': 'Conectat la {when}',
+    'This device': 'Acest dispozitiv',
+    'Sign out {device}': 'Deconectează {device}',
+    'That device is already signed out.': 'Dispozitivul acesta este deja deconectat.',
+    'Enter your password again to change how you sign in.':
+      'Introdu din nou parola ca să schimbi felul în care te conectezi.',
+    'Setting up took too long. Start again.': 'Configurarea a durat prea mult. Începe din nou.',
+    'Add a passkey or an authenticator app first.':
+      'Adaugă mai întâi o cheie de acces sau o aplicație de autentificare.',
+    'Use your authenticator app': 'Folosește aplicația de autentificare',
+    'Use a recovery code': 'Folosește un cod de recuperare',
+    'Enter the code from your app': 'Introdu codul din aplicație',
+    'Enter a recovery code': 'Introdu un cod de recuperare',
+    'Six-digit code': 'Cod din șase cifre',
+    'Recovery code': 'Cod de recuperare',
+    'Each recovery code works once.': 'Fiecare cod de recuperare merge o singură dată.',
+    'Email me a code instead': 'Trimite-mi un cod pe email',
+    'QR code for your authenticator app': 'Cod QR pentru aplicația de autentificare',
+    'Keep these somewhere safe. Each works once, and they are shown only now.':
+      'Păstrează-le într-un loc sigur. Fiecare merge o singură dată și sunt afișate doar acum.',
+    'I saved them': 'Le-am salvat',
+    'Authenticator app': 'Aplicație de autentificare',
+    'On. Sign in with a code from the app instead of email.':
+      'Pornită. Conectează-te cu un cod din aplicație în loc de email.',
+    'Codes from an authenticator app on your phone or computer.':
+      'Coduri dintr-o aplicație de autentificare de pe telefon sau calculator.',
+    'Authenticator app turned on.': 'Aplicația de autentificare e pornită.',
+    'Scan this with the app, or enter this key by hand:':
+      'Scanează codul cu aplicația sau introdu manual această cheie:',
+    'Code from the app': 'Codul din aplicație',
+    'Turn on': 'Pornește',
+    'Turn off': 'Oprește',
+    'Authenticator app turned off.': 'Aplicația de autentificare e oprită.',
+    'Set up': 'Configurează',
+    'Recovery codes': 'Coduri de recuperare',
+    '{n} of 10 left, for when you have neither your passkey nor your app.':
+      'Au rămas {n} din 10, pentru când nu ai nici cheia de acces, nici aplicația.',
+    'Make new codes': 'Generează coduri noi',
+    'Passkeys need a name such as localhost, not an IP address.':
+      'Cheile de acces au nevoie de un nume, cum ar fi localhost, nu de o adresă IP.',
+    'Adding the passkey took too long. Try again.':
+      'Adăugarea cheii de acces a durat prea mult. Încearcă din nou.',
+    'The passkey could not be checked. Try again.':
+      'Cheia de acces nu a putut fi verificată. Încearcă din nou.',
+    'No such passkey.': 'Nu există această cheie de acces.',
+    'The passkey was not used. Try again, or choose another way.':
+      'Cheia de acces nu a fost folosită. Încearcă din nou sau alege altă cale.',
+    'Use your passkey': 'Folosește cheia de acces',
+    'Your browser asks for the passkey you added for this account.':
+      'Browserul îți cere cheia de acces adăugată pentru acest cont.',
+    Passkey: 'Cheie de acces',
+    Passkeys: 'Chei de acces',
+    'The passkey was not added. Try again when you are ready.':
+      'Cheia de acces nu a fost adăugată. Încearcă din nou când ești gata.',
+    'Passkey added.': 'Cheie de acces adăugată.',
+    'Passkey removed.': 'Cheie de acces ștearsă.',
+    'Sign in with your fingerprint, face or device PIN instead of a code.':
+      'Conectează-te cu amprenta, fața sau PIN-ul dispozitivului în loc de un cod.',
+    'Passkeys need a name, not a number: open {url} to add one.':
+      'Cheile de acces au nevoie de un nume, nu de un număr: deschide {url} ca să adaugi una.',
+    'Last used {when}': 'Folosită ultima dată {when}',
+    'Added {when}': 'Adăugată {when}',
+    'made at another address': 'făcută la altă adresă',
+    'Remove the passkey {name}': 'Șterge cheia de acces {name}',
+    Add: 'Adaugă',
+    'Add a passkey': 'Adaugă o cheie de acces',
+    'Protect your super admin account': 'Protejează-ți contul de super admin',
+    'You can change everything in SocialMonitor, so add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      'Poți schimba totul în SocialMonitor, așa că adaugă o cheie de acces sau o aplicație de autentificare. Până atunci, te conectezi cu un cod primit pe email.',
+    'Add one now': 'Adaugă acum',
+    Later: 'Mai târziu',
+    'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      'Ca super admin, adaugă o cheie de acces sau o aplicație de autentificare. Până atunci, te conectezi cu un cod primit pe email.',
+    'That code is not right, or it has expired.': 'Codul nu este corect sau a expirat.',
+    'This account has two-step sign-in. Confirm it is you to change the password.':
+      'Contul acesta are conectare în doi pași. Confirmă că ești tu ca să schimbi parola.',
+    'That second step is not right.': 'Al doilea pas nu este corect.',
+    'Code from your authenticator app': 'Codul din aplicația de autentificare',
+    'Your browser asks for your passkey when you save.':
+      'Browserul îți cere cheia de acces când salvezi.',
+    'Give your email or username. We email you a code to choose a new password.':
+      'Scrie emailul sau numele de utilizator. Îți trimitem pe email un cod ca să alegi o parolă nouă.',
+    'Send code': 'Trimite codul',
+    'If that account exists, we emailed it a six-digit code. It works for 10 minutes.':
+      'Dacă acest cont există, i-am trimis pe email un cod din șase cifre. E valabil 10 minute.',
+    "Don't remember it? Send me a code instead": 'Nu ți-o amintești? Trimite-mi un cod',
+    'That code is not right.': 'Codul nu este corect.',
+    'Not base32.': 'Nu este base32.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

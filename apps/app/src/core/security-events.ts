@@ -18,6 +18,12 @@ export type SecurityEventType =
   | 'second_factor_removed'
   | 'failed_signins'
   | 'new_admin'
+  // Logged only, no email: the sign-in steps call these where they happen.
+  | 'signed_in'
+  | 'session_revoked'
+  | 'sessions_ended'
+  | 'recovery_code_used'
+  | 'recovery_codes_new'
 
 export interface SecurityEventInput {
   type: SecurityEventType
@@ -34,7 +40,7 @@ export interface SecurityEventInput {
   detail?: Record<string, unknown>
 }
 
-const KIND: Record<SecurityEventType, SecurityKind> = {
+const KIND: Partial<Record<SecurityEventType, SecurityKind>> = {
   new_device: 'newDevice',
   password_changed: 'password',
   second_factor_added: 'factorAdded',
@@ -49,6 +55,11 @@ const EVENT: Record<SecurityEventType, AuditEvent> = {
   second_factor_removed: 'security.second_factor_removed',
   failed_signins: 'security.failed_signins',
   new_admin: 'security.new_admin',
+  signed_in: 'signin.ok',
+  session_revoked: 'session.revoked',
+  sessions_ended: 'logout.everywhere',
+  recovery_code_used: 'security.recovery_used',
+  recovery_codes_new: 'security.recovery_new',
 }
 
 /** Where links in emails point: the tunnel's address when there is one, else this computer. */
@@ -62,7 +73,18 @@ export function appUrl(env: Record<string, string | undefined> = process.env) {
 
 const str = (x: unknown) => (typeof x === 'string' && x ? x : undefined)
 
+/** Never throws: a broken alert must not break the sign-in or the request that caused it. */
 export async function securityEvent(db: DB, e: SecurityEventInput) {
+  try {
+    await record(db, e)
+  } catch (err) {
+    console.warn(
+      `A security event (${e.type}) failed: ${err instanceof Error ? err.message : String(err)}`,
+    )
+  }
+}
+
+async function record(db: DB, e: SecurityEventInput) {
   const user = getUser(db, e.userId)
   if (!user) return
   const d = e.detail ?? {}
@@ -86,10 +108,12 @@ export async function securityEvent(db: DB, e: SecurityEventInput) {
     brand: str(d.brand) ?? null,
     who: user.name || user.email,
   }
+  const kind = KIND[e.type]
+  if (!kind) return // logged only
   const link = appUrl()
   const mails: [string, string, SecurityKind][] = []
   // Someone invited a moment ago has no account to protect yet; their invitation says enough.
-  if (user.verified_at && !user.disabled) mails.push([user.email, user.lang, KIND[e.type]])
+  if (user.verified_at && !user.disabled) mails.push([user.email, user.lang, kind])
   if (admin) {
     const supers = db
       .prepare('SELECT email, lang FROM users WHERE super = 1 AND disabled = 0 AND id != ?')
@@ -120,7 +144,16 @@ const deviceKey = (ua: string | null | undefined) =>
  */
 export async function signedIn(
   db: DB,
-  x: { userId: number; ip: string; ua: string; country: string | null; keep: boolean },
+  x: {
+    userId: number
+    ip: string
+    ua: string
+    country: string | null
+    keep: boolean
+    /** How the second step was passed: code, totp, passkey, recovery. */
+    method?: string
+    newDevice?: boolean
+  },
 ) {
   const user = getUser(db, x.userId)
   if (!user) return
@@ -135,7 +168,7 @@ export async function signedIn(
     target: user.email,
     ip: x.ip,
     ua: x.ua,
-    detail: { country: x.country, keep: x.keep },
+    detail: { country: x.country, keep: x.keep, method: x.method ?? 'code' },
   })
   if (fresh)
     await securityEvent(db, {
