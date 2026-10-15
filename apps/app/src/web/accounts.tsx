@@ -23,6 +23,7 @@ export function Accounts({ notify }: { notify: (s: string) => void }) {
   const [edit, setEdit] = useState<(Partial<Account> & { password?: string }) | null>(null)
   const [shown, setShown] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
+  const [keyFile, setKeyFile] = useState(false)
 
   const load = () =>
     api
@@ -34,6 +35,10 @@ export function Accounts({ notify }: { notify: (s: string) => void }) {
     api
       .get<{ local: boolean }>('/api/remote')
       .then((r) => setLocal(r.local))
+      .catch(() => {})
+    api
+      .get<{ key: string }>('/api/vault')
+      .then((v) => setKeyFile(v.key === 'file'))
       .catch(() => {})
   }, [])
 
@@ -63,6 +68,13 @@ export function Accounts({ notify }: { notify: (s: string) => void }) {
 
   return (
     <div class="sm-accounts">
+      {keyFile && (
+        <p class="g-error">
+          {t(
+            'The key to these passwords is kept next to the database, so anyone who copies the data folder can read them. Set SOCIALMONITOR_VAULT_KEY in the service’s environment.',
+          )}
+        </p>
+      )}
       {list.length > 0 && (
         <ul class="sm-accounts__list">
           {list.map((a) => (

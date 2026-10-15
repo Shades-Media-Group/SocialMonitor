@@ -810,6 +810,8 @@ export const ru: Dict = {
     '{from}–{to} of {total}': '{from}–{to} из {total}',
     Newer: 'Новее',
     Older: 'Старше',
+    'The key to these passwords is kept next to the database, so anyone who copies the data folder can read them. Set SOCIALMONITOR_VAULT_KEY in the service’s environment.':
+      'Ключ к этим паролям хранится рядом с базой данных, поэтому любой, кто скопирует папку data, сможет их прочитать. Задайте SOCIALMONITOR_VAULT_KEY в окружении службы.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

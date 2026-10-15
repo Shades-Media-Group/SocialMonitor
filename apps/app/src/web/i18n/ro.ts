@@ -813,6 +813,8 @@ export const ro: Dict = {
     '{from}–{to} of {total}': '{from}–{to} din {total}',
     Newer: 'Mai noi',
     Older: 'Mai vechi',
+    'The key to these passwords is kept next to the database, so anyone who copies the data folder can read them. Set SOCIALMONITOR_VAULT_KEY in the service’s environment.':
+      'Cheia acestor parole e păstrată lângă baza de date, așa că oricine copiază dosarul data le poate citi. Setează SOCIALMONITOR_VAULT_KEY în mediul serviciului.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

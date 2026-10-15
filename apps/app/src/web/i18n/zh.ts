@@ -776,6 +776,8 @@ export const zh: Dict = {
     '{from}–{to} of {total}': '第 {from}–{to} 条，共 {total} 条',
     Newer: '较新',
     Older: '较早',
+    'The key to these passwords is kept next to the database, so anyone who copies the data folder can read them. Set SOCIALMONITOR_VAULT_KEY in the service’s environment.':
+      '这些密码的密钥保存在数据库旁边，任何复制 data 文件夹的人都能读取它们。请在服务的环境变量中设置 SOCIALMONITOR_VAULT_KEY。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

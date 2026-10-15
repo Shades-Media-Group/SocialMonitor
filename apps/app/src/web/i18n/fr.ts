@@ -813,6 +813,8 @@ export const fr: Dict = {
     '{from}–{to} of {total}': '{from}–{to} sur {total}',
     Newer: 'Plus récents',
     Older: 'Plus anciens',
+    'The key to these passwords is kept next to the database, so anyone who copies the data folder can read them. Set SOCIALMONITOR_VAULT_KEY in the service’s environment.':
+      'La clé de ces mots de passe est gardée à côté de la base de données : quiconque copie le dossier data peut les lire. Définissez SOCIALMONITOR_VAULT_KEY dans l’environnement du service.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

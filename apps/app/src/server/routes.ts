@@ -7,7 +7,13 @@ import { TEMPLATES, validCategories } from '../core/categories.ts'
 import type { Dump } from '../core/transfer.ts'
 import { openSignInWindow, signInStatus } from '../core/collect/browser.ts'
 import { readSettings, writeSettings } from '../core/settings.ts'
-import { deleteAccount, listAccounts, revealPassword, saveAccount } from '../core/vault.ts'
+import {
+  deleteAccount,
+  listAccounts,
+  revealPassword,
+  saveAccount,
+  vaultKeySource,
+} from '../core/vault.ts'
 import type { Account } from '../core/vault.ts'
 import { gaps, queueRun, sortPending } from '../core/run.ts'
 import type { CollectedPost, Range } from '../core/types.ts'
@@ -286,6 +292,8 @@ export const routes: Route[] = [
   // Accounts: kept encrypted for the person's own reference. Passwords leave the server only on
   // this computer, one at a time, on an explicit Reveal.
   r('GET', '/api/accounts', 'super', ({ db }) => listAccounts(db)),
+  // Where the accounts' key is kept; 'file' (beside the database) is warned about in Settings.
+  r('GET', '/api/vault', 'super', () => ({ key: vaultKeySource() })),
   r('POST', '/api/accounts', 'super', (c) => {
     const a = saveAccount(c.db, b(c) as Partial<Account>)
     audit(c.db, { ...by(c), event: 'account.saved', target: `${a.network}: ${a.username}` })
