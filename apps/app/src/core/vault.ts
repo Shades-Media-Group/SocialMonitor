@@ -59,16 +59,12 @@ const keychain: Store = {
     }
   },
   write(hex) {
-    execFileSync('security', [
-      'add-generic-password',
-      '-s',
-      SERVICE,
-      '-a',
-      'vault',
-      '-w',
-      hex,
-      '-U',
-    ])
+    // `security -i` reads its command from stdin, so the key never shows in the process list.
+    if (!/^[0-9a-f]+$/i.test(hex)) throw new Error('The vault key must be hex.')
+    execFileSync('security', ['-i'], {
+      input: `add-generic-password -U -s "${SERVICE}" -a vault -w ${hex}\n`,
+      stdio: ['pipe', 'ignore', 'ignore'],
+    })
   },
 }
 
