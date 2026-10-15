@@ -2451,3 +2451,16 @@ td.sm-hot {
     display: none;
   }
 }
+
+/* The activity log: a second line under a cell, and the pager under the table. */
+.sm-block {
+  display: block;
+  font-size: 11.5px;
+}
+.sm-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+}

@@ -52,7 +52,9 @@ import {
 import { getSettings } from '../core/settings.ts'
 import { latestSummary, refreshSummary } from '../core/summary.ts'
 import type { User } from '../core/auth.ts'
-import { roleFor, signSession, visibleBrands } from '../core/auth.ts'
+import { memberships, roleFor, signSession, visibleBrands } from '../core/auth.ts'
+import { audit, listAudit } from '../core/audit.ts'
+import type { AuditEvent } from '../core/audit.ts'
 
 export class HttpError extends Error {
   status: number
@@ -106,6 +108,24 @@ export const r = (
   need,
   handle: handle as Route['handle'],
 })
+/** Who did it and from where, for the audit log. */
+export const by = (c: Ctx) => ({ actor: c.user?.id ?? null, ip: c.ip, ua: c.ua })
+/** Logs a file someone took away (an export, a PDF, a saved report) and hands it on. */
+const took = <T extends { __download: string }>(
+  c: Ctx,
+  out: T,
+  brandId: number | null,
+  event: AuditEvent = 'download',
+) => {
+  audit(c.db, {
+    ...by(c),
+    event,
+    target: out.__download,
+    brandId,
+    detail: Object.fromEntries(c.query),
+  })
+  return out
+}
 const id = (s: string | undefined) => {
   const n = Number(s)
   if (!Number.isInteger(n) || n < 1) throw new Error('Bad id.')
@@ -192,15 +212,23 @@ export const routes: Route[] = [
       error: last ? (JSON.parse(last) as { at: string; message: string }) : null,
     }
   }),
-  r('PATCH', '/api/settings', 'super', (c) => writeSettings(c.db, b(c))),
+  r('PATCH', '/api/settings', 'super', (c) => {
+    const out = writeSettings(c.db, b(c))
+    audit(c.db, { ...by(c), event: 'settings.changed', detail: { keys: Object.keys(b(c)) } })
+    return out
+  }),
   r(
     'GET',
     '/api/export',
     (c) => (c.query.get('brand') ? runs(c, id(c.query.get('brand')!)) : c.user.super || runs(c, 0)),
-    ({ db, query }) => ({
-      __download: `socialmonitor-${new Date().toISOString().slice(0, 10)}.json`,
-      data: exportAll(db, query.get('brand') ? id(query.get('brand')!) : undefined),
-    }),
+    (c) => {
+      const brandId = c.query.get('brand') ? id(c.query.get('brand')!) : undefined
+      const out = {
+        __download: `socialmonitor-${new Date().toISOString().slice(0, 10)}.json`,
+        data: exportAll(c.db, brandId),
+      }
+      return took(c, out, brandId ?? null, 'export')
+    },
   ),
   r('GET', '/api/comments.csv', byBrand, (c) => {
     const { db, query } = c
@@ -246,19 +274,32 @@ export const routes: Route[] = [
       params: Object.fromEntries(query),
       userId: c.user.id,
     })
-    return out
+    return took(c, out, query.get('brand') ? id(query.get('brand')!) : null, 'export')
   }),
-  r('POST', '/api/import', 'super', (c) => importAll(c.db, c.body as Dump)),
+  r('POST', '/api/import', 'super', (c) => {
+    const result = importAll(c.db, c.body as Dump)
+    audit(c.db, { ...by(c), event: 'import', detail: result as Record<string, unknown> })
+    return result
+  }),
   r('GET', '/api/browser/status', 'user', async () => signInStatus()),
   r('GET', '/api/gaps', 'user', (c) => visible(c, gaps(c.db), (g) => g.brand_id)),
   // Accounts: kept encrypted for the person's own reference. Passwords leave the server only on
   // this computer, one at a time, on an explicit Reveal.
   r('GET', '/api/accounts', 'super', ({ db }) => listAccounts(db)),
-  r('POST', '/api/accounts', 'super', (c) => saveAccount(c.db, b(c) as Partial<Account>)),
-  r('DELETE', '/api/accounts/:key', 'super', (c) => void deleteAccount(c.db, c.params.key!)),
+  r('POST', '/api/accounts', 'super', (c) => {
+    const a = saveAccount(c.db, b(c) as Partial<Account>)
+    audit(c.db, { ...by(c), event: 'account.saved', target: `${a.network}: ${a.username}` })
+    return a
+  }),
+  r('DELETE', '/api/accounts/:key', 'super', (c) => {
+    deleteAccount(c.db, c.params.key!)
+    audit(c.db, { ...by(c), event: 'account.deleted', detail: { id: c.params.key } })
+  }),
   r('POST', '/api/accounts/:key/reveal', 'super', (c) => {
     if (!c.local) throw new Error('Passwords are shown only on the computer SocialMonitor runs on.')
-    return { password: revealPassword(c.db, c.params.key!) }
+    const password = revealPassword(c.db, c.params.key!)
+    audit(c.db, { ...by(c), event: 'account.revealed', detail: { id: c.params.key } })
+    return { password }
   }),
   r('GET', '/api/remote', 'user', (c) => ({
     local: c.local,
@@ -283,7 +324,9 @@ export const routes: Route[] = [
   r('POST', '/api/brands', 'super', (c) => {
     const { name, links, website } = b(c) as { name?: string; links?: string[]; website?: string }
     if (!name?.trim()) throw new Error('Name the brand.')
-    return store.addBrand(c.db, name, links ?? [], website ?? null)
+    const brand = store.addBrand(c.db, name, links ?? [], website ?? null)
+    audit(c.db, { ...by(c), event: 'brand.created', target: brand.name, brandId: brand.id })
+    return brand
   }),
   r('PATCH', '/api/brands/:id', adminBrand, (c) => {
     const x = b(c) as {
@@ -301,7 +344,12 @@ export const routes: Route[] = [
     store.updateBrand(c.db, brandId, details)
     for (const link of links ?? []) store.setProfile(c.db, brandId, link)
   }),
-  r('DELETE', '/api/brands/:id', 'super', (c) => void store.deleteBrand(c.db, id(c.params.id))),
+  r('DELETE', '/api/brands/:id', 'super', (c) => {
+    const brandId = id(c.params.id)
+    const name = store.getBrand(c.db, brandId)?.name ?? null
+    store.deleteBrand(c.db, brandId)
+    audit(c.db, { ...by(c), event: 'brand.deleted', target: name, brandId })
+  }),
   r('DELETE', '/api/brands/:id/profiles/:network', adminBrand, (c) => {
     const n = net(c.params.network)
     if (!n) throw new Error('Unknown network.')
@@ -577,9 +625,13 @@ export const routes: Route[] = [
       if (s.brand_id == null ? !c.user.super : !roleFor(c.db, c.user, s.brand_id))
         throw new HttpError(403, 'You do not have access to this brand.')
     },
-    ({ db, params }) => {
-      const s = getSaved(db, id(params.id))!
-      return { __download: s.filename, type: s.type, data: new Uint8Array(readSaved(s)) }
+    (c) => {
+      const s = getSaved(c.db, id(c.params.id))!
+      return took(
+        c,
+        { __download: s.filename, type: s.type, data: new Uint8Array(readSaved(s)) },
+        s.brand_id,
+      )
     },
   ),
   r(
@@ -592,6 +644,28 @@ export const routes: Route[] = [
         throw new HttpError(403, "Only this brand's admins can do that.")
     },
     ({ db, params }) => void deleteSaved(db, id(params.id)),
+  ),
+  // The audit log: super admins read all of it, a brand's admins the rows of their brands.
+  r(
+    'GET',
+    '/api/audit',
+    (c) => {
+      if (!c.user.super && !memberships(c.db, c.user.id).some((m) => m.role === 'admin'))
+        throw new HttpError(403, 'Only admins read the activity log.')
+    },
+    (c) =>
+      listAudit(c.db, {
+        brands: c.user.super
+          ? null
+          : memberships(c.db, c.user.id)
+              .filter((m) => m.role === 'admin')
+              .map((m) => m.brand_id),
+        event: c.query.get('event') || undefined,
+        brandId: Number(c.query.get('brand')) || undefined,
+        q: c.query.get('q') || undefined,
+        page: Number(c.query.get('page')) || 0,
+        size: Number(c.query.get('size')) || 50,
+      }),
   ),
   r('GET', '/api/compare', 'user', (c) =>
     compare(c.db, Number(c.query.get('days') ?? 30) || 0, visibleBrands(c.db, c.user)),
@@ -699,7 +773,7 @@ export const routes: Route[] = [
       params: Object.fromEntries(query),
       userId: c.user.id,
     })
-    return out
+    return took(c, out, brand.id, 'export')
   }),
   // A brand's own TikTok, connected through TikTok's sign-in.
   r('GET', '/api/brands/:id/tiktok', seeBrand, (c) => ({
@@ -713,16 +787,32 @@ export const routes: Route[] = [
       String((b(c) as { origin?: string }).origin ?? ''),
     ),
   })),
-  r('DELETE', '/api/brands/:id/tiktok', adminBrand, (c) => void disconnect(c.db, id(c.params.id))),
+  r('DELETE', '/api/brands/:id/tiktok', adminBrand, (c) => {
+    disconnect(c.db, id(c.params.id))
+    audit(c.db, {
+      ...by(c),
+      event: 'network.disconnected',
+      target: 'tiktok',
+      brandId: id(c.params.id),
+    })
+  }),
   // TikTok returns here through the website's hand-back page; the state proves who asked.
   r('GET', '/api/auth/tiktok/callback', 'public', async (c) => {
     const err = c.query.get('error')
     if (err) return { __redirect: `/?tiktok=${encodeURIComponent(err)}` }
-    const { brandId } = await finishSignIn(
+    const { brandId, userId, user } = await finishSignIn(
       c.db,
       c.query.get('code') ?? '',
       c.query.get('state') ?? '',
     )
+    audit(c.db, {
+      ...by(c),
+      actor: userId,
+      event: 'network.connected',
+      target: 'tiktok',
+      brandId,
+      detail: { account: user.display_name ?? null },
+    })
     return { __redirect: `/b/${brandId}/about?tiktok=connected` }
   }),
   // A brand's own Facebook Page and its Instagram, connected through Facebook's sign-in.
@@ -733,17 +823,22 @@ export const routes: Route[] = [
   r('POST', '/api/brands/:id/meta/connect', adminBrand, (c) => ({
     url: meta.authorizeUrl(id(c.params.id), String((b(c) as { origin?: string }).origin ?? '')),
   })),
-  r(
-    'DELETE',
-    '/api/brands/:id/meta',
-    adminBrand,
-    (c) => void meta.disconnect(c.db, id(c.params.id)),
-  ),
+  r('DELETE', '/api/brands/:id/meta', adminBrand, (c) => {
+    meta.disconnect(c.db, id(c.params.id))
+    audit(c.db, {
+      ...by(c),
+      event: 'network.disconnected',
+      target: 'meta',
+      brandId: id(c.params.id),
+    })
+  }),
   // Facebook returns here through the website's hand-back page; the state proves who asked.
   r('GET', '/api/auth/meta/callback', 'public', async (c) => {
     const err = c.query.get('error_description') ?? c.query.get('error')
     if (err) return { __redirect: `/?meta=${encodeURIComponent(err)}` }
     const r = await meta.finishSignIn(c.db, c.query.get('code') ?? '', c.query.get('state') ?? '')
+    if (!r.error)
+      audit(c.db, { ...by(c), event: 'network.connected', target: 'meta', brandId: r.brandId })
     return {
       __redirect: `/b/${r.brandId}/about?meta=${r.error ? encodeURIComponent(r.error) : 'connected'}`,
     }
@@ -763,16 +858,22 @@ export const routes: Route[] = [
       { days: Number(c.query.get('days')) || undefined, network: net(c.query.get('network')) },
       c.user,
     )
-    return { __download: out.filename, type: 'application/pdf', data: out.data }
+    return took(
+      c,
+      { __download: out.filename, type: 'application/pdf', data: out.data },
+      id(c.params.id),
+    )
   }),
-  r('POST', '/api/brands/:id/bad/send', adminBrand, async (c) => ({
-    sent: await sendBad(
+  r('POST', '/api/brands/:id/bad/send', adminBrand, async (c) => {
+    const sent = await sendBad(
       c.db,
       id(c.params.id),
       { days: Number((b(c) as { days?: number }).days) || undefined },
       c.user,
-    ),
-  })),
+    )
+    audit(c.db, { ...by(c), event: 'report.sent', brandId: id(c.params.id), detail: { sent } })
+    return { sent }
+  }),
   r('GET', '/api/brands/:id/report.pdf', seeBrand, async (c) => {
     const { db, params, query } = c
     const brand = store.getBrand(db, id(params.id))
@@ -794,7 +895,7 @@ export const routes: Route[] = [
       params: Object.fromEntries(query),
       userId: c.user.id,
     })
-    return out
+    return took(c, out, brand.id)
   }),
   // AI helpers on one comment. The app never posts: a draft is text to copy.
   r('POST', '/api/comments/:id/draft', adminComment, async ({ db, params }) => {
