@@ -24,9 +24,13 @@ import { fillTikTok } from '../core/fill.ts'
 import { changed, onChange } from '../core/events.ts'
 import { baseHeaders, newNonce, pageCsp, withNonce } from './headers.ts'
 
-// Keys and options live in .env at the repository root, never in the code.
+// Keys and options live in .env at the repository root, never in the code. In production the app
+// runs from a release folder, and scripts/production.mjs points it at the repository's .env.
 try {
-  process.loadEnvFile(fileURLToPath(new URL('../../../../.env', import.meta.url)))
+  process.loadEnvFile(
+    process.env.SOCIALMONITOR_ENV_FILE ??
+      fileURLToPath(new URL('../../../../.env', import.meta.url)),
+  )
 } catch {
   /* no .env: fine */
 }
