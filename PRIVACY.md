@@ -1,12 +1,12 @@
 # Privacy policy
 
-_Last updated: 12 October 2026_
+_Last updated: 15 October 2026_
 
 SocialMonitor is an app you run on your own computer, made by Shades Media Group. This policy covers the app and its website, socialmonitor.shades.md.
 
 ## The short version
 
-Shades Media Group receives nothing. Everything SocialMonitor collects stays on your computer. The one exception is the text it asks Claude to read, which goes to Anthropic through your own account.
+Shades Media Group receives nothing. Everything SocialMonitor collects stays on your computer. Two things leave it: the text it asks Claude to read, which goes to Anthropic through your own account, and the first five characters of a new password's fingerprint, to check it against known breaches.
 
 ## What the app collects, and where it goes
 
@@ -17,6 +17,8 @@ Shades Media Group receives nothing. Everything SocialMonitor collects stays on 
 - **To draft a reply** when someone asks for one, Claude gets that comment, its author's name, the post's caption and the brand's saved replies.
 - **Sign-in emails,** if you set up email, carry only a code or a link to the people you invite, through the mail server you configure.
 - **People's accounts** (names, emails, usernames and hashed passwords) stay in the database on your computer.
+- **When someone chooses a password,** the first five characters of its SHA-1 fingerprint go to [Have I Been Pwned](https://haveibeenpwned.com/Passwords), which answers with every breached fingerprint that starts with them; the match is made on your computer, so neither the password nor its full fingerprint leaves it. `SOCIALMONITOR_HIBP=off` in `.env` turns this check off.
+- **Two-step sign-in** (passkeys, authenticator codes, recovery codes) and the list of signed-in devices (browser, system, address and, through the tunnel, the country Cloudflare reports) stay in the database on your computer.
 - **Reports and exports** are files you save; they go wherever you put them.
 - **Saved accounts** (usernames, passwords and notes you choose to keep) are encrypted on your computer and never leave it.
 - **Remote access**, if you set it up, passes through your own Cloudflare account and is limited to the people your Cloudflare Access policy allows.

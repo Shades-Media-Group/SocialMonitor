@@ -759,6 +759,8 @@ export const ro: Dict = {
       'Un brand păstrează cel mult 100 de răspunsuri salvate.',
     'No such saved reply.': 'Nu există acest răspuns salvat.',
     'Choose off, weekly or monthly.': 'Alege oprit, săptămânal sau lunar.',
+    'That password has appeared in a data breach, so attackers try it first. Choose another one.':
+      'Parola aceasta a apărut într-o scurgere de date, așa că atacatorii o încearcă primii. Alege alta.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

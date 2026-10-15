@@ -722,6 +722,8 @@ export const zh: Dict = {
     'A brand keeps at most 100 saved replies.': '每个品牌最多保存 100 条回复。',
     'No such saved reply.': '没有这条已保存的回复。',
     'Choose off, weekly or monthly.': '请选择关闭、每周或每月。',
+    'That password has appeared in a data breach, so attackers try it first. Choose another one.':
+      '这个密码出现在数据泄露中，攻击者会最先尝试它。请换一个。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

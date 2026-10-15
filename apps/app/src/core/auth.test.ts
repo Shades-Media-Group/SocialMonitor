@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { createHash, randomBytes, scryptSync } from 'node:crypto'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { openDb } from './db.ts'
 import { addBrand } from './store.ts'
 import * as auth from './auth.ts'
@@ -100,5 +101,63 @@ describe('super admin from .env', () => {
     auth.seedAdmin(db, { SOCIALMONITOR_ADMIN_EMAIL: 'boss@example.com' }, log)
     expect(logs).toHaveLength(2)
     expect(auth.countUsers(db)).toBe(0)
+  })
+})
+
+describe('password hashing', () => {
+  it('stores scrypt parameters in the hash and upgrades older hashes on sign-in', () => {
+    const h = auth.hashPassword('correct horse battery')
+    expect(h).toMatch(/^scrypt\$17\$8\$1\$/)
+    expect(auth.needsRehash(h)).toBe(false)
+    // The format before: scrypt$salt$hash, N=2^14, 16-byte salt, 64-byte key.
+    const salt = randomBytes(16)
+    const old = `scrypt$${salt.toString('base64')}$${scryptSync('correct horse battery', salt, 64).toString('base64')}`
+    expect(auth.checkPassword('correct horse battery', old)).toBe(true)
+    expect(auth.needsRehash(old)).toBe(true)
+
+    const db = openDb(':memory:')
+    const u = auth.createUser(db, { email: 'old@example.com', verified: true })
+    db.prepare('UPDATE users SET pass_hash = ? WHERE id = ?').run(old, u.id)
+    auth.upgradeHash(db, u.id, 'correct horse battery', old)
+    const now = auth.findLogin(db, 'old@example.com')!.pass_hash
+    expect(now).toMatch(/^scrypt\$17\$/)
+    expect(auth.checkPassword('correct horse battery', now)).toBe(true)
+    expect(auth.checkPassword('correct horse battery', 'scrypt$99$8$1$a$b')).toBe(false)
+  })
+})
+
+describe('breached passwords', () => {
+  const sha = createHash('sha1').update('password123456').digest('hex').toUpperCase()
+  const reply = (body: string, status = 200) =>
+    (async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ url: String(url), headers: init?.headers as Record<string, string> })
+      return new Response(body, { status })
+    }) as typeof fetch
+  let calls: { url: string; headers: Record<string, string> }[] = []
+  beforeEach(() => {
+    calls = []
+  })
+
+  it('sends only the first five characters, padded, and matches suffixes here', async () => {
+    const body = `0000000000000000000000000000000000A:0\r\n${sha.slice(5)}:42\r\n`
+    expect(await auth.breached('password123456', reply(body))).toBe(true)
+    expect(calls[0]!.url).toBe(`https://api.pwnedpasswords.com/range/${sha.slice(0, 5)}`)
+    expect(calls[0]!.headers['Add-Padding']).toBe('true')
+    // Padding rows carry a count of 0 and never count as a match.
+    expect(await auth.breached('password123456', reply(`${sha.slice(5)}:0\r\n`))).toBe(false)
+    expect(await auth.breached('password123456', reply('ABCDEF:3\r\n'))).toBe(false)
+    await expect(auth.newPassword('password123456', reply(body))).rejects.toThrow(/breach/)
+  })
+
+  it('fails open with a warning when the service is unreachable', async () => {
+    const warnings: string[] = []
+    const down = (async () => {
+      throw new Error('offline')
+    }) as typeof fetch
+    expect(await auth.breached('password123456', down, (l) => warnings.push(l))).toBe(false)
+    expect(await auth.breached('password123456', reply('', 503), (l) => warnings.push(l))).toBe(
+      false,
+    )
+    expect(warnings).toHaveLength(2)
   })
 })

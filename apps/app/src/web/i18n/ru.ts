@@ -756,6 +756,8 @@ export const ru: Dict = {
       'У бренда может быть не больше 100 сохранённых ответов.',
     'No such saved reply.': 'Такого сохранённого ответа нет.',
     'Choose off, weekly or monthly.': 'Выберите: выкл., еженедельно или ежемесячно.',
+    'That password has appeared in a data breach, so attackers try it first. Choose another one.':
+      'Этот пароль встречался в утечках данных, поэтому злоумышленники пробуют его первым. Выберите другой.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

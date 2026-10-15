@@ -50,16 +50,93 @@ const MAX_TRIES = 5
 
 // --- Passwords ---------------------------------------------------------------------------
 
+/**
+ * scrypt at N=2^17, r=8, p=1 (128 MB, a few hundred milliseconds) with a 32-byte salt. The
+ * parameters live in the hash, "scrypt$17$8$1$salt$hash", so they can rise later; hashes from
+ * before ("scrypt$salt$hash", N=2^14) still check and are rehashed at the next sign-in.
+ */
+const SCRYPT = { logN: 17, r: 8, p: 1 }
+const scrypt = (password: string, salt: Buffer, logN: number, r: number, p: number, len: number) =>
+  scryptSync(password, salt, len, { N: 2 ** logN, r, p, maxmem: 256 * 1024 * 1024 })
+
 export function hashPassword(password: string) {
-  const salt = randomBytes(16)
-  return `scrypt$${salt.toString('base64')}$${scryptSync(password, salt, 64).toString('base64')}`
+  const { logN, r, p } = SCRYPT
+  const salt = randomBytes(32)
+  const h = scrypt(password, salt, logN, r, p, 32)
+  return `scrypt$${logN}$${r}$${p}$${salt.toString('base64')}$${h.toString('base64')}`
+}
+
+function parseHash(stored: string | null) {
+  const parts = (stored ?? '').split('$')
+  if (parts[0] !== 'scrypt') return null
+  if (parts.length === 3) return { logN: 14, r: 8, p: 1, salt: parts[1]!, hash: parts[2]! }
+  if (parts.length !== 6) return null
+  const [logN, r, p] = parts.slice(1, 4).map(Number) as [number, number, number]
+  if (!(logN >= 10 && logN <= 20 && r >= 1 && r <= 32 && p >= 1 && p <= 4)) return null
+  return { logN, r, p, salt: parts[4]!, hash: parts[5]! }
 }
 
 export function checkPassword(password: string, stored: string | null) {
-  const [kind, salt, hash] = (stored ?? '').split('$')
-  if (kind !== 'scrypt' || !salt || !hash) return false
-  const want = Buffer.from(hash, 'base64')
-  return timingSafeEqual(scryptSync(password, Buffer.from(salt, 'base64'), want.length), want)
+  const h = parseHash(stored)
+  if (!h || !h.salt || !h.hash) return false
+  const want = Buffer.from(h.hash, 'base64')
+  const got = scrypt(password, Buffer.from(h.salt, 'base64'), h.logN, h.r, h.p, want.length)
+  return timingSafeEqual(got, want)
+}
+
+/** True when a stored hash uses weaker parameters than today's, so it is redone on sign-in. */
+export function needsRehash(stored: string | null) {
+  const h = parseHash(stored)
+  return !h || h.logN < SCRYPT.logN || h.r < SCRYPT.r || Buffer.from(h.salt, 'base64').length < 32
+}
+
+/** After a right password: stores it again with today's parameters when the old hash is weaker. */
+export function upgradeHash(db: DB, id: number, password: string, stored: string | null) {
+  if (needsRehash(stored))
+    db.prepare('UPDATE users SET pass_hash = ? WHERE id = ?').run(hashPassword(password), id)
+}
+
+/**
+ * Whether a password is in Have I Been Pwned's list of breached passwords, by k-anonymity: only
+ * the first five hex characters of its SHA-1 leave the computer, the matching suffixes come back
+ * padded with decoys, and the comparison happens here. Unreachable means "not known breached",
+ * with a warning in the log, so an offline install can still set passwords.
+ * SOCIALMONITOR_HIBP=off turns the check off.
+ */
+export async function breached(
+  password: string,
+  get: typeof fetch = fetch,
+  warn: (line: string) => void = console.warn,
+) {
+  if (process.env.SOCIALMONITOR_HIBP?.trim().toLowerCase() === 'off') return false
+  const sha = createHash('sha1').update(password).digest('hex').toUpperCase()
+  try {
+    const r = await get(`https://api.pwnedpasswords.com/range/${sha.slice(0, 5)}`, {
+      headers: { 'Add-Padding': 'true' },
+      signal: AbortSignal.timeout(4000),
+    })
+    if (!r.ok) throw new Error(`status ${r.status}`)
+    for (const line of (await r.text()).split('\n')) {
+      const [suffix, n] = line.trim().split(':')
+      if (suffix === sha.slice(5) && Number(n) > 0) return true
+    }
+    return false
+  } catch (e) {
+    warn(
+      `The breached-password check could not reach Have I Been Pwned (${e instanceof Error ? e.message : String(e)}); the password was accepted.`,
+    )
+    return false
+  }
+}
+
+/** A new password: long enough, and not in a known breach. */
+export async function newPassword(p: unknown, get?: typeof fetch) {
+  const s = validPassword(p)
+  if (await breached(s, get))
+    throw new Error(
+      'That password has appeared in a data breach, so attackers try it first. Choose another one.',
+    )
+  return s
 }
 
 export function validPassword(p: unknown): string {

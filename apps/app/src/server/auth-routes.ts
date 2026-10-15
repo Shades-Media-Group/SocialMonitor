@@ -107,16 +107,18 @@ export const authRoutes = [
   })),
 
   // The first account, made on the computer SocialMonitor runs on. It is the super admin.
-  r('POST', '/api/auth/setup', 'public', (c) => {
+  r('POST', '/api/auth/setup', 'public', async (c) => {
     if (auth.countUsers(c.db) > 0) throw new HttpError(403, 'SocialMonitor is already set up.')
     if (!c.local)
       throw new HttpError(403, 'Create the first account on the computer SocialMonitor runs on.')
     const x = b(c)
+    const password = await auth.newPassword(x.password)
+    if (auth.countUsers(c.db) > 0) throw new HttpError(403, 'SocialMonitor is already set up.')
     const user = auth.createUser(c.db, {
       email: String(x.email ?? ''),
       name: String(x.name ?? ''),
       username: (x.username as string) ?? null,
-      password: String(x.password ?? ''),
+      password,
       super: true,
       verified: true,
     })
@@ -139,6 +141,7 @@ export const authRoutes = [
       auth.noteFailure(`ip:${c.ip}`)
       throw new HttpError(401, "That email or username and password don't match.")
     }
+    auth.upgradeHash(c.db, u.id, password, u.pass_hash)
     const lang = langOf(c)
     auth.setLang(c.db, u.id, lang)
     return sendCode(u.id, u.email, lang, c)
@@ -180,13 +183,14 @@ export const authRoutes = [
   }),
 
   // Invitation and reset links: "<id>.<secret>" from the email.
-  r('POST', '/api/auth/accept', 'public', (c) => {
+  r('POST', '/api/auth/accept', 'public', async (c) => {
+    const password = await auth.newPassword(b(c).password)
     const [tid, secret] = String(b(c).token ?? '').split('.')
     const purpose = b(c).kind === 'reset' ? 'reset' : 'invite'
     const userId = auth.consume(c.db, tid ?? '', secret ?? '', purpose)
     const x = b(c)
     auth.updateUser(c.db, userId, {
-      password: String(x.password ?? ''),
+      password,
       ...(purpose === 'invite' && x.name !== undefined ? { name: String(x.name) } : {}),
       ...(purpose === 'invite' && x.username ? { username: String(x.username) } : {}),
     })
@@ -209,12 +213,13 @@ export const authRoutes = [
     return { ok: true }
   }),
 
-  r('PATCH', '/api/auth/me', 'user', (c) => {
+  r('PATCH', '/api/auth/me', 'user', async (c) => {
     const x = b(c)
     if (x.password !== undefined) {
       const row = auth.findLogin(c.db, c.user.email)
       if (!auth.checkPassword(String(x.current ?? ''), row?.pass_hash ?? null))
         throw new HttpError(403, 'Your current password is not right.')
+      x.password = await auth.newPassword(x.password)
     }
     if (x.prefs !== undefined) auth.savePrefs(c.db, c.user.id, x.prefs)
     auth.updateUser(c.db, c.user.id, {

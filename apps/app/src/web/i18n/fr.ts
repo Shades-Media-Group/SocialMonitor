@@ -759,6 +759,8 @@ export const fr: Dict = {
       'Une marque garde au plus 100 réponses enregistrées.',
     'No such saved reply.': 'Cette réponse enregistrée n’existe pas.',
     'Choose off, weekly or monthly.': 'Choisissez désactivé, hebdomadaire ou mensuel.',
+    'That password has appeared in a data breach, so attackers try it first. Choose another one.':
+      "Ce mot de passe figure dans une fuite de données, les attaquants l'essaient donc en premier. Choisissez-en un autre.",
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',
