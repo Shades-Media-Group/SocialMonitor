@@ -1,0 +1,63 @@
+name: Security
+
+# Secret scanning with gitleaks (the new commits on every push and pull request, the full history
+# every week) and known-vulnerability scanning of yarn.lock with osv-scanner. Any finding fails the job.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '41 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Secrets (gitleaks)
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          file="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${file}"
+          echo "${GITLEAKS_SHA256}  ${file}" | sha256sum -c -
+          tar -xzf "$file" gitleaks
+      - name: Scan
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Pushes and pull requests scan only their new commits; the weekly run, a manual run and a
+          # push whose base is unknown (a new branch, a force push) scan the whole history.
+          range=""
+          if [ "$EVENT" = pull_request ]; then
+            range="$PR_BASE..$PR_HEAD"
+          elif [ "$EVENT" = push ] && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            range="$BEFORE..$GITHUB_SHA"
+          fi
+          echo "Scanning ${range:-the full history}"
+          ./gitleaks git --redact --no-banner --exit-code 1 ${range:+--log-opts="$range"} .
+
+  osv-scanner:
+    name: Dependencies (osv-scanner)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: google/osv-scanner-action/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
+        with:
+          scan-args: |-
+            --lockfile=yarn.lock
