@@ -170,6 +170,7 @@ CREATE TABLE IF NOT EXISTS tokens (
   tries INTEGER NOT NULL DEFAULT 0,
   expires_at TEXT NOT NULL
 );
+
 `
 
 export type DB = DatabaseSync
@@ -283,6 +284,9 @@ function migrate(db: DatabaseSync) {
   // Each brand's own positive and negative categories.
   if (!has('brands', 'categories'))
     db.exec("ALTER TABLE brands ADD COLUMN categories TEXT NOT NULL DEFAULT '[]'")
+  // How many followers a commenter had when read, where the network shows it (TikTok). Null: unknown.
+  if (!has('comments', 'author_followers'))
+    db.exec('ALTER TABLE comments ADD COLUMN author_followers INTEGER')
 }
 
 export const now = () => new Date().toISOString()

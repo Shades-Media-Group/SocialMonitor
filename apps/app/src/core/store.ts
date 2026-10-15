@@ -195,12 +195,13 @@ export function savePost(
   recordMetrics(db, post, t)
   const insert = db.prepare(
     `INSERT INTO comments (post_id, ext_id, parent_ext_id, author, text, likes, posted_at, fetched_at,
-       author_avatar, author_url, media_url)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       author_avatar, author_url, media_url, author_followers)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (post_id, ext_id) DO UPDATE SET likes = excluded.likes, text = excluded.text,
        author_avatar = coalesce(excluded.author_avatar, author_avatar),
        author_url = coalesce(excluded.author_url, author_url),
-       media_url = coalesce(excluded.media_url, media_url)`,
+       media_url = coalesce(excluded.media_url, media_url),
+       author_followers = coalesce(excluded.author_followers, author_followers)`,
   )
   let newComments = 0
   for (const c of p.comments) {
@@ -219,6 +220,7 @@ export function savePost(
       c.author_avatar ?? null,
       c.author_url ?? null,
       c.media_url ?? null,
+      c.author_followers ?? null,
     )
     if (!before) newComments++
   }
@@ -494,6 +496,8 @@ export interface CommentFilter extends PostFilter {
   /** Only comments written since, or read since (new in an update), ISO times. */
   from?: string
   readSince?: string
+  /** Only comments by this person (their name or handle, any case). */
+  author?: string
 }
 
 export function listComments(db: DB, f: CommentFilter = {}) {
@@ -523,6 +527,10 @@ export function listComments(db: DB, f: CommentFilter = {}) {
   if (f.from) {
     where.push('coalesce(c.posted_at, c.fetched_at) >= ?')
     args.push(f.from)
+  }
+  if (f.author) {
+    where.push('lower(c.author) = lower(?)')
+    args.push(f.author)
   }
   if (f.readSince) {
     where.push('c.fetched_at >= ?')

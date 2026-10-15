@@ -707,6 +707,21 @@ export const ro: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Această autentificare Facebook a expirat. Încearcă din nou.',
     'Facebook and Instagram connected.': 'Facebook și Instagram conectate.',
+    'Fans and critics': 'Fani și critici',
+    Fans: 'Fani',
+    Critics: 'Critici',
+    '{name} on the network': '{name} pe rețea',
+    'Show their comments': 'Arată comentariile lor',
+    '{n}% positive': '{n}% pozitive',
+    '{n}% negative': '{n}% negative',
+    'Followers unknown': 'Urmăritori necunoscuți',
+    'Comments per week': 'Comentarii pe săptămână',
+    'People who praise the brand twice or more show here.':
+      'Aici apar oamenii care laudă brandul de cel puțin două ori.',
+    'People who complain twice or more show here.':
+      'Aici apar oamenii care se plâng de cel puțin două ori.',
+    'Comments by {name}.': 'Comentariile lui {name}.',
+    'Show everyone': 'Arată pe toată lumea',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

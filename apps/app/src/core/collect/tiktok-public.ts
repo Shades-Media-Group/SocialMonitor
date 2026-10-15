@@ -26,7 +26,7 @@ export interface RawComment {
   create_time?: number
   digg_count?: number
   reply_id?: string
-  user?: { unique_id?: string; nickname?: string; avatar_thumb?: unknown }
+  user?: { unique_id?: string; nickname?: string; avatar_thumb?: unknown; follower_count?: number }
   image_list?: unknown
   sticker?: unknown
   /** Stickers come here, not in `sticker`. */
@@ -46,6 +46,15 @@ export const tiktokMedia = (c: RawComment) =>
     /url/,
   )
 
+/**
+ * A commenter's followers as TikTok's comment list gives them. TikTok often sends 0 for accounts
+ * it hides the figure of, so only a positive count is kept; anything else stays unknown.
+ */
+export const tiktokFollowers = (c: RawComment) => {
+  const n = c.user?.follower_count
+  return typeof n === 'number' && Number.isFinite(n) && n > 0 ? Math.round(n) : null
+}
+
 /** One TikTok comment in SocialMonitor's shape. */
 export const toComment = (c: RawComment): CollectedComment => ({
   ext_id: c.cid,
@@ -57,6 +66,7 @@ export const toComment = (c: RawComment): CollectedComment => ({
   author_avatar: imageIn(c.user?.avatar_thumb, /url/),
   author_url: c.user?.unique_id ? `https://www.tiktok.com/@${c.user.unique_id}` : null,
   media_url: tiktokMedia(c),
+  author_followers: tiktokFollowers(c),
 })
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms + Math.random() * ms))

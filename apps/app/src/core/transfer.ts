@@ -126,6 +126,7 @@ export function importAll(db: DB, dump: Dump) {
       'sentiment',
       'category',
       'sentiment_by',
+      'author_followers',
     ] as const
     const insert = db.prepare(
       `INSERT INTO comments (post_id, ${ccols.join(', ')}) VALUES (?, ${ccols.map(() => '?').join(', ')})

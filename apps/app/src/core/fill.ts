@@ -1,7 +1,7 @@
 import type { DB } from './db.ts'
 import { now } from './db.ts'
 import { saveImage } from './media.ts'
-import { publicComments, tiktokMedia } from './collect/tiktok-public.ts'
+import { publicComments, tiktokFollowers, tiktokMedia } from './collect/tiktok-public.ts'
 import { imageIn } from './collect/browser.ts'
 
 /**
@@ -47,12 +47,14 @@ export async function fillTikTok(db: DB, log: (line: string) => void = () => {})
         db.prepare(
           `UPDATE comments SET author_avatar = coalesce(?, author_avatar),
              author_url = coalesce(author_url, ?), media_url = coalesce(?, media_url),
+             author_followers = coalesce(?, author_followers),
              text = CASE WHEN text = '[sticker or picture]' THEN ? ELSE text END
            WHERE id = ?`,
         ).run(
           avatar,
           handle ? `https://www.tiktok.com/@${handle}` : null,
           media,
+          tiktokFollowers(c),
           c.text ?? '',
           row.id,
         )

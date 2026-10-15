@@ -704,6 +704,21 @@ export const ru: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Этот вход через Facebook истёк. Попробуйте снова.',
     'Facebook and Instagram connected.': 'Facebook и Instagram подключены.',
+    'Fans and critics': 'Поклонники и критики',
+    Fans: 'Поклонники',
+    Critics: 'Критики',
+    '{name} on the network': '{name} в соцсети',
+    'Show their comments': 'Показать их комментарии',
+    '{n}% positive': '{n}% положительных',
+    '{n}% negative': '{n}% отрицательных',
+    'Followers unknown': 'Подписчики неизвестны',
+    'Comments per week': 'Комментарии в неделю',
+    'People who praise the brand twice or more show here.':
+      'Здесь появятся люди, которые хвалят бренд два раза и больше.',
+    'People who complain twice or more show here.':
+      'Здесь появятся люди, которые жалуются два раза и больше.',
+    'Comments by {name}.': 'Комментарии {name}.',
+    'Show everyone': 'Показать всех',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

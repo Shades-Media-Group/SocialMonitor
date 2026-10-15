@@ -468,3 +468,81 @@ export function bestTimes(db: DB, s: Scope) {
   }[]
   return rows.map((r) => ({ ...r, avg: Math.round(r.avg) }))
 }
+
+/** One person in the fans or critics list. */
+export interface Person {
+  author: string
+  n: number
+  positive: number
+  negative: number
+  last: string
+  avatar: string | null
+  url: string | null
+  networks: Network[]
+  /** Their follower count when a network showed it (TikTok); null is unknown. */
+  followers: number | null
+  /** Comments per week across the window, oldest first. */
+  weeks: number[]
+}
+
+// A comment counts as positive or negative by its rating (a person's or Claude's), else its label.
+const TONE = `coalesce(c.sentiment, CASE c.label WHEN 'praise' THEN 'positive' WHEN 'complaint' THEN 'negative' END)`
+const POSITIVE = `${TONE} IS 'positive'`
+const NEGATIVE = `${TONE} IS 'negative'`
+
+/**
+ * The brand's fans and critics in the scope: people who commented at least twice, mostly
+ * positive or mostly negative. Fans rank by positive comments, critics by negative ones, then by
+ * how much they comment. A person is their name on the network; the same name on two networks
+ * counts as one person.
+ */
+// ponytail: people are matched by name across networks; key on (name, network) if that ever merges strangers.
+export function fansAndCritics(db: DB, s: Scope, limit = 20) {
+  const w = where(s)
+  const rows = db
+    .prepare(
+      `SELECT lower(c.author) AS key, min(c.author) AS author, count(*) AS n, sum(${POSITIVE}) AS positive, sum(${NEGATIVE}) AS negative,
+              max(coalesce(c.posted_at, c.fetched_at)) AS last,
+              max(c.author_avatar) AS avatar, max(c.author_url) AS url,
+              group_concat(DISTINCT p.network) AS networks, max(c.author_followers) AS followers
+       ${FROM} WHERE ${w.sql} GROUP BY lower(c.author) HAVING count(*) >= 2`,
+    )
+    .all(...w.args) as (Omit<Person, 'networks' | 'weeks'> & { key: string; networks: string })[]
+  const rank = (key: 'positive' | 'negative', other: 'positive' | 'negative') =>
+    rows
+      .filter((r) => r[key] > r[other] && r[key] * 2 >= r.n)
+      .sort((a, b) => b[key] - a[key] || b.n - a.n || b.last.localeCompare(a.last))
+      .slice(0, limit)
+  const fans = rank('positive', 'negative')
+  const critics = rank('negative', 'positive')
+  // Weekly activity of the people listed, over the window (the last 12 weeks for all time).
+  const weeks = Math.min(26, Math.max(4, Math.ceil((s.days || 84) / 7)))
+  const start = Date.now() - weeks * 7 * 86400_000
+  // SQLite's lower() is the key both ways: it differs from JavaScript's outside ASCII.
+  const names = [...fans, ...critics].map((r) => r.key)
+  const times = names.length
+    ? (db
+        .prepare(
+          `SELECT lower(c.author) AS who, coalesce(c.posted_at, c.fetched_at) AS at ${FROM}
+           WHERE ${w.sql} AND lower(c.author) IN (SELECT value FROM json_each(?))
+             AND coalesce(c.posted_at, c.fetched_at) >= ?`,
+        )
+        .all(...w.args, JSON.stringify(names), new Date(start).toISOString()) as {
+        who: string
+        at: string
+      }[])
+    : []
+  const series = new Map<string, number[]>()
+  for (const t of times) {
+    const i = Math.min(weeks - 1, Math.floor((Date.parse(t.at) - start) / (7 * 86400_000)))
+    const list = series.get(t.who) ?? Array<number>(weeks).fill(0)
+    list[i]!++
+    series.set(t.who, list)
+  }
+  const shape = ({ key, ...r }: (typeof rows)[number]): Person => ({
+    ...r,
+    networks: r.networks.split(',') as Network[],
+    weeks: series.get(key) ?? Array<number>(weeks).fill(0),
+  })
+  return { fans: fans.map(shape), critics: critics.map(shape), weeks }
+}

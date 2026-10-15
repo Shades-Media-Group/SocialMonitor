@@ -17,6 +17,7 @@ import {
   heatmap,
   daily,
   bestTimes,
+  fansAndCritics,
   profileStats,
   topAuthors,
   topWords,
@@ -325,6 +326,7 @@ export const routes: Route[] = [
       threads: query.get('threads') === '1',
       from: query.get('from') ?? undefined,
       readSince: query.get('since') ?? undefined,
+      author: query.get('author') ?? undefined,
       search: query.get('q') ?? undefined,
       sentiment: (['positive', 'negative', 'neutral', 'none'] as const).find(
         (v) => v === query.get('sentiment'),
@@ -518,6 +520,14 @@ export const routes: Route[] = [
       watched: watched(db, s, JSON.parse(brand?.trackers ?? '[]') as Tracker[]),
     }
   }),
+  // The brand's fans and critics in the window, with their reach where a network shows it.
+  r('GET', '/api/brands/:id/people', seeBrand, ({ db, params, query }) =>
+    fansAndCritics(db, {
+      brandId: id(params.id),
+      network: net(query.get('network')),
+      days: Number(query.get('days') ?? 30) || 0,
+    }),
+  ),
   r('GET', '/api/brands/:id/daily', seeBrand, ({ db, params, query }) => {
     const day = (k: string, fallback: string) => {
       const v = query.get(k) ?? fallback
