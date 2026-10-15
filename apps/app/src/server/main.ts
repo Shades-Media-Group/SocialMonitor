@@ -169,6 +169,7 @@ const server = createServer(async (req, res) => {
         ip,
         session,
         client,
+        origin: origin ?? `${secure ? 'https' : 'http'}://${req.headers.host ?? HOST}`,
       }
       if (r.need !== 'public') {
         if (!user) throw new HttpError(401, 'Sign in first.')

@@ -803,6 +803,34 @@ export const ro: Dict = {
     '{n} of 10 left, for when you have neither your passkey nor your app.':
       'Au rămas {n} din 10, pentru când nu ai nici cheia de acces, nici aplicația.',
     'Make new codes': 'Generează coduri noi',
+    'Passkeys need a name such as localhost, not an IP address.':
+      'Cheile de acces au nevoie de un nume, cum ar fi localhost, nu de o adresă IP.',
+    'Adding the passkey took too long. Try again.':
+      'Adăugarea cheii de acces a durat prea mult. Încearcă din nou.',
+    'The passkey could not be checked. Try again.':
+      'Cheia de acces nu a putut fi verificată. Încearcă din nou.',
+    'No such passkey.': 'Nu există această cheie de acces.',
+    'The passkey was not used. Try again, or choose another way.':
+      'Cheia de acces nu a fost folosită. Încearcă din nou sau alege altă cale.',
+    'Use your passkey': 'Folosește cheia de acces',
+    'Your browser asks for the passkey you added for this account.':
+      'Browserul îți cere cheia de acces adăugată pentru acest cont.',
+    Passkey: 'Cheie de acces',
+    Passkeys: 'Chei de acces',
+    'The passkey was not added. Try again when you are ready.':
+      'Cheia de acces nu a fost adăugată. Încearcă din nou când ești gata.',
+    'Passkey added.': 'Cheie de acces adăugată.',
+    'Passkey removed.': 'Cheie de acces ștearsă.',
+    'Sign in with your fingerprint, face or device PIN instead of a code.':
+      'Conectează-te cu amprenta, fața sau PIN-ul dispozitivului în loc de un cod.',
+    'Passkeys need a name, not a number: open {url} to add one.':
+      'Cheile de acces au nevoie de un nume, nu de un număr: deschide {url} ca să adaugi una.',
+    'Last used {when}': 'Folosită ultima dată {when}',
+    'Added {when}': 'Adăugată {when}',
+    'made at another address': 'făcută la altă adresă',
+    'Remove the passkey {name}': 'Șterge cheia de acces {name}',
+    Add: 'Adaugă',
+    'Add a passkey': 'Adaugă o cheie de acces',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

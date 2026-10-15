@@ -801,6 +801,34 @@ export const ru: Dict = {
     '{n} of 10 left, for when you have neither your passkey nor your app.':
       'Осталось {n} из 10 — на случай, когда нет ни ключа доступа, ни приложения.',
     'Make new codes': 'Создать новые коды',
+    'Passkeys need a name such as localhost, not an IP address.':
+      'Ключам доступа нужно имя, например localhost, а не IP-адрес.',
+    'Adding the passkey took too long. Try again.':
+      'Добавление ключа доступа заняло слишком много времени. Попробуйте ещё раз.',
+    'The passkey could not be checked. Try again.':
+      'Не удалось проверить ключ доступа. Попробуйте ещё раз.',
+    'No such passkey.': 'Такого ключа доступа нет.',
+    'The passkey was not used. Try again, or choose another way.':
+      'Ключ доступа не был использован. Попробуйте ещё раз или выберите другой способ.',
+    'Use your passkey': 'Использовать ключ доступа',
+    'Your browser asks for the passkey you added for this account.':
+      'Браузер попросит ключ доступа, добавленный для этого аккаунта.',
+    Passkey: 'Ключ доступа',
+    Passkeys: 'Ключи доступа',
+    'The passkey was not added. Try again when you are ready.':
+      'Ключ доступа не добавлен. Попробуйте ещё раз, когда будете готовы.',
+    'Passkey added.': 'Ключ доступа добавлен.',
+    'Passkey removed.': 'Ключ доступа удалён.',
+    'Sign in with your fingerprint, face or device PIN instead of a code.':
+      'Входите по отпечатку пальца, лицу или PIN-коду устройства вместо кода.',
+    'Passkeys need a name, not a number: open {url} to add one.':
+      'Ключам доступа нужно имя, а не номер: откройте {url}, чтобы добавить ключ.',
+    'Last used {when}': 'Последнее использование: {when}',
+    'Added {when}': 'Добавлен {when}',
+    'made at another address': 'создан на другом адресе',
+    'Remove the passkey {name}': 'Удалить ключ доступа {name}',
+    Add: 'Добавить',
+    'Add a passkey': 'Добавить ключ доступа',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

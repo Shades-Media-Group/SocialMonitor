@@ -84,6 +84,8 @@ export interface Ctx {
   session: Session | null
   /** The browser asking, for the devices list. */
   client: Client
+  /** The page's origin (checked against the allowed ones), for passkeys. */
+  origin: string
 }
 type Signed = Ctx & { user: User }
 /**

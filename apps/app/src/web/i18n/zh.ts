@@ -763,6 +763,31 @@ export const zh: Dict = {
     '{n} of 10 left, for when you have neither your passkey nor your app.':
       '剩余 {n} 个（共 10 个），在通行密钥和应用都不可用时使用。',
     'Make new codes': '生成新的恢复码',
+    'Passkeys need a name such as localhost, not an IP address.':
+      '通行密钥需要像 localhost 这样的名称，而不是 IP 地址。',
+    'Adding the passkey took too long. Try again.': '添加通行密钥用时过长，请重试。',
+    'The passkey could not be checked. Try again.': '无法验证该通行密钥，请重试。',
+    'No such passkey.': '没有这个通行密钥。',
+    'The passkey was not used. Try again, or choose another way.':
+      '未使用通行密钥。请重试，或选择其他方式。',
+    'Use your passkey': '使用通行密钥',
+    'Your browser asks for the passkey you added for this account.':
+      '浏览器会请求你为此账户添加的通行密钥。',
+    Passkey: '通行密钥',
+    Passkeys: '通行密钥',
+    'The passkey was not added. Try again when you are ready.': '通行密钥未添加。准备好后请重试。',
+    'Passkey added.': '通行密钥已添加。',
+    'Passkey removed.': '通行密钥已移除。',
+    'Sign in with your fingerprint, face or device PIN instead of a code.':
+      '用指纹、面容或设备 PIN 登录，而不是输入验证码。',
+    'Passkeys need a name, not a number: open {url} to add one.':
+      '通行密钥需要名称而不是数字地址：打开 {url} 来添加。',
+    'Last used {when}': '上次使用：{when}',
+    'Added {when}': '添加于 {when}',
+    'made at another address': '在其他地址创建',
+    'Remove the passkey {name}': '移除通行密钥 {name}',
+    Add: '添加',
+    'Add a passkey': '添加通行密钥',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

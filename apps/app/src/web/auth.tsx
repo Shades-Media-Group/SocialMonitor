@@ -1,5 +1,7 @@
 import { useId, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
+import { startAuthentication } from '@simplewebauthn/browser'
+import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser'
 import { api } from './api.ts'
 import { Icon, Logo, navigate } from './ui.tsx'
 import { t } from './i18n.ts'
@@ -18,9 +20,22 @@ interface Ticket {
   ticket: string
   to: string
   mail: boolean
-  second?: { totp: boolean; recovery: boolean }
+  second?: {
+    totp: boolean
+    recovery: boolean
+    passkey: PublicKeyCredentialRequestOptionsJSON | null
+  }
 }
-type Second = 'totp' | 'recovery'
+type Second = 'passkey' | 'totp' | 'recovery'
+
+/** The browser's passkey prompt; cancelling it reads as a plain sentence, not a DOMException. */
+async function askPasskey(options: PublicKeyCredentialRequestOptionsJSON) {
+  try {
+    return await startAuthentication({ optionsJSON: options })
+  } catch {
+    throw new Error(t('The passkey was not used. Try again, or choose another way.'))
+  }
+}
 
 export interface AuthInfo {
   user: Me | null
@@ -387,26 +402,35 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
     const s = ticket.second
     const others: [Second, string][] = (
       [
+        ['passkey', t('Use your passkey')],
         ['totp', t('Use your authenticator app')],
         ['recovery', t('Use a recovery code')],
       ] as [Second, string][]
     ).filter(([k]) => k !== second && s[k])
     return (
       <Frame
-        title={second === 'totp' ? t('Enter the code from your app') : t('Enter a recovery code')}
+        title={
+          second === 'passkey'
+            ? t('Use your passkey')
+            : second === 'totp'
+              ? t('Enter the code from your app')
+              : t('Enter a recovery code')
+        }
         busy={busy}
         onSubmit={go(async () => {
           onIn(
             await api.post<Me>('/api/auth/code', {
               ticket: ticket.ticket,
-              [second]: f.code,
+              [second]: second === 'passkey' ? await askPasskey(s.passkey!) : f.code,
               keep: f.keep,
             }),
           )
         })}
       >
         {who}
-        {second === 'totp' ? (
+        {second === 'passkey' ? (
+          <p class="g-hint">{t('Your browser asks for the passkey you added for this account.')}</p>
+        ) : second === 'totp' ? (
           <Field
             key="totp"
             label={t('Six-digit code')}
@@ -434,7 +458,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
           />
         )}
         {err}
-        {submit(t('Verify'))}
+        {submit(second === 'passkey' ? t('Continue') : t('Verify'))}
         {others.map(([k, text]) => (
           <button
             class="g-btn g-btn--ghost"
@@ -574,7 +598,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
         setTicket(r)
         setResent(false)
         setF({ ...f, password: '', code: '' })
-        if (r.second) setSecond(r.second.totp ? 'totp' : 'recovery')
+        if (r.second) setSecond(r.second.passkey ? 'passkey' : r.second.totp ? 'totp' : 'recovery')
         setStep(r.second ? 'second' : 'code')
       })}
     >

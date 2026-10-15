@@ -1,12 +1,48 @@
 import { useEffect, useState } from 'preact/hooks'
 import { encode } from 'uqr'
+import { startRegistration } from '@simplewebauthn/browser'
+import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/browser'
 import { ApiError, api } from './api.ts'
-import { Row } from './ui.tsx'
+import { Row, ago } from './ui.tsx'
 import { t } from './i18n.ts'
 
 interface Security {
   totp: boolean
   recovery: number
+  passkeys: {
+    id: string
+    name: string
+    created_at: string
+    last_used_at: string | null
+    here: boolean
+  }[]
+  passkeysHere: boolean
+}
+
+/** A name for a new passkey from this browser: "Chrome on macOS". */
+function deviceName() {
+  const ua = navigator.userAgent
+  const browser = /Edg\//.test(ua)
+    ? 'Edge'
+    : /Firefox\//.test(ua)
+      ? 'Firefox'
+      : /Chrome\//.test(ua)
+        ? 'Chrome'
+        : /Safari\//.test(ua)
+          ? 'Safari'
+          : null
+  const os = /iPhone|iPad/.test(ua)
+    ? 'iOS'
+    : /Android/.test(ua)
+      ? 'Android'
+      : /Mac OS X/.test(ua)
+        ? 'macOS'
+        : /Windows/.test(ua)
+          ? 'Windows'
+          : /Linux/.test(ua)
+            ? 'Linux'
+            : null
+  return browser && os ? t('{browser} on {os}', { browser, os }) : t('Passkey')
 }
 
 /** The otpauth link as a QR code, drawn here: nothing about the secret leaves the page. */
@@ -73,6 +109,7 @@ export function TwoStep({ open, notify }: { open: boolean; notify: (s: string) =
   const [sec, setSec] = useState<Security | null>(null)
   const [setup, setSetup] = useState<{ secret: string; uri: string; code: string } | null>(null)
   const [codes, setCodes] = useState<string[] | null>(null)
+  const [naming, setNaming] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<{ retry: () => Promise<void>; password: string } | null>(
     null,
   )
@@ -88,6 +125,7 @@ export function TwoStep({ open, notify }: { open: boolean; notify: (s: string) =
       setSetup(null)
       setCodes(null)
       setConfirm(null)
+      setNaming(null)
     }
   }, [open])
 
@@ -163,9 +201,119 @@ export function TwoStep({ open, notify }: { open: boolean; notify: (s: string) =
       {error}
     </p>
   )
-  const protectedBy = sec.totp
+  const protectedBy = sec.totp || sec.passkeys.length > 0
+  const addPasskey = guarded(async () => {
+    const options = await api.post<PublicKeyCredentialCreationOptionsJSON>(
+      '/api/auth/passkeys/options',
+    )
+    let response
+    try {
+      response = await startRegistration({ optionsJSON: options })
+    } catch {
+      throw new Error(t('The passkey was not added. Try again when you are ready.'))
+    }
+    const r = await api.post<{ recovery: string[] | null }>('/api/auth/passkeys', {
+      name: naming,
+      response,
+    })
+    setNaming(null)
+    if (r.recovery) setCodes(r.recovery)
+    notify(t('Passkey added.'))
+    await load()
+  })
+  const localhost = `${location.protocol}//localhost${location.port ? `:${location.port}` : ''}`
   return (
     <>
+      <Row
+        label={t('Passkeys')}
+        hint={
+          sec.passkeysHere
+            ? t('Sign in with your fingerprint, face or device PIN instead of a code.')
+            : t('Passkeys need a name, not a number: open {url} to add one.', { url: localhost })
+        }
+      >
+        <div class="sm-accounts">
+          {sec.passkeys.length > 0 && (
+            <ul class="sm-accounts__list">
+              {sec.passkeys.map((p) => (
+                <li>
+                  <div class="sm-accounts__who">
+                    <strong>{p.name}</strong>
+                    <span class="sm-quiet">
+                      {p.last_used_at
+                        ? t('Last used {when}', { when: ago(p.last_used_at) })
+                        : t('Added {when}', { when: ago(p.created_at) })}
+                      {!p.here && ` · ${t('made at another address')}`}
+                    </span>
+                  </div>
+                  <div class="sm-accounts__do">
+                    <button
+                      class="sm-textbtn"
+                      type="button"
+                      aria-label={t('Remove the passkey {name}', { name: p.name })}
+                      onClick={guarded(async () => {
+                        await api.del(`/api/auth/passkeys/${p.id}`)
+                        notify(t('Passkey removed.'))
+                        await load()
+                      })}
+                    >
+                      {t('Remove')}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {sec.passkeysHere &&
+            (naming !== null ? (
+              <form
+                class="sm-accounts__form"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  void addPasskey()
+                }}
+              >
+                <label class="sm-auth__field">
+                  <span>{t('Name')}</span>
+                  <input
+                    class="g-input"
+                    required
+                    maxLength={60}
+                    ref={(el) => el?.focus()}
+                    value={naming}
+                    onInput={(e) => setNaming((e.target as HTMLInputElement).value)}
+                  />
+                </label>
+                {err}
+                <div class="sm-inline">
+                  <button class="g-btn g-btn--sm" type="submit">
+                    {t('Add')}
+                  </button>
+                  <button
+                    class="g-btn g-btn--ghost g-btn--sm"
+                    type="button"
+                    onClick={() => setNaming(null)}
+                  >
+                    {t('Cancel')}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div>
+                <button
+                  class="g-btn g-btn--sm"
+                  type="button"
+                  onClick={() => {
+                    setError(null)
+                    setNaming(deviceName())
+                  }}
+                >
+                  {t('Add a passkey')}
+                </button>
+              </div>
+            ))}
+        </div>
+      </Row>
       <Row
         label={t('Authenticator app')}
         hint={
@@ -248,7 +396,7 @@ export function TwoStep({ open, notify }: { open: boolean; notify: (s: string) =
                 {t('Set up')}
               </button>
             )}
-            {!setup && err}
+            {!setup && naming === null && err}
           </div>
         )}
       </Row>

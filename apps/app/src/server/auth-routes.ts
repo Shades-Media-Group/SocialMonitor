@@ -4,6 +4,7 @@ import { accessMail, codeMail, linkMail, mailReady, sendMail } from '../core/mai
 import { mailLang, mailText } from '../core/mail-text.ts'
 import * as store from '../core/store.ts'
 import * as tf from '../core/two-factor.ts'
+import * as pk from '../core/passkeys.ts'
 import { securityEvent } from '../core/security-events.ts'
 import { publicHost } from './access.ts'
 import type { Ctx } from './routes.ts'
@@ -77,16 +78,30 @@ async function sendCode(userId: number, email: string, lang: ReturnType<typeof l
 }
 
 /** Which second steps this person can use instead of the emailed code. */
-const secondSteps = (c: Ctx, userId: number) => {
+const secondSteps = async (c: Ctx, userId: number, key: string) => {
   const f = tf.factors(c.db, userId)
-  return { totp: f.totp, recovery: f.recovery > 0 }
+  return {
+    totp: f.totp,
+    recovery: f.recovery > 0,
+    // Options for the browser to sign with a passkey made on this host, if there is one.
+    passkey: await pk.authenticationOptions(c.db, userId, pk.relyingParty(c.origin), key),
+  }
 }
 
 /**
- * Checks the second step in a request: an authenticator code (`totp`) or a recovery code
- * (`recovery`). False when none was given or it is wrong.
+ * Checks the second step in a request: a passkey's answer (`passkey`, to the challenge stored
+ * under `key`), an authenticator code (`totp`) or a recovery code (`recovery`). False when none
+ * was given or it is wrong.
  */
-async function secondStep(c: Ctx, userId: number, x: Record<string, unknown>) {
+async function secondStep(c: Ctx, userId: number, x: Record<string, unknown>, key: string) {
+  if (x.passkey && typeof x.passkey === 'object')
+    return pk.checkPasskey(
+      c.db,
+      userId,
+      pk.relyingParty(c.origin),
+      key,
+      x.passkey as Parameters<typeof pk.checkPasskey>[4],
+    )
   if (typeof x.totp === 'string') return tf.checkTotp(c.db, userId, x.totp)
   if (typeof x.recovery === 'string') {
     const ok = tf.useRecoveryCode(c.db, userId, x.recovery)
@@ -101,7 +116,13 @@ async function secondStep(c: Ctx, userId: number, x: Record<string, unknown>) {
   return false
 }
 const stepName = (x: Record<string, unknown>) =>
-  typeof x.totp === 'string' ? 'totp' : typeof x.recovery === 'string' ? 'recovery' : 'code'
+  x.passkey
+    ? 'passkey'
+    : typeof x.totp === 'string'
+      ? 'totp'
+      : typeof x.recovery === 'string'
+        ? 'recovery'
+        : 'code'
 
 /** Changing how someone signs in needs their password, entered in the last 15 minutes. */
 const CONFIRM_MINUTES = 15
@@ -201,7 +222,12 @@ export const authRoutes = [
     // only when asked for ("Email me a code instead").
     if (tf.hasSecondFactor(c.db, u.id)) {
       const t = auth.issue(c.db, u.id, 'code')
-      return { ticket: t.id, to: mask(u.email), mail: mailReady(), second: secondSteps(c, u.id) }
+      return {
+        ticket: t.id,
+        to: mask(u.email),
+        mail: mailReady(),
+        second: await secondSteps(c, u.id, `ticket:${t.id}`),
+      }
     }
     return sendCode(u.id, u.email, lang, c)
   }),
@@ -227,7 +253,7 @@ export const authRoutes = [
     try {
       if (via === 'code') userId = auth.consume(c.db, ticket, String(x.code ?? ''), 'code')
       else {
-        const ok = owner ? await secondStep(c, owner.id, x) : false
+        const ok = owner ? await secondStep(c, owner.id, x, `ticket:${ticket}`) : false
         userId = auth.spend(c.db, ticket, 'code', () => ok)
       }
     } catch (e) {
@@ -257,7 +283,61 @@ export const authRoutes = [
   // How this person can sign in.
   r('GET', '/api/auth/security', 'user', (c) => {
     const f = tf.factors(c.db, c.user.id)
-    return { totp: f.totp, recovery: f.recovery }
+    const rp = pk.relyingParty(c.origin)
+    return {
+      totp: f.totp,
+      recovery: f.recovery,
+      passkeys: pk.listPasskeys(c.db, c.user.id).map((p) => ({
+        id: p.id,
+        name: p.name,
+        created_at: p.created_at,
+        last_used_at: p.last_used_at,
+        here: p.rp_id === rp?.rpID,
+      })),
+      // Passkeys can be made here (not on a bare IP address such as 127.0.0.1).
+      passkeysHere: !!rp,
+    }
+  }),
+
+  // Passkeys: options for the browser, then its answer and a name.
+  r('POST', '/api/auth/passkeys/options', 'user', (c) => {
+    confirmed(c)
+    const rp = pk.relyingParty(c.origin)
+    if (!rp) throw new Error('Passkeys need a name such as localhost, not an IP address.')
+    return pk.registrationOptions(c.db, c.user, rp)
+  }),
+  r('POST', '/api/auth/passkeys', 'user', async (c) => {
+    confirmed(c)
+    const rp = pk.relyingParty(c.origin)
+    if (!rp) throw new Error('Passkeys need a name such as localhost, not an IP address.')
+    const x = b(c)
+    const name = String(x.name ?? '')
+    await pk.addPasskey(
+      c.db,
+      c.user.id,
+      rp,
+      x.response as Parameters<typeof pk.addPasskey>[3],
+      name,
+    )
+    securityEvent(c.db, {
+      type: 'second_factor_added',
+      ...who(c, c.user.id),
+      detail: { method: 'passkey', name: name.slice(0, 60) },
+    })
+    const recovery =
+      tf.recoveryLeft(c.db, c.user.id) === 0 ? tf.newRecoveryCodes(c.db, c.user.id) : null
+    return { recovery }
+  }),
+  r('DELETE', '/api/auth/passkeys/:id', 'user', (c) => {
+    confirmed(c)
+    if (!pk.deletePasskey(c.db, c.user.id, String(c.params.id)))
+      throw new HttpError(404, 'No such passkey.')
+    if (!tf.hasSecondFactor(c.db, c.user.id)) tf.dropRecoveryCodes(c.db, c.user.id)
+    securityEvent(c.db, {
+      type: 'second_factor_removed',
+      ...who(c, c.user.id),
+      detail: { method: 'passkey' },
+    })
   }),
 
   // An authenticator app: a new secret, then its first code turns it on.

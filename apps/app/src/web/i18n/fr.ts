@@ -803,6 +803,34 @@ export const fr: Dict = {
     '{n} of 10 left, for when you have neither your passkey nor your app.':
       "Il en reste {n} sur 10, pour quand vous n'avez ni votre clé d'accès ni votre application.",
     'Make new codes': 'Générer de nouveaux codes',
+    'Passkeys need a name such as localhost, not an IP address.':
+      "Les clés d'accès ont besoin d'un nom comme localhost, pas d'une adresse IP.",
+    'Adding the passkey took too long. Try again.':
+      "L'ajout de la clé d'accès a pris trop de temps. Réessayez.",
+    'The passkey could not be checked. Try again.':
+      "La clé d'accès n'a pas pu être vérifiée. Réessayez.",
+    'No such passkey.': "Cette clé d'accès n'existe pas.",
+    'The passkey was not used. Try again, or choose another way.':
+      "La clé d'accès n'a pas été utilisée. Réessayez, ou choisissez un autre moyen.",
+    'Use your passkey': "Utiliser votre clé d'accès",
+    'Your browser asks for the passkey you added for this account.':
+      "Votre navigateur demande la clé d'accès ajoutée pour ce compte.",
+    Passkey: "Clé d'accès",
+    Passkeys: "Clés d'accès",
+    'The passkey was not added. Try again when you are ready.':
+      "La clé d'accès n'a pas été ajoutée. Réessayez quand vous êtes prêt.",
+    'Passkey added.': "Clé d'accès ajoutée.",
+    'Passkey removed.': "Clé d'accès supprimée.",
+    'Sign in with your fingerprint, face or device PIN instead of a code.':
+      "Connectez-vous avec votre empreinte, votre visage ou le code de l'appareil au lieu d'un code.",
+    'Passkeys need a name, not a number: open {url} to add one.':
+      "Les clés d'accès ont besoin d'un nom, pas d'un numéro : ouvrez {url} pour en ajouter une.",
+    'Last used {when}': 'Utilisée pour la dernière fois {when}',
+    'Added {when}': 'Ajoutée {when}',
+    'made at another address': 'créée à une autre adresse',
+    'Remove the passkey {name}': "Supprimer la clé d'accès {name}",
+    Add: 'Ajouter',
+    'Add a passkey': "Ajouter une clé d'accès",
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',
