@@ -8,7 +8,7 @@ import { HttpError, routes } from './routes.ts'
 import { authRoutes } from './auth-routes.ts'
 import { SESSION_COOKIE, readCookie, readSession, seedAdmin } from '../core/auth.ts'
 import { seedFromFile } from './seed.ts'
-import { clientOf, isLocal, publicHost, refuseRemote } from './access.ts'
+import { clientOf, gate, publicHost } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
 import { startScheduler } from '../core/schedule.ts'
 import { fillTikTok } from '../core/fill.ts'
@@ -93,6 +93,9 @@ function serveStatic(res: ServerResponse, path: string) {
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${HOST}`)
+  // Anything that came through Cloudflare needs a valid Access token.
+  const pass = await gate(req, PORT)
+  if (!pass.ok) return send(res, pass.status, { error: pass.error })
   // Only the dashboard itself may drive the API from a browser: its own origin, the dev UI and the
   // tunnel. Other local ports count as the same site to cookies, so they are refused by name.
   const origin = req.headers.origin
@@ -100,9 +103,6 @@ const server = createServer(async (req, res) => {
   // A form or text/plain POST skips the browser's CORS check; JSON can't be sent cross-site without it.
   if (req.method === 'POST' && !/^application\/json\b/.test(req.headers['content-type'] ?? ''))
     return send(res, 415, { error: 'Send JSON.' })
-  // Through a tunnel, only requests Cloudflare Access let in get anything at all.
-  const refusal = await refuseRemote(req)
-  if (refusal) return send(res, 403, { error: refusal })
   // Then the person: everything except the app's own files and the sign-in endpoints needs a session.
   const user = readSession(db, readCookie(req.headers.cookie, SESSION_COOKIE))
   const needsUser = url.pathname.startsWith('/api/') || url.pathname.startsWith('/media/')
@@ -139,10 +139,10 @@ const server = createServer(async (req, res) => {
         params: m.groups ?? {},
         query: url.searchParams,
         body: req.method === 'GET' ? {} : await body(req),
-        local: isLocal(req),
+        local: pass.local,
         user,
         cookies: [] as string[],
-        secure: !isLocal(req),
+        secure: !pass.local,
         ip: who.ip,
         country: who.country,
         ua: String(req.headers['user-agent'] ?? '').slice(0, 300),
