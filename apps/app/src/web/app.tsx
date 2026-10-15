@@ -198,7 +198,9 @@ function Dashboard({ me }: { me: Me }) {
 
   // Live: the server says when anything changed (an update's progress, Claude, another tab).
   // The screen refreshes its data then, unless the person is in the middle of something.
+  // A print page is a snapshot for a PDF: it never listens.
   useEffect(() => {
+    if (readRoute().page === 'print') return
     let alive = true
     let pending = false
     const refresh = async () => {

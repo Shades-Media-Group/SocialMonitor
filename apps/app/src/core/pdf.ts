@@ -30,10 +30,12 @@ export async function brandPdf(uiOrigin: string, brandId: number, query: string,
       }
     })
     await page.goto(`${uiOrigin}/print/${brandId}${query ? `?${query}` : ''}`, {
-      waitUntil: 'networkidle',
+      // Not 'networkidle': the page keeps its live-update stream open, so the network never rests.
+      waitUntil: 'load',
     })
     await page.waitForSelector('body[data-ready="1"]', { timeout: 20000 })
     await page.emulateMedia({ media: 'print' })
+    await loadImages(page)
     await shrinkImages(page)
     return await page.pdf({
       format: 'A4',
@@ -46,14 +48,34 @@ export async function brandPdf(uiOrigin: string, brandId: number, query: string,
 }
 
 /**
+ * Pictures load lazily on screen, so the ones below the first page never start in a headless
+ * browser. Each is asked to load now, and the PDF waits for them at most 20 seconds in all.
+ */
+async function loadImages(page: Page) {
+  await page.evaluate(async () => {
+    const imgs = [...document.images]
+    for (const img of imgs) img.loading = 'eager'
+    const done = imgs.map((img) =>
+      img.complete
+        ? null
+        : new Promise((ok) => {
+            img.addEventListener('load', ok, { once: true })
+            img.addEventListener('error', ok, { once: true })
+          }),
+    )
+    await Promise.race([Promise.all(done), new Promise((ok) => setTimeout(ok, 20_000))])
+  })
+}
+
+/**
  * Pictures are kept at full size, but a PDF shows them a few centimetres wide. Each one is
  * redrawn at twice its printed size as a JPEG, so the file stays small and still sharp.
  */
 async function shrinkImages(page: Page) {
   await page.evaluate(async () => {
     const imgs = [...document.images]
-    await Promise.all(imgs.map((img) => (img.complete ? null : img.decode().catch(() => null))))
     for (const img of imgs) {
+      if (!img.complete) continue // never arrived: printed as the browser has it
       const w = Math.round(img.getBoundingClientRect().width * 2)
       const h = Math.round(img.getBoundingClientRect().height * 2)
       if (!w || !h || !img.naturalWidth) continue
@@ -85,7 +107,11 @@ async function shrinkImages(page: Page) {
           canvas.height,
         )
         img.src = canvas.toDataURL('image/jpeg', 0.82)
-        await img.decode().catch(() => null)
+        // A data URL decodes at once; the limit only guards against a stuck picture.
+        await Promise.race([
+          img.decode().catch(() => null),
+          new Promise((ok) => setTimeout(ok, 2000)),
+        ])
       } catch {
         /* a picture from elsewhere can't be redrawn; it stays as it is */
       }
