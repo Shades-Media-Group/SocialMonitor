@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { AppState } from './app.tsx'
 import { api } from './api.ts'
-import { NETWORK_NAME, Row, Segmented, Sheet, count } from './ui.tsx'
+import { NETWORK_NAME, Row, Segmented, Sheet, ago, count, when } from './ui.tsx'
 import { JsonPanel } from './json.tsx'
 import { Accounts } from './accounts.tsx'
 import type { Lang } from './i18n.ts'
-import { LANGS, lang, setLang, t } from './i18n.ts'
+import { LANGS, lang, locale, setLang, t } from './i18n.ts'
 import { flushPrefs, setPref } from './prefs.ts'
 
 interface Settings {
@@ -134,6 +134,9 @@ export function SettingsSheet({
         />
       </Row>
       <Account me={me} notify={notify} />
+      <Row label={t('Devices')}>
+        <Devices open={open} notify={notify} />
+      </Row>
       {me.super && s && (
         <>
           <Row label={t('Gap')} hint={t('hours between updates that use a signed-in network')}>
@@ -323,12 +326,111 @@ function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
             >
               {t('Change password')}
             </button>
-            <button class="sm-textbtn" type="button" onClick={out('/api/auth/logout-everywhere')}>
-              {t('Sign out everywhere')}
-            </button>
           </div>
         )}
       </div>
     </Row>
+  )
+}
+
+interface Device {
+  id: string
+  browser: string | null
+  os: string | null
+  country: string | null
+  local: boolean
+  created_at: string
+  seen_at: string
+  current: boolean
+}
+
+const regions = (() => {
+  try {
+    return new Intl.DisplayNames(locale, { type: 'region' })
+  } catch {
+    return null
+  }
+})()
+/** Where a session was last used: this computer, or the country Cloudflare reported. */
+function place(d: Device) {
+  if (d.local) return t('This computer')
+  if (!d.country || d.country === 'XX' || d.country === 'T1') return null
+  try {
+    return regions?.of(d.country) ?? d.country
+  } catch {
+    return d.country
+  }
+}
+
+/** The browsers this person is signed in on: sign one out, or all of them. */
+function Devices({ open, notify }: { open: boolean; notify: (s: string) => void }) {
+  const [list, setList] = useState<Device[] | null>(null)
+  const load = () =>
+    api
+      .get<Device[]>('/api/auth/sessions')
+      .then(setList)
+      .catch(() => setList(null))
+  useEffect(() => {
+    if (open) load()
+  }, [open])
+  const end = (d: Device) =>
+    api
+      .del(`/api/auth/sessions/${d.id}`)
+      .then(() => {
+        if (d.current) dispatchEvent(new Event('sm-signed-out'))
+        else void load()
+      })
+      .catch((e: Error) => notify(e.message))
+  if (!list) return null
+  return (
+    <div class="sm-accounts">
+      <ul class="sm-accounts__list">
+        {list.map((d) => {
+          const name =
+            d.browser && d.os
+              ? t('{browser} on {os}', { browser: d.browser, os: d.os })
+              : (d.browser ?? d.os ?? t('Unknown browser'))
+          const where = place(d)
+          return (
+            <li>
+              <div class="sm-accounts__who">
+                <strong>{name}</strong>
+                <span class="sm-quiet" title={t('Signed in {when}', { when: when(d.created_at) })}>
+                  {[where, d.current ? t('This device') : ago(d.seen_at)]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
+              </div>
+              <div class="sm-accounts__do">
+                <button
+                  class="sm-textbtn"
+                  type="button"
+                  aria-label={t('Sign out {device}', { device: name })}
+                  onClick={() => end(d)}
+                >
+                  {t('Sign out')}
+                </button>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+      {list.length > 1 && (
+        <div>
+          <button
+            class="sm-textbtn"
+            type="button"
+            onClick={() =>
+              api
+                .post('/api/auth/logout-everywhere')
+                .then(() => dispatchEvent(new Event('sm-signed-out')))
+                .catch((e: Error) => notify(e.message))
+            }
+          >
+            {t('Sign out everywhere')}
+          </button>
+        </div>
+      )}
+    </div>
   )
 }

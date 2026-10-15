@@ -6,7 +6,16 @@ import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
 import { HttpError, routes } from './routes.ts'
 import { authRoutes } from './auth-routes.ts'
-import { SESSION_COOKIE, readCookie, readSession, seedAdmin } from '../core/auth.ts'
+import {
+  cookieAge,
+  cookieName,
+  getSession,
+  readCookie,
+  readSession,
+  rotateSession,
+  seedAdmin,
+  sessionCookie,
+} from '../core/auth.ts'
 import { seedFromFile } from './seed.ts'
 import { isLocal, publicHost, refuseRemote } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
@@ -104,7 +113,22 @@ const server = createServer(async (req, res) => {
   const refusal = await refuseRemote(req)
   if (refusal) return send(res, 403, { error: refusal })
   // Then the person: everything except the app's own files and the sign-in endpoints needs a session.
-  const user = readSession(db, readCookie(req.headers.cookie, SESSION_COOKIE))
+  const secure = !isLocal(req)
+  const ip = String(req.headers['cf-connecting-ip'] ?? req.socket.remoteAddress ?? '')
+  // Cloudflare's guess at the country, only through the tunnel; a local request can't be trusted.
+  const country = secure ? String(req.headers['cf-ipcountry'] ?? '').slice(0, 2) || null : null
+  const client = { ua: String(req.headers['user-agent'] ?? ''), ip, country }
+  const signed = readSession(db, readCookie(req.headers.cookie, cookieName(secure)), client)
+  const user = signed?.user ?? null
+  let session = signed?.session ?? null
+  const cookies: string[] = []
+  // A change of role gives the session a new id on its next request.
+  if (session?.rotate) {
+    const next = rotateSession(db, session)
+    session = getSession(db, next.id) ?? null
+    if (session) cookies.push(sessionCookie(next.token, secure, cookieAge(session)))
+  }
+  if (cookies.length) res.setHeader('set-cookie', cookies)
   const needsUser = url.pathname.startsWith('/api/') || url.pathname.startsWith('/media/')
   if (needsUser && !user && !url.pathname.startsWith('/api/auth/'))
     return send(res, 401, { error: 'Sign in first.', signin: true })
@@ -140,9 +164,11 @@ const server = createServer(async (req, res) => {
         body: req.method === 'GET' ? {} : await body(req),
         local: isLocal(req),
         user,
-        cookies: [] as string[],
-        secure: !isLocal(req),
-        ip: String(req.headers['cf-connecting-ip'] ?? req.socket.remoteAddress ?? ''),
+        cookies,
+        secure,
+        ip,
+        session,
+        client,
       }
       if (r.need !== 'public') {
         if (!user) throw new HttpError(401, 'Sign in first.')

@@ -1,5 +1,5 @@
 import { createHash, randomBytes, scryptSync } from 'node:crypto'
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { openDb } from './db.ts'
 import { addBrand } from './store.ts'
 import * as auth from './auth.ts'
@@ -16,7 +16,7 @@ describe('sign-in', () => {
     expect(() => auth.validPassword('short')).toThrow()
   })
 
-  it('accepts its own sessions and refuses forged, expired and revoked ones', () => {
+  it('accepts its own render tokens and refuses forged, long, expired and revoked ones', () => {
     const db = openDb(':memory:')
     const u = auth.createUser(db, {
       email: 'a@example.com',
@@ -24,7 +24,7 @@ describe('sign-in', () => {
       verified: true,
     })
     const token = auth.signSession(u)
-    expect(auth.readSession(db, token)?.id).toBe(u.id)
+    expect(auth.readSession(db, token)).toMatchObject({ user: { id: u.id }, session: null })
     expect(auth.readSession(db, token.slice(0, -2) + 'xx')).toBeNull()
     expect(auth.readSession(db, auth.signSession(u, -1))).toBeNull()
     auth.endSessions(db, u.id)
@@ -159,5 +159,75 @@ describe('breached passwords', () => {
       false,
     )
     expect(warnings).toHaveLength(2)
+  })
+})
+
+describe('sessions', () => {
+  const client = {
+    ua: 'Mozilla/5.0 (Macintosh; Mac OS X 14_0) Chrome/130.0',
+    ip: '1.2.3.4',
+    country: 'MD',
+  }
+  const setup = () => {
+    const db = openDb(':memory:')
+    const u = auth.createUser(db, { email: 's@example.com', verified: true })
+    return { db, u }
+  }
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('keeps only a hash of the id, and ends after 12 idle hours', () => {
+    vi.useFakeTimers({ now: new Date('2026-10-01T08:00:00Z') })
+    const { db, u } = setup()
+    const s = auth.createSession(db, u, false, client)
+    expect(s.maxAge).toBeUndefined()
+    expect(db.prepare('SELECT count(*) AS n FROM sessions WHERE id = ?').get(s.token)).toEqual({
+      n: 0,
+    })
+    expect(auth.readSession(db, s.token, client)?.user.id).toBe(u.id)
+    vi.setSystemTime(new Date('2026-10-01T19:00:00Z'))
+    expect(auth.readSession(db, s.token, client)).not.toBeNull() // used at 19:00, idle clock restarts
+    vi.setSystemTime(new Date('2026-10-02T06:59:00Z'))
+    expect(auth.readSession(db, s.token, client)).not.toBeNull()
+    vi.setSystemTime(new Date('2026-10-02T19:00:01Z'))
+    expect(auth.readSession(db, s.token, client)).toBeNull()
+    expect(auth.listSessions(db, u.id)).toHaveLength(0)
+  })
+
+  it('with Keep me signed in, outlives 12 hours but never 30 days', () => {
+    vi.useFakeTimers({ now: new Date('2026-10-01T08:00:00Z') })
+    const { db, u } = setup()
+    const s = auth.createSession(db, u, true, client)
+    expect(s.maxAge).toBe(30 * 86400)
+    for (let day = 1; day < 30; day++) {
+      vi.setSystemTime(new Date(Date.parse('2026-10-01T08:00:00Z') + day * 86400_000))
+      expect(auth.readSession(db, s.token, client)).not.toBeNull()
+    }
+    vi.setSystemTime(new Date('2026-10-31T08:00:01Z'))
+    expect(auth.readSession(db, s.token, client)).toBeNull()
+  })
+
+  it('rotates the id after a change of role, and ends with session_version', () => {
+    const { db, u } = setup()
+    const s = auth.createSession(db, u, false, client)
+    auth.updateUser(db, u.id, { super: true })
+    const read = auth.readSession(db, s.token, client)!
+    expect(read.session!.rotate).toBe(1)
+    const next = auth.rotateSession(db, read.session!)
+    expect(auth.readSession(db, s.token, client)).toBeNull()
+    expect(auth.readSession(db, next.token, client)!.session!.rotate).toBe(0)
+    const other = auth.createSession(db, u, false, client)
+    auth.endSessions(db, u.id)
+    expect(auth.readSession(db, next.token, client)).toBeNull()
+    expect(auth.readSession(db, other.token, client)).toBeNull()
+  })
+
+  it('names the cookie __Host- over https only', () => {
+    expect(auth.sessionCookie('x', true, 60)).toBe(
+      '__Host-sm_session=x; Path=/; HttpOnly; SameSite=Strict; Max-Age=60; Secure',
+    )
+    expect(auth.sessionCookie('x', false)).toBe('sm_session=x; Path=/; HttpOnly; SameSite=Strict')
+    expect(auth.device(client.ua)).toEqual({ browser: 'Chrome', os: 'macOS' })
   })
 })

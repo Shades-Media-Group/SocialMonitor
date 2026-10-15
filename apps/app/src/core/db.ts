@@ -192,6 +192,24 @@ CREATE TABLE IF NOT EXISTS tokens (
   tries INTEGER NOT NULL DEFAULT 0,
   expires_at TEXT NOT NULL
 );
+-- Signed-in browsers. id is the SHA-256 of the random id in the cookie, never the id itself.
+-- version is users.session_version when it began; rotate asks for a new id on the next request
+-- (after a change of role); confirmed_at is when the password was last re-entered in it.
+CREATE TABLE IF NOT EXISTS sessions (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  version INTEGER NOT NULL,
+  keep INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  seen_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  ua TEXT NOT NULL DEFAULT '',
+  ip TEXT NOT NULL DEFAULT '',
+  country TEXT,
+  rotate INTEGER NOT NULL DEFAULT 0,
+  confirmed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
 `
 
 export type DB = DatabaseSync

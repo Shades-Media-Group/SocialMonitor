@@ -3,6 +3,7 @@ import type { Role, User } from '../core/auth.ts'
 import { accessMail, codeMail, linkMail, mailReady, sendMail } from '../core/mail.ts'
 import { mailLang, mailText } from '../core/mail-text.ts'
 import * as store from '../core/store.ts'
+import { securityEvent } from '../core/security-events.ts'
 import { publicHost } from './access.ts'
 import type { Ctx } from './routes.ts'
 import { HttpError, r } from './routes.ts'
@@ -25,11 +26,23 @@ const base = () => {
   )
 }
 
-const signIn = (c: Ctx, user: User, keep = false) => {
-  const seconds = keep ? auth.KEEP_DAYS * 86400 : undefined
-  c.cookies.push(auth.sessionCookie(auth.signSession(user, seconds), c.secure, seconds))
+/** What a security event needs to know about the request. */
+const who = (c: Ctx, userId: number) => ({ userId, ip: c.ip, ua: c.client.ua })
+
+/**
+ * Starts a session. Any session this browser already had ends, so the id always changes when
+ * someone signs in.
+ */
+const signIn = (c: Ctx, user: User, keep = false, method = 'password') => {
+  if (c.session) auth.deleteSession(c.db, c.session.id)
+  const newDevice = !auth.knownDevice(c.db, user.id, c.client.ua)
+  const s = auth.createSession(c.db, user, keep, c.client)
+  c.session = auth.getSession(c.db, s.id) ?? null
+  c.cookies.push(auth.sessionCookie(s.token, c.secure, s.maxAge))
   auth.touch(c.db, user.id)
+  securityEvent(c.db, { type: 'signed_in', ...who(c, user.id), detail: { method, newDevice } })
 }
+const signOut = (c: Ctx) => c.cookies.push(auth.sessionCookie('', c.secure, 0))
 
 const me = (c: Ctx, user: User) => ({
   id: user.id,
@@ -175,11 +188,38 @@ export const authRoutes = [
   }),
 
   r('POST', '/api/auth/logout', 'public', (c) => {
-    c.cookies.push(auth.sessionCookie('', c.secure, 0))
+    if (c.session) auth.deleteSession(c.db, c.session.id)
+    signOut(c)
   }),
   r('POST', '/api/auth/logout-everywhere', 'user', (c) => {
     auth.endSessions(c.db, c.user.id)
-    c.cookies.push(auth.sessionCookie('', c.secure, 0))
+    securityEvent(c.db, { type: 'sessions_ended', ...who(c, c.user.id) })
+    signOut(c)
+  }),
+
+  // The browsers this person is signed in on.
+  r('GET', '/api/auth/sessions', 'user', (c) =>
+    auth.listSessions(c.db, c.user.id).map((s) => ({
+      id: s.id,
+      ...auth.device(s.ua),
+      country: s.country,
+      local: !s.country && /^(::1|127\.|::ffff:127\.)/.test(s.ip),
+      created_at: s.created_at,
+      seen_at: s.seen_at,
+      current: s.id === c.session?.id,
+    })),
+  ),
+  r('DELETE', '/api/auth/sessions/:id', 'user', (c) => {
+    const s = auth.getSession(c.db, String(c.params.id))
+    if (!s || s.user_id !== c.user.id)
+      throw new HttpError(404, 'That device is already signed out.')
+    auth.deleteSession(c.db, s.id)
+    securityEvent(c.db, {
+      type: 'session_revoked',
+      ...who(c, c.user.id),
+      detail: auth.device(s.ua),
+    })
+    if (s.id === c.session?.id) signOut(c)
   }),
 
   // Invitation and reset links: "<id>.<secret>" from the email.
@@ -228,7 +268,8 @@ export const authRoutes = [
       ...(x.password !== undefined ? { password: String(x.password) } : {}),
     })
     const user = auth.getUser(c.db, c.user.id)!
-    if (x.password !== undefined) signIn(c, user) // the old sessions just ended; keep this one
+    // The old sessions just ended; this browser gets a new one.
+    if (x.password !== undefined) signIn(c, user, !!c.session?.keep, 'password change')
     return me(c, user)
   }),
 

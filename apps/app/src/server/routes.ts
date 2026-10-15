@@ -51,7 +51,7 @@ import {
 } from '../core/replies.ts'
 import { getSettings } from '../core/settings.ts'
 import { latestSummary, refreshSummary } from '../core/summary.ts'
-import type { User } from '../core/auth.ts'
+import type { Client, Session, User } from '../core/auth.ts'
 import { roleFor, signSession, visibleBrands } from '../core/auth.ts'
 
 export class HttpError extends Error {
@@ -77,6 +77,10 @@ export interface Ctx {
   secure: boolean
   /** Who is asking: Cloudflare's client address through the tunnel, else this computer. */
   ip: string
+  /** The signed-in browser's session; null for render tokens and public requests. */
+  session: Session | null
+  /** The browser asking, for the devices list. */
+  client: Client
 }
 type Signed = Ctx & { user: User }
 /**

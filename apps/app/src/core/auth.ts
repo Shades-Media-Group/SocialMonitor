@@ -15,8 +15,8 @@ import { DATA_DIR, now } from './db.ts'
  * Who may open the dashboard, and what they see. A super admin sees every brand and manages
  * people; everyone else sees only the brands they belong to, as a viewer (read only) or as that
  * brand's admin (edits the brand, its links and its people, rates comments, runs updates).
- * Sessions are signed tokens (HS256) in an HttpOnly cookie; signing in takes the password and
- * then a six-digit code sent by email.
+ * Sessions live server-side, named by a random id in an HttpOnly cookie; signing in takes the
+ * password and then a second step: an emailed code, an authenticator code or a passkey.
  */
 export type Role = 'viewer' | 'admin'
 export interface User {
@@ -168,18 +168,19 @@ function signingKey() {
 const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url')
 const sign = (data: string) => createHmac('sha256', signingKey()).update(data).digest()
 
-export function signSession(
-  user: Pick<User, 'id' | 'session_version'>,
-  seconds = SESSION_HOURS * 3600,
-) {
+/**
+ * A short-lived token for the headless browser that renders a PDF as a person: signed (HS256),
+ * never stored, at most RENDER_MAX seconds. People's own sign-ins are server-side sessions below.
+ */
+const RENDER_MAX = 600
+export function signSession(user: Pick<User, 'id' | 'session_version'>, seconds = 120) {
   const iat = Math.floor(Date.now() / 1000)
-  const body = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: user.id, v: user.session_version, iat, exp: iat + seconds })}`
+  const body = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: user.id, v: user.session_version, iat, exp: iat + Math.min(seconds, RENDER_MAX) })}`
   return `${body}.${sign(body).toString('base64url')}`
 }
 
-/** The signed-in user, or null for a missing, forged, expired or revoked token. */
-export function readSession(db: DB, token: string | undefined): User | null {
-  const [h, p, s] = (token ?? '').split('.')
+function readRenderToken(db: DB, token: string): User | null {
+  const [h, p, s] = token.split('.')
   if (!h || !p || !s) return null
   const want = sign(`${h}.${p}`)
   const got = Buffer.from(s, 'base64url')
@@ -190,9 +191,10 @@ export function readSession(db: DB, token: string | undefined): User | null {
     const c = JSON.parse(Buffer.from(p, 'base64url').toString()) as {
       sub: number
       v: number
+      iat: number
       exp: number
     }
-    if (!c.exp || c.exp * 1000 < Date.now()) return null
+    if (!c.exp || c.exp * 1000 < Date.now() || c.exp - c.iat > RENDER_MAX) return null
     const u = getUser(db, c.sub)
     if (!u || u.disabled || !u.verified_at || u.session_version !== c.v) return null
     return u
@@ -201,9 +203,177 @@ export function readSession(db: DB, token: string | undefined): User | null {
   }
 }
 
+// --- Sessions ----------------------------------------------------------------------------
+
+/**
+ * Each sign-in is a row in `sessions`, named in the cookie by a random 256-bit id; the table
+ * keeps only its SHA-256, so a copy of the database can't be used to sign in. A session ends
+ * after IDLE hours without use (KEEP_DAYS with "Keep me signed in") and at most ABSOLUTE_DAYS
+ * after it began, whichever comes first. Bumping users.session_version ends them all.
+ */
+export interface Session {
+  id: string
+  user_id: number
+  version: number
+  keep: number
+  created_at: string
+  seen_at: string
+  expires_at: string
+  ua: string
+  ip: string
+  country: string | null
+  rotate: number
+  confirmed_at: string | null
+}
+const IDLE_HOURS = SESSION_HOURS
+const ABSOLUTE_DAYS = 30
+/** How often last-seen is written, so a busy dashboard doesn't write on every request. */
+const SEEN_EVERY = 60_000
+
+export interface Client {
+  ua: string
+  ip: string
+  country: string | null
+}
+
+const sessionId = (token: string) => hash(`session:${token}`)
+
+export function createSession(
+  db: DB,
+  user: Pick<User, 'id' | 'session_version'>,
+  keep: boolean,
+  client: Client,
+) {
+  const token = randomBytes(32).toString('base64url')
+  const at = now()
+  db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(at)
+  db.prepare(
+    `INSERT INTO sessions (id, user_id, version, keep, created_at, seen_at, expires_at, ua, ip, country)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    sessionId(token),
+    user.id,
+    user.session_version,
+    keep ? 1 : 0,
+    at,
+    at,
+    new Date(Date.now() + ABSOLUTE_DAYS * 86400_000).toISOString(),
+    client.ua.slice(0, 400),
+    client.ip.slice(0, 64),
+    client.country,
+  )
+  return { token, id: sessionId(token), maxAge: keep ? ABSOLUTE_DAYS * 86400 : undefined }
+}
+
+/** Seconds a session's cookie should live: until its absolute end with keep, else the browser's. */
+export const cookieAge = (s: Pick<Session, 'keep' | 'expires_at'>) =>
+  s.keep ? Math.max(0, Math.floor((Date.parse(s.expires_at) - Date.now()) / 1000)) : undefined
+
+export const getSession = (db: DB, id: string) =>
+  db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) as Session | undefined
+
+/**
+ * The signed-in person for a cookie, or null for a missing, unknown, idle, expired or revoked
+ * session. A render token (see signSession) comes back with session null.
+ */
+export function readSession(
+  db: DB,
+  token: string | undefined,
+  client?: Client,
+): { user: User; session: Session | null } | null {
+  if (!token) return null
+  if (token.includes('.')) {
+    const user = readRenderToken(db, token)
+    return user ? { user, session: null } : null
+  }
+  const s = getSession(db, sessionId(token))
+  if (!s) return null
+  const t = Date.now()
+  const idle = (s.keep ? KEEP_DAYS * 24 : IDLE_HOURS) * 3600_000
+  const user = getUser(db, s.user_id)
+  if (
+    t - Date.parse(s.seen_at) > idle ||
+    t > Date.parse(s.expires_at) ||
+    !user ||
+    user.disabled ||
+    !user.verified_at ||
+    user.session_version !== s.version
+  ) {
+    db.prepare('DELETE FROM sessions WHERE id = ?').run(s.id)
+    return null
+  }
+  if (t - Date.parse(s.seen_at) > SEEN_EVERY) {
+    s.seen_at = now()
+    db.prepare(
+      'UPDATE sessions SET seen_at = ?, ip = coalesce(?, ip), country = coalesce(?, country) WHERE id = ?',
+    ).run(s.seen_at, client?.ip.slice(0, 64) ?? null, client?.country ?? null, s.id)
+  }
+  return { user, session: s }
+}
+
+/** A new id for the same session (after a change of role); the old id stops working. */
+export function rotateSession(db: DB, s: Session) {
+  const token = randomBytes(32).toString('base64url')
+  db.prepare('UPDATE sessions SET id = ?, rotate = 0 WHERE id = ?').run(sessionId(token), s.id)
+  return { token, id: sessionId(token) }
+}
+
+/** Every session of this person gets a new id on its next request. */
+export const rotateSessions = (db: DB, userId: number) =>
+  db.prepare('UPDATE sessions SET rotate = 1 WHERE user_id = ?').run(userId)
+
+export const deleteSession = (db: DB, id: string) =>
+  db.prepare('DELETE FROM sessions WHERE id = ?').run(id)
+
+/** A person's sessions, newest use first. */
+export const listSessions = (db: DB, userId: number) =>
+  db
+    .prepare('SELECT * FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY seen_at DESC')
+    .all(userId, now()) as unknown as Session[]
+
+/** Whether this person already has a session from the same browser, to tell a new device. */
+export const knownDevice = (db: DB, userId: number, ua: string) =>
+  !!db.prepare('SELECT 1 FROM sessions WHERE user_id = ? AND ua = ?').get(userId, ua.slice(0, 400))
+
+/** Browser and system from a user agent, for the devices list. */
+export function device(ua: string) {
+  const browser = /Edg\//.test(ua)
+    ? 'Edge'
+    : /OPR\//.test(ua)
+      ? 'Opera'
+      : /Firefox\//.test(ua)
+        ? 'Firefox'
+        : /Chrome\//.test(ua)
+          ? 'Chrome'
+          : /Safari\//.test(ua)
+            ? 'Safari'
+            : null
+  const os = /iPhone|iPad|iPod/.test(ua)
+    ? 'iOS'
+    : /Android/.test(ua)
+      ? 'Android'
+      : /Mac OS X|Macintosh/.test(ua)
+        ? 'macOS'
+        : /Windows/.test(ua)
+          ? 'Windows'
+          : /CrOS/.test(ua)
+            ? 'ChromeOS'
+            : /Linux/.test(ua)
+              ? 'Linux'
+              : null
+  return { browser, os }
+}
+
+/**
+ * The cookie: `__Host-sm_session` over HTTPS (the tunnel), which browsers bind to this exact
+ * host with Secure and Path=/; plain `sm_session` on http://127.0.0.1, where Secure can't be
+ * set. Without maxAge it lasts until the browser closes.
+ */
 export const SESSION_COOKIE = 'sm_session'
-export function sessionCookie(token: string, secure: boolean, maxAge = SESSION_HOURS * 3600) {
-  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure ? '; Secure' : ''}`
+export const cookieName = (secure: boolean) =>
+  secure ? `__Host-${SESSION_COOKIE}` : SESSION_COOKIE
+export function sessionCookie(token: string, secure: boolean, maxAge?: number) {
+  return `${cookieName(secure)}=${token}; Path=/; HttpOnly; SameSite=Strict${maxAge === undefined ? '' : `; Max-Age=${maxAge}`}${secure ? '; Secure' : ''}`
 }
 export function readCookie(header: string | undefined, name = SESSION_COOKIE) {
   for (const part of (header ?? '').split(';')) {
@@ -294,8 +464,10 @@ export function updateUser(
     )
   if (x.username !== undefined)
     db.prepare('UPDATE users SET username = ? WHERE id = ?').run(validUsername(x.username), id)
-  if (x.super !== undefined)
+  if (x.super !== undefined) {
     db.prepare('UPDATE users SET super = ? WHERE id = ?').run(x.super ? 1 : 0, id)
+    rotateSessions(db, id)
+  }
   if (x.disabled !== undefined) {
     db.prepare('UPDATE users SET disabled = ? WHERE id = ?').run(x.disabled ? 1 : 0, id)
     if (x.disabled) endSessions(db, id)
@@ -308,8 +480,11 @@ export function updateUser(
   }
 }
 
-export const endSessions = (db: DB, id: number) =>
+/** Ends every session of a person: their sessions go and older render tokens stop working. */
+export function endSessions(db: DB, id: number) {
   db.prepare('UPDATE users SET session_version = session_version + 1 WHERE id = ?').run(id)
+  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id)
+}
 
 export const deleteUser = (db: DB, id: number) =>
   db.prepare('DELETE FROM users WHERE id = ?').run(id)
@@ -373,6 +548,7 @@ export const memberships = (db: DB, userId: number) =>
     .all(userId) as unknown as Membership[]
 
 export function setMembership(db: DB, userId: number, brandId: number, role: Role | null) {
+  rotateSessions(db, userId)
   if (role === null)
     db.prepare('DELETE FROM memberships WHERE user_id = ? AND brand_id = ?').run(userId, brandId)
   else

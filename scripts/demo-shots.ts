@@ -30,7 +30,7 @@ if (!existsSync(join(DEMO, 'socialmonitor.db')))
   throw new Error('No demo data: run node scripts/demo-data.ts first.')
 
 const { openDb } = await import('../apps/app/src/core/db.ts')
-const { signSession, getUser } = await import('../apps/app/src/core/auth.ts')
+const { createSession, getUser } = await import('../apps/app/src/core/auth.ts')
 const { listSchedules, listBrands } = await import('../apps/app/src/core/store.ts')
 const db = openDb()
 
@@ -42,7 +42,11 @@ if (soon)
     `A schedule is due at ${soon.next_run_at}; the server would start an update. Try after it.`,
   )
 const brandId = listBrands(db)[0]!.id
-const token = signSession(getUser(db, 1)!)
+const { token } = createSession(db, getUser(db, 1)!, false, {
+  ua: 'demo-shots',
+  ip: '127.0.0.1',
+  country: null,
+})
 
 // The server, on the demo data only.
 const server = spawn(process.execPath, [join(root, 'apps/app/src/server/main.ts')], {
