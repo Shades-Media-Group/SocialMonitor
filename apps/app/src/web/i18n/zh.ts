@@ -788,6 +788,13 @@ export const zh: Dict = {
     'Remove the passkey {name}': '移除通行密钥 {name}',
     Add: '添加',
     'Add a passkey': '添加通行密钥',
+    'Protect your super admin account': '保护你的超级管理员账户',
+    'You can change everything in SocialMonitor, so add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      '你可以更改 SocialMonitor 中的一切，所以请添加通行密钥或验证器应用。在此之前，你需要用邮件中的验证码登录。',
+    'Add one now': '立即添加',
+    Later: '稍后',
+    'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      '作为超级管理员，请添加通行密钥或验证器应用。在此之前，你需要用邮件中的验证码登录。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

@@ -54,6 +54,8 @@ const me = (c: Ctx, user: User) => ({
   super: !!user.super,
   memberships: auth.memberships(c.db, user.id),
   prefs: auth.readPrefs(c.db, user.id),
+  // Super admins are asked to add a passkey or an authenticator; until then, email codes only.
+  needs_second: !!user.super && !tf.hasSecondFactor(c.db, user.id),
 })
 
 const mask = (email: string) =>

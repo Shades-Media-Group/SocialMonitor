@@ -829,6 +829,13 @@ export const ru: Dict = {
     'Remove the passkey {name}': 'Удалить ключ доступа {name}',
     Add: 'Добавить',
     'Add a passkey': 'Добавить ключ доступа',
+    'Protect your super admin account': 'Защитите аккаунт суперадминистратора',
+    'You can change everything in SocialMonitor, so add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      'Вы можете изменить в SocialMonitor всё, поэтому добавьте ключ доступа или приложение-аутентификатор. До тех пор вы входите с кодом из письма.',
+    'Add one now': 'Добавить сейчас',
+    Later: 'Позже',
+    'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      'Как суперадминистратор, добавьте ключ доступа или приложение-аутентификатор. До тех пор вы входите с кодом из письма.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

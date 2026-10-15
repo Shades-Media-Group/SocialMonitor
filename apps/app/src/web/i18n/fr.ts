@@ -831,6 +831,13 @@ export const fr: Dict = {
     'Remove the passkey {name}': "Supprimer la clé d'accès {name}",
     Add: 'Ajouter',
     'Add a passkey': "Ajouter une clé d'accès",
+    'Protect your super admin account': 'Protégez votre compte de super admin',
+    'You can change everything in SocialMonitor, so add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      "Vous pouvez tout modifier dans SocialMonitor : ajoutez donc une clé d'accès ou une application d'authentification. D'ici là, vous vous connectez avec un code reçu par e-mail.",
+    'Add one now': 'En ajouter un maintenant',
+    Later: 'Plus tard',
+    'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      "En tant que super admin, ajoutez une clé d'accès ou une application d'authentification. D'ici là, vous vous connectez avec un code reçu par e-mail.",
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

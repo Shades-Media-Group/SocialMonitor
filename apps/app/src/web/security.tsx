@@ -105,7 +105,15 @@ function Codes({ codes, onDone }: { codes: string[]; onDone: () => void }) {
  * Two-step sign-in in Settings: the authenticator app and recovery codes. Changes ask for the
  * password again when it was entered more than 15 minutes ago.
  */
-export function TwoStep({ open, notify }: { open: boolean; notify: (s: string) => void }) {
+export function TwoStep({
+  open,
+  notify,
+  superAdmin,
+}: {
+  open: boolean
+  notify: (s: string) => void
+  superAdmin: boolean
+}) {
   const [sec, setSec] = useState<Security | null>(null)
   const [setup, setSetup] = useState<{ secret: string; uri: string; code: string } | null>(null)
   const [codes, setCodes] = useState<string[] | null>(null)
@@ -224,6 +232,13 @@ export function TwoStep({ open, notify }: { open: boolean; notify: (s: string) =
   const localhost = `${location.protocol}//localhost${location.port ? `:${location.port}` : ''}`
   return (
     <>
+      {superAdmin && !protectedBy && (
+        <p class="g-error sm-security__ask" role="status">
+          {t(
+            'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.',
+          )}
+        </p>
+      )}
       <Row
         label={t('Passkeys')}
         hint={

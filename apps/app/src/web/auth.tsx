@@ -14,6 +14,8 @@ export interface Me {
   super: boolean
   memberships: { brand_id: number; role: 'viewer' | 'admin' }[]
   prefs?: Record<string, unknown>
+  /** A super admin without a passkey or authenticator yet. */
+  needs_second?: boolean
 }
 /** What the password step answers: a ticket, and the second steps besides the emailed code. */
 interface Ticket {

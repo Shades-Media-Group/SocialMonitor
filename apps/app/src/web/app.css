@@ -2478,3 +2478,25 @@ td.sm-hot {
   padding: 0;
   list-style: none;
 }
+.sm-security__ask {
+  margin: 8px 0 0;
+}
+/* The ask to add a second step, for super admins without one. */
+.sm-ask {
+  display: grid;
+  gap: 12px;
+  padding: 28px 28px 24px;
+}
+.sm-ask h2 {
+  margin: 0;
+  padding-right: 32px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.sm-ask p {
+  margin: 0;
+  color: var(--g-text-2);
+}
+.sm-ask .sm-sheet__actions {
+  margin-top: 8px;
+}

@@ -831,6 +831,13 @@ export const ro: Dict = {
     'Remove the passkey {name}': 'Șterge cheia de acces {name}',
     Add: 'Adaugă',
     'Add a passkey': 'Adaugă o cheie de acces',
+    'Protect your super admin account': 'Protejează-ți contul de super admin',
+    'You can change everything in SocialMonitor, so add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      'Poți schimba totul în SocialMonitor, așa că adaugă o cheie de acces sau o aplicație de autentificare. Până atunci, te conectezi cu un cod primit pe email.',
+    'Add one now': 'Adaugă acum',
+    Later: 'Mai târziu',
+    'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
+      'Ca super admin, adaugă o cheie de acces sau o aplicație de autentificare. Până atunci, te conectezi cu un cod primit pe email.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

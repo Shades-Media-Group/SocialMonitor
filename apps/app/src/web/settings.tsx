@@ -135,7 +135,7 @@ export function SettingsSheet({
         />
       </Row>
       <Account me={me} notify={notify} />
-      <TwoStep open={open} notify={notify} />
+      <TwoStep open={open} notify={notify} superAdmin={me.super} />
       <Row label={t('Devices')}>
         <Devices open={open} notify={notify} />
       </Row>
