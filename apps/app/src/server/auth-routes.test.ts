@@ -283,3 +283,27 @@ describe('signing in with a second step', () => {
     expect(me).toMatchObject({ email: u.email, needs_second: false })
   })
 })
+
+describe('changing how someone signs in', () => {
+  it('asks for the password again after 15 minutes, then allows it', async () => {
+    vi.useFakeTimers({ now: new Date('2026-10-01T08:00:00Z'), toFake: ['Date'] })
+    const { db, u } = setup()
+    const code = mailbox()
+    const call = browser(db)
+    const t = await call('POST', '/api/auth/login', {
+      login: u.email,
+      password: 'first password here',
+    })
+    await call('POST', '/api/auth/code', { ticket: t.ticket, code: code() })
+    // Just signed in: no need to confirm.
+    expect(await call('POST', '/api/auth/totp/start')).toHaveProperty('secret')
+    vi.setSystemTime(new Date('2026-10-01T08:16:00Z'))
+    const asked = await call('POST', '/api/auth/totp/start').catch((e: HttpError) => e)
+    expect((asked as HttpError).extra).toEqual({ confirm: true })
+    await expect(call('POST', '/api/auth/confirm', { password: 'wrong one here' })).rejects.toThrow(
+      'Your current password is not right.',
+    )
+    await call('POST', '/api/auth/confirm', { password: 'first password here' })
+    expect(await call('POST', '/api/auth/totp/start')).toHaveProperty('uri')
+  })
+})
