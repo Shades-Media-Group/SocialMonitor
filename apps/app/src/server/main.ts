@@ -134,7 +134,7 @@ const server = createServer(async (req, res) => {
       if (r.method !== req.method) continue
       const m = r.path.exec(url.pathname)
       if (!m) continue
-      const who = clientOf(req.headers, req.socket.remoteAddress)
+      const who = clientOf(req.headers, req.socket.remoteAddress, pass.access)
       const ctx = {
         db,
         params: m.groups ?? {},

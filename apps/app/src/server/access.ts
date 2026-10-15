@@ -163,31 +163,16 @@ export async function gate(
 }
 
 /**
- * Whether the TCP peer is the tunnel: cloudflared on this computer, or an address named in
- * SOCIALMONITOR_TUNNEL_ADDRESSES (comma separated) when it runs elsewhere. Only then are
- * Cloudflare's headers about the visitor believed.
- */
-export function trustedPeer(peer: string | undefined, env: Env = process.env) {
-  const p = peer ?? ''
-  if (LOOPBACK.has(p)) return true
-  return (env.SOCIALMONITOR_TUNNEL_ADDRESSES ?? '')
-    .split(',')
-    .map((a) => a.trim())
-    .filter(Boolean)
-    .includes(p.replace(/^::ffff:/, ''))
-}
-
-/**
- * Who is asking, and from which country when Cloudflare says. cf-connecting-ip and cf-ipcountry
- * count only from a trusted peer; anyone else gets the socket's own address and no country.
+ * Who is asking, and from which country. cf-connecting-ip and cf-ipcountry are believed only on
+ * a request whose Access token was valid; anything else gets the socket's own address.
  */
 export function clientOf(
   headers: Headers,
   peer: string | undefined,
-  env: Env = process.env,
+  access: boolean,
 ): { ip: string; country: string | null } {
   const sock = (peer ?? '').replace(/^::ffff:/, '')
-  if (!trustedPeer(peer, env)) return { ip: sock, country: null }
+  if (!access) return { ip: sock, country: null }
   const ip = one(headers['cf-connecting-ip'])
   const country = one(headers['cf-ipcountry']).toUpperCase()
   return {

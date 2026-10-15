@@ -46,4 +46,4 @@ Open the address and pass Cloudflare Access with the code it emails you. Then si
 - The dashboard still listens only on 127.0.0.1; the tunnel reaches it from inside your computer.
 - The dashboard checks the Access token itself: its RS256 signature against your team's keys, the audience tag, the issuer and its expiry. A request that carries Cloudflare's headers (`cf-connecting-ip`, `cf-ray`) or asks for the public hostname is refused without a valid one, even if a hostname is ever routed past Access by mistake.
 - It answers only to `127.0.0.1:<port>`, `localhost:<port>` and the public hostname. Any other `Host` gets nothing, so a web page can't reach it through DNS rebinding.
-- The visitor's address and country come from Cloudflare's `cf-connecting-ip` and `cf-ipcountry` headers, believed only when the connection comes from this computer. If cloudflared runs on another machine, name its addresses in `SOCIALMONITOR_TUNNEL_ADDRESSES` (comma separated).
+- The visitor's address and country (`cf-connecting-ip`, `cf-ipcountry`) are believed only on a request with a valid Access token; otherwise the connection's own address is used.
