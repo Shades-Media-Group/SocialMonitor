@@ -15,6 +15,16 @@ describe('emails in Gradient’s design', () => {
     expect(m.html).toContain('Sign-in code: 716428 · Works for 10 minutes')
   })
 
+  it('sends a password code the same way, with its own words', () => {
+    const m = codeMail('en', '402913', 'reset')
+    expect(m.subject).toBe('402913 is your SocialMonitor password code')
+    expect(m.html).toContain('Password code: 402913 · Works for 10 minutes')
+    expect(m.text).toContain('402913')
+    expect(m.text).toContain('did not ask to change your password')
+    for (const l of ['ro', 'ru', 'fr', 'zh'])
+      expect(codeMail(l, '402913', 'reset').subject.startsWith('402913')).toBe(true)
+  })
+
   it('writes an invitation and a reset with a button and the link spelled out', () => {
     for (const kind of ['invite', 'reset', 'forgot'] as const) {
       const m = linkMail('en', kind, link, 'Ana')

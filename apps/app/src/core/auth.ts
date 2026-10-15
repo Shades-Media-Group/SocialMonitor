@@ -592,20 +592,21 @@ export function listPeople(db: DB, viewer: User) {
 
 const hash = (s: string) => createHash('sha256').update(s).digest('hex')
 
-/** Issues a code (six digits) or a link secret; the database keeps only its hash. */
-export function issue(db: DB, userId: number, purpose: Purpose) {
+/**
+ * Issues a code (six digits, ten minutes) or a link secret; the database keeps only its hash.
+ * Sign-in tickets are always codes; a reset is a code when asked for (newer requests) or a link.
+ */
+export function issue(db: DB, userId: number, purpose: Purpose, asCode = purpose === 'code') {
   db.prepare('DELETE FROM tokens WHERE (user_id = ? AND purpose = ?) OR expires_at < ?').run(
     userId,
     purpose,
     now(),
   )
   const id = randomBytes(16).toString('base64url')
-  const secret =
-    purpose === 'code'
-      ? String(randomInt(0, 1_000_000)).padStart(6, '0')
-      : randomBytes(24).toString('base64url')
-  const minutes =
-    purpose === 'code' ? CODE_MINUTES : purpose === 'reset' ? RESET_MINUTES : INVITE_HOURS * 60
+  const secret = asCode
+    ? String(randomInt(0, 1_000_000)).padStart(6, '0')
+    : randomBytes(24).toString('base64url')
+  const minutes = asCode ? CODE_MINUTES : purpose === 'reset' ? RESET_MINUTES : INVITE_HOURS * 60
   db.prepare(
     'INSERT INTO tokens (id, user_id, purpose, secret_hash, expires_at) VALUES (?, ?, ?, ?, ?)',
   ).run(
@@ -618,14 +619,46 @@ export function issue(db: DB, userId: number, purpose: Purpose) {
   return { id, secret }
 }
 
+/** Whether a secret is the one a token was issued with. */
+const matches = (id: string, secret: string, t: TokenRow) =>
+  timingSafeEqual(Buffer.from(hash(`${id}:${String(secret).trim()}`)), Buffer.from(t.secret_hash))
+
 /** Uses up a one-time secret and returns its user; wrong guesses count toward a limit. */
-export const consume = (db: DB, id: string, secret: string, purpose: Purpose) =>
-  spend(db, id, purpose, (t) =>
-    timingSafeEqual(
-      Buffer.from(hash(`${id}:${String(secret).trim()}`)),
-      Buffer.from(t.secret_hash),
-    ),
-  )
+export const consume = (db: DB, id: string, secret: string, purpose: Purpose, keep = false) =>
+  spend(db, id, purpose, (t) => matches(id, secret, t), keep)
+
+/**
+ * A password code (the emailed six digits for a reset). Every failure reads the same, whether
+ * the code is wrong, expired or was never sent, so it can't tell which accounts exist. With
+ * keep, a right code stays usable for the second step that must follow.
+ */
+export function checkResetCode(db: DB, id: string, code: string, keep = false) {
+  try {
+    return spend(db, id, 'reset', (t) => matches(id, code, t), keep)
+  } catch {
+    throw new Error('That code is not right, or it has expired.')
+  }
+}
+
+/** Counts one wrong try against a token, as a wrong code would. */
+export function failToken(db: DB, id: string) {
+  const t = db.prepare('SELECT tries FROM tokens WHERE id = ?').get(id) as
+    | { tries: number }
+    | undefined
+  if (!t) return
+  if (t.tries + 1 >= MAX_TRIES) db.prepare('DELETE FROM tokens WHERE id = ?').run(id)
+  else db.prepare('UPDATE tokens SET tries = tries + 1 WHERE id = ?').run(id)
+}
+export const dropToken = (db: DB, id: string) =>
+  db.prepare('DELETE FROM tokens WHERE id = ?').run(id)
+
+/** The account a reset code was sent to, to count wrong codes against it. */
+export const resetOwner = (db: DB, id: string) =>
+  db
+    .prepare(
+      "SELECT u.id, u.email FROM tokens t JOIN users u ON u.id = t.user_id WHERE t.id = ? AND t.purpose = 'reset'",
+    )
+    .get(String(id)) as { id: number; email: string } | undefined
 
 type Purpose = 'code' | 'invite' | 'reset'
 interface TokenRow {
@@ -655,8 +688,7 @@ export function spend(
       : 'This link has expired. Ask for a new one.'
   if (!t || t.expires_at < now()) throw new Error(expired)
   if (!check(t)) {
-    if (t.tries + 1 >= MAX_TRIES) db.prepare('DELETE FROM tokens WHERE id = ?').run(id)
-    else db.prepare('UPDATE tokens SET tries = tries + 1 WHERE id = ?').run(id)
+    failToken(db, id)
     throw new Error(purpose === 'code' ? 'That code is not right.' : 'This link is not valid.')
   }
   if (!keep) db.prepare('DELETE FROM tokens WHERE id = ?').run(id)

@@ -838,6 +838,20 @@ export const fr: Dict = {
     Later: 'Plus tard',
     'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
       "En tant que super admin, ajoutez une clé d'accès ou une application d'authentification. D'ici là, vous vous connectez avec un code reçu par e-mail.",
+    'That code is not right, or it has expired.': "Ce code n'est pas bon, ou il a expiré.",
+    'This account has two-step sign-in. Confirm it is you to change the password.':
+      "Ce compte a la connexion en deux étapes. Confirmez que c'est bien vous pour changer le mot de passe.",
+    'That second step is not right.': "Cette deuxième étape n'est pas bonne.",
+    'Code from your authenticator app': "Code de votre application d'authentification",
+    'Your browser asks for your passkey when you save.':
+      "Votre navigateur demande votre clé d'accès à l'enregistrement.",
+    'Give your email or username. We email you a code to choose a new password.':
+      "Indiquez votre e-mail ou votre nom d'utilisateur. Nous vous envoyons un code pour choisir un nouveau mot de passe.",
+    'Send code': 'Envoyer le code',
+    'If that account exists, we emailed it a six-digit code. It works for 10 minutes.':
+      'Si ce compte existe, nous lui avons envoyé un code à six chiffres. Il est valable 10 minutes.',
+    "Don't remember it? Send me a code instead":
+      'Vous ne vous en souvenez pas ? Envoyez-moi un code',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

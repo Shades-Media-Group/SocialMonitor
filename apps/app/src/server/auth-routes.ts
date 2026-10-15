@@ -1,5 +1,6 @@
 import * as auth from '../core/auth.ts'
 import type { Role, User } from '../core/auth.ts'
+import { randomBytes } from 'node:crypto'
 import { accessMail, codeMail, linkMail, mailReady, sendMail } from '../core/mail.ts'
 import { mailLang, mailText } from '../core/mail-text.ts'
 import * as store from '../core/store.ts'
@@ -125,6 +126,51 @@ const stepName = (x: Record<string, unknown>) =>
       : typeof x.recovery === 'string'
         ? 'recovery'
         : 'code'
+
+/**
+ * A password change or reset on an account with a passkey or an authenticator needs that too,
+ * so an emailed code alone can't take the account over. Without one in the request, the reply
+ * asks for it (403 with `second`: what this person can use) and nothing changes; a wrong one
+ * counts against the account and against `token`, the code that came with it.
+ */
+async function secondFor(
+  c: Ctx,
+  userId: number,
+  x: Record<string, unknown>,
+  key: string,
+  token?: string,
+) {
+  if (!tf.hasSecondFactor(c.db, userId)) return null
+  const via = stepName(x)
+  if (via !== 'code' && (await secondStep(c, userId, x, key))) return via
+  if (via !== 'code') {
+    auth.noteFailure(`login:${auth.getUser(c.db, userId)?.email ?? ''}`)
+    if (token) auth.failToken(c.db, token)
+  }
+  throw new HttpError(
+    403,
+    via === 'code'
+      ? 'This account has two-step sign-in. Confirm it is you to change the password.'
+      : 'That second step is not right.',
+    { second: await secondSteps(c, userId, key) },
+  )
+}
+
+/** Sets the new password: every other session ends, this browser gets a new one. */
+function newPassword(
+  c: Ctx,
+  userId: number,
+  password: string,
+  how: string,
+  second: string | null,
+  keep: boolean,
+) {
+  auth.updateUser(c.db, userId, { password })
+  const user = auth.getUser(c.db, userId)!
+  signIn(c, user, keep, how)
+  securityEvent(c.db, { type: 'password_changed', ...who(c, userId), detail: { how, second } })
+  return user
+}
 
 /** Changing how someone signs in needs their password, entered in the last 15 minutes. */
 const CONFIRM_MINUTES = 15
@@ -428,54 +474,128 @@ export const authRoutes = [
   }),
 
   // Invitation and reset links: "<id>.<secret>" from the email.
+  // Invitation links, and reset links sent before resets used codes.
   r('POST', '/api/auth/accept', 'public', async (c) => {
-    const password = await auth.newPassword(b(c).password)
-    const [tid, secret] = String(b(c).token ?? '').split('.')
-    const purpose = b(c).kind === 'reset' ? 'reset' : 'invite'
-    const userId = auth.consume(c.db, tid ?? '', secret ?? '', purpose)
     const x = b(c)
-    auth.updateUser(c.db, userId, {
-      password,
-      ...(purpose === 'invite' && x.name !== undefined ? { name: String(x.name) } : {}),
-      ...(purpose === 'invite' && x.username ? { username: String(x.username) } : {}),
-    })
+    const password = await auth.newPassword(x.password)
+    const [tid = '', secret = ''] = String(x.token ?? '').split('.')
+    const purpose = x.kind === 'reset' ? 'reset' : 'invite'
+    const userId = auth.consume(c.db, tid, secret, purpose, purpose === 'reset')
+    if (purpose === 'reset') {
+      const how = await secondFor(c, userId, x, `reset:${tid}`, tid)
+      auth.dropToken(c.db, tid)
+      auth.updateUser(c.db, userId, { password })
+      securityEvent(c.db, {
+        type: 'password_changed',
+        ...who(c, userId),
+        detail: { how: 'reset link', second: how },
+      })
+    } else
+      auth.updateUser(c.db, userId, {
+        password,
+        ...(x.name !== undefined ? { name: String(x.name) } : {}),
+        ...(x.username ? { username: String(x.username) } : {}),
+      })
     return { email: auth.getUser(c.db, userId)!.email }
   }),
 
-  r('POST', '/api/auth/forgot', 'public', async (c) => {
+  // A forgotten password: a six-digit code by email. The answer is the same whether or not the
+  // account exists, and so is its timing, since the email goes out after the reply.
+  r('POST', '/api/auth/forgot', 'public', (c) => {
     const login = String(b(c).login ?? '').trim()
-    // Its own limit, so asking for links can't lock anyone out of signing in.
+    // Its own limit, so asking for codes can't lock anyone out of signing in.
     auth.checkRate(`forgot:${login}`, 3)
     auth.checkRate(`ip:${c.ip}`, 20)
     auth.noteFailure(`forgot:${login}`)
     auth.noteFailure(`ip:${c.ip}`)
     const u = auth.findLogin(c.db, login)
     if (u && !u.disabled && u.verified_at) {
-      const t = auth.issue(c.db, u.id, 'reset')
-      const lang = langOf(c)
-      await sendMail(u.email, linkMail(lang, 'forgot', `${base()}/reset/${t.id}.${t.secret}`))
+      const t = auth.issue(c.db, u.id, 'reset', true)
+      void sendMail(u.email, codeMail(langOf(c), t.secret, 'reset')).catch((e: unknown) =>
+        console.error(`A password code could not be sent: ${String(e)}`),
+      )
+      return { ticket: t.id, mail: mailReady() }
     }
-    return { ok: true }
+    return { ticket: randomBytes(16).toString('base64url'), mail: mailReady() }
   }),
 
-  r('PATCH', '/api/auth/me', 'user', async (c) => {
+  // The code and a new password together; with a second step set up, that too. Signs in.
+  r('POST', '/api/auth/reset', 'public', async (c) => {
     const x = b(c)
-    if (x.password !== undefined) {
-      const row = auth.findLogin(c.db, c.user.email)
-      if (!auth.checkPassword(String(x.current ?? ''), row?.pass_hash ?? null))
-        throw new HttpError(403, 'Your current password is not right.')
-      x.password = await auth.newPassword(x.password)
+    const ticket = String(x.ticket ?? '')
+    const owner = auth.resetOwner(c.db, ticket)
+    auth.checkRate(`ip:${c.ip}`, 20)
+    if (owner) auth.checkRate(`login:${owner.email}`)
+    const password = await auth.newPassword(x.password)
+    let userId: number
+    try {
+      userId = auth.checkResetCode(c.db, ticket, String(x.code ?? ''), true)
+    } catch (e) {
+      auth.noteFailure(`ip:${c.ip}`)
+      if (owner) auth.noteFailure(`login:${owner.email}`)
+      throw e
     }
+    const u = auth.getUser(c.db, userId)
+    if (!u || u.disabled || !u.verified_at) {
+      auth.dropToken(c.db, ticket)
+      throw new Error('That code is not right, or it has expired.')
+    }
+    const how = await secondFor(c, userId, x, `reset:${ticket}`, ticket)
+    auth.dropToken(c.db, ticket)
+    return me(c, newPassword(c, userId, password, 'reset code', how, x.keep === true))
+  }),
+
+  // Changing the password while signed in: with the current one, or with a code by email.
+  r('POST', '/api/auth/password/code', 'user', async (c) => {
+    auth.checkRate(`forgot:${c.user.email}`, 3)
+    auth.noteFailure(`forgot:${c.user.email}`)
+    const t = auth.issue(c.db, c.user.id, 'reset', true)
+    await sendMail(c.user.email, codeMail(langOf(c), t.secret, 'reset'))
+    return { ticket: t.id, to: mask(c.user.email), mail: mailReady() }
+  }),
+  r('POST', '/api/auth/password', 'user', async (c) => {
+    const x = b(c)
+    const account = `login:${c.user.email}`
+    auth.checkRate(account)
+    const password = await auth.newPassword(x.password)
+    const ticket = typeof x.ticket === 'string' ? x.ticket : null
+    if (ticket) {
+      try {
+        if (auth.resetOwner(c.db, ticket)?.id !== c.user.id)
+          throw new Error('That code is not right, or it has expired.')
+        auth.checkResetCode(c.db, ticket, String(x.code ?? ''), true)
+      } catch (e) {
+        auth.noteFailure(account)
+        throw e
+      }
+    } else {
+      const row = auth.findLogin(c.db, c.user.email)
+      if (!auth.checkPassword(String(x.current ?? ''), row?.pass_hash ?? null)) {
+        auth.noteFailure(account)
+        throw new HttpError(403, 'Your current password is not right.')
+      }
+    }
+    const how = await secondFor(c, c.user.id, x, `change:${c.user.id}`, ticket ?? undefined)
+    if (ticket) auth.dropToken(c.db, ticket)
+    const user = newPassword(
+      c,
+      c.user.id,
+      password,
+      ticket ? 'emailed code' : 'current password',
+      how,
+      !!c.session?.keep,
+    )
+    return me(c, user)
+  }),
+
+  r('PATCH', '/api/auth/me', 'user', (c) => {
+    const x = b(c)
     if (x.prefs !== undefined) auth.savePrefs(c.db, c.user.id, x.prefs)
     auth.updateUser(c.db, c.user.id, {
       ...(x.name !== undefined ? { name: String(x.name) } : {}),
       ...(x.username !== undefined ? { username: (x.username as string) || null } : {}),
-      ...(x.password !== undefined ? { password: String(x.password) } : {}),
     })
-    const user = auth.getUser(c.db, c.user.id)!
-    // The old sessions just ended; this browser gets a new one.
-    if (x.password !== undefined) signIn(c, user, !!c.session?.keep, 'password change')
-    return me(c, user)
+    return me(c, auth.getUser(c.db, c.user.id)!)
   }),
 
   // People

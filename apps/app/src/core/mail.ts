@@ -74,25 +74,29 @@ const action = (lang: string, label: string, link: string, note: string) => [
 ]
 
 /**
- * The six-digit sign-in code, on Gradient's ink pass so mail apps offer to copy it. The subject
- * leads with the code and the preheader says how long it works (gradient/docs/guides/email.md).
+ * A six-digit code, on Gradient's ink pass so mail apps offer to copy it: for signing in, or for
+ * choosing a new password (`reset`). The subject leads with the code and the preheader says how
+ * long it works (gradient/docs/guides/email.md).
  */
-export const codeMail = (lang: string, code: string): Mail =>
-  build(
+export function codeMail(lang: string, code: string, kind: 'signin' | 'reset' = 'signin'): Mail {
+  const k = kind === 'reset'
+  const label = mailText(lang, k ? 'resetCodeLabel' : 'codeLabel')
+  return build(
     lang,
-    mailText(lang, 'codeSubject', { code }),
-    mailText(lang, 'codeHeading'),
+    mailText(lang, k ? 'resetCodeSubject' : 'codeSubject', { code }),
+    mailText(lang, k ? 'resetCodeHeading' : 'codeHeading'),
     undefined,
     [
       ui.code(
-        mailText(lang, 'codeLabel'),
+        label,
         code,
         mailText(lang, 'codeValid'),
-        mailText(lang, 'codeStub'),
+        mailText(lang, k ? 'resetCodeStub' : 'codeStub'),
       ),
     ],
-    `${mailText(lang, 'codeLabel')}: ${code} · ${mailText(lang, 'codeValid')}`,
+    `${label}: ${code} · ${mailText(lang, 'codeValid')}`,
   )
+}
 
 /** An invitation to choose a first password, or a reset; `forgot` when the person asked for it. */
 export function linkMail(

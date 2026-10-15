@@ -1,6 +1,6 @@
 # People, roles and sign-in
 
-Everyone signs in to SocialMonitor, on the computer it runs on and through the tunnel alike. Signing in takes a password and then a six-digit code sent by email.
+Everyone signs in to SocialMonitor, on the computer it runs on and through the tunnel alike. Signing in takes a password and then a second step: a six-digit code sent by email, or, for people who set one up, a passkey or a code from an authenticator app.
 
 ## The first account
 
@@ -30,6 +30,26 @@ One person can be an admin of one brand and a viewer of another. Manage people u
 ## Inviting someone
 
 In People, give an email and choose each brand's role. They get a link to choose a password; it works once, for 72 hours. "Send the invitation again" makes a new one. For someone already set up, the same button sends a reset link instead.
+
+## Two-step sign-in
+
+Under **Settings**, anyone can add:
+
+- **Passkeys:** the fingerprint, face or PIN of a phone or computer. A passkey works only at the address it was made at, and browsers refuse passkeys on a bare IP address: open the dashboard at `http://localhost:4400` (or through the tunnel) to add and use one.
+- **An authenticator app:** scan the QR code, then type its first code to turn it on.
+- **Recovery codes:** ten codes, shown once, that each work once, for when the phone is lost. The first passkey or app comes with them; "Make new codes" replaces them all.
+
+With one of these, signing in asks for it after the password instead of emailing a code, and "Email me a code instead" stays there as a fallback. Changes to these ask for the password again when it was entered more than 15 minutes ago.
+
+Super admins are asked to add a passkey or an authenticator app right after they sign in, and Settings reminds them until they do. Until then they keep signing in with the emailed code.
+
+## Forgotten and changed passwords
+
+"Forgot your password?" emails a six-digit code to the account; the code and a new password go on one screen. The answer looks the same whether or not the account exists. Codes work for 10 minutes, five wrong ones void the code, and each account can ask for three in 15 minutes.
+
+Signed in, **Settings → Change password** takes the current password, or "Send me a code instead" emails a code.
+
+Either way, an account with a passkey or an authenticator app also needs that (or a recovery code), so an emailed code alone can't take it over. The new password ends every other session; this browser stays signed in. Links from reset emails sent before codes keep working until they expire.
 
 ## Email
 

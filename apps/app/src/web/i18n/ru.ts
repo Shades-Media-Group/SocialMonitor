@@ -836,6 +836,19 @@ export const ru: Dict = {
     Later: 'Позже',
     'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
       'Как суперадминистратор, добавьте ключ доступа или приложение-аутентификатор. До тех пор вы входите с кодом из письма.',
+    'That code is not right, or it has expired.': 'Код неверный или срок его действия истёк.',
+    'This account has two-step sign-in. Confirm it is you to change the password.':
+      'В этом аккаунте включён двухэтапный вход. Подтвердите, что это вы, чтобы сменить пароль.',
+    'That second step is not right.': 'Второй шаг не пройден.',
+    'Code from your authenticator app': 'Код из приложения-аутентификатора',
+    'Your browser asks for your passkey when you save.':
+      'Браузер запросит ключ доступа при сохранении.',
+    'Give your email or username. We email you a code to choose a new password.':
+      'Укажите почту или имя пользователя. Мы пришлём код, чтобы вы выбрали новый пароль.',
+    'Send code': 'Отправить код',
+    'If that account exists, we emailed it a six-digit code. It works for 10 minutes.':
+      'Если такой аккаунт существует, мы отправили на его почту шестизначный код. Он действует 10 минут.',
+    "Don't remember it? Send me a code instead": 'Не помните его? Пришлите мне код',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

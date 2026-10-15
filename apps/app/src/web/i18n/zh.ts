@@ -795,6 +795,18 @@ export const zh: Dict = {
     Later: '稍后',
     'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
       '作为超级管理员，请添加通行密钥或验证器应用。在此之前，你需要用邮件中的验证码登录。',
+    'That code is not right, or it has expired.': '验证码不正确或已过期。',
+    'This account has two-step sign-in. Confirm it is you to change the password.':
+      '此账户已开启两步登录。请确认是你本人后再修改密码。',
+    'That second step is not right.': '第二步验证不正确。',
+    'Code from your authenticator app': '验证器应用中的验证码',
+    'Your browser asks for your passkey when you save.': '保存时浏览器会请求你的通行密钥。',
+    'Give your email or username. We email you a code to choose a new password.':
+      '输入邮箱或用户名，我们会通过邮件发送验证码，用于设置新密码。',
+    'Send code': '发送验证码',
+    'If that account exists, we emailed it a six-digit code. It works for 10 minutes.':
+      '如果该账户存在，我们已向其邮箱发送六位数验证码，10 分钟内有效。',
+    "Don't remember it? Send me a code instead": '不记得了？改为给我发送验证码',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

@@ -838,6 +838,19 @@ export const ro: Dict = {
     Later: 'Mai târziu',
     'As a super admin, add a passkey or an authenticator app. Until then, you sign in with a code by email.':
       'Ca super admin, adaugă o cheie de acces sau o aplicație de autentificare. Până atunci, te conectezi cu un cod primit pe email.',
+    'That code is not right, or it has expired.': 'Codul nu este corect sau a expirat.',
+    'This account has two-step sign-in. Confirm it is you to change the password.':
+      'Contul acesta are conectare în doi pași. Confirmă că ești tu ca să schimbi parola.',
+    'That second step is not right.': 'Al doilea pas nu este corect.',
+    'Code from your authenticator app': 'Codul din aplicația de autentificare',
+    'Your browser asks for your passkey when you save.':
+      'Browserul îți cere cheia de acces când salvezi.',
+    'Give your email or username. We email you a code to choose a new password.':
+      'Scrie emailul sau numele de utilizator. Îți trimitem pe email un cod ca să alegi o parolă nouă.',
+    'Send code': 'Trimite codul',
+    'If that account exists, we emailed it a six-digit code. It works for 10 minutes.':
+      'Dacă acest cont există, i-am trimis pe email un cod din șase cifre. E valabil 10 minute.',
+    "Don't remember it? Send me a code instead": 'Nu ți-o amintești? Trimite-mi un cod',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',
