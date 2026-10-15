@@ -76,8 +76,11 @@ async function shrinkImages(page: Page) {
     const imgs = [...document.images]
     for (const img of imgs) {
       if (!img.complete) continue // never arrived: printed as the browser has it
-      const w = Math.round(img.getBoundingClientRect().width * 2)
-      const h = Math.round(img.getBoundingClientRect().height * 2)
+      // A logo (data-crisp) keeps sharp edges and its transparency: a PNG at three times its size.
+      const crisp = img.hasAttribute('data-crisp')
+      const k = crisp ? 3 : 2
+      const w = Math.round(img.getBoundingClientRect().width * k)
+      const h = Math.round(img.getBoundingClientRect().height * k)
       if (!w || !h || !img.naturalWidth) continue
       // With object-fit: cover only the middle shows, so only that is kept; otherwise the whole
       // picture is kept, in its own proportions.
@@ -92,8 +95,10 @@ async function shrinkImages(page: Page) {
       const ctx = canvas.getContext('2d')
       if (!ctx) continue
       // Stickers and logos can be see-through; JPEG has no transparency, so they sit on paper.
-      ctx.fillStyle = '#fff'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      if (!crisp) {
+        ctx.fillStyle = '#fff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+      }
       try {
         ctx.drawImage(
           img,
@@ -106,7 +111,7 @@ async function shrinkImages(page: Page) {
           canvas.width,
           canvas.height,
         )
-        img.src = canvas.toDataURL('image/jpeg', 0.82)
+        img.src = crisp ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.82)
         // A data URL decodes at once; the limit only guards against a stuck picture.
         await Promise.race([
           img.decode().catch(() => null),

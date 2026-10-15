@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { BrandRow, CommentRow, Network, PostRow } from './api.ts'
 import { api } from './api.ts'
-import { Logo, NETWORK_NAME, NetworkMark, fmt, short, when } from './ui.tsx'
+import { Logo, Mark, NETWORK_NAME, NetworkMark, fmt, short, when } from './ui.tsx'
+import { textOn, validColor } from '../core/color.ts'
+import type { Growth } from './growth.tsx'
+import { GrowthLists } from './growth.tsx'
+import type { CampaignReportData } from './campaigns.tsx'
+import { CampaignReport, dates } from './campaigns.tsx'
 import { Heatmap, LineChart } from './charts.tsx'
 import { brandCategories } from './rate.tsx'
 import { locale, t } from './i18n.ts'
@@ -38,25 +43,52 @@ interface DayRow {
 const iso = (d: Date) => d.toISOString().slice(0, 10)
 
 /**
- * The letterhead: the mark and what kind of report this is on one line, the brand large, then
- * the facts that frame it, labelled, between hairlines. Ink on paper, like a statement.
+ * The brand's own look on paper, when its admins set one: its accent as CSS variables, with
+ * text set on it only where it reads; otherwise it marks rules only.
+ */
+function look(brand: BrandRow) {
+  const accent = validColor(brand.report_color)
+  if (!accent) return { class: '', style: undefined }
+  const on = textOn(accent)
+  return {
+    class: ` sm-pr--accent${on ? ' sm-pr--ontext' : ''}`,
+    style: { '--pr-accent': accent, '--pr-on-accent': on ?? 'inherit' },
+  }
+}
+
+/** The closing credit; with the brand's own logo up top, SocialMonitor's mark moves here. */
+const PrFoot = ({ brand }: { brand: BrandRow }) => (
+  <footer class="sm-pr__foot">
+    {brand.report_logo && <Mark size={11} />}
+    {t('SocialMonitor. Free and open source. Built by Shades Media Group.')}
+  </footer>
+)
+
+/**
+ * The letterhead: the mark (or the brand's own logo) and what kind of report this is on one
+ * line, the brand large, then the facts that frame it, labelled, between hairlines. Ink on
+ * paper, like a statement.
  */
 function PrHead({
-  title,
+  brand,
   kind,
   facts,
 }: {
-  title: string
+  brand: BrandRow
   kind: string
   facts: [string, string][]
 }) {
   return (
     <header class="sm-pr__head">
       <div class="sm-pr__top">
-        <Logo />
-        <span>{kind}</span>
+        {brand.report_logo ? (
+          <img class="sm-pr__logo" src={brand.report_logo} alt={brand.name} data-crisp />
+        ) : (
+          <Logo />
+        )}
+        <span class="sm-pr__kind">{kind}</span>
       </div>
-      <h1>{title}</h1>
+      <h1>{brand.name}</h1>
       <dl class="sm-pr__meta">
         {facts.map(([k, v]) => (
           <div>
@@ -105,6 +137,7 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
   const [reply, setReply] = useState<CommentRow[]>([])
   const [posts, setPosts] = useState<PostRow[]>([])
   const [series, setSeries] = useState<{ now: DayRow[]; before: DayRow[] } | null>(null)
+  const [growth, setGrowth] = useState<Growth | null>(null)
 
   useEffect(() => {
     document.documentElement.dataset.theme = 'light'
@@ -132,6 +165,7 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
           ),
         ),
       api.get<PostRow[]>(`/api/posts?brand=${brand.id}&limit=10${n}`).then(setPosts),
+      api.get<Growth>(`/api/brands/${brand.id}/growth?days=${days}${n}`).then(setGrowth),
       Promise.all([daily(d(span - 1), d(0)), daily(d(2 * span - 1), d(span))]).then(
         ([now, before]) => setSeries({ now, before }),
       ),
@@ -207,9 +241,9 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
 
   return (
     <div class="sm-shell sm-shell--print">
-      <article class="sm-pr sm-body">
+      <article class={`sm-pr sm-body${look(brand).class}`} style={look(brand).style}>
         <PrHead
-          title={brand.name}
+          brand={brand}
           kind={t('Brand report')}
           facts={[
             [t('Period'), period],
@@ -334,6 +368,13 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
           </table>
         </section>
 
+        {growth && (
+          <section class="sm-pr__block">
+            <h2>{t('Posts that grew most')}</h2>
+            <GrowthLists g={growth} />
+          </section>
+        )}
+
         {posts.length > 0 && (
           <section class="sm-pr__block">
             <h2>{t('Posts')}</h2>
@@ -411,9 +452,7 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
           </section>
         </div>
 
-        <footer class="sm-pr__foot">
-          {t('SocialMonitor. Free and open source. Built by Shades Media Group.')}
-        </footer>
+        <PrFoot brand={brand} />
       </article>
     </div>
   )
@@ -470,9 +509,9 @@ export function PrintBad({ brand }: { brand: BrandRow }) {
 
   return (
     <div class="sm-shell sm-shell--print">
-      <article class="sm-pr sm-body">
+      <article class={`sm-pr sm-body${look(brand).class}`} style={look(brand).style}>
         <PrHead
-          title={brand.name}
+          brand={brand}
           kind={t('Negative comments')}
           facts={[
             [t('Period'), period],
@@ -515,9 +554,47 @@ export function PrintBad({ brand }: { brand: BrandRow }) {
           </section>
         ))}
 
-        <footer class="sm-pr__foot">
-          {t('SocialMonitor. Free and open source. Built by Shades Media Group.')}
-        </footer>
+        <PrFoot brand={brand} />
+      </article>
+    </div>
+  )
+}
+
+/**
+ * A campaign's report on paper: the brand's letterhead with the campaign's name and dates,
+ * then the same pieces the Reports tab shows.
+ */
+export function PrintCampaign({ brand, campaignId }: { brand: BrandRow; campaignId: number }) {
+  const [r, setR] = useState<CampaignReportData | null>(null)
+  useEffect(() => {
+    document.documentElement.dataset.theme = 'light'
+    api
+      .get<CampaignReportData>(`/api/campaigns/${campaignId}/report`)
+      .then(setR)
+      .catch(() => (document.body.dataset.ready = '1'))
+  }, [campaignId])
+  useEffect(() => {
+    if (r)
+      requestAnimationFrame(() => requestAnimationFrame(() => (document.body.dataset.ready = '1')))
+  }, [r])
+  if (!r) return null
+  const c = r.campaign
+  return (
+    <div class="sm-shell sm-shell--print">
+      <article class={`sm-pr sm-body${look(brand).class}`} style={look(brand).style}>
+        <PrHead
+          brand={brand}
+          kind={t('Campaign report')}
+          facts={[
+            [t('Campaign'), c.name],
+            [t('Dates'), dates(c) || t('Any time')],
+            [t('Posts'), fmt(r.engagement.posts)],
+            [t('Prepared'), new Date().toLocaleDateString(locale, { dateStyle: 'long' })],
+          ]}
+        />
+        {c.about && <p class="sm-pr__about">{c.about}</p>}
+        <CampaignReport r={r} brand={brand} print />
+        <PrFoot brand={brand} />
       </article>
     </div>
   )

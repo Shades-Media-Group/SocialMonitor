@@ -24,6 +24,7 @@ import {
   watched,
   labelTotals,
   postEngagement,
+  postGrowth,
   reach,
   reputation,
   responses,
@@ -55,6 +56,8 @@ import { getSettings } from '../core/settings.ts'
 import { latestSummary, refreshSummary } from '../core/summary.ts'
 import type { User } from '../core/auth.ts'
 import { roleFor, signSession, visibleBrands } from '../core/auth.ts'
+import { setBranding } from '../core/branding.ts'
+import * as campaigns from '../core/campaigns.ts'
 
 export class HttpError extends Error {
   status: number
@@ -166,6 +169,18 @@ const seeRun = (c: Signed) => {
     throw new HttpError(403, 'You do not have access to this update.')
   for (const brandId of ids) sees(c, brandId)
 }
+const campaignBrand = (db: DB, campaignId: number) =>
+  brandOf(db, 'SELECT brand_id FROM campaigns WHERE id = ?', campaignId)
+const postBrand = (db: DB, postId: number) =>
+  brandOf(
+    db,
+    'SELECT pr.brand_id FROM posts p JOIN profiles pr ON pr.id = p.profile_id WHERE p.id = ?',
+    postId,
+  )
+const seeCampaign = (c: Signed) => sees(c, campaignBrand(c.db, id(c.params.id)))
+const adminCampaign = (c: Signed) => runs(c, campaignBrand(c.db, id(c.params.id)))
+const seePost = (c: Signed) => sees(c, postBrand(c.db, id(c.params.id)))
+const adminPost = (c: Signed) => runs(c, postBrand(c.db, id(c.params.id)))
 const adminSchedule = (c: Signed) =>
   runs(c, brandOf(c.db, 'SELECT brand_id FROM schedules WHERE id = ?', id(c.params.id)))
 /** Keeps only what the user may see. */
@@ -297,6 +312,7 @@ export const routes: Route[] = [
       notes?: string | null
       reply_target_hours?: number
       ai_sort?: boolean
+      campaign_auto?: boolean
     }
     const brandId = id(c.params.id)
     const { links, ...details } = x
@@ -563,6 +579,14 @@ export const routes: Route[] = [
       days: Number(query.get('days') ?? 30) || 0,
     }),
   ),
+  // The posts that gained most in the window, measured between real readings of each post.
+  r('GET', '/api/brands/:id/growth', seeBrand, ({ db, params, query }) =>
+    postGrowth(db, {
+      brandId: id(params.id),
+      network: net(query.get('network')),
+      days: Number(query.get('days') ?? 30) || 0,
+    }),
+  ),
   // Ideas for the next post: the latest kept, and new ones on an admin's request.
   r(
     'GET',
@@ -576,6 +600,63 @@ export const routes: Route[] = [
       throw new Error('No AI to ask: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.')
     return suggestIdeas(db, id(params.id), engine)
   }),
+  // Campaigns: a brand's list, its admins' changes, and which posts are in each.
+  r('GET', '/api/brands/:id/campaigns', seeBrand, (c) =>
+    campaigns.listCampaigns(c.db, id(c.params.id)),
+  ),
+  r('POST', '/api/brands/:id/campaigns', adminBrand, (c) =>
+    campaigns.saveCampaign(c.db, id(c.params.id), b(c)),
+  ),
+  r('PUT', '/api/campaigns/:id', adminCampaign, (c) =>
+    campaigns.saveCampaign(c.db, campaignBrand(c.db, id(c.params.id)), b(c), id(c.params.id)),
+  ),
+  r(
+    'DELETE',
+    '/api/campaigns/:id',
+    adminCampaign,
+    (c) => void campaigns.deleteCampaign(c.db, id(c.params.id)),
+  ),
+  r('GET', '/api/posts/:id/campaigns', seePost, (c) =>
+    campaigns.postCampaigns(c.db, id(c.params.id)),
+  ),
+  r('PUT', '/api/posts/:id/campaigns', adminPost, (c) => {
+    const x = b(c) as { campaign_id?: unknown; member?: unknown }
+    campaigns.setPostCampaign(c.db, id(c.params.id), id(String(x.campaign_id)), !!x.member)
+    return campaigns.postCampaigns(c.db, id(c.params.id))
+  }),
+  // A campaign's report: its posts, what people said under them, and how they grew.
+  r('GET', '/api/campaigns/:id/report', seeCampaign, ({ db, params }) => {
+    const camp = campaigns.getCampaign(db, id(params.id))
+    if (!camp) throw new HttpError(404, 'No such campaign.')
+    const s = { brandId: camp.brand_id, campaignId: camp.id }
+    const labels = labelTotals(db, s)
+    const posts = store.listPosts(db, { ...s, limit: 200 })
+    const sum = (k: 'likes' | 'comments_count' | 'shares' | 'views') =>
+      posts.reduce((n, p) => n + (p[k] ?? 0), 0)
+    const top = (label: Label) => store.listComments(db, { ...s, label, others: true, limit: 5 })
+    return {
+      campaign: camp,
+      labels,
+      reputation: reputation(labels),
+      responses: responses(db, s),
+      sentiment: store.sentimentCounts(db, camp.brand_id, undefined, camp.id),
+      engagement: {
+        posts: posts.length,
+        likes: sum('likes'),
+        comments: sum('comments_count'),
+        shares: sum('shares'),
+        views: sum('views'),
+      },
+      posts: posts.slice(0, 30),
+      complaints: top('complaint'),
+      questions: top('question'),
+      growth: postGrowth(db, s, 8, camp.starts_on),
+    }
+  }),
+  // The brand's own logo and accent colour on its PDF reports.
+  r('PUT', '/api/brands/:id/report-branding', adminBrand, (c) =>
+    setBranding(c.db, id(c.params.id), b(c) as { logo?: unknown; color?: unknown }),
+  ),
   r('GET', '/api/brands/:id/daily', seeBrand, ({ db, params, query }) => {
     const day = (k: string, fallback: string) => {
       const v = query.get(k) ?? fallback
@@ -834,8 +915,14 @@ export const routes: Route[] = [
     const ui = uiOrigin()
     const q = new URLSearchParams()
     for (const k of ['days', 'network']) if (query.get(k)) q.set(k, query.get(k)!)
+    // A campaign's report instead, when one of this brand's campaigns is named.
+    const camp = query.get('campaign')
+      ? campaigns.getCampaign(db, id(query.get('campaign')!))
+      : null
+    if (query.get('campaign') && camp?.brand_id !== brand.id) throw new Error('No such campaign.')
+    if (camp) q.set('campaign', String(camp.id))
     const out = {
-      __download: `${brand.name.replace(/[^\w-]+/g, '-')}-report-${new Date().toISOString().slice(0, 10)}.pdf`,
+      __download: `${(camp ? `${brand.name} ${camp.name}` : brand.name).replace(/[^\w-]+/g, '-')}-report-${new Date().toISOString().slice(0, 10)}.pdf`,
       type: 'application/pdf',
       data: await brandPdf(ui, brand.id, q.toString(), signSession(c.user, 120)),
     }

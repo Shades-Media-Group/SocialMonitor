@@ -17,6 +17,7 @@ import type {
 } from './types.ts'
 import { NETWORKS } from './types.ts'
 import { TEMPLATES } from './categories.ts'
+import { placeBrand, placePost } from './campaigns.ts'
 
 type Row = Record<string, unknown>
 const all = <T>(db: DB, sql: string, ...args: (string | number | null)[]) =>
@@ -89,10 +90,15 @@ export function updateBrand(
     notes?: string | null
     reply_target_hours?: number
     ai_sort?: boolean
+    campaign_auto?: boolean
   },
 ) {
-  const { reply_target_hours: hours, ai_sort: ai, ...text } = f
+  const { reply_target_hours: hours, ai_sort: ai, campaign_auto: auto, ...text } = f
   if (ai !== undefined) db.prepare('UPDATE brands SET ai_sort = ? WHERE id = ?').run(ai ? 1 : 0, id)
+  if (auto !== undefined) {
+    db.prepare('UPDATE brands SET campaign_auto = ? WHERE id = ?').run(auto ? 1 : 0, id)
+    placeBrand(db, id)
+  }
   if (hours !== undefined) {
     if (!Number.isFinite(hours) || hours <= 0 || hours > 24 * 30)
       throw new Error('The reply target is between 1 hour and 30 days.')
@@ -221,6 +227,7 @@ export function savePost(
     t,
   )!
   recordMetrics(db, post, t)
+  placePost(db, post.id)
   const insert = db.prepare(
     `INSERT INTO comments (post_id, ext_id, parent_ext_id, author, text, likes, posted_at, fetched_at,
        author_avatar, author_url, media_url, author_followers)
@@ -432,9 +439,14 @@ export interface PostFilter {
   network?: Network
   /** 'top': most likes + comments + shares first; 'growth': most gained in 7 days. Default: newest. */
   sort?: 'new' | 'top' | 'growth'
+  /** Only posts in this campaign (and, for comments, only comments under them). */
+  campaignId?: number
   limit?: number
   offset?: number
 }
+
+const IN_CAMPAIGN =
+  'p.id IN (SELECT post_id FROM post_campaigns WHERE campaign_id = ? AND member = 1)'
 
 const WEEK_AGO = "strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-7 days')"
 
@@ -448,6 +460,10 @@ export function listPosts(db: DB, f: PostFilter = {}) {
   if (f.network) {
     where.push('p.network = ?')
     args.push(f.network)
+  }
+  if (f.campaignId) {
+    where.push(IN_CAMPAIGN)
+    args.push(f.campaignId)
   }
   return all<
     Post & {
@@ -464,6 +480,8 @@ export function listPosts(db: DB, f: PostFilter = {}) {
       /** Likes, comments and shares it gained in the last 7 days, and views; null with no history. */
       grew_7d: number | null
       views_7d: number | null
+      /** JSON: the ids of the campaigns it is in. */
+      campaign_ids: string
     }
   >(
     db,
@@ -486,7 +504,8 @@ export function listPosts(db: DB, f: PostFilter = {}) {
             WHERE m.post_id = p.id ORDER BY m.at LIMIT 1)) AS grew_7d,
        p.views - coalesce(
          (SELECT m.views FROM post_metrics m WHERE m.post_id = p.id AND m.at <= ${WEEK_AGO} ORDER BY m.at DESC LIMIT 1),
-         (SELECT m.views FROM post_metrics m WHERE m.post_id = p.id ORDER BY m.at LIMIT 1)) AS views_7d
+         (SELECT m.views FROM post_metrics m WHERE m.post_id = p.id ORDER BY m.at LIMIT 1)) AS views_7d,
+       (SELECT json_group_array(pc.campaign_id) FROM post_campaigns pc WHERE pc.post_id = p.id AND pc.member = 1) AS campaign_ids
      FROM posts p JOIN profiles pr ON pr.id = p.profile_id
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
      ORDER BY ${f.sort === 'top' ? 'coalesce(p.likes,0) + 3 * coalesce(p.comments_count,0) + 5 * coalesce(p.shares,0) DESC,' : f.sort === 'growth' ? 'grew_7d IS NULL, grew_7d DESC, views_7d DESC,' : ''} p.posted_at DESC, p.id DESC LIMIT ? OFFSET ?`,
@@ -542,6 +561,10 @@ export function listComments(db: DB, f: CommentFilter = {}) {
   if (f.network) {
     where.push('p.network = ?')
     args.push(f.network)
+  }
+  if (f.campaignId) {
+    where.push(IN_CAMPAIGN)
+    args.push(f.campaignId)
   }
   if (f.label) {
     where.push('c.label = ?')
@@ -621,17 +644,20 @@ export function listComments(db: DB, f: CommentFilter = {}) {
 
 /** Counts per label for a brand (or all brands), optionally since a time. */
 /** Rated comments per sentiment and category, for one brand or all. */
-export function sentimentCounts(db: DB, brandId?: number, network?: Network) {
+export function sentimentCounts(db: DB, brandId?: number, network?: Network, campaignId?: number) {
   return all<{ sentiment: string; category: string | null; n: number }>(
     db,
     `SELECT c.sentiment, c.category, count(*) AS n
      FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
      WHERE c.sentiment IS NOT NULL AND (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR p.network = ?)
+       AND (? IS NULL OR ${IN_CAMPAIGN})
      GROUP BY c.sentiment, c.category ORDER BY n DESC`,
     brandId ?? null,
     brandId ?? null,
     network ?? null,
     network ?? null,
+    campaignId ?? null,
+    campaignId ?? null,
   )
 }
 

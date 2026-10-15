@@ -845,6 +845,101 @@ export const fr: Dict = {
     'A brand watches five rivals at most.': 'Une marque suit cinq concurrents au plus.',
     'There is already a brand with this name.': 'Une marque porte déjà ce nom.',
     'No such rival.': "Ce concurrent n'existe pas.",
+    'Report branding': 'Identité des rapports',
+    Logo: 'Logo',
+    'PNG, JPG or SVG, up to 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.':
+      'PNG, JPG ou SVG, jusqu’à 1 Mo. Il remplace le logo SocialMonitor en haut des rapports PDF.',
+    '{brand} logo': 'Logo de {brand}',
+    Replace: 'Remplacer',
+    'Upload logo': 'Importer le logo',
+    'Logo saved.': 'Logo enregistré.',
+    'Logo removed.': 'Logo supprimé.',
+    'The logo is larger than 1 MB.': 'Le logo dépasse 1 Mo.',
+    'Send the logo as a PNG, JPG or SVG file.': 'Envoyez le logo en fichier PNG, JPG ou SVG.',
+    'The logo file is empty.': 'Le fichier du logo est vide.',
+    'The logo must be a PNG, JPG or SVG file.': 'Le logo doit être un fichier PNG, JPG ou SVG.',
+    'The SVG could not be drawn.': 'Le SVG n’a pas pu être dessiné.',
+    'Accent colour': 'Couleur d’accent',
+    'None: reports keep their usual ink.': 'Aucune : les rapports gardent leur encre habituelle.',
+    "Used for the rule under the brand's name and the report's label.":
+      'Utilisée pour le filet sous le nom de la marque et pour l’étiquette du rapport.',
+    "No text reads well on this colour, so it marks only the rule under the brand's name.":
+      'Aucun texte ne se lit bien sur cette couleur : elle ne marque que le filet sous le nom de la marque.',
+    'Pick a colour': 'Choisir une couleur',
+    'Colour as a hex value': 'Couleur en valeur hexadécimale',
+    'The colour is a hex value like #1a6bd6.':
+      'La couleur est une valeur hexadécimale, comme #1a6bd6.',
+    'Colour removed.': 'Couleur supprimée.',
+    'Posts that grew most': 'Publications qui ont le plus progressé',
+    'By likes, comments and shares': 'Par j’aime, commentaires et partages',
+    'By views': 'Par vues',
+    Gained: 'Gagné',
+    'No post grew in this period.': 'Aucune publication n’a progressé sur cette période.',
+    'Posts read only once in this period are left out; history builds up with each update.':
+      'Les publications lues une seule fois sur cette période sont écartées ; l’historique s’enrichit à chaque mise à jour.',
+    'No post grew between two readings in this period; history builds up with each update.':
+      'Aucune publication n’a progressé entre deux lectures sur cette période ; l’historique s’enrichit à chaque mise à jour.',
+    Now: 'Maintenant',
+    Campaigns: 'Campagnes',
+    Campaign: 'Campagne',
+    'Campaign report': 'Rapport de campagne',
+    'New campaign': 'Nouvelle campagne',
+    'Edit campaign': 'Modifier la campagne',
+    'Assign posts automatically': 'Attribuer les publications automatiquement',
+    "By the campaign's hashtags or keywords within its dates; then Claude places the posts they do not.":
+      'Par les hashtags ou mots-clés de la campagne, dans ses dates ; puis Claude place les publications restantes.',
+    "By the campaign's hashtags or keywords within its dates. The AI is off for this brand.":
+      'Par les hashtags ou mots-clés de la campagne, dans ses dates. L’IA est désactivée pour cette marque.',
+    'Off: posts join campaigns only when someone adds them.':
+      'Désactivé : les publications n’entrent dans une campagne que si quelqu’un les ajoute.',
+    'Posts join campaigns by themselves.':
+      'Les publications rejoignent les campagnes d’elles-mêmes.',
+    'Posts join campaigns by hand only.':
+      'Les publications rejoignent les campagnes uniquement à la main.',
+    Dates: 'Dates',
+    'Any time': 'Sans dates',
+    'From {date}': 'À partir du {date}',
+    'Until {date}': 'Jusqu’au {date}',
+    'Since {date}': 'Depuis le {date}',
+    'Hashtags and keywords': 'Hashtags et mots-clés',
+    Hashtags: 'Hashtags',
+    Keywords: 'Mots-clés',
+    Starts: 'Début',
+    Ends: 'Fin',
+    'Optional. Posts outside the dates never join by themselves.':
+      'Facultatif. Les publications hors de ces dates n’entrent jamais d’elles-mêmes.',
+    'A post with any of them in its caption joins.':
+      'Une publication qui en contient un dans sa légende rejoint la campagne.',
+    'Separated by commas; whole words, any case.':
+      'Séparés par des virgules ; mots entiers, sans tenir compte de la casse.',
+    'What the campaign is about, for Claude to place posts.':
+      'Le sujet de la campagne, pour que Claude puisse y placer des publications.',
+    'Delete {name}? Its posts stay; only the campaign goes.':
+      'Supprimer {name} ? Les publications restent ; seule la campagne disparaît.',
+    'No campaigns yet. Add one to see its posts, what people said under them and how they grew, in one report.':
+      'Aucune campagne pour l’instant. Ajoutez-en une pour voir dans un seul rapport ses publications, ce qu’on en dit et leur progression.',
+    'Add to {name}': 'Ajouter à {name}',
+    'Take out of {name}': 'Retirer de {name}',
+    'By its hashtags or keywords': 'Par ses hashtags ou mots-clés',
+    'Chosen by Claude': 'Choisie par Claude',
+    'Set by hand': 'Défini à la main',
+    '{n} comments sorted': '{n} commentaires classés',
+    'Rated positive {p}, negative {n}, neutral {u}.':
+      'Notés positifs {p}, négatifs {n}, neutres {u}.',
+    'Top complaints': 'Principales plaintes',
+    'Top questions': 'Principales questions',
+    'No complaints under these posts.': 'Aucune plainte sous ces publications.',
+    'No questions under these posts.': 'Aucune question sous ces publications.',
+    'Posts in the campaign': 'Publications de la campagne',
+    'No posts in this campaign yet.': 'Aucune publication dans cette campagne pour l’instant.',
+    'Name the campaign.': 'Donnez un nom à la campagne.',
+    'A campaign name is at most 80 characters.':
+      'Le nom d’une campagne fait au plus 80 caractères.',
+    'This brand already has a campaign with that name.':
+      'Cette marque a déjà une campagne de ce nom.',
+    'No such campaign.': 'Cette campagne n’existe pas.',
+    "That campaign is not this post's brand's.":
+      'Cette campagne n’appartient pas à la marque de cette publication.',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',

@@ -14,7 +14,7 @@ import type { ViewMode } from './json.tsx'
 import { readMode, saveMode } from './json.tsx'
 import { Home } from './home.tsx'
 import { BrandPage } from './brand-page.tsx'
-import { PrintBad, PrintReport } from './print.tsx'
+import { PrintBad, PrintCampaign, PrintReport } from './print.tsx'
 import type { AuthInfo, Me } from './auth.tsx'
 import { AuthScreen, linkFromPath } from './auth.tsx'
 import { People } from './people.tsx'
@@ -268,6 +268,11 @@ function Dashboard({ me }: { me: Me }) {
     return loaded && brand ? (
       new URLSearchParams(location.search).get('kind') === 'bad' ? (
         <PrintBad brand={brand} />
+      ) : Number(new URLSearchParams(location.search).get('campaign')) > 0 ? (
+        <PrintCampaign
+          brand={brand}
+          campaignId={Number(new URLSearchParams(location.search).get('campaign'))}
+        />
       ) : (
         <PrintReport brand={brand} />
       )

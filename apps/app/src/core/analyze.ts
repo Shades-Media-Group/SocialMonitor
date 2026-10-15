@@ -331,6 +331,28 @@ export async function sortComments(
   return out
 }
 
+/**
+ * Asks Claude which of the brand's campaigns each post belongs to, from its caption and what it
+ * shows. Posts are numbered from 1; the answer is read with parsePicks in campaigns.ts.
+ */
+export async function pickCampaigns(
+  engine: Engine,
+  brand: string,
+  campaigns: { id: number; name: string; hints: string }[],
+  posts: { caption: string; about: string | null }[],
+): Promise<string> {
+  const prompt = `Brand: ${brand}. Its campaigns, one per line as "id|name|hints":
+${campaigns.map((c) => `${c.id}|${clip(c.name, 80)}|${clip(c.hints, 300) || '-'}`).join('\n')}
+For each post below, pick the one campaign it clearly belongs to, or - when none fits. Reply with one line per post, "n|id" or "n|-". Output only these lines.`
+  const input = posts
+    .map(
+      (p, i) =>
+        `${i + 1}|${clip(p.caption, 600) || '(no caption)'}${p.about ? ` [What the post shows: ${clip(p.about, 300)}]` : ''}`,
+    )
+    .join('\n')
+  return engine === 'claude' ? viaClaude(prompt, input) : viaApi(prompt, input)
+}
+
 /** One sentence about the post, from its caption, top comments and, when saved, its picture. */
 export async function describePost(
   engine: Engine,

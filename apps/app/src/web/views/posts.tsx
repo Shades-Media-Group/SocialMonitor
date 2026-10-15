@@ -19,6 +19,7 @@ import { locale, t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
 import { MoodStrip, PostCard, PostDrawer } from '../social.tsx'
 import { BestHours, PostIdeas } from '../ideas.tsx'
+import { CampaignCell, useCampaigns } from '../campaigns.tsx'
 
 const KIND: Record<string, string> = {
   video: 'Video',
@@ -210,6 +211,13 @@ export function Posts({
   const [look, setLook] = usePref<'table' | 'grid'>('posts.look.v2', 'table')
   const [cols, setCols] = usePref<'2' | '3' | '4' | '5' | '6'>('posts.cols', '4')
   const [openPost, setOpenPost] = useState<PostRow | null>(null)
+  const [tick, setTick] = useState(0)
+  const [campaigns, refreshCampaigns] = useCampaigns(brand.id, version)
+  const camps = campaigns ?? []
+  const campaignsChanged = () => {
+    setTick((x) => x + 1)
+    refreshCampaigns()
+  }
 
   useEffect(() => {
     api
@@ -218,7 +226,7 @@ export function Posts({
       )
       .then(setAll)
       .catch(() => setAll([]))
-  }, [brand.id, network, version, sort])
+  }, [brand.id, network, version, sort, tick])
 
   if (all === null) return null
   const since = days ? new Date(Date.now() - days * 86400_000).toISOString() : ''
@@ -315,6 +323,7 @@ export function Posts({
                     {t('7 days')}
                   </th>
                   <th class="sm-num">{t('To look at')}</th>
+                  {camps.length > 0 && <th>{t('Campaigns')}</th>}
                   <th>{t('What people say')}</th>
                 </tr>
               </thead>
@@ -348,6 +357,14 @@ export function Posts({
                       ) : null}
                     </td>
                     <td class={`sm-num g-num${p.flagged ? ' sm-hot' : ''}`}>{fmt(p.flagged)}</td>
+                    {camps.length > 0 && (
+                      <CampaignCell
+                        post={p}
+                        campaigns={camps}
+                        admin={brand.my_role === 'admin'}
+                        onChange={campaignsChanged}
+                      />
+                    )}
                     <td>
                       <MoodStrip p={p} />
                     </td>

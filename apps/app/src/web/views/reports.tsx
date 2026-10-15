@@ -6,6 +6,9 @@ import { Empty, Menu, NETWORK_NAME, count, when } from '../ui.tsx'
 import { renderReport } from '../markdown.tsx'
 import { JsonPanel } from '../json.tsx'
 import { t } from '../i18n.ts'
+import type { Growth } from '../growth.tsx'
+import { GrowthLists } from '../growth.tsx'
+import { CampaignBox } from '../campaigns.tsx'
 
 const STATUS: Record<string, string> = {
   ok: t('Done'),
@@ -130,8 +133,34 @@ function SavedFiles({ brand, version, notify }: Pick<BrandView, 'brand' | 'versi
   )
 }
 
+/** The posts that gained most in the chosen period, from each post's own history. */
+function GrowthBox({ brand, version, days, network }: BrandView) {
+  const [g, setG] = useState<Growth | null>(null)
+  useEffect(() => {
+    api
+      .get<Growth>(
+        `/api/brands/${brand.id}/growth?days=${days}${network ? `&network=${network}` : ''}`,
+      )
+      .then(setG)
+      .catch(() => setG(null))
+  }, [brand.id, version, days, network])
+  if (!g) return null
+  return (
+    <section class="sm-box sm-box--table">
+      <header class="sm-box__head">
+        <h2>{t('Posts that grew most')}</h2>
+        <span class="sm-box__meta">
+          {days ? t('Last {days}', { days: count(days, 'day') }) : t('All time')}
+        </span>
+      </header>
+      <GrowthLists g={g} />
+    </section>
+  )
+}
+
 /** Every update of this brand on the left; the report of the chosen one on the right. */
-export function Reports({ brand, version, running, mode, openUpdate, notify }: BrandView) {
+export function Reports(view: BrandView) {
+  const { brand, version, running, mode, openUpdate, notify } = view
   const [runs, setRuns] = useState<RunRow[] | null>(null)
   const [open, setOpen] = useState<RunRow | null>(null)
 
@@ -152,6 +181,8 @@ export function Reports({ brand, version, running, mode, openUpdate, notify }: B
     return (
       <div class="sm-stack">
         <SavedFiles brand={brand} version={version} notify={notify} />
+        <GrowthBox {...view} />
+        <CampaignBox brand={brand} version={version} />
         <Empty title={t('No reports yet.')}>
           {t(
             'Every update ends with one: the posts read, the comments to answer, and what changed.',
@@ -188,6 +219,8 @@ export function Reports({ brand, version, running, mode, openUpdate, notify }: B
   return (
     <div class="sm-stack">
       <SavedFiles brand={brand} version={version} notify={notify} />
+      <GrowthBox {...view} />
+      <CampaignBox brand={brand} version={version} />
       <h2 class="sm-sec__title">{t('Update reports')}</h2>
       <div class="sm-split">
         <ul class="sm-runs" aria-label={t('Updates')}>

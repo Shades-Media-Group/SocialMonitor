@@ -160,6 +160,31 @@ CREATE TABLE IF NOT EXISTS saved_replies (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS saved_replies_brand ON saved_replies(brand_id);
+-- A brand's campaigns: a name, an optional date range (YYYY-MM-DD, inclusive) and hints that
+-- tie posts to it: hashtags (JSON, lower case, no #), keywords (JSON) and a short description.
+CREATE TABLE IF NOT EXISTS campaigns (
+  id INTEGER PRIMARY KEY,
+  brand_id INTEGER NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  starts_on TEXT,
+  ends_on TEXT,
+  hashtags TEXT NOT NULL DEFAULT '[]',
+  keywords TEXT NOT NULL DEFAULT '[]',
+  about TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE (brand_id, name)
+);
+-- Which posts belong to which campaigns, and who said so: the hints ('rule'), Claude ('ai') or a
+-- person ('you'). member 0 keeps a person's "not in this campaign", so nothing adds it back.
+CREATE TABLE IF NOT EXISTS post_campaigns (
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  set_by TEXT NOT NULL CHECK (set_by IN ('rule','ai','you')),
+  member INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (post_id, campaign_id)
+);
+CREATE INDEX IF NOT EXISTS post_campaigns_campaign ON post_campaigns(campaign_id, member);
 
 -- People who can open the dashboard. A super admin sees and manages everything; everyone else
 -- sees only the brands they are a member of, as a viewer or as that brand's admin.
@@ -335,6 +360,16 @@ function migrate(db: DatabaseSync) {
   // How many followers a commenter had when read, where the network shows it (TikTok). Null: unknown.
   if (!has('comments', 'author_followers'))
     db.exec('ALTER TABLE comments ADD COLUMN author_followers INTEGER')
+  // The brand's own logo (a /media/ path) and accent colour on its PDF reports. Empty: none.
+  if (!has('brands', 'report_logo')) {
+    db.exec('ALTER TABLE brands ADD COLUMN report_logo TEXT')
+    db.exec('ALTER TABLE brands ADD COLUMN report_color TEXT')
+  }
+  // Whether posts join the brand's campaigns by themselves (hints, then Claude when the AI is on).
+  if (!has('brands', 'campaign_auto'))
+    db.exec('ALTER TABLE brands ADD COLUMN campaign_auto INTEGER NOT NULL DEFAULT 1')
+  // When Claude last looked for a post's campaign, so it is asked again only after campaigns change.
+  if (!has('posts', 'campaign_ai_at')) db.exec('ALTER TABLE posts ADD COLUMN campaign_ai_at TEXT')
 }
 
 export const now = () => new Date().toISOString()

@@ -42,6 +42,11 @@ export interface Brand {
   ai_sort: 0 | 1
   /** Set on a rival: the brand that watches it. Rivals stay out of the brand list. */
   competitor_of: number | null
+  /** The brand's logo on its PDF reports, a /media/ path, and its accent colour (#rrggbb). */
+  report_logo: string | null
+  report_color: string | null
+  /** 1: posts join campaigns by their hints, then by Claude when the AI is on; 0: by hand only. */
+  campaign_auto: 0 | 1
   created_at: string
 }
 
