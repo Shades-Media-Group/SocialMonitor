@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { openDb } from './db.ts'
-import { addBrand } from './store.ts'
+import { addBrand, addCompetitor } from './store.ts'
 import * as auth from './auth.ts'
 
 beforeAll(() => {
@@ -53,5 +53,19 @@ describe('sign-in', () => {
     expect(auth.roleFor(db, ann, one.id)).toBe('viewer')
     expect(auth.roleFor(db, ann, two.id)).toBeNull()
     expect(auth.roleFor(db, boss, two.id)).toBe('admin')
+  })
+
+  it("lets a brand's people reach its rivals, and no one else", () => {
+    const db = openDb(':memory:')
+    const one = addBrand(db, 'One', [], null)
+    const two = addBrand(db, 'Two', [], null)
+    const rival = addCompetitor(db, one.id, 'Rival', ['https://www.tiktok.com/@rival'])
+    const ann = auth.createUser(db, { email: 'ann@example.com' })
+    const bob = auth.createUser(db, { email: 'bob@example.com' })
+    auth.setMembership(db, ann.id, one.id, 'admin')
+    auth.setMembership(db, bob.id, two.id, 'admin')
+    expect(auth.roleFor(db, ann, rival.id)).toBe('admin')
+    expect(auth.roleFor(db, bob, rival.id)).toBeNull()
+    expect(auth.visibleBrands(db, ann)).toEqual([one.id])
   })
 })

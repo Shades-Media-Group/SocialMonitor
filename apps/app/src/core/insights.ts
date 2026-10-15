@@ -167,27 +167,34 @@ export function sentimentShares(db: DB, s: Scope) {
   const r = db
     .prepare(
       `SELECT count(c.sentiment) AS rated, coalesce(sum(c.sentiment = 'positive'), 0) AS positive,
-         coalesce(sum(c.sentiment = 'negative'), 0) AS negative
+         coalesce(sum(c.sentiment = 'negative'), 0) AS negative,
+         coalesce(sum(c.sentiment = 'neutral'), 0) AS neutral
        FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
        WHERE ${w.sql}`,
     )
-    .get(...w.args) as { rated: number; positive: number; negative: number }
+    .get(...w.args) as { rated: number; positive: number; negative: number; neutral: number }
   return {
     positive: r.rated ? r.positive / r.rated : null,
     negative: r.rated ? r.negative / r.rated : null,
+    neutral: r.rated ? r.neutral / r.rated : null,
   }
 }
 
 /**
- * One row per brand, side by side, for the home page and the comparison. Only `only` when
- * given. Overdue is how many wait past the brand's reply target now, whatever the window.
+ * One row per brand, side by side, for the home page, the comparison and share of voice. Only
+ * `only` when given, else every brand but the rivals. Overdue is how many wait past the brand's
+ * reply target now, whatever the window.
  */
-export function compare(db: DB, days = 30, only: number[] | null = null) {
+export function compare(db: DB, days = 30, only: number[] | null = null, network?: Network) {
   const brands = (
-    db.prepare('SELECT id, name FROM brands ORDER BY name').all() as { id: number; name: string }[]
-  ).filter((b) => !only || only.includes(b.id))
+    db.prepare('SELECT id, name, competitor_of FROM brands ORDER BY name').all() as {
+      id: number
+      name: string
+      competitor_of: number | null
+    }[]
+  ).filter((b) => (only ? only.includes(b.id) : !b.competitor_of))
   const rows = brands.map((b) => {
-    const s = { brandId: b.id, days }
+    const s = { brandId: b.id, days, network }
     const posts = postEngagement(db, s, 1000)
     const labels = labelTotals(db, s)
     const sorted = labels.total! - (labels.unsorted ?? 0)
@@ -198,6 +205,10 @@ export function compare(db: DB, days = 30, only: number[] | null = null) {
     const seen = posts.filter((p) => p.views)
     const views = reach(seen)
     const acts = seen.reduce((n, p) => n + (p.likes ?? 0) + (p.comments ?? 0) + (p.shares ?? 0), 0)
+    const allActs = posts.reduce(
+      (n, p) => n + (p.likes ?? 0) + (p.comments ?? 0) + (p.shares ?? 0),
+      0,
+    )
     return {
       id: b.id,
       name: b.name,
@@ -214,10 +225,12 @@ export function compare(db: DB, days = 30, only: number[] | null = null) {
       praise_share: sorted ? (labels.praise ?? 0) / sorted : null,
       positive_share: mood.positive,
       negative_share: mood.negative,
+      neutral_share: mood.neutral,
+      interactions_per_post: posts.length ? Math.round(allActs / posts.length) : null,
       engagement_rate: views ? acts / views : null,
       response_rate: r.rate,
       median_reply_minutes: r.median_minutes,
-      overdue: overdueCount(db, b.id),
+      overdue: overdueCount(db, b.id, network),
       reputation: reputation(labels),
       reach: reach(posts),
       comments: labels.total ?? 0,

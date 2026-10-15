@@ -63,6 +63,13 @@ export function importAll(db: DB, dump: Dump) {
       brandIds.set(r.id as number, row.id)
       count.brands++
     }
+    // Rivals point at the brand that watches them, under its id in this database.
+    for (const r of t.brands ?? [])
+      if (r.competitor_of)
+        db.prepare('UPDATE brands SET competitor_of = ? WHERE id = ?').run(
+          brandIds.get(r.competitor_of as number) ?? null,
+          brandIds.get(r.id as number)!,
+        )
     for (const r of t.profiles ?? []) {
       const brand = brandIds.get(r.brand_id as number)
       if (!brand) continue

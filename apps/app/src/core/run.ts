@@ -83,13 +83,15 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   const skipped: string[] = []
   let page: Page | null = null
   const stopped = () => store.stopAsked(db, runId)
+  // Each brand's rivals are read with it, so its share of voice stays current.
+  const brandIds = store.withCompetitors(db, scope.brandIds)
   // Every profile this update reads, for "2 of 5" in the progress notice.
-  const all = scope.brandIds.flatMap((id) =>
+  const all = brandIds.flatMap((id) =>
     store.listProfiles(db, id).filter((p) => scope.networks.includes(p.network)),
   )
   let at = 0
 
-  for (const brandId of scope.brandIds) {
+  for (const brandId of brandIds) {
     if (stopped()) break
     const brand = store.getBrand(db, brandId)
     if (!brand) continue

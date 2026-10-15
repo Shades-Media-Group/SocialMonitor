@@ -9,6 +9,12 @@ import {
   setVerdict,
   setSentiment,
   listProfiles,
+  addCompetitor,
+  withCompetitors,
+  listCompetitors,
+  listBrands,
+  deleteBrand,
+  getBrand,
 } from './store.ts'
 import { parseVerdicts } from './analyze.ts'
 import { nextRun } from './schedule.ts'
@@ -476,5 +482,62 @@ describe('brands compared', () => {
     expect(alpha!.per_day.at(-1)).toEqual({ day: today.slice(0, 10), n: 3 })
     expect(compare(db, 7, []).length).toBe(0)
     expect(compare(db, 7).map((r) => r.share_of_voice)).toEqual([0.75, 0.25])
+  })
+})
+
+describe('rivals', () => {
+  it('belong to one brand, are read with it and stay out of the brand list', () => {
+    const db = openDb(':memory:')
+    const a = addBrand(db, 'Alpha', ['https://www.tiktok.com/@alpha'])
+    const other = addBrand(db, 'Other', [])
+    const r = addCompetitor(db, a.id, 'Rival', ['https://www.tiktok.com/@rival'])
+    expect(r.competitor_of).toBe(a.id)
+    expect(() => addCompetitor(db, a.id, 'Nolinks', [])).toThrow()
+    expect(() => addCompetitor(db, a.id, 'alpha', ['https://www.tiktok.com/@x'])).toThrow()
+    expect(() => addCompetitor(db, r.id, 'Deep', ['https://www.tiktok.com/@deep'])).toThrow()
+    expect(withCompetitors(db, [a.id, other.id])).toEqual([a.id, r.id, other.id])
+
+    const today = new Date().toISOString()
+    const say = (brandId: number, n: number, sentiment: 'positive' | 'neutral') => {
+      savePost(db, listProfiles(db, brandId)[0]!, {
+        ext_id: `p${brandId}`,
+        url: 'u',
+        posted_at: today,
+        kind: 'video',
+        caption: '',
+        thumb_url: null,
+        likes: 30,
+        comments_count: n,
+        shares: 0,
+        views: null,
+        comments: Array.from({ length: n }, (_, i) => ({
+          ext_id: `${brandId}-${i}`,
+          parent_ext_id: null,
+          author: `fan${i}`,
+          text: 'hi',
+          likes: 0,
+          posted_at: today,
+        })),
+      })
+      for (const c of listComments(db, { brandId, limit: 100 }))
+        setSentiment(db, c.id, sentiment, null, 'ai')
+    }
+    say(a.id, 3, 'positive')
+    say(r.id, 1, 'neutral')
+    // The home page leaves rivals out; share of voice asks for them by id.
+    expect(compare(db, 30).map((x) => x.name)).toEqual(['Alpha', 'Other'])
+    const [mine, theirs] = compare(db, 30, [a.id, r.id])
+    expect(mine).toMatchObject({ share_of_voice: 0.75, positive_share: 1, neutral_share: 0 })
+    expect(theirs).toMatchObject({ share_of_voice: 0.25, neutral_share: 1 })
+    expect(mine!.interactions_per_post).toBe(33)
+    expect(compare(db, 30, [a.id, r.id], 'instagram').every((x) => x.comments === 0)).toBe(true)
+
+    // A whole-database import keeps who watches whom; deleting the brand deletes its rivals.
+    const copy = openDb(':memory:')
+    importAll(copy, exportAll(db))
+    const alpha = listBrands(copy).find((x) => x.name === 'Alpha')!
+    expect(listCompetitors(copy, alpha.id).map((x) => x.name)).toEqual(['Rival'])
+    deleteBrand(db, a.id)
+    expect(getBrand(db, r.id)).toBeUndefined()
   })
 })
