@@ -783,7 +783,6 @@ export const ro: Dict = {
     Downloaded: 'Descărcat',
     'Report emailed': 'Raport trimis pe e-mail',
     'Sign-in from a new device': 'Conectare de pe un dispozitiv nou',
-    'Password change alert': 'Alertă de schimbare a parolei',
     'Second factor added': 'Al doilea factor adăugat',
     'Second factor removed': 'Al doilea factor eliminat',
     'Five failed sign-ins': 'Cinci conectări eșuate',

@@ -746,7 +746,6 @@ export const zh: Dict = {
     Downloaded: '已下载',
     'Report emailed': '报告已通过邮件发送',
     'Sign-in from a new device': '从新设备登录',
-    'Password change alert': '密码修改提醒',
     'Second factor added': '已添加第二验证方式',
     'Second factor removed': '已移除第二验证方式',
     'Five failed sign-ins': '五次登录失败',

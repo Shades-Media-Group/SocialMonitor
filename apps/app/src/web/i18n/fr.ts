@@ -783,7 +783,6 @@ export const fr: Dict = {
     Downloaded: 'Téléchargé',
     'Report emailed': 'Rapport envoyé par e-mail',
     'Sign-in from a new device': 'Connexion depuis un nouvel appareil',
-    'Password change alert': 'Alerte de changement de mot de passe',
     'Second factor added': 'Second facteur ajouté',
     'Second factor removed': 'Second facteur retiré',
     'Five failed sign-ins': 'Cinq échecs de connexion',

@@ -60,3 +60,7 @@ openssl rand -base64 48    # once; store it in the server's secret store as SOCI
 ## Activity
 
 **Activity** (the lock in the left rail, at `/activity`) lists who did what, when and from which address: sign-ins and failed ones, codes sent, password changes, invitations and access changes, brands added or deleted, networks connected, settings, saved accounts, exports and downloads. Super admins see everything; a brand's admins see the events of their brands. Rows can't be changed or deleted: the database refuses it. They are kept for at least a year, and never hold a password, a code, a link or a comment's text.
+
+## Security alerts
+
+SocialMonitor emails a person when their account signs in from a device or country it hasn't used before, when their password changes, when a second factor is added or removed, and after five failed sign-ins in a row. When someone becomes a super admin or a brand's admin, they and every other super admin get an email. Each one says what happened, when, from where, and what to do if it wasn't them, and each is written to Activity.

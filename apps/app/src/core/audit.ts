@@ -34,7 +34,6 @@ export const AUDIT_EVENTS = [
   'download',
   'report.sent',
   'security.new_device',
-  'security.password_changed',
   'security.second_factor_added',
   'security.second_factor_removed',
   'security.failed_signins',

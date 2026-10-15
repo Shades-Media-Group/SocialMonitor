@@ -238,6 +238,132 @@ export function digestMail(
   )
 }
 
+/** What a security alert is about. */
+export type SecurityKind =
+  | 'newDevice'
+  | 'password'
+  | 'factorAdded'
+  | 'factorRemoved'
+  | 'failed'
+  | 'newAdmin'
+  | 'newAdminOthers'
+
+/** The facts a security alert states: when, from where, on what, and for admins who and what. */
+export interface SecurityFacts {
+  at: string
+  ip?: string | null
+  country?: string | null
+  ua?: string | null
+  /** The second factor: "passkey", "authenticator app". */
+  method?: string | null
+  /** The person it happened to, for the other super admins. */
+  who?: string
+  /** The admin who did it. */
+  by?: string
+  /** For a brand admin: which brand; none means super admin. */
+  brand?: string | null
+}
+
+const LOCALE: Record<string, string> = {
+  en: 'en-GB',
+  ro: 'ro-RO',
+  ru: 'ru-RU',
+  fr: 'fr-FR',
+  zh: 'zh-CN',
+}
+
+/** "Chrome on macOS" from a user agent; empty when it says nothing useful. */
+export function deviceName(ua: string | null | undefined) {
+  const u = ua ?? ''
+  const browser = /Edg\//.test(u)
+    ? 'Edge'
+    : /OPR\//.test(u)
+      ? 'Opera'
+      : /Firefox\//.test(u)
+        ? 'Firefox'
+        : /Chrome\//.test(u)
+          ? 'Chrome'
+          : /Safari\//.test(u)
+            ? 'Safari'
+            : ''
+  const os = /iPhone|iPad/.test(u)
+    ? 'iOS'
+    : /Android/.test(u)
+      ? 'Android'
+      : /Windows/.test(u)
+        ? 'Windows'
+        : /Mac OS X|Macintosh/.test(u)
+          ? 'macOS'
+          : /Linux/.test(u)
+            ? 'Linux'
+            : ''
+  return [browser, os].filter(Boolean).join(' · ')
+}
+
+/**
+ * A security alert: what happened, when (in UTC, named), from where and on which device, and
+ * what to do if it wasn't the reader. One button, to the dashboard, with the link written out.
+ */
+export function securityMail(
+  lang: string,
+  kind: SecurityKind,
+  f: SecurityFacts,
+  link: string,
+): Mail {
+  const l = mailLang(lang)
+  let when = f.at
+  try {
+    when = `${new Date(f.at).toLocaleString(LOCALE[l], {
+      dateStyle: 'long',
+      timeStyle: 'short',
+      timeZone: 'UTC',
+    })} UTC`
+  } catch {
+    /* keep the ISO time */
+  }
+  let country = f.country ?? ''
+  try {
+    if (country)
+      country = new Intl.DisplayNames([LOCALE[l]!], { type: 'region' }).of(country) ?? country
+  } catch {
+    /* keep the code */
+  }
+  const unknown = mailText(l, 'secUnknown')
+  const scope = f.brand ? mailText(l, 'scopeBrand', { brand: f.brand }) : mailText(l, 'scopeSuper')
+  const vars = { who: f.who ?? '', by: f.by ?? '', scope }
+  const admin = kind === 'newAdmin' || kind === 'newAdminOthers'
+  const notYou =
+    kind === 'failed'
+      ? 'secNotYouFailed'
+      : kind === 'newAdminOthers'
+        ? 'secNotYouAdmin'
+        : 'secNotYou'
+  return build(
+    l,
+    mailText(l, `${kind}Subject`, vars),
+    mailText(l, `${kind}Heading`, vars),
+    mailText(l, `${kind}Lead`, vars),
+    [
+      ui.fields([
+        { label: mailText(l, 'secWhen'), value: when },
+        ...(admin
+          ? [{ label: mailText(l, 'secBy'), value: f.by || unknown }]
+          : [
+              {
+                label: mailText(l, 'secWhere'),
+                value: [f.ip, country].filter(Boolean).join(', ') || unknown,
+              },
+              { label: mailText(l, 'secDevice'), value: deviceName(f.ua) || unknown },
+            ]),
+        ...(f.method ? [{ label: mailText(l, 'secMethod'), value: f.method }] : []),
+      ]),
+      ui.paragraph(mailText(l, notYou)),
+      ui.button(mailText(l, 'open'), link),
+      ui.note(`${mailText(l, 'orCopy')} ${link}`),
+    ],
+  )
+}
+
 export async function sendMail(
   to: string,
   mail: Mail,

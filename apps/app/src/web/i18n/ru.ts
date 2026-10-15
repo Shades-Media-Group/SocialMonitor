@@ -780,7 +780,6 @@ export const ru: Dict = {
     Downloaded: 'Скачано',
     'Report emailed': 'Отчёт отправлен по почте',
     'Sign-in from a new device': 'Вход с нового устройства',
-    'Password change alert': 'Оповещение о смене пароля',
     'Second factor added': 'Добавлен второй фактор',
     'Second factor removed': 'Удалён второй фактор',
     'Five failed sign-ins': 'Пять неудачных входов',

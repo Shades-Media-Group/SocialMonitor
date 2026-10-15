@@ -45,7 +45,6 @@ const EVENT: Record<string, string> = {
   download: t('Downloaded'),
   'report.sent': t('Report emailed'),
   'security.new_device': t('Sign-in from a new device'),
-  'security.password_changed': t('Password change alert'),
   'security.second_factor_added': t('Second factor added'),
   'security.second_factor_removed': t('Second factor removed'),
   'security.failed_signins': t('Five failed sign-ins'),
