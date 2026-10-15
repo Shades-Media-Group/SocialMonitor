@@ -42,6 +42,7 @@ import {
 import * as meta from '../core/meta-api.ts'
 import { deleteSaved, getSaved, listSaved, readSaved, saveReport } from '../core/saved.ts'
 import { draftReply, pickEngine, translate } from '../core/analyze.ts'
+import { latestIdeas, suggestIdeas } from '../core/ideas.ts'
 import { getSettings } from '../core/settings.ts'
 import type { User } from '../core/auth.ts'
 import { roleFor, signSession, visibleBrands } from '../core/auth.ts'
@@ -528,6 +529,19 @@ export const routes: Route[] = [
       days: Number(query.get('days') ?? 30) || 0,
     }),
   ),
+  // Ideas for the next post: the latest kept, and new ones on an admin's request.
+  r(
+    'GET',
+    '/api/brands/:id/ideas',
+    seeBrand,
+    ({ db, params }) => latestIdeas(db, id(params.id)) ?? { ideas: [], created_at: null },
+  ),
+  r('POST', '/api/brands/:id/ideas', adminBrand, ({ db, params }) => {
+    const engine = pickEngine(getSettings(db))
+    if (!engine)
+      throw new Error('No AI to ask: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.')
+    return suggestIdeas(db, id(params.id), engine)
+  }),
   r('GET', '/api/brands/:id/daily', seeBrand, ({ db, params, query }) => {
     const day = (k: string, fallback: string) => {
       const v = query.get(k) ?? fallback

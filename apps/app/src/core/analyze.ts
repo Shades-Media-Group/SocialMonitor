@@ -147,7 +147,7 @@ function viaClaudeCode(prompt: string, input: string, pics: Pic[] = []): Promise
 }
 
 /** Claude Code first; when it fails and an Anthropic API key is set, the API instead. */
-async function viaClaude(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
+export async function viaClaude(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
   try {
     return await viaClaudeCode(prompt, input, pics)
   } catch (e) {
@@ -162,7 +162,7 @@ const MEDIA_TYPE: Record<string, string> = {
   gif: 'image/gif',
 }
 
-async function viaApi(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
+export async function viaApi(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
   const content: unknown[] = []
   const { readFileSync } = await import('node:fs')
   for (const p of pics) {

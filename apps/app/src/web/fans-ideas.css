@@ -67,3 +67,46 @@
   white-space: nowrap;
 }
 
+/* Ideas for the next post: plain rows split by hairlines. */
+.sm-ideas__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.sm-ideas__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sm-ideas__list li {
+  display: grid;
+  gap: 2px;
+  padding: 12px 0;
+}
+.sm-ideas__list li + li {
+  border-top: 1px solid var(--c-line-2);
+}
+.sm-ideas__list p {
+  margin: 0;
+}
+.sm-ideas__topic {
+  font-size: 14px;
+  font-weight: 650;
+  text-wrap: pretty;
+}
+.sm-ideas__plan {
+  color: var(--c-text-2);
+  font-size: 12.5px;
+}
+.sm-ideas__why {
+  max-width: 72ch;
+  color: var(--c-text-3);
+  font-size: 12.5px;
+  text-wrap: pretty;
+}
+@media (max-width: 640px) {
+  .sm-ideas .sm-box__head {
+    flex-wrap: wrap;
+    padding-block: 8px;
+  }
+}

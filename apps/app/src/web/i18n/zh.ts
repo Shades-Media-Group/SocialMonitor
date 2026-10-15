@@ -685,6 +685,30 @@ export const zh: Dict = {
     'People who complain twice or more show here.': '投诉两次及以上的人会显示在这里。',
     'Comments by {name}.': '{name} 的评论。',
     'Show everyone': '显示所有人',
+    'Best hours to post': '最佳发布时间',
+    'Engagement by the hour a post went out, your time': '按发布时段的互动率，你的本地时间',
+    'Interactions per post by the hour it went out, your time':
+      '按发布时段的每帖互动数，你的本地时间',
+    'From {n}. Hours with fewer than {min} posts are left out.':
+      '基于 {n}。少于 {min} 条帖子的时段不计入。',
+    'Too few posts to tell yet: this needs 12 posts, with {min} or more in at least two hours. There are {n} here.':
+      '帖子太少，暂无法判断：需要 12 条帖子，且至少两个时段各有 {min} 条及以上。这里有 {n}。',
+    'New ideas are ready.': '新点子已就绪。',
+    'Ideas for the next post': '下一条帖子的点子',
+    'Suggested {when}': '建议于 {when}',
+    'Asking Claude…': '正在询问 Claude…',
+    'Suggest new ideas': '再给些新点子',
+    'Suggest ideas': '给些点子',
+    'Claude reads the posts that did best and worst and what people ask for in comments, then suggests what to post next.':
+      'Claude 会阅读表现最好和最差的帖子，以及评论里大家想看什么，然后建议接下来发什么。',
+    'A brand admin can ask Claude for ideas here.': '品牌管理员可以在这里向 Claude 要点子。',
+    'Days and hours are in the time of the computer SocialMonitor runs on.':
+      '日期和时间按运行 SocialMonitor 的电脑的时间计。',
+    'Ideas need at least 5 posts from the last 90 days. Run an update.':
+      '生成点子需要最近 90 天内至少 5 条帖子。请先运行一次更新。',
+    'Claude answered without ideas. Try again.': 'Claude 没有给出点子。请重试。',
+    'No AI to ask: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.':
+      '没有可用的 AI：请登录 Claude Code，或在 .env 中设置 ANTHROPIC_API_KEY。',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

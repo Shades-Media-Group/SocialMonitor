@@ -171,6 +171,12 @@ CREATE TABLE IF NOT EXISTS tokens (
   expires_at TEXT NOT NULL
 );
 
+-- The latest post ideas the AI suggested for a brand, made on request: a JSON list and when.
+CREATE TABLE IF NOT EXISTS post_ideas (
+  brand_id INTEGER PRIMARY KEY REFERENCES brands(id) ON DELETE CASCADE,
+  ideas TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
 `
 
 export type DB = DatabaseSync
