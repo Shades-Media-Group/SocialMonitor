@@ -26,6 +26,7 @@
     "dev:site": "yarn --cwd apps/site dev",
     "build:site": "yarn --cwd apps/site build",
     "deploy:site": "yarn --cwd apps/site deploy",
+    "deploy:verify": "node scripts/deploy-verify.mjs",
     "verify": "yarn typecheck && yarn lint && yarn test && yarn build:site",
     "format": "prettier --write .",
     "release": "node scripts/release.mjs",
