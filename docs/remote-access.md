@@ -42,3 +42,4 @@ Open the address and pass Cloudflare Access with the code it emails you. Then si
 - Saved account passwords are never revealed through the tunnel, only on the computer itself.
 - "Sign in to networks" opens a window on the computer itself, so it is refused remotely.
 - The dashboard still listens only on 127.0.0.1; the tunnel reaches it from inside your computer.
+- The visitor's address and country come from Cloudflare's `cf-connecting-ip` and `cf-ipcountry` headers, believed only when the connection comes from this computer. If cloudflared runs on another machine, name its addresses in `SOCIALMONITOR_TUNNEL_ADDRESSES` (comma separated).

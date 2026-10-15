@@ -8,7 +8,7 @@ import { HttpError, routes } from './routes.ts'
 import { authRoutes } from './auth-routes.ts'
 import { SESSION_COOKIE, readCookie, readSession, seedAdmin } from '../core/auth.ts'
 import { seedFromFile } from './seed.ts'
-import { isLocal, publicHost, refuseRemote } from './access.ts'
+import { clientOf, isLocal, publicHost, refuseRemote } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
 import { startScheduler } from '../core/schedule.ts'
 import { fillTikTok } from '../core/fill.ts'
@@ -133,6 +133,7 @@ const server = createServer(async (req, res) => {
       if (r.method !== req.method) continue
       const m = r.path.exec(url.pathname)
       if (!m) continue
+      const who = clientOf(req.headers, req.socket.remoteAddress)
       const ctx = {
         db,
         params: m.groups ?? {},
@@ -142,7 +143,9 @@ const server = createServer(async (req, res) => {
         user,
         cookies: [] as string[],
         secure: !isLocal(req),
-        ip: String(req.headers['cf-connecting-ip'] ?? req.socket.remoteAddress ?? ''),
+        ip: who.ip,
+        country: who.country,
+        ua: String(req.headers['user-agent'] ?? '').slice(0, 300),
       }
       if (r.need !== 'public') {
         if (!user) throw new HttpError(401, 'Sign in first.')

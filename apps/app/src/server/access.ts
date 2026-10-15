@@ -9,6 +9,7 @@ import type { IncomingMessage } from 'node:http'
  *   SOCIALMONITOR_PUBLIC_HOST   the tunnel's hostname, e.g. socialmonitor-app.example.com
  *   SOCIALMONITOR_ACCESS_TEAM   the Zero Trust team domain, e.g. myteam.cloudflareaccess.com
  *   SOCIALMONITOR_ACCESS_AUD    the Access application's audience tag
+ *   SOCIALMONITOR_TUNNEL_ADDRESSES  only when cloudflared runs on another machine: its addresses
  */
 const LOCAL = /^(127\.0\.0\.1|localhost)(:\d+)?$/
 
@@ -17,6 +18,43 @@ export const publicHost = () => process.env.SOCIALMONITOR_PUBLIC_HOST?.trim().to
 /** True when the request was made on this computer, not through the tunnel. */
 export function isLocal(req: IncomingMessage) {
   return LOCAL.test(req.headers.host ?? '') && !req.headers['cf-connecting-ip']
+}
+
+const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1'])
+const one = (h: string | string[] | undefined) => (Array.isArray(h) ? h[0] : h)?.trim() || ''
+
+/**
+ * Whether the TCP peer is the tunnel: cloudflared on this computer, or an address named in
+ * SOCIALMONITOR_TUNNEL_ADDRESSES (comma separated) when it runs elsewhere. Only then are
+ * Cloudflare's headers about the visitor believed.
+ */
+export function trustedPeer(peer: string | undefined, env = process.env) {
+  const p = peer ?? ''
+  if (LOOPBACK.has(p)) return true
+  return (env.SOCIALMONITOR_TUNNEL_ADDRESSES ?? '')
+    .split(',')
+    .map((a) => a.trim())
+    .filter(Boolean)
+    .includes(p.replace(/^::ffff:/, ''))
+}
+
+/**
+ * Who is asking, and from which country when Cloudflare says. cf-connecting-ip and cf-ipcountry
+ * count only from a trusted peer; anyone else gets the socket's own address and no country.
+ */
+export function clientOf(
+  headers: Record<string, string | string[] | undefined>,
+  peer: string | undefined,
+  env = process.env,
+): { ip: string; country: string | null } {
+  const sock = (peer ?? '').replace(/^::ffff:/, '')
+  if (!trustedPeer(peer, env)) return { ip: sock, country: null }
+  const ip = one(headers['cf-connecting-ip'])
+  const country = one(headers['cf-ipcountry']).toUpperCase()
+  return {
+    ip: /^[0-9a-f.:]{2,45}$/i.test(ip) ? ip : sock,
+    country: /^[A-Z]{2}$/.test(country) && country !== 'XX' ? country : null,
+  }
 }
 
 let certs: { keys: (JsonWebKey & { kid: string })[]; at: number } | null = null

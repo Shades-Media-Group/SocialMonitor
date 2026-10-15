@@ -75,8 +75,12 @@ export interface Ctx {
   cookies: string[]
   /** The request arrived over HTTPS (the tunnel), so cookies are marked Secure. */
   secure: boolean
-  /** Who is asking: Cloudflare's client address through the tunnel, else this computer. */
+  /** Who is asking: Cloudflare's client address from the tunnel, else the socket's (see clientOf). */
   ip: string
+  /** The visitor's country from Cloudflare, when the tunnel says; null on this computer. */
+  country: string | null
+  /** The browser's user agent, cut to 300 characters. */
+  ua: string
 }
 type Signed = Ctx & { user: User }
 /**
