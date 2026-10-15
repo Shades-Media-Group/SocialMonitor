@@ -1,6 +1,13 @@
 import { createSign, generateKeyPairSync } from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { accessConfig, clientOf, gate, trustedPeer, validAccessToken } from './access.ts'
+import {
+  accessConfig,
+  allowedHosts,
+  clientOf,
+  gate,
+  trustedPeer,
+  validAccessToken,
+} from './access.ts'
 
 const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
 const other = generateKeyPairSync('rsa', { modulusLength: 2048 })
@@ -105,6 +112,24 @@ describe('the request gate', () => {
     socket: { remoteAddress: peer },
   })
   const f = certs(['k1', publicKey])
+
+  it('answers only to its own names', async () => {
+    expect([...allowedHosts(4400, { SOCIALMONITOR_UI: 'http://127.0.0.1:4400' })]).toEqual([
+      '127.0.0.1:4400',
+      'localhost:4400',
+    ])
+    expect(allowedHosts(4401, { ...env, SOCIALMONITOR_UI: 'http://127.0.0.1:4400' })).toEqual(
+      new Set([
+        '127.0.0.1:4401',
+        'localhost:4401',
+        '127.0.0.1:4400',
+        'localhost:4400',
+        'app.example.test',
+      ]),
+    )
+    for (const host of ['evil.example', '127.0.0.1:9999', '', 'app.example.test.evil.example'])
+      expect(await gate(req({ host }), 4400, env, f)).toMatchObject({ ok: false, status: 421 })
+  })
 
   it('lets requests made on this computer through as local', async () => {
     for (const host of ['127.0.0.1:4400', 'localhost:4400'])

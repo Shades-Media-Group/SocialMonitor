@@ -93,7 +93,8 @@ function serveStatic(res: ServerResponse, path: string) {
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${HOST}`)
-  // Anything that came through Cloudflare needs a valid Access token.
+  // First the address and the tunnel: a Host outside the allow-list (DNS rebinding) gets nothing,
+  // and anything that came through Cloudflare needs a valid Access token.
   const pass = await gate(req, PORT)
   if (!pass.ok) return send(res, pass.status, { error: pass.error })
   // Only the dashboard itself may drive the API from a browser: its own origin, the dev UI and the

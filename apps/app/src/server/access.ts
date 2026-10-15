@@ -29,6 +29,28 @@ export function accessConfig(env: Env = process.env) {
   return { team: team.includes('.') ? team : `${team}.cloudflareaccess.com`, aud }
 }
 
+/**
+ * The Host headers this server answers to: this computer on its own port, the dev UI that
+ * proxies to it, and the tunnel's hostname. Any other name is a DNS-rebinding page or a
+ * misrouted hostname, and gets nothing.
+ */
+export function allowedHosts(port: number, env: Env = process.env) {
+  const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`])
+  const ui = env.SOCIALMONITOR_UI?.trim()
+  if (ui) {
+    try {
+      const h = new URL(ui).host.toLowerCase()
+      hosts.add(h)
+      hosts.add(h.replace('127.0.0.1', 'localhost'))
+    } catch {
+      /* not a URL: ignored */
+    }
+  }
+  const pub = publicHost(env)
+  if (pub) hosts.add(pub)
+  return hosts
+}
+
 /** Signs that a request came through Cloudflare rather than from this computer. */
 export const tunneled = (headers: Headers, peer: string | undefined, env: Env = process.env) =>
   !LOOPBACK.has(peer ?? '') ||
@@ -107,18 +129,20 @@ export type Gate =
 let warned = false
 
 /**
- * Decides whether a request may go on, before any routing. A request from this computer with
- * no tunnel signs passes as local. Anything that came
+ * Decides whether a request may go on, before any routing. A Host outside the allow-list gets
+ * 421. A request from this computer with no tunnel signs passes as local. Anything that came
  * through the tunnel passes only on the public hostname with a valid Access token; without
  * Access configured, it is refused (fail closed) and the log says why once.
  */
 export async function gate(
   req: Pick<IncomingMessage, 'headers'> & { socket: { remoteAddress?: string } },
-  _port: number,
+  port: number,
   env: Env = process.env,
   fetcher: typeof fetch = fetch,
 ): Promise<Gate> {
   const host = one(req.headers.host).toLowerCase()
+  if (!allowedHosts(port, env).has(host))
+    return { ok: false, status: 421, error: 'This dashboard does not answer to that address.' }
   if (!tunneled(req.headers, req.socket.remoteAddress, env))
     return { ok: true, local: true, access: false }
   const config = accessConfig(env)
