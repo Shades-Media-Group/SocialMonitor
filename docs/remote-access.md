@@ -45,5 +45,6 @@ Open the address and pass Cloudflare Access with the code it emails you. Then si
 - "Sign in to networks" opens a window on the computer itself, so it is refused remotely.
 - The dashboard still listens only on 127.0.0.1; the tunnel reaches it from inside your computer.
 - The dashboard checks the Access token itself: its RS256 signature against your team's keys, the audience tag, the issuer and its expiry. A request that carries Cloudflare's headers (`cf-connecting-ip`, `cf-ray`) or asks for the public hostname is refused without a valid one, even if a hostname is ever routed past Access by mistake.
+- Every page carries a strict Content Security Policy with a fresh nonce, so only the dashboard's own scripts run and no other site can frame it; through the tunnel it also sends HSTS.
 - It answers only to `127.0.0.1:<port>`, `localhost:<port>` and the public hostname. Any other `Host` gets nothing, so a web page can't reach it through DNS rebinding.
 - The visitor's address and country (`cf-connecting-ip`, `cf-ipcountry`) are believed only on a request with a valid Access token; otherwise the connection's own address is used.

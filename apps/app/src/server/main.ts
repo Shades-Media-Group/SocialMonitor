@@ -13,6 +13,7 @@ import { closeStaleRuns } from '../core/store.ts'
 import { startScheduler } from '../core/schedule.ts'
 import { fillTikTok } from '../core/fill.ts'
 import { changed, onChange } from '../core/events.ts'
+import { baseHeaders, newNonce, pageCsp, withNonce } from './headers.ts'
 
 // Keys and options live in .env at the repository root, never in the code.
 try {
@@ -87,16 +88,30 @@ function serveStatic(res: ServerResponse, path: string) {
       : join(WEB, 'index.html')
   if (!existsSync(target))
     return send(res, 503, 'The dashboard is not built yet: run yarn start.', 'text/plain')
+  if (target.endsWith('index.html')) {
+    // The page: a fresh nonce on its scripts, and a CSP that runs nothing else.
+    const nonce = newNonce()
+    res.writeHead(200, {
+      'content-type': TYPES['.html'],
+      'cache-control': 'no-store',
+      'content-security-policy': pageCsp(nonce),
+    })
+    return res.end(withNonce(readFileSync(target, 'utf8'), nonce))
+  }
   res.writeHead(200, { 'content-type': TYPES[extname(target)] ?? 'application/octet-stream' })
   res.end(readFileSync(target))
 }
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${HOST}`)
+  for (const [k, v] of Object.entries(baseHeaders(false))) res.setHeader(k, v)
   // First the address and the tunnel: a Host outside the allow-list (DNS rebinding) gets nothing,
   // and anything that came through Cloudflare needs a valid Access token.
   const pass = await gate(req, PORT)
   if (!pass.ok) return send(res, pass.status, { error: pass.error })
+  // Through the tunnel the browser sees HTTPS: tell it to keep using it.
+  if (pass.access)
+    res.setHeader('strict-transport-security', baseHeaders(true)['strict-transport-security']!)
   // Only the dashboard itself may drive the API from a browser: its own origin, the dev UI and the
   // tunnel. Other local ports count as the same site to cookies, so they are refused by name.
   const origin = req.headers.origin
