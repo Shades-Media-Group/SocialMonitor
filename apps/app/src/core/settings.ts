@@ -13,7 +13,7 @@ export interface Settings {
 }
 
 const DEFAULTS: Settings = { gap_hours: 4, keep_days: 365, analyzer: 'auto' }
-const VERSION = (
+export const VERSION = (
   JSON.parse(readFileSync(new URL('../../../../package.json', import.meta.url), 'utf8')) as {
     version: string
   }

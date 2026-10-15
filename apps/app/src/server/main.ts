@@ -147,7 +147,12 @@ const server = createServer(async (req, res) => {
   }
   if (cookies.length) res.setHeader('set-cookie', cookies)
   const needsUser = url.pathname.startsWith('/api/') || url.pathname.startsWith('/media/')
-  if (needsUser && !user && !url.pathname.startsWith('/api/auth/'))
+  if (
+    needsUser &&
+    !user &&
+    !url.pathname.startsWith('/api/auth/') &&
+    url.pathname !== '/api/health'
+  )
     return send(res, 401, { error: 'Sign in first.', signin: true })
   // Live updates: open dashboards keep one event stream and refetch when told something changed.
   if (url.pathname === '/api/events') {

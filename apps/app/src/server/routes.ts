@@ -58,7 +58,8 @@ import {
   updateReply,
 } from '../core/replies.ts'
 import { latestIdeas, suggestIdeas } from '../core/ideas.ts'
-import { getSettings } from '../core/settings.ts'
+import { getSettings, VERSION } from '../core/settings.ts'
+import { execFileSync } from 'node:child_process'
 import { latestSummary, refreshSummary } from '../core/summary.ts'
 import type { Client, Session, User } from '../core/auth.ts'
 import { memberships, roleFor, signSession, visibleBrands } from '../core/auth.ts'
@@ -234,7 +235,32 @@ const visible = <T>(c: Signed, rows: T[], brandOfRow: (row: T) => number | numbe
   })
 }
 
+/** The commit this copy runs, read once: the updater and deploy:verify compare it with main. */
+const COMMIT = (() => {
+  try {
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
+      cwd: new URL('.', import.meta.url),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim()
+  } catch {
+    return 'unknown'
+  }
+})()
+
+/** Public, for the updater and uptime checks: the version, the commit and a cheap database check.
+ * Nothing else, since anyone past the tunnel's Access may call it. */
+export function health(db: DB) {
+  try {
+    db.prepare('SELECT 1').get()
+  } catch {
+    throw new HttpError(503, 'The database does not answer.', { ok: false, db: 'error' })
+  }
+  return { ok: true, version: VERSION, commit: COMMIT, db: 'ok' }
+}
+
 export const routes: Route[] = [
+  r('GET', '/api/health', 'public', ({ db }) => health(db)),
   r('GET', '/api/settings', 'user', ({ db }) => readSettings(db)),
   // Which AI sorts comments on this computer: Claude Code, an API key, or none yet.
   r('GET', '/api/ai', 'user', ({ db }) => {
