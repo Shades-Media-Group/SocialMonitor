@@ -1,23 +1,29 @@
 // Remote access through a Cloudflare Tunnel, protected by Cloudflare Access.
 //
-//   yarn tunnel setup <hostname> [tunnel-name]   once: creates the tunnel (or joins an existing one,
-//                                                 e.g. a server's shared tunnel) and its DNS record.
-//                                                 Needs `cloudflared tunnel login` first.
+//   yarn tunnel setup <hostname>   once: creates SocialMonitor's own tunnel and its DNS record.
+//                                  Needs `cloudflared tunnel login` first.
 //   yarn tunnel                    runs it; the dashboard must be running with `yarn start` on port 4400
 //
-// The tunnel's files live in data/tunnel (git-ignored). The dashboard itself refuses every request
-// that does not carry a valid Cloudflare Access token, so set up the Access application before
-// sharing the address: see docs/remote-access.md.
+// One tunnel per app: SocialMonitor never joins a tunnel another app runs, so revoking one leaves the
+// others up. Its only route is <hostname> -> http://127.0.0.1:4400, then 404 for everything else; the
+// config is rewritten that way on every run. The tunnel's files live in data/tunnel (git-ignored), and
+// its credentials file must stay readable by this user only (0600). Put Cloudflare Access in front of
+// the hostname before sharing it, and set CF_ACCESS_TEAM and CF_ACCESS_AUD so the dashboard checks the
+// Access token itself: see docs/remote-access.md.
 import { execFileSync, spawn } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 const root = new URL('..', import.meta.url).pathname
+const NAME = 'socialmonitor'
 const dir = join(root, 'data', 'tunnel')
 const config = join(dir, 'config.yml')
+const credentials = join(dir, 'credentials.json')
 const cf = (...args) =>
   execFileSync('cloudflared', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+const ACCESS_NOTE =
+  'Cloudflare Access must be in front of this hostname, and CF_ACCESS_TEAM and CF_ACCESS_AUD must be set in .env, so the dashboard refuses anything Access did not let in. See docs/remote-access.md.'
 
 function setEnv(key, value) {
   const file = join(root, '.env')
@@ -29,9 +35,47 @@ function setEnv(key, value) {
   writeFileSync(file, [...lines.filter(Boolean), `${key}=${value}`, ''].join('\n'), { mode: 0o600 })
 }
 
-const [cmd, host, NAME = 'socialmonitor'] = process.argv.slice(2)
+/** Anyone who can read the credentials file can run a connector for this tunnel and receive its
+ * traffic, so it must be private to this user. Windows has no mode bits; there it relies on the
+ * profile folder's permissions. */
+function checkCredentials() {
+  if (!existsSync(credentials))
+    throw new Error(
+      `No tunnel credentials at ${credentials}: run \`yarn tunnel setup <hostname>\`.`,
+    )
+  if (process.platform === 'win32') return
+  const mode = statSync(credentials).mode & 0o777
+  if (mode & 0o077)
+    throw new Error(
+      `${credentials} is readable by others (mode ${mode.toString(8)}). Run: chmod 600 "${credentials}"`,
+    )
+}
+
+/** Exactly one route, then 404: never SSH, RDP, a database or anything else on this computer. */
+function writeConfig(host) {
+  const { TunnelID } = JSON.parse(readFileSync(credentials, 'utf8'))
+  writeFileSync(
+    config,
+    [
+      `tunnel: ${TunnelID}`,
+      `credentials-file: ${credentials}`,
+      'ingress:',
+      `  - hostname: ${host}`,
+      '    service: http://127.0.0.1:4400',
+      '  - service: http_status:404',
+      '',
+    ].join('\n'),
+    { mode: 0o600 },
+  )
+}
+
+const [cmd, host, extra] = process.argv.slice(2)
 
 if (cmd === 'setup') {
+  if (extra)
+    throw new Error(
+      "SocialMonitor runs its own tunnel and never joins another app's. Usage: yarn tunnel setup <hostname>",
+    )
   if (!host || !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(host))
     throw new Error('Usage: yarn tunnel setup <hostname>, e.g. socialmonitor-app.example.com')
   if (!existsSync(join(homedir(), '.cloudflared', 'cert.pem')))
@@ -39,43 +83,36 @@ if (cmd === 'setup') {
       'Run `cloudflared tunnel login` first and choose the domain in the browser window it opens.',
     )
   mkdirSync(dir, { recursive: true })
-  const list = JSON.parse(cf('tunnel', 'list', '--output', 'json'))
-  let tunnel = list.find((t) => t.name === NAME)
-  if (tunnel && NAME !== 'socialmonitor') {
-    // Joining a tunnel another app already runs: route the name, and print the rule to add to its config.
-    cf('tunnel', 'route', 'dns', '--overwrite-dns', NAME, host)
-    setEnv('SOCIALMONITOR_PUBLIC_HOST', host)
-    console.log(
-      `https://${host} now points at the tunnel "${NAME}". Add this rule to that tunnel's config, above its last catch-all rule, and restart it:`,
+  const exists = JSON.parse(cf('tunnel', 'list', '--output', 'json')).some((t) => t.name === NAME)
+  if (!exists) {
+    cf('tunnel', 'create', '--credentials-file', credentials, NAME)
+    chmodSync(credentials, 0o600)
+  } else if (!existsSync(credentials))
+    throw new Error(
+      `A tunnel named "${NAME}" exists in your Cloudflare account, but its credentials are not in ${dir}. Copy data/tunnel/credentials.json from the computer that created it, or delete the tunnel with \`cloudflared tunnel delete ${NAME}\` and run setup again.`,
     )
-    console.log(`  - hostname: ${host}\n    service: http://127.0.0.1:4400`)
-    process.exit(0)
-  }
-  if (!tunnel) {
-    cf('tunnel', 'create', '--credentials-file', join(dir, 'credentials.json'), NAME)
-    tunnel = JSON.parse(cf('tunnel', 'list', '--output', 'json')).find((t) => t.name === NAME)
-  }
+  checkCredentials()
   cf('tunnel', 'route', 'dns', '--overwrite-dns', NAME, host)
-  writeFileSync(
-    config,
-    [
-      `tunnel: ${tunnel.id}`,
-      `credentials-file: ${join(dir, 'credentials.json')}`,
-      'ingress:',
-      `  - hostname: ${host}`,
-      '    service: http://127.0.0.1:4400',
-      '  - service: http_status:404',
-      '',
-    ].join('\n'),
-  )
+  writeConfig(host)
   setEnv('SOCIALMONITOR_PUBLIC_HOST', host)
-  console.log(`Tunnel ${NAME} routes https://${host} to this computer's port 4400.`)
   console.log(
-    'Next: create the Cloudflare Access application for it (docs/remote-access.md), then `yarn tunnel`.',
+    `Tunnel ${NAME} routes https://${host} to this computer's port 4400, and nothing else.`,
   )
+  console.log(ACCESS_NOTE)
+  console.log('Then run `yarn tunnel`.')
+} else if (cmd) {
+  throw new Error('Usage: yarn tunnel setup <hostname>, then yarn tunnel')
 } else {
-  if (!existsSync(config))
-    throw new Error('No tunnel yet: run `yarn tunnel setup <hostname>` first.')
+  try {
+    process.loadEnvFile(join(root, '.env'))
+  } catch {
+    /* no .env */
+  }
+  const publicHost = process.env.SOCIALMONITOR_PUBLIC_HOST
+  if (!publicHost) throw new Error('No tunnel yet: run `yarn tunnel setup <hostname>` first.')
+  checkCredentials()
+  writeConfig(publicHost)
+  if (!process.env.CF_ACCESS_TEAM || !process.env.CF_ACCESS_AUD) console.warn(ACCESS_NOTE)
   spawn('cloudflared', ['tunnel', '--config', config, 'run'], { stdio: 'inherit' }).on(
     'exit',
     (code) => process.exit(code ?? 0),

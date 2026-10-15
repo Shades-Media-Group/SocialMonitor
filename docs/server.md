@@ -60,16 +60,15 @@ Set the `SMTP_*` keys and `SOCIALMONITOR_JWT_SECRET` as in [people and sign-in](
 
 "Sign in to networks" opens a browser window on the server itself, so do it once at the server's screen or over remote desktop. Through the tunnel the button is refused on purpose.
 
-## The tunnel, next to other apps
+## One tunnel per app
 
-If the server already runs a Cloudflare Tunnel for other apps, add SocialMonitor to it instead of starting a second one:
+SocialMonitor runs its own Cloudflare Tunnel, even when the server already runs tunnels for other apps. Revoking one tunnel then leaves the others up, and no tunnel can reach another app's ports. Set it up as in [remote access](remote-access.md):
 
 ```bash
-cloudflared tunnel list                      # find the existing tunnel's name
-yarn tunnel setup socialmonitor-app.example.com that-tunnel-name
+yarn tunnel setup socialmonitor-app.example.com
 ```
 
-The script routes the hostname to that tunnel and prints the rule to add to its config. Then protect the hostname with Cloudflare Access, as in [remote access](remote-access.md).
+Its only route is that hostname to `http://127.0.0.1:4400`; everything else gets a 404. `yarn tunnel` writes the config again on every start, so the route can't drift. Never add SSH, remote desktop, a database or Docker to any tunnel. The credentials file, `data/tunnel/credentials.json`, lets whoever holds it run a connector and receive the traffic. Keep it readable only by your user (`chmod 600`; `yarn tunnel` refuses to start otherwise), and leave it out of chats, logs and backups. If it leaks, delete the tunnel in Cloudflare and run setup again.
 
 ## Backups
 
