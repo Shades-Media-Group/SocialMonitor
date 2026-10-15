@@ -8,6 +8,7 @@ import { JsonPanel } from '../json.tsx'
 import { t } from '../i18n.ts'
 import type { Growth } from '../growth.tsx'
 import { GrowthLists } from '../growth.tsx'
+import { CampaignBox } from '../campaigns.tsx'
 
 const STATUS: Record<string, string> = {
   ok: t('Done'),
@@ -181,6 +182,7 @@ export function Reports(view: BrandView) {
       <div class="sm-stack">
         <SavedFiles brand={brand} version={version} notify={notify} />
         <GrowthBox {...view} />
+        <CampaignBox brand={brand} version={version} />
         <Empty title={t('No reports yet.')}>
           {t(
             'Every update ends with one: the posts read, the comments to answer, and what changed.',
@@ -218,6 +220,7 @@ export function Reports(view: BrandView) {
     <div class="sm-stack">
       <SavedFiles brand={brand} version={version} notify={notify} />
       <GrowthBox {...view} />
+      <CampaignBox brand={brand} version={version} />
       <h2 class="sm-sec__title">{t('Update reports')}</h2>
       <div class="sm-split">
         <ul class="sm-runs" aria-label={t('Updates')}>

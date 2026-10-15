@@ -12,7 +12,8 @@ import type { Comment, Network, Profile, RunScope } from './types.ts'
 import { NETWORKS } from './types.ts'
 import { collectors } from './collect/index.ts'
 import { Challenge, closeBrowser, openBrowser, pause } from './collect/browser.ts'
-import { describePost, pickEngine, sortComments } from './analyze.ts'
+import { describePost, pickCampaigns, pickEngine, sortComments } from './analyze.ts'
+import { placeByAi } from './campaigns.ts'
 import type { Kind } from './analyze.ts'
 import { getSettings } from './settings.ts'
 import { buildReport } from './report.ts'
@@ -289,6 +290,17 @@ async function aiStep(
       store.setSetting(db, 'ai_error', JSON.stringify({ at: now(), message: (e as Error).message }))
       throw new Error(`AI: ${(e as Error).message}`, { cause: e })
     }
+  }
+  // Campaigns last, once posts are described: Claude places what the hints did not.
+  try {
+    const placed = await placeByAi(
+      db,
+      touched.map((x) => x.postId),
+      (brand, campaigns, posts) => pickCampaigns(engine, brand, campaigns, posts),
+    )
+    if (placed) log(`Claude placed ${placed} posts in campaigns.`)
+  } catch (e) {
+    log(`Could not place posts in campaigns: ${(e as Error).message}`)
   }
   store.setSetting(db, 'ai_error', '')
 }

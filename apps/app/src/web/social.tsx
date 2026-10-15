@@ -19,6 +19,7 @@ import {
   when,
 } from './ui.tsx'
 import { CommentList } from './views/comments.tsx'
+import { PostCampaigns } from './campaigns.tsx'
 
 /**
  * The social pieces every screen shares: an account card per network profile, a post card with
@@ -236,6 +237,7 @@ export function PostDrawer({
             <p class="sm-viewer__caption">
               <b>@{post.handle}</b> {post.caption ?? post.description}
             </p>
+            <PostCampaigns post={post} brands={brands} />
             <PostEvolution post={post} />
             {rows === null ? null : rows.length ? (
               <div class="sm-ig">

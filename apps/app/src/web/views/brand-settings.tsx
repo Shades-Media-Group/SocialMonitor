@@ -6,6 +6,7 @@ import { BadReport } from '../bad-report.tsx'
 import { t } from '../i18n.ts'
 import { NETWORK_NAME, NetworkMark, Row, Segmented, when } from '../ui.tsx'
 import { textOn, validColor } from '../../core/color.ts'
+import { CampaignSettings } from '../campaigns.tsx'
 
 type Range = 'new' | 'due' | 'all'
 
@@ -260,6 +261,8 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
         notify={notify}
         reload={reload}
       />
+
+      <CampaignSettings brand={brand} reload={reload} notify={notify} />
     </div>
   )
 }

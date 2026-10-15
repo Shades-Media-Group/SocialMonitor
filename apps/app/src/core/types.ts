@@ -35,6 +35,8 @@ export interface Brand {
   /** The brand's logo on its PDF reports, a /media/ path, and its accent colour (#rrggbb). */
   report_logo: string | null
   report_color: string | null
+  /** 1: posts join campaigns by their hints, then by Claude when the AI is on; 0: by hand only. */
+  campaign_auto: 0 | 1
   created_at: string
 }
 

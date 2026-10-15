@@ -741,6 +741,62 @@ export const ro: Dict = {
     'No post grew between two readings in this period; history builds up with each update.':
       'Nicio postare nu a crescut între două citiri în această perioadă; istoricul crește cu fiecare actualizare.',
     Now: 'Acum',
+    Campaigns: 'Campanii',
+    Campaign: 'Campanie',
+    'Campaign report': 'Raportul campaniei',
+    'New campaign': 'Campanie nouă',
+    'Edit campaign': 'Editează campania',
+    'Assign posts automatically': 'Atribuie postările automat',
+    "By the campaign's hashtags or keywords within its dates; then Claude places the posts they do not.":
+      'După hashtagurile sau cuvintele cheie ale campaniei, în perioada ei; apoi Claude plasează postările rămase.',
+    "By the campaign's hashtags or keywords within its dates. The AI is off for this brand.":
+      'După hashtagurile sau cuvintele cheie ale campaniei, în perioada ei. AI-ul este oprit pentru acest brand.',
+    'Off: posts join campaigns only when someone adds them.':
+      'Oprit: postările intră în campanii doar când le adaugă cineva.',
+    'Posts join campaigns by themselves.': 'Postările intră singure în campanii.',
+    'Posts join campaigns by hand only.': 'Postările intră în campanii doar manual.',
+    Dates: 'Perioadă',
+    'Any time': 'Oricând',
+    'From {date}': 'Din {date}',
+    'Until {date}': 'Până la {date}',
+    'Since {date}': 'Din {date}',
+    'Hashtags and keywords': 'Hashtaguri și cuvinte cheie',
+    Hashtags: 'Hashtaguri',
+    Keywords: 'Cuvinte cheie',
+    Starts: 'Începe',
+    Ends: 'Se termină',
+    'Optional. Posts outside the dates never join by themselves.':
+      'Opțional. Postările din afara perioadei nu intră niciodată singure.',
+    'A post with any of them in its caption joins.':
+      'O postare care are oricare dintre ele în descriere intră în campanie.',
+    'Separated by commas; whole words, any case.':
+      'Separate prin virgulă; cuvinte întregi, indiferent de majuscule.',
+    'What the campaign is about, for Claude to place posts.':
+      'Despre ce este campania, ca să poată Claude plasa postările.',
+    'Delete {name}? Its posts stay; only the campaign goes.':
+      'Ștergi {name}? Postările rămân; dispare doar campania.',
+    'No campaigns yet. Add one to see its posts, what people said under them and how they grew, in one report.':
+      'Nicio campanie încă. Adaugă una ca să vezi într-un singur raport postările ei, ce au spus oamenii sub ele și cum au crescut.',
+    'Add to {name}': 'Adaugă în {name}',
+    'Take out of {name}': 'Scoate din {name}',
+    'By its hashtags or keywords': 'După hashtaguri sau cuvinte cheie',
+    'Chosen by Claude': 'Ales de Claude',
+    'Set by hand': 'Setat manual',
+    '{n} comments sorted': '{n} comentarii sortate',
+    'Rated positive {p}, negative {n}, neutral {u}.':
+      'Evaluate pozitiv {p}, negativ {n}, neutru {u}.',
+    'Top complaints': 'Principalele reclamații',
+    'Top questions': 'Principalele întrebări',
+    'No complaints under these posts.': 'Nicio reclamație sub aceste postări.',
+    'No questions under these posts.': 'Nicio întrebare sub aceste postări.',
+    'Posts in the campaign': 'Postările campaniei',
+    'No posts in this campaign yet.': 'Încă nicio postare în această campanie.',
+    'Name the campaign.': 'Dă un nume campaniei.',
+    'A campaign name is at most 80 characters.': 'Numele campaniei are cel mult 80 de caractere.',
+    'This brand already has a campaign with that name.':
+      'Acest brand are deja o campanie cu acest nume.',
+    'No such campaign.': 'Nu există această campanie.',
+    "That campaign is not this post's brand's.": 'Campania nu aparține brandului acestei postări.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

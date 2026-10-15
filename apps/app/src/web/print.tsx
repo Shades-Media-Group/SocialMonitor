@@ -5,6 +5,8 @@ import { Logo, Mark, NETWORK_NAME, NetworkMark, fmt, short, when } from './ui.ts
 import { textOn, validColor } from '../core/color.ts'
 import type { Growth } from './growth.tsx'
 import { GrowthLists } from './growth.tsx'
+import type { CampaignReportData } from './campaigns.tsx'
+import { CampaignReport, dates } from './campaigns.tsx'
 import { Heatmap, LineChart } from './charts.tsx'
 import { brandCategories } from './rate.tsx'
 import { locale, t } from './i18n.ts'
@@ -552,6 +554,46 @@ export function PrintBad({ brand }: { brand: BrandRow }) {
           </section>
         ))}
 
+        <PrFoot brand={brand} />
+      </article>
+    </div>
+  )
+}
+
+/**
+ * A campaign's report on paper: the brand's letterhead with the campaign's name and dates,
+ * then the same pieces the Reports tab shows.
+ */
+export function PrintCampaign({ brand, campaignId }: { brand: BrandRow; campaignId: number }) {
+  const [r, setR] = useState<CampaignReportData | null>(null)
+  useEffect(() => {
+    document.documentElement.dataset.theme = 'light'
+    api
+      .get<CampaignReportData>(`/api/campaigns/${campaignId}/report`)
+      .then(setR)
+      .catch(() => (document.body.dataset.ready = '1'))
+  }, [campaignId])
+  useEffect(() => {
+    if (r)
+      requestAnimationFrame(() => requestAnimationFrame(() => (document.body.dataset.ready = '1')))
+  }, [r])
+  if (!r) return null
+  const c = r.campaign
+  return (
+    <div class="sm-shell sm-shell--print">
+      <article class={`sm-pr sm-body${look(brand).class}`} style={look(brand).style}>
+        <PrHead
+          brand={brand}
+          kind={t('Campaign report')}
+          facts={[
+            [t('Campaign'), c.name],
+            [t('Dates'), dates(c) || t('Any time')],
+            [t('Posts'), fmt(r.engagement.posts)],
+            [t('Prepared'), new Date().toLocaleDateString(locale, { dateStyle: 'long' })],
+          ]}
+        />
+        {c.about && <p class="sm-pr__about">{c.about}</p>}
+        <CampaignReport r={r} brand={brand} print />
         <PrFoot brand={brand} />
       </article>
     </div>

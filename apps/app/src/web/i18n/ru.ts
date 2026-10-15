@@ -738,6 +738,62 @@ export const ru: Dict = {
     'No post grew between two readings in this period; history builds up with each update.':
       'За этот период ни одна публикация не выросла между двумя чтениями; история пополняется с каждым обновлением.',
     Now: 'Сейчас',
+    Campaigns: 'Кампании',
+    Campaign: 'Кампания',
+    'Campaign report': 'Отчёт по кампании',
+    'New campaign': 'Новая кампания',
+    'Edit campaign': 'Изменить кампанию',
+    'Assign posts automatically': 'Распределять публикации автоматически',
+    "By the campaign's hashtags or keywords within its dates; then Claude places the posts they do not.":
+      'По хэштегам или ключевым словам кампании в её сроки; затем Claude распределяет остальные публикации.',
+    "By the campaign's hashtags or keywords within its dates. The AI is off for this brand.":
+      'По хэштегам или ключевым словам кампании в её сроки. ИИ для этого бренда выключен.',
+    'Off: posts join campaigns only when someone adds them.':
+      'Выключено: публикации попадают в кампании, только когда их добавляют вручную.',
+    'Posts join campaigns by themselves.': 'Публикации попадают в кампании автоматически.',
+    'Posts join campaigns by hand only.': 'Публикации попадают в кампании только вручную.',
+    Dates: 'Сроки',
+    'Any time': 'Без сроков',
+    'From {date}': 'С {date}',
+    'Until {date}': 'До {date}',
+    'Since {date}': 'С {date}',
+    'Hashtags and keywords': 'Хэштеги и ключевые слова',
+    Hashtags: 'Хэштеги',
+    Keywords: 'Ключевые слова',
+    Starts: 'Начало',
+    Ends: 'Конец',
+    'Optional. Posts outside the dates never join by themselves.':
+      'Необязательно. Публикации вне этих сроков сами не попадают в кампанию.',
+    'A post with any of them in its caption joins.':
+      'Публикация с любым из них в подписи попадает в кампанию.',
+    'Separated by commas; whole words, any case.': 'Через запятую; целые слова, регистр не важен.',
+    'What the campaign is about, for Claude to place posts.':
+      'О чём кампания — чтобы Claude мог распределять публикации.',
+    'Delete {name}? Its posts stay; only the campaign goes.':
+      'Удалить {name}? Публикации останутся, удалится только кампания.',
+    'No campaigns yet. Add one to see its posts, what people said under them and how they grew, in one report.':
+      'Кампаний пока нет. Добавьте кампанию, чтобы видеть в одном отчёте её публикации, что под ними пишут и как они растут.',
+    'Add to {name}': 'Добавить в {name}',
+    'Take out of {name}': 'Убрать из {name}',
+    'By its hashtags or keywords': 'По хэштегам или ключевым словам',
+    'Chosen by Claude': 'Выбрано Claude',
+    'Set by hand': 'Задано вручную',
+    '{n} comments sorted': 'Отсортировано комментариев: {n}',
+    'Rated positive {p}, negative {n}, neutral {u}.':
+      'Оценки: положительных {p}, отрицательных {n}, нейтральных {u}.',
+    'Top complaints': 'Главные жалобы',
+    'Top questions': 'Главные вопросы',
+    'No complaints under these posts.': 'Под этими публикациями нет жалоб.',
+    'No questions under these posts.': 'Под этими публикациями нет вопросов.',
+    'Posts in the campaign': 'Публикации кампании',
+    'No posts in this campaign yet.': 'В этой кампании пока нет публикаций.',
+    'Name the campaign.': 'Укажите название кампании.',
+    'A campaign name is at most 80 characters.': 'Название кампании — не больше 80 символов.',
+    'This brand already has a campaign with that name.':
+      'У этого бренда уже есть кампания с таким названием.',
+    'No such campaign.': 'Такой кампании нет.',
+    "That campaign is not this post's brand's.":
+      'Эта кампания не принадлежит бренду этой публикации.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

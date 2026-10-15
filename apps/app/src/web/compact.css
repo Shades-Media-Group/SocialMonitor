@@ -4286,6 +4286,79 @@ a.sm-person[href]:hover .sm-person__name {
   font-variant-numeric: tabular-nums;
 }
 
+/* Campaigns. In the post viewer: a labelled line of chips under the caption. */
+.sm-postcamps {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.sm-postcamps__label {
+  color: var(--c-text-3);
+  font-size: 12px;
+  font-weight: 600;
+}
+p.sm-postcamps {
+  display: block;
+  font-size: 13px;
+}
+p.sm-postcamps .sm-postcamps__label {
+  margin-right: 8px;
+}
+/* In the Posts table: the names, then the admins' menu, on one line. */
+.sm-campcell {
+  white-space: nowrap;
+}
+.sm-campcell__names {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+.sm-campcell .sm-menu__trigger {
+  margin-left: 4px;
+  vertical-align: middle;
+}
+/* The campaign report: a bar to pick one, eight figures, then two columns. */
+.sm-camp__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.sm-camp__bar .sm-sec__title {
+  margin: 0;
+}
+.sm-camp__bar .g-btn {
+  margin-left: auto;
+}
+.sm-shell .sm-camp__figs {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+}
+.sm-camp__mood {
+  margin: 4px 0 0;
+}
+.sm-pr__figs.sm-pr__figs--8 {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+.sm-pr__about {
+  margin: -4px 0 0;
+  color: #3d4350;
+  font-size: 12.5px;
+}
+@media screen and (max-width: 900px) {
+  .sm-shell .sm-camp__figs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media screen and (max-width: 520px) {
+  .sm-shell .sm-camp__figs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Posts that grew most: two short tables side by side, each under a small heading. */
 .sm-grow {
   display: grid;

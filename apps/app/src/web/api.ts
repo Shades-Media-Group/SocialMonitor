@@ -22,6 +22,8 @@ export type PostRow = Post & {
   /** Likes, comments and shares gained in the last 7 days, and views; null without history. */
   grew_7d: number | null
   views_7d: number | null
+  /** JSON: the ids of the campaigns it is in. */
+  campaign_ids: string
 }
 export type CommentRow = Comment & {
   network: Network

@@ -13,7 +13,12 @@ export interface Scope {
   days?: number
   /** The window of the same length just before this one, for comparing. */
   previous?: boolean
+  /** Only the posts in this campaign. */
+  campaignId?: number
 }
+
+const IN_CAMPAIGN =
+  '(? IS NULL OR p.id IN (SELECT post_id FROM post_campaigns WHERE campaign_id = ? AND member = 1))'
 
 const since = (days?: number, previous?: boolean) =>
   days ? new Date(Date.now() - days * (previous ? 2 : 1) * 86400_000).toISOString() : null
@@ -26,7 +31,7 @@ function where(s: Scope) {
     sql: `(? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR p.network = ?)
           AND (? IS NULL OR coalesce(c.posted_at, c.fetched_at) >= ?)
           AND (? IS NULL OR coalesce(c.posted_at, c.fetched_at) < ?)
-          AND lower(c.author) != lower(pr.handle)`,
+          AND lower(c.author) != lower(pr.handle) AND ${IN_CAMPAIGN}`,
     args: [
       s.brandId ?? null,
       s.brandId ?? null,
@@ -36,6 +41,8 @@ function where(s: Scope) {
       since(s.days, s.previous),
       until(s),
       until(s),
+      s.campaignId ?? null,
+      s.campaignId ?? null,
     ],
   }
 }
@@ -517,21 +524,27 @@ export function rankGrowth(rows: Reading[], from: string | null, limit = 8) {
   return { interactions: top(inter), views: top(views), thin }
 }
 
-/** The posts that grew most in the scope's window, with what the report shows of each. */
-export function postGrowth(db: DB, s: Scope, limit = 8) {
+/**
+ * The posts that grew most in the scope's window (or since `from`, an ISO date, when given),
+ * with what the report shows of each.
+ */
+export function postGrowth(db: DB, s: Scope, limit = 8, from?: string | null) {
   const rows = db
     .prepare(
       `SELECT m.post_id, m.at, m.likes, m.comments, m.shares, m.views FROM post_metrics m
          JOIN posts p ON p.id = m.post_id JOIN profiles pr ON pr.id = p.profile_id
-       WHERE (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR p.network = ?) ORDER BY m.post_id, m.at`,
+       WHERE (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR p.network = ?) AND ${IN_CAMPAIGN}
+       ORDER BY m.post_id, m.at`,
     )
     .all(
       s.brandId ?? null,
       s.brandId ?? null,
       s.network ?? null,
       s.network ?? null,
+      s.campaignId ?? null,
+      s.campaignId ?? null,
     ) as unknown as Reading[]
-  const ranked = rankGrowth(rows, since(s.days), limit)
+  const ranked = rankGrowth(rows, from === undefined ? since(s.days) : from, limit)
   const ids = [...new Set([...ranked.interactions, ...ranked.views].map((g) => g.post_id))]
   const posts = new Map(
     (ids.length
