@@ -10,6 +10,7 @@ yarn start         # the dashboard and scheduler at http://localhost:4400
 yarn mcp           # the MCP server on stdio
 yarn dev:site      # the website with live reload
 yarn deploy:site   # build, check, wrangler deploy to socialmonitor.shades.md
+yarn deploy:verify # check production: Access in front, HSTS, the PC on the tip of main (docs/server.md#production)
 yarn brand         # regenerate every logo file from one geometry
 yarn release <patch|minor|major>   # then git push --follow-tags
 ```

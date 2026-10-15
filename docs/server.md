@@ -30,7 +30,102 @@ Run `yarn start` under the server's own process manager, so it starts with the m
 
 - **Linux:** a systemd service with `WorkingDirectory` set to the repository and `ExecStart` running `yarn start`.
 - **macOS:** a launchd agent, or `pm2 start "yarn start" --name socialmonitor`.
-- **Windows:** in PowerShell opened as administrator, from the repository, run `powershell -ExecutionPolicy Bypass -File scripts\windows-service.ps1`. It adds a startup task that runs before anyone signs in, restarts SocialMonitor within a minute if it stops, and logs to `data\service.log`. Add `-Remove` to take it out.
+- **Windows without WSL:** in PowerShell opened as administrator, from the repository, run `powershell -ExecutionPolicy Bypass -File scripts\windows-service.ps1`. It adds a startup task that runs before anyone signs in, restarts SocialMonitor within a minute if it stops, and logs to `data\service.log`. Add `-Remove` to take it out. It runs the checkout as it is and never updates it; with WSL, use [production](#production) instead.
+
+## Production
+
+Shades' own copy runs on the always-on Windows PC, inside WSL Ubuntu, at `~/shades/SocialMonitor`. It is reached at `app.socialmonitor.shades.md` through its own Cloudflare Tunnel, with Cloudflare Access in front. Development happens on the Mac. Code reaches the PC only through `main` on GitHub: the PC pulls by itself, and nobody copies files to it or edits it by hand.
+
+### From the Mac to the PC
+
+1. Commit on the Mac. Every commit is signed with the Mac's SSH key, `~/.ssh/git_signing`.
+2. Push to `main`. Merge pull requests on the command line, not with GitHub's button, so the merge commit carries your signature too.
+3. Within a minute the PC sees the new commit. It builds it, backs up the database, switches, and checks that it is healthy. If it isn't, the PC rolls back by itself.
+4. From the Mac, run `yarn deploy:verify`. It passes once the PC runs the tip of `main`; allow a minute for the poll plus the build.
+
+### Signatures
+
+The PC deploys a commit only when every commit between the live one and the new tip is signed by a key in `~/.config/socialmonitor/allowed_signers`. That includes merge commits and every commit on a merged branch. The file holds the Mac's key, and the PC's own key if you added it at setup. It lives outside the repository, so a push can't add a key of its own. Change it on the PC itself, by hand, and only for a key you made. `SOCIALMONITOR_ALLOWED_SIGNERS` moves it.
+
+The PC refuses anything else and leaves the live release running:
+
+- an unsigned commit
+- a commit signed by a key it doesn't know
+- a branch that isn't a fast-forward of the live commit, such as a force-push
+
+`status.json` then says `refused` and why. A newer push that fixes it goes live as usual. To fix an unsigned commit, sign it again (`git rebase --exec 'git commit --amend --no-edit -S' <live>`) and push.
+
+The history the PC first cloned is the trusted baseline: setup made that commit the first release without checking signatures, because it predates signing.
+
+### What the updater does
+
+`scripts/production.mjs` is one Node process, run by the systemd unit `socialmonitor`. It runs the dashboard as a child process, on `127.0.0.1:4400`, and starts it again with growing pauses if it stops. Every 60 seconds it runs `git fetch origin main`. When the tip is new and passes the signature checks, it goes through these steps:
+
+1. **Build.** It checks the commit out with `git worktree` into `~/.local/share/socialmonitor/releases/<sha>`, then runs `yarn install --frozen-lockfile`, the dashboard's build and Playwright's Chromium install there. The live app isn't touched. A build that fails twice changes nothing.
+2. **Back up.** It makes a consistent copy of the database to `data/backups/pre-<sha>-<time>.db` and keeps the last 20. When restic is set up, it also runs `scripts/backup.mjs`.
+3. **Switch.** It stops the app, points `~/.local/share/socialmonitor/current` at the new release, and starts it. Every release reads the repository's own `data/` and `.env`.
+4. **Check its health.** It waits up to 120 seconds for `/api/health` to report the new commit.
+5. **Roll back when unhealthy.** It goes back to the previous release. If the new release changed the database's schema, it first restores the copy from step 2; that loses only what the failed release wrote in the minutes it was up. The commit is then left alone until a newer one comes.
+
+After a healthy release, the checkout at `~/shades/SocialMonitor` fast-forwards to the live commit, so its scripts (the updater, backups, the tunnel) match. When the updater's own file changed, it restarts itself through systemd.
+
+The updater never runs anything from a fetched commit before the signatures check out. It never merges, and it runs git with the repository's hooks turned off.
+
+### Status, logs and going back
+
+| What                                                                                                | Where                                      |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| The last result (`ok`, `building`, `refused`, `failed`, `rolled-back`), the live commit and version | `~/.local/state/socialmonitor/status.json` |
+| The updater's log                                                                                   | `~/.local/state/socialmonitor/updater.log` |
+| The last build's output                                                                             | `~/.local/state/socialmonitor/build.log`   |
+| The app's own output                                                                                | `journalctl -u socialmonitor -f`           |
+| Backups before each release                                                                         | `data/backups/`                            |
+
+To go back to an earlier commit by hand, run `node scripts/production.mjs --release <sha>` on the PC. Any commit already in the live history works. The updater then leaves the tip of `main` alone until a newer commit comes. The same command releases a newer signed commit at once, without waiting for the poll.
+
+### Ask the server
+
+From a Mac chat, send the **Server Remote** chat a message for anything on the PC: the status, the logs, a backup, a restore or a setup step. For example: "SocialMonitor: send status.json and the last 30 lines of updater.log". That chat acts on the PC and tells Cristian. Secrets stay on the PC; they never go into a chat.
+
+### Set the PC up, once
+
+In WSL Ubuntu, with the Server Remote chat:
+
+1. Turn on systemd: run `printf '[boot]\nsystemd=true\n' | sudo tee -a /etc/wsl.conf`, then `wsl --shutdown` in Windows PowerShell, then open Ubuntu again.
+2. Install Node 22 with nvm (`nvm install 22 && nvm alias default 22`), then `npm install -g yarn`, then `sudo apt install git restic`. Install Claude Code too (`curl -fsSL https://claude.ai/install.sh | bash`), and get its token with `claude setup-token`.
+3. Clone the repository and run the setup. It asks for each setting; secrets are typed hidden, and it is safe to run again:
+
+   ```bash
+   git clone https://github.com/Shades-Media-Group/SocialMonitor.git ~/shades/SocialMonitor
+   bash ~/shades/SocialMonitor/scripts/production-setup.sh
+   ```
+
+4. Set up the tunnel as in [remote access](remote-access.md) (`cloudflared tunnel login`, then `node scripts/tunnel.mjs setup app.socialmonitor.shades.md`). Then run the setup again, which starts it as the `socialmonitor-tunnel` service.
+5. In Windows PowerShell opened as administrator, run the command the setup prints last. It runs `scripts\windows-wsl-boot.ps1`, so WSL starts with Windows and stays up.
+6. At the PC's own screen, open the dashboard at `http://127.0.0.1:4400` and use "Sign in to networks". The browser window shows on the Windows desktop through WSLg.
+
+### Check it from the Mac
+
+`yarn deploy:verify` makes these checks:
+
+- The dashboard's address answers with Cloudflare Access's sign-in, not with the app.
+- `socialmonitor.shades.md` is up and sends HSTS.
+- With a service token, `/api/health` is ok and runs the commit at the tip of `origin/main`.
+
+Each check prints PASS or FAIL, and the command exits non-zero when any check fails.
+
+To give it a service token, once:
+
+1. In Cloudflare Zero Trust, open Access → Service credentials → Service Tokens → Create Service Token. Name it `deploy-verify`. Copy the Client ID and the Client Secret; the secret is shown only once.
+2. Open Access → Applications, then the dashboard's application → Policies → Add a policy. Set Action to **Service Auth**, and Include → Service Token → `deploy-verify`.
+3. On the Mac, put both in the repository's `.env` (it is git-ignored): `CF_ACCESS_CLIENT_ID=…` and `CF_ACCESS_CLIENT_SECRET=…`.
+
+The token passes Access only, and only for the dashboard's address. It doesn't sign anyone in to SocialMonitor. `/api/health` is the one route it can read.
+
+### What is not certain yet
+
+- **The sign-in window under systemd.** The `socialmonitor` unit sets `DISPLAY=:0`, `WAYLAND_DISPLAY=wayland-0` and `XDG_RUNTIME_DIR=/mnt/wslg/runtime-dir`, the values a WSLg shell has. They assume the Linux user is uid 1000, WSLg's own. With systemd on, `/tmp/.X11-unix` can be cleaned at boot; the setup checks for that and prints the fix (a tmpfiles rule that links it to `/mnt/wslg/.X11-unix`). If WSL was started by the startup task before anyone signed in to Windows, the window may not reach the desktop. If it doesn't show, sign in to Windows first, then run `sudo systemctl restart socialmonitor` in Ubuntu and try again.
+- **Keeping WSL up.** WSL stops a distribution shortly after its last Windows-side process ends, even with systemd services running. That's why the startup task keeps a `sleep infinity` attached. Running `wsl.exe` from a task that runs before anyone signs in (S4U) works on current WSL, but not on every build. After the first Windows restart, check from the Mac with `yarn deploy:verify` before signing in to Windows. If it fails, set the task to "Run only when user is logged on" and turn on automatic sign-in, as LMS does.
 
 ## Keep Claude signed in
 

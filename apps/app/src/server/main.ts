@@ -24,9 +24,13 @@ import { fillTikTok } from '../core/fill.ts'
 import { changed, onChange } from '../core/events.ts'
 import { baseHeaders, newNonce, pageCsp, withNonce } from './headers.ts'
 
-// Keys and options live in .env at the repository root, never in the code.
+// Keys and options live in .env at the repository root, never in the code. In production the app
+// runs from a release folder, and scripts/production.mjs points it at the repository's .env.
 try {
-  process.loadEnvFile(fileURLToPath(new URL('../../../../.env', import.meta.url)))
+  process.loadEnvFile(
+    process.env.SOCIALMONITOR_ENV_FILE ??
+      fileURLToPath(new URL('../../../../.env', import.meta.url)),
+  )
 } catch {
   /* no .env: fine */
 }
@@ -147,7 +151,12 @@ const server = createServer(async (req, res) => {
   }
   if (cookies.length) res.setHeader('set-cookie', cookies)
   const needsUser = url.pathname.startsWith('/api/') || url.pathname.startsWith('/media/')
-  if (needsUser && !user && !url.pathname.startsWith('/api/auth/'))
+  if (
+    needsUser &&
+    !user &&
+    !url.pathname.startsWith('/api/auth/') &&
+    url.pathname !== '/api/health'
+  )
     return send(res, 401, { error: 'Sign in first.', signin: true })
   // Live updates: open dashboards keep one event stream and refetch when told something changed.
   if (url.pathname === '/api/events') {
