@@ -728,6 +728,16 @@ export const ru: Dict = {
     'Colour as a hex value': 'Цвет в формате hex',
     'The colour is a hex value like #1a6bd6.': 'Цвет задаётся в формате hex, например #1a6bd6.',
     'Colour removed.': 'Цвет удалён.',
+    'Posts that grew most': 'Публикации с наибольшим ростом',
+    'By likes, comments and shares': 'По лайкам, комментариям и репостам',
+    'By views': 'По просмотрам',
+    Gained: 'Прирост',
+    'No post grew in this period.': 'За этот период ни одна публикация не выросла.',
+    'Posts read only once in this period are left out; history builds up with each update.':
+      'Публикации, прочитанные за период лишь один раз, не учитываются; история пополняется с каждым обновлением.',
+    'No post grew between two readings in this period; history builds up with each update.':
+      'За этот период ни одна публикация не выросла между двумя чтениями; история пополняется с каждым обновлением.',
+    Now: 'Сейчас',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

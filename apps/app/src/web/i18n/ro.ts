@@ -731,6 +731,16 @@ export const ro: Dict = {
     'Colour as a hex value': 'Culoarea ca valoare hex',
     'The colour is a hex value like #1a6bd6.': 'Culoarea este o valoare hex, de exemplu #1a6bd6.',
     'Colour removed.': 'Culoarea a fost eliminată.',
+    'Posts that grew most': 'Postările care au crescut cel mai mult',
+    'By likes, comments and shares': 'După aprecieri, comentarii și distribuiri',
+    'By views': 'După vizualizări',
+    Gained: 'Câștigat',
+    'No post grew in this period.': 'Nicio postare nu a crescut în această perioadă.',
+    'Posts read only once in this period are left out; history builds up with each update.':
+      'Postările citite o singură dată în această perioadă sunt omise; istoricul crește cu fiecare actualizare.',
+    'No post grew between two readings in this period; history builds up with each update.':
+      'Nicio postare nu a crescut între două citiri în această perioadă; istoricul crește cu fiecare actualizare.',
+    Now: 'Acum',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

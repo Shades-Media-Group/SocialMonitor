@@ -3,6 +3,8 @@ import type { BrandRow, CommentRow, Network, PostRow } from './api.ts'
 import { api } from './api.ts'
 import { Logo, Mark, NETWORK_NAME, NetworkMark, fmt, short, when } from './ui.tsx'
 import { textOn, validColor } from '../core/color.ts'
+import type { Growth } from './growth.tsx'
+import { GrowthLists } from './growth.tsx'
 import { Heatmap, LineChart } from './charts.tsx'
 import { brandCategories } from './rate.tsx'
 import { locale, t } from './i18n.ts'
@@ -133,6 +135,7 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
   const [reply, setReply] = useState<CommentRow[]>([])
   const [posts, setPosts] = useState<PostRow[]>([])
   const [series, setSeries] = useState<{ now: DayRow[]; before: DayRow[] } | null>(null)
+  const [growth, setGrowth] = useState<Growth | null>(null)
 
   useEffect(() => {
     document.documentElement.dataset.theme = 'light'
@@ -160,6 +163,7 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
           ),
         ),
       api.get<PostRow[]>(`/api/posts?brand=${brand.id}&limit=10${n}`).then(setPosts),
+      api.get<Growth>(`/api/brands/${brand.id}/growth?days=${days}${n}`).then(setGrowth),
       Promise.all([daily(d(span - 1), d(0)), daily(d(2 * span - 1), d(span))]).then(
         ([now, before]) => setSeries({ now, before }),
       ),
@@ -361,6 +365,13 @@ export function PrintReport({ brand }: { brand: BrandRow }) {
             </tbody>
           </table>
         </section>
+
+        {growth && (
+          <section class="sm-pr__block">
+            <h2>{t('Posts that grew most')}</h2>
+            <GrowthLists g={growth} />
+          </section>
+        )}
 
         {posts.length > 0 && (
           <section class="sm-pr__block">

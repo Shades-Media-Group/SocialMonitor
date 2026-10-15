@@ -4286,6 +4286,47 @@ a.sm-person[href]:hover .sm-person__name {
   font-variant-numeric: tabular-nums;
 }
 
+/* Posts that grew most: two short tables side by side, each under a small heading. */
+.sm-grow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+}
+.sm-grow__list {
+  min-width: 0;
+}
+.sm-grow__list h3 {
+  margin: 0 0 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+.sm-grow .sm-postcell {
+  min-width: 0;
+}
+.sm-grow__gain {
+  color: var(--g-success, #00754d);
+  font-weight: 600;
+}
+.sm-grow__note {
+  margin: 8px 0 0;
+}
+.sm-shell .sm-box .sm-grow {
+  padding-bottom: 12px;
+}
+.sm-shell .sm-box .sm-grow__note {
+  margin: -4px 0 12px;
+}
+.sm-pr .sm-grow__list h3 {
+  font-size: 11.5px;
+}
+@media screen and (max-width: 760px) {
+  .sm-grow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
 /* Controls grouped at the toolbar's end sit on one line, evenly spaced. */
 .sm-toolbar__group {
   display: inline-flex;

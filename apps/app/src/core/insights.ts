@@ -468,3 +468,93 @@ export function bestTimes(db: DB, s: Scope) {
   }[]
   return rows.map((r) => ({ ...r, avg: Math.round(r.avg) }))
 }
+
+/** One reading of a post's numbers, from post_metrics. */
+export interface Reading {
+  post_id: number
+  at: string
+  likes: number | null
+  comments: number | null
+  shares: number | null
+  views: number | null
+}
+/** How much a post grew in the period: what it gained, and the figure now. */
+export interface Gain {
+  post_id: number
+  gained: number
+  now: number
+}
+
+const interactions = (r: Reading) => (r.likes ?? 0) + (r.comments ?? 0) + (r.shares ?? 0)
+
+/**
+ * The posts that grew most since `from` (null: all time), by likes + comments + shares and by
+ * views. Growth is measured between two real readings: the last one before the period (or the
+ * first one in it) and the latest. A post read only once in the period has no growth to show;
+ * those are counted in `thin`, never guessed. `rows` are ordered by post, then time.
+ */
+export function rankGrowth(rows: Reading[], from: string | null, limit = 8) {
+  const byPost = new Map<number, Reading[]>()
+  for (const r of rows) byPost.set(r.post_id, [...(byPost.get(r.post_id) ?? []), r])
+  const inter: Gain[] = []
+  const views: Gain[] = []
+  let thin = 0
+  for (const [post_id, rs] of byPost) {
+    const inside = from ? rs.filter((r) => r.at > from) : rs
+    if (!inside.length) continue // not read in this period at all
+    const start = (from ? rs.filter((r) => r.at <= from).at(-1) : undefined) ?? inside[0]!
+    const end = inside.at(-1)!
+    if (start === end) {
+      thin++
+      continue
+    }
+    const gained = interactions(end) - interactions(start)
+    if (gained > 0) inter.push({ post_id, gained, now: interactions(end) })
+    if (end.views != null && start.views != null && end.views > start.views)
+      views.push({ post_id, gained: end.views - start.views, now: end.views })
+  }
+  const top = (list: Gain[]) => list.sort((a, b) => b.gained - a.gained).slice(0, limit)
+  return { interactions: top(inter), views: top(views), thin }
+}
+
+/** The posts that grew most in the scope's window, with what the report shows of each. */
+export function postGrowth(db: DB, s: Scope, limit = 8) {
+  const rows = db
+    .prepare(
+      `SELECT m.post_id, m.at, m.likes, m.comments, m.shares, m.views FROM post_metrics m
+         JOIN posts p ON p.id = m.post_id JOIN profiles pr ON pr.id = p.profile_id
+       WHERE (? IS NULL OR pr.brand_id = ?) AND (? IS NULL OR p.network = ?) ORDER BY m.post_id, m.at`,
+    )
+    .all(
+      s.brandId ?? null,
+      s.brandId ?? null,
+      s.network ?? null,
+      s.network ?? null,
+    ) as unknown as Reading[]
+  const ranked = rankGrowth(rows, since(s.days), limit)
+  const ids = [...new Set([...ranked.interactions, ...ranked.views].map((g) => g.post_id))]
+  const posts = new Map(
+    (ids.length
+      ? (db
+          .prepare(
+            `SELECT id, network, url, thumb_url, posted_at, coalesce(description, caption) AS about
+             FROM posts WHERE id IN (${ids.map(() => '?').join(',')})`,
+          )
+          .all(...ids) as {
+          id: number
+          network: Network
+          url: string
+          thumb_url: string | null
+          posted_at: string | null
+          about: string
+        }[])
+      : []
+    ).map((p) => [p.id, p]),
+  )
+  const withPost = (list: Gain[]) => list.map((g) => ({ ...g, ...posts.get(g.post_id)! }))
+  return {
+    interactions: withPost(ranked.interactions),
+    views: withPost(ranked.views),
+    thin: ranked.thin,
+  }
+}

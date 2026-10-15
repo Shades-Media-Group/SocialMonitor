@@ -696,6 +696,16 @@ export const zh: Dict = {
     'Colour as a hex value': '十六进制颜色值',
     'The colour is a hex value like #1a6bd6.': '颜色须为十六进制值，例如 #1a6bd6。',
     'Colour removed.': '颜色已移除。',
+    'Posts that grew most': '增长最多的帖子',
+    'By likes, comments and shares': '按点赞、评论和分享',
+    'By views': '按观看次数',
+    Gained: '增长',
+    'No post grew in this period.': '此期间没有帖子增长。',
+    'Posts read only once in this period are left out; history builds up with each update.':
+      '此期间只读取过一次的帖子不计入；每次更新都会积累历史数据。',
+    'No post grew between two readings in this period; history builds up with each update.':
+      '此期间没有帖子在两次读取之间增长；每次更新都会积累历史数据。',
+    Now: '当前',
     'No caption.': '无正文。',
     'Open on {network}': '在{network}上打开',
     '{n} to look at': '{n}条待查看',

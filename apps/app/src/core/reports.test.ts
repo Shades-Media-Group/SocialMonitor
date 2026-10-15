@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { openDb } from './db.ts'
+import { addBrand, listProfiles, savePost } from './store.ts'
 import { contrast, textOn, validColor } from './color.ts'
 import { sniff } from './branding.ts'
+import { postGrowth, rankGrowth } from './insights.ts'
 
 describe('report branding', () => {
   it('accepts hex colours only', () => {
@@ -32,5 +35,82 @@ describe('report branding', () => {
     )
     expect(sniff(Buffer.from('<html><svg></svg></html>'))).toBeNull()
     expect(sniff(Buffer.from('GIF89a'))).toBeNull()
+  })
+})
+
+describe('posts that grew most', () => {
+  const at = (n: number) => new Date(Date.UTC(2026, 9, n)).toISOString()
+  const read = (post_id: number, day: number, likes: number, views: number | null = null) => ({
+    post_id,
+    at: at(day),
+    likes,
+    comments: 1,
+    shares: 0,
+    views,
+  })
+
+  it('measures between real readings and never guesses from one', () => {
+    const rows = [
+      // Read before the period and in it: grew 40 interactions and 900 views.
+      read(1, 1, 10, 100),
+      read(1, 6, 50, 1000),
+      // Two readings inside the period: grew 5; no views the second time.
+      read(2, 8, 20, 50),
+      read(2, 9, 25, null),
+      // One reading in the period only: no growth to show.
+      read(3, 9, 500, 9000),
+      // Read only before the period: not part of it.
+      read(4, 1, 1, 1),
+      read(4, 2, 99, 99),
+      // Lost likes: not growth.
+      read(5, 1, 30),
+      read(5, 8, 20),
+    ]
+    const g = rankGrowth(rows, at(5))
+    expect(g.interactions.map((x) => [x.post_id, x.gained, x.now])).toEqual([
+      [1, 40, 51],
+      [2, 5, 26],
+    ])
+    expect(g.views.map((x) => [x.post_id, x.gained, x.now])).toEqual([[1, 900, 1000]])
+    expect(g.thin).toBe(1)
+    // All time: from each post's first reading.
+    expect(rankGrowth(rows, null).interactions[0]).toMatchObject({ post_id: 4, gained: 98 })
+    expect(rankGrowth(rows, null, 1).interactions).toHaveLength(1)
+  })
+
+  it("reads one brand's history from the database", () => {
+    const db = openDb(':memory:')
+    const brand = addBrand(db, 'Grow', ['https://www.tiktok.com/@grow'])
+    const other = addBrand(db, 'Other', ['https://www.tiktok.com/@other'])
+    const post = (ext_id: string, likes: number, views: number) => ({
+      ext_id,
+      url: `https://www.tiktok.com/@grow/video/${ext_id}`,
+      posted_at: new Date(Date.now() - 3 * 86400_000).toISOString(),
+      kind: 'video',
+      caption: `About ${ext_id}`,
+      thumb_url: null,
+      likes,
+      comments_count: 0,
+      shares: 0,
+      views,
+      comments: [],
+    })
+    const [mine] = listProfiles(db, brand.id)
+    const [theirs] = listProfiles(db, other.id)
+    savePost(db, mine!, post('a', 5, 100))
+    savePost(db, mine!, post('b', 5, 100))
+    savePost(db, theirs!, post('c', 5, 100))
+    // Reads are hours apart in real use; date the first ones back so the next are distinct.
+    db.prepare('UPDATE post_metrics SET at = ?').run(
+      new Date(Date.now() - 2 * 86400_000).toISOString(),
+    )
+    savePost(db, mine!, post('a', 30, 400))
+    savePost(db, theirs!, post('c', 900, 9000))
+    const g = postGrowth(db, { brandId: brand.id, days: 7 })
+    expect(g.interactions).toEqual([
+      expect.objectContaining({ gained: 25, now: 30, about: 'About a', network: 'tiktok' }),
+    ])
+    expect(g.views).toEqual([expect.objectContaining({ gained: 300, now: 400 })])
+    expect(g.thin).toBe(1)
   })
 })

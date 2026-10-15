@@ -23,6 +23,7 @@ import {
   watched,
   labelTotals,
   postEngagement,
+  postGrowth,
   reach,
   reputation,
   responses,
@@ -519,6 +520,14 @@ export const routes: Route[] = [
       watched: watched(db, s, JSON.parse(brand?.trackers ?? '[]') as Tracker[]),
     }
   }),
+  // The posts that gained most in the window, measured between real readings of each post.
+  r('GET', '/api/brands/:id/growth', seeBrand, ({ db, params, query }) =>
+    postGrowth(db, {
+      brandId: id(params.id),
+      network: net(query.get('network')),
+      days: Number(query.get('days') ?? 30) || 0,
+    }),
+  ),
   // The brand's own logo and accent colour on its PDF reports.
   r('PUT', '/api/brands/:id/report-branding', adminBrand, (c) =>
     setBranding(c.db, id(c.params.id), b(c) as { logo?: unknown; color?: unknown }),

@@ -732,6 +732,16 @@ export const fr: Dict = {
     'The colour is a hex value like #1a6bd6.':
       'La couleur est une valeur hexadécimale, comme #1a6bd6.',
     'Colour removed.': 'Couleur supprimée.',
+    'Posts that grew most': 'Publications qui ont le plus progressé',
+    'By likes, comments and shares': 'Par j’aime, commentaires et partages',
+    'By views': 'Par vues',
+    Gained: 'Gagné',
+    'No post grew in this period.': 'Aucune publication n’a progressé sur cette période.',
+    'Posts read only once in this period are left out; history builds up with each update.':
+      'Les publications lues une seule fois sur cette période sont écartées ; l’historique s’enrichit à chaque mise à jour.',
+    'No post grew between two readings in this period; history builds up with each update.':
+      'Aucune publication n’a progressé entre deux lectures sur cette période ; l’historique s’enrichit à chaque mise à jour.',
+    Now: 'Maintenant',
     'No caption.': 'Pas de légende.',
     'Open on {network}': 'Ouvrir sur {network}',
     '{n} to look at': '{n} à examiner',
