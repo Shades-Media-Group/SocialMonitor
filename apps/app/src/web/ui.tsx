@@ -278,6 +278,12 @@ export interface MenuItem {
   /** Shown in red: deletes or blocks something. */
   danger?: boolean
   disabled?: boolean
+  /** Ticked: the item is what is showing now. */
+  checked?: boolean
+  /** A small delete button at the end of the row, named by this label. */
+  remove?: { label: string; onSelect: () => void }
+  /** A thin line above it, to set it apart from the items before. */
+  divider?: boolean
 }
 
 /**
@@ -352,20 +358,48 @@ export function Menu({
       </button>
       {pos && (
         <div ref={list} class="sm-menu" role="menu" aria-label={label} style={pos} onKeyDown={move}>
-          {items.map((it) => (
-            <button
-              type="button"
-              role="menuitem"
-              class={it.danger ? 'is-danger' : undefined}
-              disabled={it.disabled}
-              onClick={() => {
-                setPos(null)
-                it.onSelect()
-              }}
-            >
-              {it.label}
-            </button>
-          ))}
+          {items.map((it) => {
+            const item = (
+              <button
+                type="button"
+                role={it.checked === undefined ? 'menuitem' : 'menuitemradio'}
+                aria-checked={it.checked}
+                class={it.danger ? 'is-danger' : undefined}
+                disabled={it.disabled}
+                onClick={() => {
+                  setPos(null)
+                  it.onSelect()
+                }}
+              >
+                {it.label}
+              </button>
+            )
+            const row = it.remove ? (
+              <div class="sm-menu__row">
+                {item}
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="sm-menu__remove"
+                  aria-label={it.remove.label}
+                  title={it.remove.label}
+                  onClick={it.remove.onSelect}
+                >
+                  <Icon name="close" size={13} />
+                </button>
+              </div>
+            ) : (
+              item
+            )
+            return it.divider ? (
+              <>
+                <span class="sm-menu__line" role="separator" />
+                {row}
+              </>
+            ) : (
+              row
+            )
+          })}
         </div>
       )}
     </>

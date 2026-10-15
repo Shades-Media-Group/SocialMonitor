@@ -309,6 +309,11 @@ function migrate(db: DatabaseSync) {
     db.exec("ALTER TABLE users ADD COLUMN prefs TEXT NOT NULL DEFAULT '{}'")
   // The language a person reads the dashboard in, for the emails they get.
   if (!has('users', 'lang')) db.exec("ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'en'")
+  // A rival a brand watches: read by the same updates, shown only on that brand's Share of voice.
+  if (!has('brands', 'competitor_of'))
+    db.exec(
+      'ALTER TABLE brands ADD COLUMN competitor_of INTEGER REFERENCES brands(id) ON DELETE CASCADE',
+    )
   // Each brand's own positive and negative categories.
   if (!has('brands', 'categories'))
     db.exec("ALTER TABLE brands ADD COLUMN categories TEXT NOT NULL DEFAULT '[]'")

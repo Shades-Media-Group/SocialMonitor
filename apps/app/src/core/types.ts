@@ -40,6 +40,8 @@ export interface Brand {
   digest_sent_at: string | null
   /** 1: Claude sorts its comments and describes its posts after each update; 0: left to people. */
   ai_sort: 0 | 1
+  /** Set on a rival: the brand that watches it. Rivals stay out of the brand list. */
+  competitor_of: number | null
   created_at: string
 }
 

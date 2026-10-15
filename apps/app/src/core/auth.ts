@@ -307,9 +307,14 @@ export function setMembership(db: DB, userId: number, brandId: number, role: Rol
 /** What a user may do with one brand: 'admin' for super admins and the brand's admins. */
 export function roleFor(db: DB, user: User, brandId: number): Role | null {
   if (user.super) return 'admin'
+  // A rival belongs to the brand that watches it: that brand's people see and edit it.
+  const owner = (
+    db.prepare('SELECT competitor_of FROM brands WHERE id = ?').get(brandId) as
+      { competitor_of: number | null } | undefined
+  )?.competitor_of
   const m = db
     .prepare('SELECT role FROM memberships WHERE user_id = ? AND brand_id = ?')
-    .get(user.id, brandId) as { role: Role } | undefined
+    .get(user.id, owner ?? brandId) as { role: Role } | undefined
   return m?.role ?? null
 }
 

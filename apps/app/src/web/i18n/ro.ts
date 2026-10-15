@@ -800,6 +800,52 @@ export const ro: Dict = {
     'Claude answered without ideas. Try again.': 'Claude a răspuns fără idei. Încearcă din nou.',
     'No AI to ask: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.':
       'Nu e niciun AI de întrebat: conectează-te la Claude Code sau setează ANTHROPIC_API_KEY în .env.',
+    'Saved views': 'Vederi salvate',
+    'Save this view…': 'Salvează această vedere…',
+    'Name this view': 'Numește această vedere',
+    'Name this view, e.g. TikTok complaints': 'Numele vederii, de ex. Reclamații TikTok',
+    'Save view': 'Salvează vederea',
+    'View saved: {name}': 'Vedere salvată: {name}',
+    'Compare brands': 'Compară branduri',
+    'Same period, side by side': 'Aceeași perioadă, alături',
+    'Engagement rate': 'Rata de interacțiune',
+    'Reply rate': 'Rata de răspuns',
+    'Period figures': 'Cifrele perioadei',
+    'Compare up to four brands at a time.': 'Compară cel mult patru branduri odată.',
+    'Choose two brands or more.': 'Alege două branduri sau mai multe.',
+    'Pick up to four above to see them side by side.':
+      'Alege până la patru mai sus ca să le vezi alături.',
+    'Side by side': 'Alături',
+    'The leader of each row is in bold': 'Liderul fiecărui rând e îngroșat',
+    '{name} added. The next update reads it.':
+      '{name} a fost adăugat. Următoarea actualizare îl citește.',
+    'Remove {name}? Its posts and comments are deleted too.':
+      'Elimini {name}? Postările și comentariile lui se șterg și ele.',
+    Rivals: 'Concurenți',
+    'Read with every update, compared on Share of voice':
+      'Citiți la fiecare actualizare, comparați în Cota de voce',
+    'New rival': 'Concurent nou',
+    'Add rival': 'Adaugă concurentul',
+    'Five rivals at most: remove one to add another.':
+      'Cel mult cinci concurenți: elimină unul ca să adaugi altul.',
+    'Engagement per post': 'Interacțiuni pe postare',
+    'No rivals yet.': 'Niciun concurent încă.',
+    'Add the brands you compete with in Settings, then press Update.':
+      'Adaugă în Setări brandurile cu care concurezi, apoi apasă Actualizează.',
+    'Open Settings': 'Deschide Setările',
+    "Ask one of this brand's admins to add the brands it competes with.":
+      'Roagă un administrator al acestui brand să adauge concurenții.',
+    'Little to go on for {names}: fewer than {n} comments in this period, so their shares can swing on a few people.':
+      'Puține date pentru {names}: sub {n} comentarii în această perioadă, așa că procentele pot varia din cauza câtorva oameni.',
+    'Of all comments under their posts': 'Din toate comentariile de sub postările lor',
+    'How people feel': 'Ce simt oamenii',
+    'Share of voice over time': 'Cota de voce în timp',
+    'Rivals belong to one of your brands.': 'Concurenții aparțin unuia dintre brandurile tale.',
+    'Name the rival.': 'Numește concurentul.',
+    'Add at least one profile link.': 'Adaugă cel puțin un link de profil.',
+    'A brand watches five rivals at most.': 'Un brand urmărește cel mult cinci concurenți.',
+    'There is already a brand with this name.': 'Există deja un brand cu acest nume.',
+    'No such rival.': 'Acest concurent nu există.',
     'No caption.': 'Fără descriere.',
     'Open on {network}': 'Deschide pe {network}',
     '{n} to look at': '{n} de verificat',

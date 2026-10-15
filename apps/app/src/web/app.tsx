@@ -18,11 +18,13 @@ import { PrintBad, PrintReport } from './print.tsx'
 import type { AuthInfo, Me } from './auth.tsx'
 import { AuthScreen, linkFromPath } from './auth.tsx'
 import { People } from './people.tsx'
+import { Compare } from './compare.tsx'
 
 export const TABS = [
   ['overview', 'Overview'],
   ['posts', 'Posts'],
   ['stats', 'Statistics'],
+  ['voice', 'Share of voice'],
   ['comments', 'Comments'],
   ['calendar', 'Calendar'],
   ['reports', 'Reports'],
@@ -41,6 +43,7 @@ export const TAB_ICON: Record<Tab, IconName> = {
   comments: 'chat',
   posts: 'image',
   stats: 'arrowOutward',
+  voice: 'contrast',
   calendar: 'calendar',
   reports: 'file',
   schedules: 'schedule',
@@ -55,6 +58,7 @@ export type Route =
   | { page: 'brand'; brandId: number; tab: Tab }
   | { page: 'print'; brandId: number }
   | { page: 'people' }
+  | { page: 'compare' }
 
 export function readRoute(): Route {
   // Old bookmarks and links used #/b/1/overview; they move to the clean address.
@@ -62,6 +66,7 @@ export function readRoute(): Route {
   const [, a, b, c] = location.pathname.split('/')
   if (a === 'new') return { page: 'new' }
   if (a === 'people') return { page: 'people' }
+  if (a === 'compare') return { page: 'compare' }
   if (a === 'print' && Number(b) > 0) return { page: 'print', brandId: Number(b) }
   if (a === 'b' && Number(b) > 0) {
     const tab = (TABS.some(([t]) => t === c) ? c : 'overview') as Tab
@@ -108,6 +113,10 @@ export interface BrandView extends AppState {
   network: Network | ''
   /** The window, in days back from today; 0 is all time. */
   days: number
+  setNetwork: (n: Network | '') => void
+  setDays: (d: number) => void
+  /** A place in the page header's filter row a tab can fill, such as Comments' saved views. */
+  viewSlot?: HTMLElement | null
 }
 
 /** Signs in first, then shows the dashboard. Any 401 from the server comes back here. */
@@ -402,6 +411,16 @@ function Dashboard({ me }: { me: Me }) {
               <span class="sm-nav__name">{t('All brands')}</span>
               <span class="sm-nav__num g-num">{brands.length}</span>
             </a>
+            {brands.length > 1 && (
+              <a
+                class="sm-nav__item"
+                href="/compare"
+                aria-current={route.page === 'compare' ? 'page' : undefined}
+              >
+                <Icon name="layers" size={15} />
+                <span class="sm-nav__name">{t('Compare brands')}</span>
+              </a>
+            )}
             <p class="sm-nav__group">{t('Brands')}</p>
             {brands.map((b) => {
               const open = brand?.id === b.id
@@ -486,6 +505,8 @@ function Dashboard({ me }: { me: Me }) {
         </button>
         {!loaded ? null : route.page === 'people' && manages ? (
           <People {...page} />
+        ) : route.page === 'compare' ? (
+          <Compare {...page} />
         ) : route.page === 'brand' && brand ? (
           <BrandPage {...page} brand={brand} tab={route.tab} />
         ) : (

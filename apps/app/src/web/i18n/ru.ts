@@ -797,6 +797,52 @@ export const ru: Dict = {
     'Claude answered without ideas. Try again.': 'Claude ответил без идей. Попробуйте ещё раз.',
     'No AI to ask: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.':
       'Некого спросить: войдите в Claude Code или задайте ANTHROPIC_API_KEY в .env.',
+    'Saved views': 'Сохранённые виды',
+    'Save this view…': 'Сохранить этот вид…',
+    'Name this view': 'Название вида',
+    'Name this view, e.g. TikTok complaints': 'Название, например: жалобы в TikTok',
+    'Save view': 'Сохранить вид',
+    'View saved: {name}': 'Вид сохранён: {name}',
+    'Compare brands': 'Сравнение брендов',
+    'Same period, side by side': 'Один период, рядом',
+    'Engagement rate': 'Вовлечённость',
+    'Reply rate': 'Доля ответов',
+    'Period figures': 'Показатели за период',
+    'Compare up to four brands at a time.': 'Можно сравнить до четырёх брендов сразу.',
+    'Choose two brands or more.': 'Выберите два бренда или больше.',
+    'Pick up to four above to see them side by side.':
+      'Выберите до четырёх выше, чтобы увидеть их рядом.',
+    'Side by side': 'Рядом',
+    'The leader of each row is in bold': 'Лидер каждой строки выделен жирным',
+    '{name} added. The next update reads it.':
+      '{name} добавлен. Следующее обновление его прочитает.',
+    'Remove {name}? Its posts and comments are deleted too.':
+      'Удалить {name}? Его публикации и комментарии тоже удалятся.',
+    Rivals: 'Конкуренты',
+    'Read with every update, compared on Share of voice':
+      'Читаются при каждом обновлении, сравниваются в разделе «Доля голоса»',
+    'New rival': 'Новый конкурент',
+    'Add rival': 'Добавить конкурента',
+    'Five rivals at most: remove one to add another.':
+      'Не больше пяти конкурентов: удалите одного, чтобы добавить другого.',
+    'Engagement per post': 'Взаимодействий на публикацию',
+    'No rivals yet.': 'Конкурентов пока нет.',
+    'Add the brands you compete with in Settings, then press Update.':
+      'Добавьте в настройках бренды, с которыми вы конкурируете, затем нажмите «Обновить».',
+    'Open Settings': 'Открыть настройки',
+    "Ask one of this brand's admins to add the brands it competes with.":
+      'Попросите администратора этого бренда добавить конкурентов.',
+    'Little to go on for {names}: fewer than {n} comments in this period, so their shares can swing on a few people.':
+      'Мало данных по {names}: меньше {n} комментариев за период, поэтому доли могут меняться из-за нескольких человек.',
+    'Of all comments under their posts': 'От всех комментариев под их публикациями',
+    'How people feel': 'Как к ним относятся',
+    'Share of voice over time': 'Доля голоса со временем',
+    'Rivals belong to one of your brands.': 'Конкуренты принадлежат одному из ваших брендов.',
+    'Name the rival.': 'Укажите название конкурента.',
+    'Add at least one profile link.': 'Добавьте хотя бы одну ссылку на профиль.',
+    'A brand watches five rivals at most.': 'Бренд может отслеживать не больше пяти конкурентов.',
+    'There is already a brand with this name.': 'Бренд с таким названием уже есть.',
+    'No such rival.': 'Такого конкурента нет.',
     'No caption.': 'Без подписи.',
     'Open on {network}': 'Открыть в {network}',
     '{n} to look at': 'на проверку: {n}',

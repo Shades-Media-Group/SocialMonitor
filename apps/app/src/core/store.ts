@@ -116,6 +116,34 @@ export const deleteBrand = (db: DB, id: number) =>
   db.prepare('DELETE FROM brands WHERE id = ?').run(id)
 
 export const listBrands = (db: DB) => all<Brand>(db, 'SELECT * FROM brands ORDER BY name')
+
+/** The rivals a brand watches, by name. */
+export const listCompetitors = (db: DB, brandId: number) =>
+  all<Brand>(db, 'SELECT * FROM brands WHERE competitor_of = ? ORDER BY name', brandId)
+
+/** Brands with the rivals each one watches, for updates: reading a brand reads its rivals too. */
+export const withCompetitors = (db: DB, brandIds: number[]) => [
+  ...new Set(brandIds.flatMap((id) => [id, ...listCompetitors(db, id).map((c) => c.id)])),
+]
+
+/**
+ * Adds a rival to a brand from its public profile links. It takes the brand's categories, so
+ * comments on both are sorted the same way. Five at most: the charts have six colours.
+ */
+export function addCompetitor(db: DB, brandId: number, name: string, links: string[]) {
+  const owner = getBrand(db, brandId)
+  if (!owner || owner.competitor_of) throw new Error('Rivals belong to one of your brands.')
+  if (!name.trim()) throw new Error('Name the rival.')
+  if (!links.filter(Boolean).length) throw new Error('Add at least one profile link.')
+  if (listCompetitors(db, brandId).length >= 5)
+    throw new Error('A brand watches five rivals at most.')
+  if (one(db, 'SELECT id FROM brands WHERE lower(name) = lower(?)', name.trim()))
+    throw new Error('There is already a brand with this name.')
+  for (const link of links.filter(Boolean)) parseProfile(link)
+  const brand = addBrand(db, name, links, null, JSON.parse(owner.categories || '[]'))
+  db.prepare('UPDATE brands SET competitor_of = ? WHERE id = ?').run(brandId, brand.id)
+  return { ...brand, competitor_of: brandId }
+}
 export const getBrand = (db: DB, id: number) =>
   one<Brand>(db, 'SELECT * FROM brands WHERE id = ?', id)
 export const listProfiles = (db: DB, brandId?: number) =>

@@ -1,5 +1,6 @@
 import type { DB } from './db.ts'
 import type { Network } from './types.ts'
+import { overdueCount } from './store.ts'
 
 /**
  * The numbers behind the charts, the comparison and the exports. Every query takes the same
@@ -160,36 +161,86 @@ export function labelTotals(db: DB, s: Scope) {
   return out
 }
 
-/** One row per brand, side by side, for the comparison on the home page. Only `only` when given. */
-export function compare(db: DB, days = 30, only: number[] | null = null) {
+/** Rated customer comments in the scope: how many are positive and negative, of all rated. */
+export function sentimentShares(db: DB, s: Scope) {
+  const w = where(s)
+  const r = db
+    .prepare(
+      `SELECT count(c.sentiment) AS rated, coalesce(sum(c.sentiment = 'positive'), 0) AS positive,
+         coalesce(sum(c.sentiment = 'negative'), 0) AS negative,
+         coalesce(sum(c.sentiment = 'neutral'), 0) AS neutral
+       FROM comments c JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id
+       WHERE ${w.sql}`,
+    )
+    .get(...w.args) as { rated: number; positive: number; negative: number; neutral: number }
+  return {
+    positive: r.rated ? r.positive / r.rated : null,
+    negative: r.rated ? r.negative / r.rated : null,
+    neutral: r.rated ? r.neutral / r.rated : null,
+  }
+}
+
+/**
+ * One row per brand, side by side, for the home page, the comparison and share of voice. Only
+ * `only` when given, else every brand but the rivals. Overdue is how many wait past the brand's
+ * reply target now, whatever the window.
+ */
+export function compare(db: DB, days = 30, only: number[] | null = null, network?: Network) {
   const brands = (
-    db.prepare('SELECT id, name FROM brands ORDER BY name').all() as { id: number; name: string }[]
-  ).filter((b) => !only || only.includes(b.id))
+    db.prepare('SELECT id, name, competitor_of FROM brands ORDER BY name').all() as {
+      id: number
+      name: string
+      competitor_of: number | null
+    }[]
+  ).filter((b) => (only ? only.includes(b.id) : !b.competitor_of))
   const rows = brands.map((b) => {
-    const s = { brandId: b.id, days }
+    const s = { brandId: b.id, days, network }
     const posts = postEngagement(db, s, 1000)
     const labels = labelTotals(db, s)
     const sorted = labels.total! - (labels.unsorted ?? 0)
     const r = responses(db, s)
+    const mood = sentimentShares(db, s)
     const sum = (k: 'likes' | 'comments') => posts.reduce((n, p) => n + (p[k] ?? 0), 0)
+    // Likes, comments and shares per view, over the posts the networks report views for.
+    const seen = posts.filter((p) => p.views)
+    const views = reach(seen)
+    const acts = seen.reduce((n, p) => n + (p.likes ?? 0) + (p.comments ?? 0) + (p.shares ?? 0), 0)
+    const allActs = posts.reduce(
+      (n, p) => n + (p.likes ?? 0) + (p.comments ?? 0) + (p.shares ?? 0),
+      0,
+    )
     return {
       id: b.id,
       name: b.name,
       posts: posts.length,
+      likes: sum('likes'),
       likes_per_post: posts.length ? Math.round(sum('likes') / posts.length) : null,
       comments_per_post: posts.length
         ? Math.round((sum('comments') / posts.length) * 10) / 10
         : null,
+      complaints: labels.complaint ?? 0,
+      questions: labels.question ?? 0,
+      praise: labels.praise ?? 0,
       complaint_share: sorted ? (labels.complaint ?? 0) / sorted : null,
       praise_share: sorted ? (labels.praise ?? 0) / sorted : null,
+      positive_share: mood.positive,
+      negative_share: mood.negative,
+      neutral_share: mood.neutral,
+      interactions_per_post: posts.length ? Math.round(allActs / posts.length) : null,
+      engagement_rate: views ? acts / views : null,
       response_rate: r.rate,
       median_reply_minutes: r.median_minutes,
+      overdue: overdueCount(db, b.id, network),
       reputation: reputation(labels),
       reach: reach(posts),
       comments: labels.total ?? 0,
+      per_day: timeline(db, s).map(({ day, ...kinds }) => ({
+        day,
+        n: Object.values(kinds as Record<string, number>).reduce((a, x) => a + x, 0),
+      })),
     }
   })
-  // Share of voice: each brand's part of all the comments across the brands you watch.
+  // Share of voice: each brand's part of all the comments across the brands compared.
   const all = rows.reduce((n, r) => n + r.comments, 0)
   return rows.map((r) => ({ ...r, share_of_voice: all ? r.comments / all : null }))
 }

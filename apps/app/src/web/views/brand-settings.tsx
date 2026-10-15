@@ -163,6 +163,7 @@ function SavedReplies({ brand, notify }: Pick<BrandView, 'brand' | 'notify'>) {
     </section>
   )
 }
+import { Rivals } from './rivals.tsx'
 
 type Range = 'new' | 'due' | 'all'
 
@@ -510,6 +511,7 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
       </section>
 
       <SavedReplies brand={brand} notify={notify} />
+      <Rivals brand={brand} notify={notify} />
 
       <BadReport
         brand={brand}

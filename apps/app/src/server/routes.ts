@@ -271,7 +271,11 @@ export const routes: Route[] = [
   }),
 
   r('GET', '/api/brands', 'user', (c) =>
-    visible(c, store.listBrands(c.db), (br) => br.id).map((brand) => ({
+    visible(
+      c,
+      store.listBrands(c.db).filter((br) => !br.competitor_of),
+      (br) => br.id,
+    ).map((brand) => ({
       my_role: roleFor(c.db, c.user, brand.id),
       ...brand,
       profiles: store.listProfiles(c.db, brand.id),
@@ -613,9 +617,39 @@ export const routes: Route[] = [
     },
     ({ db, params }) => void deleteSaved(db, id(params.id)),
   ),
-  r('GET', '/api/compare', 'user', (c) =>
-    compare(c.db, Number(c.query.get('days') ?? 30) || 0, visibleBrands(c.db, c.user)),
+  // The rivals a brand watches, with their profiles: its people see them, its admins change them.
+  r('GET', '/api/brands/:id/competitors', seeBrand, ({ db, params }) =>
+    store.listCompetitors(db, id(params.id)).map((c) => ({
+      ...c,
+      profiles: store.listProfiles(db, c.id),
+    })),
   ),
+  r('POST', '/api/brands/:id/competitors', adminBrand, (c) => {
+    const x = b(c) as { name?: string; links?: string[] }
+    return store.addCompetitor(c.db, id(c.params.id), String(x.name ?? ''), x.links ?? [])
+  }),
+  r('DELETE', '/api/brands/:id/competitors/:rival', adminBrand, ({ db, params }) => {
+    const rival = store.getBrand(db, id(params.rival))
+    if (rival?.competitor_of !== id(params.id)) throw new HttpError(404, 'No such rival.')
+    store.deleteBrand(db, rival.id)
+  }),
+  // Share of voice: the brand first, then its rivals, over the same window and network.
+  r('GET', '/api/brands/:id/voice', seeBrand, ({ db, params, query }) => {
+    const brandId = id(params.id)
+    const ids = [brandId, ...store.listCompetitors(db, brandId).map((c) => c.id)]
+    const rows = compare(db, Number(query.get('days') ?? 30) || 0, ids, net(query.get('network')))
+    return ids.map((n) => rows.find((r) => r.id === n)!)
+  }),
+  // Brands side by side; ?brands=1,2 narrows to those, never past the ones this person sees.
+  r('GET', '/api/compare', 'user', (c) => {
+    const seen = visibleBrands(c.db, c.user)
+    const want = (c.query.get('brands') ?? '')
+      .split(',')
+      .map(Number)
+      .filter((n) => n > 0)
+    const only = want.length ? want.filter((n) => !seen || seen.includes(n)) : seen
+    return compare(c.db, Number(c.query.get('days') ?? 30) || 0, only)
+  }),
   r('GET', '/api/brands/:id/export.xlsx', seeBrand, (c) => {
     const { db, params, query } = c
     const brand = store.getBrand(db, id(params.id))
