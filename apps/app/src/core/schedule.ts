@@ -1,6 +1,7 @@
 import type { DB } from './db.ts'
 import * as store from './store.ts'
 import type { Schedule } from './types.ts'
+import { SCHEDULE_POSTS } from './types.ts'
 import { catchUp, queueRun } from './run.ts'
 import { sendDigests } from './alerts.ts'
 
@@ -26,6 +27,31 @@ export function nextRun(s: Schedule, from = new Date()): Date | null {
   return next ? new Date(next.getTime() + jitter(12)) : null
 }
 
+/** Saves a schedule and sets its next start at once, so it never shows without one. */
+export function saveSchedule(db: DB, input: store.ScheduleInput, id?: number): Schedule {
+  const s = store.saveSchedule(db, input, id)
+  const next = s.enabled ? (nextRun(s)?.toISOString() ?? null) : null
+  store.setNextRun(db, s.id, next)
+  return { ...s, next_run_at: next }
+}
+
+/**
+ * The brand's "Update by itself" switch: off pauses every schedule the brand has, on resumes them
+ * all, each from its own next start. Schedules already in that state keep their next start.
+ */
+export function setBrandSchedules(db: DB, brandId: number, enabled: boolean): Schedule[] {
+  for (const s of store.listSchedules(db, brandId)) {
+    if (!!s.enabled === enabled) continue
+    store.setScheduleEnabled(
+      db,
+      s.id,
+      enabled,
+      enabled ? (nextRun(s)?.toISOString() ?? null) : null,
+    )
+  }
+  return store.listSchedules(db, brandId)
+}
+
 /** Checks the schedules once a minute and queues the ones that are due. */
 export function startScheduler(db: DB) {
   const tick = () => {
@@ -41,12 +67,12 @@ export function startScheduler(db: DB) {
       try {
         queueRun(
           db,
-          // A schedule for new posts also refreshes the numbers of posts that are due, so they stay light.
+          // New posts plus the numbers of older posts that are due, or the newest posts again.
           {
             brandIds: [s.brand_id],
             networks: s.networks,
             range: s.range === 'all' ? 'all' : 'due',
-            limit: 10,
+            limit: SCHEDULE_POSTS,
           },
           'schedule',
           { scheduleId: s.id },

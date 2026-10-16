@@ -786,7 +786,7 @@ export interface ScheduleInput {
   times?: string[]
   networks: Network[]
   range?: Range
-  enabled?: boolean
+  enabled?: boolean | 0 | 1
 }
 
 export function saveSchedule(db: DB, s: ScheduleInput, id?: number): Schedule {
@@ -805,7 +805,7 @@ export function saveSchedule(db: DB, s: ScheduleInput, id?: number): Schedule {
     JSON.stringify(s.networks),
     // 'new' always ran as 'due' (new posts plus the numbers that are due); it is stored as such.
     scheduleRange(s.range),
-    s.enabled === false ? 0 : 1,
+    s.enabled === false || s.enabled === 0 ? 0 : 1,
   ] as const
   const row = id
     ? one<Row>(
@@ -827,6 +827,11 @@ export const deleteSchedule = (db: DB, id: number) =>
   db.prepare('DELETE FROM schedules WHERE id = ?').run(id)
 export const setNextRun = (db: DB, id: number, at: string | null) =>
   db.prepare('UPDATE schedules SET next_run_at = ? WHERE id = ?').run(at, id)
+/** Turns one schedule on or off, with the next start it now has (null when off). */
+export const setScheduleEnabled = (db: DB, id: number, enabled: boolean, nextAt: string | null) =>
+  db
+    .prepare('UPDATE schedules SET enabled = ?, next_run_at = ? WHERE id = ?')
+    .run(enabled ? 1 : 0, nextAt, id)
 
 // Settings
 

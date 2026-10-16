@@ -16,6 +16,7 @@ import {
 } from '../core/vault.ts'
 import type { Account } from '../core/vault.ts'
 import { gaps, queueRun, sortPending } from '../core/run.ts'
+import { saveSchedule, setBrandSchedules } from '../core/schedule.ts'
 import type { CollectedPost, Range } from '../core/types.ts'
 import {
   byNetwork,
@@ -1274,7 +1275,7 @@ export const routes: Route[] = [
     'POST',
     '/api/schedules',
     (c) => runs(c, Number(b(c).brand_id)),
-    (c) => store.saveSchedule(c.db, b(c) as unknown as store.ScheduleInput),
+    (c) => saveSchedule(c.db, b(c) as unknown as store.ScheduleInput),
   ),
   r(
     'PUT',
@@ -1283,7 +1284,11 @@ export const routes: Route[] = [
       adminSchedule(c)
       runs(c, Number(b(c).brand_id))
     },
-    (c) => store.saveSchedule(c.db, b(c) as unknown as store.ScheduleInput, id(c.params.id)),
+    (c) => saveSchedule(c.db, b(c) as unknown as store.ScheduleInput, id(c.params.id)),
+  ),
+  // The brand's "Update by itself" switch: pauses or resumes every schedule it has.
+  r('PUT', '/api/brands/:id/schedules', adminBrand, (c) =>
+    setBrandSchedules(c.db, id(c.params.id), b(c).enabled === true),
   ),
   r(
     'DELETE',
