@@ -1,4 +1,5 @@
 import type { DB } from './db.ts'
+import { scheduleRange } from './types.ts'
 
 type Table = 'brands' | 'profiles' | 'posts' | 'comments' | 'schedules' | 'runs'
 
@@ -156,7 +157,7 @@ export function importAll(db: DB, dump: Dump) {
         (r.every_hours as number) ?? null,
         r.times as string,
         r.networks as string,
-        r.range as string,
+        scheduleRange(r.range),
       )
     }
     db.exec('COMMIT')

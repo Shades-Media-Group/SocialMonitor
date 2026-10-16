@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS schedules (
   every_hours REAL,
   times TEXT NOT NULL DEFAULT '[]',
   networks TEXT NOT NULL,
-  range TEXT NOT NULL DEFAULT 'new',
+  range TEXT NOT NULL DEFAULT 'due',
   enabled INTEGER NOT NULL DEFAULT 1,
   next_run_at TEXT
 );
@@ -456,6 +456,8 @@ function migrate(db: DatabaseSync) {
     db.exec('ALTER TABLE brands ADD COLUMN campaign_auto INTEGER NOT NULL DEFAULT 1')
   // When Claude last looked for a post's campaign, so it is asked again only after campaigns change.
   if (!has('posts', 'campaign_ai_at')) db.exec('ALTER TABLE posts ADD COLUMN campaign_ai_at TEXT')
+  // A schedule for 'new' posts always ran as 'due' (new posts plus the numbers that are due).
+  db.exec("UPDATE schedules SET range = 'due' WHERE range = 'new'")
 }
 
 export const now = () => new Date().toISOString()

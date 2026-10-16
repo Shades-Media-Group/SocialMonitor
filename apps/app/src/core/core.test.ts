@@ -83,7 +83,7 @@ describe('schedules', () => {
     every_hours: null,
     times: ['09:00', '18:00'],
     networks: ['tiktok'],
-    range: 'new',
+    range: 'due',
     enabled: 1,
     next_run_at: null,
   }

@@ -15,7 +15,7 @@ import type {
   ScheduleKind,
   Tracker,
 } from './types.ts'
-import { NETWORKS } from './types.ts'
+import { NETWORKS, scheduleRange } from './types.ts'
 import { TEMPLATES } from './categories.ts'
 import { placeBrand, placePost } from './campaigns.ts'
 
@@ -768,6 +768,7 @@ const toSchedule = (r: Row): Schedule => ({
   ...(r as unknown as Schedule),
   times: JSON.parse(r.times as string),
   networks: JSON.parse(r.networks as string),
+  range: scheduleRange(r.range),
 })
 
 export const listSchedules = (db: DB, brandId?: number) =>
@@ -802,7 +803,8 @@ export function saveSchedule(db: DB, s: ScheduleInput, id?: number): Schedule {
     s.kind === 'interval' ? s.every_hours! : null,
     JSON.stringify(s.kind === 'times' ? [...new Set(s.times)].sort() : []),
     JSON.stringify(s.networks),
-    s.range ?? 'new',
+    // 'new' always ran as 'due' (new posts plus the numbers that are due); it is stored as such.
+    scheduleRange(s.range),
     s.enabled === false ? 0 : 1,
   ] as const
   const row = id
