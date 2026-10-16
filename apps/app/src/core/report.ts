@@ -20,6 +20,8 @@ export function buildReport(
   postIds: number[],
   problems: string[],
   skipped: string[],
+  /** Work left for Claude after its usage limit. */
+  waiting: string[] = [],
 ) {
   const lines: string[] = []
   const stats: Record<string, unknown> = { posts: new Set(postIds).size }
@@ -82,6 +84,7 @@ export function buildReport(
   }
 
   if (skipped.length) lines.push('### Waiting for the gap', '', ...skipped.map((s) => `- ${s}`), '')
+  if (waiting.length) lines.push('### Waiting for Claude', '', ...waiting.map((s) => `- ${s}`), '')
   if (problems.length) lines.push('### Needs you', '', ...problems.map((s) => `- ${s}`), '')
   return { text: lines.join('\n').trim() + '\n', stats }
 }
