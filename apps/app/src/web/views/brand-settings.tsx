@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
-import type { Network, Schedule } from '../api.ts'
+import type { AiStatus, Network, Schedule } from '../api.ts'
 import type { Digest } from '../../core/types.ts'
 import { RUN } from '../../core/types.ts'
 import { api } from '../api.ts'
@@ -208,6 +208,7 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
   const [own, setOwn] = useState<Schedule | null | undefined>(undefined)
   const [engine, setEngine] = useState<'claude' | 'api' | null | undefined>(undefined)
   const [aiError, setAiError] = useState<{ at: string; message: string } | null>(null)
+  const [pause, setPause] = useState<AiStatus | null>(null)
   const [busy, setBusy] = useState(false)
   const [report, setReport] = useState(false)
 
@@ -221,12 +222,15 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
   useEffect(() => {
     void load()
     api
-      .get<{ engine: 'claude' | 'api' | null; error: { at: string; message: string } | null }>(
-        '/api/ai',
-      )
+      .get<{
+        engine: 'claude' | 'api' | null
+        error: { at: string; message: string } | null
+        pause: AiStatus
+      }>('/api/ai')
       .then((r) => {
         setEngine(r.engine)
         setAiError(r.error)
+        setPause(r.pause)
       })
       .catch(() => setEngine(null))
   }, [brand.id])
@@ -288,6 +292,21 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
     }
   }
 
+  // Claude at its usage limit, and this brand's comments waiting for it, in one line.
+  const waitingHere = !!pause?.waiting?.brands.includes(brand.id)
+  const limit = [
+    pause?.paused &&
+      (pause.kind === 'busy'
+        ? t('Claude is busy. It is tried again at {time}.', { time: when(pause.until) })
+        : t('Claude is at its usage limit until {time}.', { time: when(pause.until) })),
+    waitingHere &&
+      t('Comments here wait to be sorted; Claude sorts them after {time}.', {
+        time: when(pause?.paused ? pause.resumes_at : pause!.waiting!.after),
+      }),
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   const emails = (() => {
     try {
       return JSON.parse(brand.alert_emails || '[]') as string[]
@@ -306,7 +325,10 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
           label={t('Update by itself')}
           hint={
             on && own?.next_run_at
-              ? t('Next: {when}', { when: when(own.next_run_at) })
+              ? t('Next: {when}', { when: when(own.next_run_at) }) +
+                (pause?.paused && brand.ai_sort !== 0
+                  ? ` · ${t('Waits for Claude until {time}', { time: when(pause.until) })}`
+                  : '')
               : t('Off: nothing runs until someone presses Update.')
           }
         >
@@ -410,6 +432,18 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
                   : t('No AI yet: install Claude Code, or set ANTHROPIC_API_KEY in .env.')}
           </span>
         </Row>
+        {limit && (
+          <Row
+            label={t('Usage limit')}
+            hint={
+              pause?.paused
+                ? t('Updates and sorting wait, then start again by themselves.')
+                : undefined
+            }
+          >
+            <span class="sm-quiet">{limit}</span>
+          </Row>
+        )}
         {aiError && (
           <Row label={t('Last problem')}>
             <p class="g-error" role="alert">

@@ -15,6 +15,8 @@ const STATUS: Record<string, string> = {
   partial: t('Done, with gaps'),
   error: t('Failed'),
   running: t('Reading now'),
+  // Claude was at its usage limit: the schedule moved to the reset.
+  postponed: t('Postponed'),
 }
 
 interface Saved {

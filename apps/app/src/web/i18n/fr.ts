@@ -1261,6 +1261,17 @@ export const fr: Dict = {
     'An account needs a network and a username.':
       'Un compte doit avoir un réseau et un nom d’utilisateur.',
     'No such account.': 'Compte introuvable.',
+    'Claude is at its usage limit until {time}.':
+      "Claude a atteint sa limite d'utilisation jusqu'à {time}.",
+    'Claude is busy. It is tried again at {time}.': 'Claude est surchargé. Nouvel essai à {time}.',
+    'Comments here wait to be sorted; Claude sorts them after {time}.':
+      "Les commentaires d'ici attendent d'être triés ; Claude les trie après {time}.",
+    'Usage limit': "Limite d'utilisation",
+    'Updates and sorting wait, then start again by themselves.':
+      "Les mises à jour et le tri attendent, puis reprennent d'eux-mêmes.",
+    'Waits for Claude until {time}': "Attend Claude jusqu'à {time}",
+    Postponed: 'Reportée',
+    'Update postponed': 'Mise à jour reportée',
   },
   nouns: {
     event: { one: 'événement', many: 'd’événements', other: 'événements' },

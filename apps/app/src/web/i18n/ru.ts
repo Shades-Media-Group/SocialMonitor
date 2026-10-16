@@ -1251,6 +1251,17 @@ export const ru: Dict = {
       'SOCIALMONITOR_VAULT_KEY должен состоять из 64 шестнадцатеричных символов.',
     'An account needs a network and a username.': 'Для аккаунта нужны сеть и имя пользователя.',
     'No such account.': 'Такого аккаунта нет.',
+    'Claude is at its usage limit until {time}.': 'Лимит использования Claude исчерпан до {time}.',
+    'Claude is busy. It is tried again at {time}.':
+      'Claude перегружен. Следующая попытка в {time}.',
+    'Comments here wait to be sorted; Claude sorts them after {time}.':
+      'Комментарии здесь ждут сортировки; Claude отсортирует их после {time}.',
+    'Usage limit': 'Лимит использования',
+    'Updates and sorting wait, then start again by themselves.':
+      'Обновления и сортировка ждут, а затем снова запускаются сами.',
+    'Waits for Claude until {time}': 'Ждёт Claude до {time}',
+    Postponed: 'Отложено',
+    'Update postponed': 'Обновление отложено',
   },
   nouns: {
     event: { one: 'событие', few: 'события', many: 'событий', other: 'события' },

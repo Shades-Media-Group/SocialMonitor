@@ -1190,6 +1190,16 @@ export const zh: Dict = {
       'SOCIALMONITOR_VAULT_KEY必须是64个十六进制字符。',
     'An account needs a network and a username.': '账号需要平台和用户名。',
     'No such account.': '没有这个账号。',
+    'Claude is at its usage limit until {time}.': 'Claude 已达使用上限，直到 {time}。',
+    'Claude is busy. It is tried again at {time}.': 'Claude 繁忙，将于 {time} 重试。',
+    'Comments here wait to be sorted; Claude sorts them after {time}.':
+      '这里的评论正在等待分类；Claude 会在 {time} 之后分类。',
+    'Usage limit': '使用上限',
+    'Updates and sorting wait, then start again by themselves.':
+      '更新和分类会先等待，之后自动重新开始。',
+    'Waits for Claude until {time}': '等待 Claude 至 {time}',
+    Postponed: '已推迟',
+    'Update postponed': '更新已推迟',
   },
   nouns: {
     event: { other: '条记录' },

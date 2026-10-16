@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
-import type { Network, Schedule } from '../api.ts'
+import type { AiStatus, Network, Schedule } from '../api.ts'
 import { api } from '../api.ts'
 import { Chips, Empty, NETWORK_NAME, Row, Segmented, count, when } from '../ui.tsx'
 import { JsonPanel } from '../json.tsx'
@@ -25,8 +25,20 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
   const [rows, setRows] = useState<Schedule[]>([])
   const [form, setForm] = useState<Partial<Schedule> | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [ai, setAi] = useState<AiStatus | null>(null)
   const load = () => api.get<Schedule[]>('/api/schedules').then(setRows)
-  useEffect(() => void load(), [])
+  useEffect(() => {
+    void load()
+    api
+      .get<AiStatus>('/api/ai/status')
+      .then(setAi)
+      .catch(() => setAi(null))
+  }, [])
+  /** "Waits for Claude until 15:40", for a schedule whose brand Claude sorts. */
+  const waits = (brandId: number) =>
+    ai?.paused && brands.find((b) => b.id === brandId)?.ai_sort !== 0
+      ? ` · ${t('Waits for Claude until {time}', { time: when(ai.until) })}`
+      : ''
 
   const scope = rows.filter((s) => !brandId || s.brand_id === brandId)
   if (mode === 'json') {
@@ -114,7 +126,9 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
                 <h2>{brands.find((b) => b.id === s.brand_id)?.name}</h2>
                 <p class="sm-quiet">{describe(s)}</p>
                 <p class="sm-quiet">
-                  {s.enabled ? t('Next: {when}', { when: when(s.next_run_at) }) : t('Paused')}
+                  {s.enabled
+                    ? t('Next: {when}', { when: when(s.next_run_at) }) + waits(s.brand_id)
+                    : t('Paused')}
                 </p>
               </div>
               <div class="sm-brand-row__actions">
