@@ -160,7 +160,7 @@ const STATUS: Record<string, string> = {
 }
 const TRIGGER: Record<string, string> = {
   manual: t('Manual'),
-  schedule: t('Schedule'),
+  schedule: t('By schedule'),
   mcp: 'MCP',
 }
 /** "Instagram and TikTok" in a sentence, "Instagram, TikTok" in a table cell. */

@@ -183,21 +183,28 @@ export const fr: Dict = {
     'Back to sign in': 'Retour à la connexion',
     Continue: 'Continuer',
     'Forgot your password?': 'Mot de passe oublié ?',
-    'or': 'ou',
+    or: 'ou',
     'Shades login': 'Connexion Shades',
     'Ask a super admin for access': 'Demandez l’accès à un super admin',
-    'Your Shades account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.': 'Votre compte Shades fonctionne, mais il n’a pas encore accès à SocialMonitor. Demandez à un super admin de vous donner un rôle, puis reconnectez-vous.',
+    'Your Shades account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.':
+      'Votre compte Shades fonctionne, mais il n’a pas encore accès à SocialMonitor. Demandez à un super admin de vous donner un rôle, puis reconnectez-vous.',
     'Your account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.':
       'Votre compte fonctionne, mais il n’a pas encore accès à SocialMonitor. Demandez à un super admin de vous donner un rôle, puis reconnectez-vous.',
     'Sign in again': 'Se reconnecter',
     'Shades login did not work. Try again.': 'La connexion Shades n’a pas abouti. Réessayez.',
-    'Shades login took too long. Try again.': 'La connexion Shades a pris trop de temps. Réessayez.',
-    'Shades ID cannot be reached right now. Try again in a moment.': 'Shades ID est injoignable pour le moment. Réessayez dans un instant.',
+    'Shades login took too long. Try again.':
+      'La connexion Shades a pris trop de temps. Réessayez.',
+    'Shades ID cannot be reached right now. Try again in a moment.':
+      'Shades ID est injoignable pour le moment. Réessayez dans un instant.',
     'Shades login was cancelled.': 'La connexion Shades a été annulée.',
-    'Shades login is only for @shades.md accounts.': 'La connexion Shades est réservée aux comptes @shades.md.',
-    'Confirm your email at Shades ID first, then try again.': 'Confirmez d’abord votre e-mail dans Shades ID, puis réessayez.',
-    'This account is blocked. Ask a super admin.': 'Ce compte est bloqué. Demandez à un super admin.',
-    'This email belongs to another Shades account here. Ask a super admin.': 'Ici, cet e-mail appartient à un autre compte Shades. Demandez à un super admin.',
+    'Shades login is only for @shades.md accounts.':
+      'La connexion Shades est réservée aux comptes @shades.md.',
+    'Confirm your email at Shades ID first, then try again.':
+      'Confirmez d’abord votre e-mail dans Shades ID, puis réessayez.',
+    'This account is blocked. Ask a super admin.':
+      'Ce compte est bloqué. Demandez à un super admin.',
+    'This email belongs to another Shades account here. Ask a super admin.':
+      'Ici, cet e-mail appartient à un autre compte Shades. Demandez à un super admin.',
     'Joined with Shades login': 'Arrivé par la connexion Shades',
     'All networks': 'Tous les réseaux',
     Period: 'Période',
@@ -1157,7 +1164,7 @@ export const fr: Dict = {
       'Les prix indiquent ce que les mêmes jetons coûteraient sur l’API Anthropic. L’abonnement Claude n’est pas facturé à l’appel : rien ici n’a été payé.',
     Stopped: 'Arrêtée',
     Manual: 'Manuelle',
-    Schedule: 'Planifiée',
+    'By schedule': 'Planifiée',
     'Last 50, rivals included': 'Les 50 dernières, concurrents inclus',
     'Next update': 'Prochaine mise à jour',
     'About {tokens} tokens and {usd}': 'Environ {tokens} jetons et {usd}',

@@ -183,21 +183,28 @@ export const ru: Dict = {
     'Back to sign in': 'Вернуться ко входу',
     Continue: 'Продолжить',
     'Forgot your password?': 'Забыли пароль?',
-    'or': 'или',
+    or: 'или',
     'Shades login': 'Вход через Shades',
     'Ask a super admin for access': 'Попросите доступ у суперадминистратора',
-    'Your Shades account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.': 'Ваш аккаунт Shades работает, но доступа к SocialMonitor у него пока нет. Попросите суперадминистратора выдать вам роль, затем войдите снова.',
+    'Your Shades account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.':
+      'Ваш аккаунт Shades работает, но доступа к SocialMonitor у него пока нет. Попросите суперадминистратора выдать вам роль, затем войдите снова.',
     'Your account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.':
       'Ваш аккаунт работает, но доступа к SocialMonitor у него пока нет. Попросите суперадминистратора выдать вам роль, затем войдите снова.',
     'Sign in again': 'Войти снова',
     'Shades login did not work. Try again.': 'Вход через Shades не удался. Попробуйте ещё раз.',
-    'Shades login took too long. Try again.': 'Вход через Shades занял слишком много времени. Попробуйте ещё раз.',
-    'Shades ID cannot be reached right now. Try again in a moment.': 'Shades ID сейчас недоступен. Попробуйте чуть позже.',
+    'Shades login took too long. Try again.':
+      'Вход через Shades занял слишком много времени. Попробуйте ещё раз.',
+    'Shades ID cannot be reached right now. Try again in a moment.':
+      'Shades ID сейчас недоступен. Попробуйте чуть позже.',
     'Shades login was cancelled.': 'Вход через Shades отменён.',
-    'Shades login is only for @shades.md accounts.': 'Вход через Shades доступен только для аккаунтов @shades.md.',
-    'Confirm your email at Shades ID first, then try again.': 'Сначала подтвердите почту в Shades ID, затем попробуйте ещё раз.',
-    'This account is blocked. Ask a super admin.': 'Этот аккаунт заблокирован. Обратитесь к суперадминистратору.',
-    'This email belongs to another Shades account here. Ask a super admin.': 'Здесь эта почта принадлежит другому аккаунту Shades. Обратитесь к суперадминистратору.',
+    'Shades login is only for @shades.md accounts.':
+      'Вход через Shades доступен только для аккаунтов @shades.md.',
+    'Confirm your email at Shades ID first, then try again.':
+      'Сначала подтвердите почту в Shades ID, затем попробуйте ещё раз.',
+    'This account is blocked. Ask a super admin.':
+      'Этот аккаунт заблокирован. Обратитесь к суперадминистратору.',
+    'This email belongs to another Shades account here. Ask a super admin.':
+      'Здесь эта почта принадлежит другому аккаунту Shades. Обратитесь к суперадминистратору.',
     'Joined with Shades login': 'Присоединился через вход Shades',
     'All networks': 'Все сети',
     Period: 'Период',
@@ -1149,7 +1156,7 @@ export const ru: Dict = {
       'Цены показывают, сколько те же токены стоили бы через API Anthropic. Подписка Claude не оплачивается за вызов, поэтому здесь ничего не списано.',
     Stopped: 'Остановлено',
     Manual: 'Вручную',
-    Schedule: 'По расписанию',
+    'By schedule': 'По расписанию',
     'Last 50, rivals included': 'Последние 50, с конкурентами',
     'Next update': 'Следующее обновление',
     'About {tokens} tokens and {usd}': 'Около {tokens} токенов и {usd}',
