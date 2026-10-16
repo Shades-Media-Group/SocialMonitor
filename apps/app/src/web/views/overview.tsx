@@ -172,7 +172,7 @@ function Week({
     }
   }
   return (
-    <section class="sm-box sm-week" aria-busy={busy}>
+    <section class="sm-box sm-week sm-span-12" aria-busy={busy}>
       <header class="sm-box__head">
         <h2>{t('This week')}</h2>
         <span class="sm-inline sm-week__meta">
