@@ -84,10 +84,19 @@ describe('restic arguments and settings', () => {
   it('names every missing setting, and accepts a password file', () => {
     expect(missingSettings({})).toEqual([
       'RESTIC_REPOSITORY',
-      'AWS_ACCESS_KEY_ID',
-      'AWS_SECRET_ACCESS_KEY',
       'RESTIC_PASSWORD or RESTIC_PASSWORD_FILE',
     ])
+    // R2 needs its keys; a folder (a OneDrive path) does not.
+    expect(missingSettings({ RESTIC_REPOSITORY: 's3:https://x/b', RESTIC_PASSWORD: 'p' })).toEqual([
+      'AWS_ACCESS_KEY_ID',
+      'AWS_SECRET_ACCESS_KEY',
+    ])
+    expect(
+      missingSettings({
+        RESTIC_REPOSITORY: '/mnt/c/Users/me/OneDrive/backup',
+        RESTIC_PASSWORD: 'p',
+      }),
+    ).toEqual([])
     expect(
       missingSettings({
         RESTIC_REPOSITORY: 's3:https://x.r2.cloudflarestorage.com/b',
@@ -99,7 +108,11 @@ describe('restic arguments and settings', () => {
   })
 
   it('forgets only with a separate prune credential, which replaces the nightly one', () => {
-    const nightly = { AWS_ACCESS_KEY_ID: 'night', AWS_SECRET_ACCESS_KEY: 'night-key' }
+    const nightly = {
+      RESTIC_REPOSITORY: 's3:https://x.r2.cloudflarestorage.com/b',
+      AWS_ACCESS_KEY_ID: 'night',
+      AWS_SECRET_ACCESS_KEY: 'night-key',
+    }
     expect(pruneEnv(nightly)).toBeNull()
     expect(pruneEnv({ ...nightly, RESTIC_PRUNE_AWS_ACCESS_KEY_ID: 'p' })).toBeNull()
     const env = pruneEnv({
@@ -109,6 +122,9 @@ describe('restic arguments and settings', () => {
     })
     expect(env?.AWS_ACCESS_KEY_ID).toBe('admin')
     expect(env?.AWS_SECRET_ACCESS_KEY).toBe('admin-key')
+    // A folder repository forgets with its own settings.
+    const folder = { RESTIC_REPOSITORY: '/mnt/c/Users/me/OneDrive/backup' }
+    expect(pruneEnv(folder)).toBe(folder)
   })
 
   it('finds the restored database under the original absolute path', () => {

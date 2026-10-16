@@ -214,6 +214,17 @@ Every run writes to `data/backup.log` and puts its result in `data/backup-status
    node scripts/backup.mjs --test-restore
    ```
 
+### Or a folder, without a bucket
+
+restic can also write to a folder. On the Windows PC, a folder inside OneDrive gives an off-site copy with no Cloudflare bucket: OneDrive uploads the encrypted files, and its version history keeps older copies for 30 days. From WSL, point the repository at the Windows folder and leave the AWS keys out:
+
+```bash
+RESTIC_REPOSITORY=/mnt/c/Users/<you>/OneDrive/SocialMonitor-backup
+RESTIC_PASSWORD_FILE=/home/you/.config/socialmonitor/restic-password
+```
+
+Then run `restic init` and the two test runs from step 7. A folder has no bucket lock, so ransomware on the PC can delete it too; OneDrive's version history and Recycle Bin are the only way back. The R2 bucket with its lock is the stronger choice when you can have it.
+
 Also keep `SOCIALMONITOR_VAULT_KEY` in your password manager. The backup holds the saved accounts encrypted, and they open again only with the same key.
 
 ### Schedule
@@ -258,6 +269,8 @@ The aim is to keep 30 daily and 12 monthly snapshots. Removing the older ones de
 4. Add the lock rules back.
 
 Skipping a month costs only storage; nothing is lost.
+
+A folder repository has no separate prune credential, so every nightly run forgets and prunes on its own.
 
 ### Restore
 

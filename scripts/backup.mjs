@@ -85,11 +85,14 @@ export const forgetArgs = () => [
 ]
 export const restoreArgs = (target) => ['restore', 'latest', '--tag', TAG, '--target', target]
 
+/** Whether the repository is S3-compatible storage such as R2, rather than a folder. */
+export const isS3 = (env) => /^s3:/i.test(env.RESTIC_REPOSITORY ?? '')
+
 /** The settings that are missing from env, by name. */
 export function missingSettings(env) {
-  const missing = ['RESTIC_REPOSITORY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'].filter(
-    (k) => !env[k],
-  )
+  // S3-style repositories (R2) need keys; a folder (a OneDrive or external drive path) does not.
+  const keys = isS3(env) ? ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'] : []
+  const missing = ['RESTIC_REPOSITORY', ...keys].filter((k) => !env[k])
   if (!env.RESTIC_PASSWORD && !env.RESTIC_PASSWORD_FILE)
     missing.push('RESTIC_PASSWORD or RESTIC_PASSWORD_FILE')
   return missing
@@ -98,6 +101,9 @@ export function missingSettings(env) {
 /** The environment for forget: the prune credential in place of the nightly one, or null when no
  * prune credential is set, in which case nothing is forgotten. */
 export function pruneEnv(env) {
+  // A folder repository has no separate delete permission: forgetting runs with the same settings.
+  // Its copy off this computer (OneDrive's version history) is what protects it from deletion.
+  if (!isS3(env)) return env
   const id = env.RESTIC_PRUNE_AWS_ACCESS_KEY_ID
   const secret = env.RESTIC_PRUNE_AWS_SECRET_ACCESS_KEY
   return id && secret ? { ...env, AWS_ACCESS_KEY_ID: id, AWS_SECRET_ACCESS_KEY: secret } : null
