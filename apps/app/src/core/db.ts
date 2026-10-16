@@ -456,6 +456,14 @@ function migrate(db: DatabaseSync) {
     db.exec('ALTER TABLE brands ADD COLUMN campaign_auto INTEGER NOT NULL DEFAULT 1')
   // When Claude last looked for a post's campaign, so it is asked again only after campaigns change.
   if (!has('posts', 'campaign_ai_at')) db.exec('ALTER TABLE posts ADD COLUMN campaign_ai_at TEXT')
+  // The update (runs.id) an AI call was made for; null for calls outside updates (reply drafts,
+  // summaries, translations) and for calls from before it was kept. Adding a column is not an
+  // UPDATE, so the append-only trigger stays as it is.
+  if (!has('ai_usage', 'run_id')) db.exec('ALTER TABLE ai_usage ADD COLUMN run_id INTEGER')
+  db.exec('CREATE INDEX IF NOT EXISTS ai_usage_run ON ai_usage(run_id)')
+  // What an update read, per brand id: {"12": {"posts": 8, "comments": 140, "new": 22}}. Set to
+  // {} when it starts; null marks updates from before reads and AI calls were tied to them.
+  if (!has('runs', 'tally')) db.exec('ALTER TABLE runs ADD COLUMN tally TEXT')
 }
 
 export const now = () => new Date().toISOString()

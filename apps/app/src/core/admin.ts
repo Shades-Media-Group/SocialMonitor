@@ -2,7 +2,10 @@ import { statSync } from 'node:fs'
 import { join } from 'node:path'
 import type { DB } from './db.ts'
 import { DATA_DIR } from './db.ts'
+import type { Tally } from './store.ts'
 import { withCompetitors } from './store.ts'
+import type { Network } from './types.ts'
+import { NETWORKS } from './types.ts'
 
 /**
  * The Admin tab: what a brand's AI work used, in tokens and API-equivalent USD, next to how much
@@ -152,6 +155,174 @@ export function adminUsage(db: DB, brandId: number, at = Date.now()) {
       recorded_days: Math.ceil(days),
     },
     brands: allBrands(db, since30),
+    updates: adminUpdates(db, brandId),
+  }
+}
+
+/** One update in the brand's history. Null figures were not recorded (updates before run_id). */
+export interface UpdateRow {
+  id: number
+  started_at: string
+  finished_at: string | null
+  seconds: number | null
+  /** As runs.trigger records it: manual, schedule or mcp. */
+  trigger: string
+  /** As runs.status records it: ok, partial, error, stopped, running, or a newer one. */
+  status: string
+  networks: Network[]
+  /** False for updates from before their reads and AI calls were tied to them. */
+  recorded: boolean
+  posts: number | null
+  comments: number | null
+  new_comments: number | null
+  sorted: number | null
+  calls: number | null
+  tokens: number | null
+  input: number | null
+  output: number | null
+  cache_read: number | null
+  cache_write: number | null
+  cost_usd: number | null
+  by_task: (UsageTotals & { key: string })[]
+}
+
+export interface UpdateEstimate {
+  tokens: number
+  cost_usd: number
+  /** How many recent updates the median is taken from (at most 5). */
+  from: number
+  networks: Network[]
+  /** False when no recent update used these networks, so updates on others stood in. */
+  same_networks: boolean
+}
+
+const HISTORY = 50
+const ESTIMATE_FROM = 5
+
+const median = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b)
+  const m = s.length >> 1
+  return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2
+}
+const inOrder = (nets: Network[]) => NETWORKS.filter((n) => nets.includes(n))
+const sameSet = (a: Network[], b: Network[]) => inOrder(a).join() === inOrder(b).join()
+
+/**
+ * The brand's last 50 updates, newest first, each with what it read and what its AI calls used
+ * for the brand and its rivals, and what the next update would take: the median of the last five
+ * updates that used AI on the networks the next one reads.
+ */
+export function adminUpdates(db: DB, brandId: number) {
+  const brands = withCompetitors(db, [brandId])
+  const ids = JSON.stringify(brands)
+  const runs = db
+    .prepare(
+      `SELECT id, trigger, scope, started_at, finished_at, status, tally FROM runs
+       WHERE EXISTS (SELECT 1 FROM json_each(json_extract(runs.scope, '$.brandIds'))
+         WHERE value IN (SELECT value FROM json_each(?)))
+       ORDER BY id DESC LIMIT ?`,
+    )
+    .all(ids, HISTORY) as {
+    id: number
+    trigger: string
+    scope: string
+    started_at: string
+    finished_at: string | null
+    status: string
+    tally: string | null
+  }[]
+  const usage = db
+    .prepare(
+      `SELECT run_id, task AS key, ${SUMS} FROM ai_usage
+       WHERE run_id IN (SELECT value FROM json_each(?)) AND brand_id IN (SELECT value FROM json_each(?))
+       GROUP BY run_id, task ORDER BY cost_usd DESC`,
+    )
+    .all(JSON.stringify(runs.map((r) => r.id)), ids) as unknown as (UsageTotals & {
+    run_id: number
+    key: string
+  })[]
+
+  const rows: UpdateRow[] = runs.map((r) => {
+    const scope = JSON.parse(r.scope) as { networks?: Network[] }
+    const base = {
+      id: r.id,
+      started_at: r.started_at,
+      finished_at: r.finished_at,
+      seconds: r.finished_at ? (Date.parse(r.finished_at) - Date.parse(r.started_at)) / 1000 : null,
+      trigger: r.trigger,
+      status: r.status,
+      networks: inOrder(scope.networks ?? []),
+    }
+    if (r.tally == null)
+      return {
+        ...base,
+        recorded: false,
+        posts: null,
+        comments: null,
+        new_comments: null,
+        sorted: null,
+        calls: null,
+        tokens: null,
+        input: null,
+        output: null,
+        cache_read: null,
+        cache_write: null,
+        cost_usd: null,
+        by_task: [],
+      }
+    const tally = JSON.parse(r.tally) as Record<string, Partial<Tally>>
+    const read = (k: keyof Tally) => brands.reduce((s, id) => s + (tally[id]?.[k] ?? 0), 0)
+    const by_task = usage.filter((u) => u.run_id === r.id).map(({ run_id: _, ...u }) => u)
+    const sum = (k: keyof UsageTotals) => by_task.reduce((s, u) => s + u[k], 0)
+    return {
+      ...base,
+      recorded: true,
+      posts: read('posts'),
+      comments: read('comments'),
+      new_comments: read('new'),
+      sorted: by_task.find((u) => u.key === 'sort-comments')?.items ?? 0,
+      calls: sum('calls'),
+      tokens: sum('input') + sum('output') + sum('cache_read') + sum('cache_write'),
+      input: sum('input'),
+      output: sum('output'),
+      cache_read: sum('cache_read'),
+      cache_write: sum('cache_write'),
+      cost_usd: sum('cost_usd'),
+      by_task,
+    }
+  })
+  return { runs: rows, estimate: estimate(db, brandId, rows) }
+}
+
+/**
+ * What the next update would take: it reads the networks of the brand's next scheduled update,
+ * else those of its latest one. The median of the last five updates that used AI on that same set
+ * of networks; when none did, of the last five that used AI at all. Null before any did. Running
+ * and stopped updates are left out.
+ */
+function estimate(db: DB, brandId: number, rows: UpdateRow[]): UpdateEstimate | null {
+  // A running or stopped update used only part of what a whole one takes.
+  const withAi = rows.filter(
+    (r) => r.recorded && (r.calls ?? 0) > 0 && r.status !== 'running' && r.status !== 'stopped',
+  )
+  if (!withAi.length) return null
+  const scheduled = db
+    .prepare(
+      `SELECT networks FROM schedules WHERE brand_id = ? AND enabled = 1
+       ORDER BY next_run_at IS NULL, next_run_at LIMIT 1`,
+    )
+    .get(brandId) as { networks: string } | undefined
+  const networks = inOrder(
+    scheduled ? (JSON.parse(scheduled.networks) as Network[]) : (rows[0]?.networks ?? []),
+  )
+  const same = withAi.filter((r) => sameSet(r.networks, networks))
+  const basis = (same.length ? same : withAi).slice(0, ESTIMATE_FROM)
+  return {
+    tokens: Math.round(median(basis.map((r) => r.tokens ?? 0))),
+    cost_usd: median(basis.map((r) => r.cost_usd ?? 0)),
+    from: basis.length,
+    networks,
+    same_networks: same.length > 0,
   }
 }
 

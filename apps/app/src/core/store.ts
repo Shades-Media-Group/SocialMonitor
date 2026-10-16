@@ -691,11 +691,32 @@ export function labelCounts(db: DB, brandId?: number, since?: string, network?: 
 export function startRun(db: DB, trigger: 'manual' | 'schedule' | 'mcp', scope: unknown) {
   return one<{ id: number }>(
     db,
-    'INSERT INTO runs (trigger, scope, started_at) VALUES (?, ?, ?) RETURNING id',
+    "INSERT INTO runs (trigger, scope, started_at, tally) VALUES (?, ?, ?, '{}') RETURNING id",
     trigger,
     JSON.stringify(scope),
     now(),
   )!.id
+}
+
+export interface Tally {
+  posts: number
+  comments: number
+  new: number
+}
+
+/** Adds one profile's read to the update's count for its brand (runs.tally). */
+export function tallyRun(db: DB, id: number, brandId: number, read: Tally) {
+  const row = db.prepare('SELECT tally FROM runs WHERE id = ?').get(id) as
+    { tally: string | null } | undefined
+  if (!row) return
+  const tally = JSON.parse(row.tally || '{}') as Record<string, Tally>
+  const was = tally[brandId] ?? { posts: 0, comments: 0, new: 0 }
+  tally[brandId] = {
+    posts: was.posts + read.posts,
+    comments: was.comments + read.comments,
+    new: was.new + read.new,
+  }
+  db.prepare('UPDATE runs SET tally = ? WHERE id = ?').run(JSON.stringify(tally), id)
 }
 
 /** Where a running update is, for the notice every open dashboard shows. */
