@@ -6,7 +6,7 @@ import { api } from '../api.ts'
 import { LineChart } from '../charts.tsx'
 import { JsonPanel } from '../json.tsx'
 import { locale, t } from '../i18n.ts'
-import { Empty, NETWORK_NAME, fmt, short } from '../ui.tsx'
+import { Empty, Modal, NETWORK_NAME, count, fmt, short, when } from '../ui.tsx'
 import { usePref } from '../prefs.ts'
 
 interface Totals {
@@ -47,6 +47,37 @@ interface Usage {
     comments: number
     calls: number
   }[]
+  updates: { runs: Update[]; estimate: Estimate | null }
+}
+/** One update; null figures were not recorded (updates from before they were tied to it). */
+interface Update {
+  id: number
+  started_at: string
+  finished_at: string | null
+  seconds: number | null
+  trigger: string
+  status: string
+  networks: Network[]
+  recorded: boolean
+  posts: number | null
+  comments: number | null
+  new_comments: number | null
+  sorted: number | null
+  calls: number | null
+  tokens: number | null
+  input: number | null
+  output: number | null
+  cache_read: number | null
+  cache_write: number | null
+  cost_usd: number | null
+  by_task: Group[]
+}
+interface Estimate {
+  tokens: number
+  cost_usd: number
+  from: number
+  networks: Network[]
+  same_networks: boolean
 }
 
 const cents = new Intl.NumberFormat(locale, {
@@ -114,7 +145,30 @@ const TASK: Record<string, string> = {
   ideas: 'Post ideas',
   reply: 'Reply drafts',
   translate: 'Translations',
+  'limit-check': 'Limit check',
 }
+
+/** As runs.status records it; a status this list does not know shows as it is. */
+const STATUS: Record<string, string> = {
+  ok: t('Done'),
+  partial: t('Done, with gaps'),
+  error: t('Failed'),
+  stopped: t('Stopped'),
+  running: t('Reading now'),
+  // Translated in the ai-limits change, which adds this status.
+  postponed: t('Postponed'),
+}
+const TRIGGER: Record<string, string> = {
+  manual: t('Manual'),
+  schedule: t('Schedule'),
+  mcp: 'MCP',
+}
+/** "Instagram and TikTok" in a sentence, "Instagram, TikTok" in a table cell. */
+const networkList = (nets: Network[], sentence = false) =>
+  new Intl.ListFormat(
+    locale,
+    sentence ? { style: 'long', type: 'conjunction' } : { style: 'short', type: 'unit' },
+  ).format(nets.map((n) => NETWORK_NAME[n]))
 
 /** A table whose columns sort on a click, the way Statistics does it. */
 function SortTable<R>({
@@ -297,6 +351,7 @@ export function Admin({ brand, mode, version }: BrandView) {
             </div>
             <div class="sm-span-4">{held}</div>
           </div>
+          {u.updates.runs.length > 0 && <Updates {...u.updates} />}
         </>
       ) : (
         <>
@@ -347,6 +402,8 @@ export function Admin({ brand, mode, version }: BrandView) {
               show={active[4]}
             />
           </section>
+
+          {u.updates.runs.length > 0 && <Updates {...u.updates} />}
 
           <section class="sm-box sm-box--table">
             <header class="sm-box__head">
@@ -423,6 +480,190 @@ export function Admin({ brand, mode, version }: BrandView) {
         </>
       )}
     </div>
+  )
+}
+
+/**
+ * The brand's last 50 updates, newest first: what each read, sorted and used, with what the next
+ * one would take above them. A row opens that update's breakdown by task.
+ */
+function Updates({ runs, estimate }: Usage['updates']) {
+  const [open, setOpen] = useState<Update | null>(null)
+  const e = estimate
+  return (
+    <>
+      <section class="sm-box sm-box--table">
+        <header class="sm-box__head">
+          <h2>{t('Updates')}</h2>
+          <span class="sm-box__meta">{t('Last 50, rivals included')}</span>
+        </header>
+        <p class="sm-admin__next">
+          <span class="sm-admin__next-label">{t('Next update')}</span>
+          {e ? (
+            <>
+              <strong class="g-num">
+                {t('About {tokens} tokens and {usd}', {
+                  tokens: short(e.tokens),
+                  usd: usd(e.cost_usd),
+                })}
+              </strong>
+              <span class="sm-admin__next-note">
+                {t(
+                  e.same_networks
+                    ? 'At the API-equivalent price. An estimate from recent updates: the median of {updates} that used AI on {networks}.'
+                    : 'At the API-equivalent price. An estimate from recent updates: the median of {updates} that used AI, since none read only {networks} yet.',
+                  {
+                    updates: count(e.from, 'update'),
+                    networks: networkList(e.networks, true),
+                  },
+                )}
+              </span>
+            </>
+          ) : (
+            <span class="sm-admin__unrecorded">
+              {t('No estimate yet: it needs a recorded update that used AI.')}
+            </span>
+          )}
+        </p>
+        <div class="sm-scroll">
+          <table class="sm-dtable sm-admin__table sm-admin__updates">
+            <thead>
+              <tr>
+                <th>{t('Started')}</th>
+                <th class="sm-num sm-admin__wide">{t('Took')}</th>
+                <th class="sm-admin__wide">{t('Started by')}</th>
+                <th class="sm-admin__wide">{t('Networks')}</th>
+                <th>{t('Status')}</th>
+                <th class="sm-num sm-admin__wide">{t('Posts')}</th>
+                <th class="sm-num sm-admin__wide">{t('Comments')}</th>
+                <th class="sm-num sm-admin__wide">{t('Sorted')}</th>
+                <th class="sm-num">{t('Tokens')}</th>
+                <th class="sm-num">{t('USD')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {runs.map((r) => (
+                <tr class={open?.id === r.id ? 'is-current' : undefined}>
+                  <td class="sm-admin__name">
+                    <button type="button" class="sm-admin__open" onClick={() => setOpen(r)}>
+                      {when(r.started_at)}
+                    </button>
+                  </td>
+                  <td class="sm-num g-num sm-admin__wide">{seconds(r.seconds)}</td>
+                  <td class="sm-admin__wide">{TRIGGER[r.trigger] ?? r.trigger}</td>
+                  <td class="sm-admin__wide">{networkList(r.networks)}</td>
+                  <td class={`sm-admin__status sm-admin__status--${r.status}`}>
+                    {STATUS[r.status] ?? r.status}
+                  </td>
+                  <td class="sm-num g-num sm-admin__wide">{fmt(r.posts)}</td>
+                  <td class="sm-num g-num sm-admin__wide">{fmt(r.comments)}</td>
+                  <td class="sm-num g-num sm-admin__wide">{fmt(r.sorted)}</td>
+                  {r.recorded ? (
+                    <>
+                      <td class="sm-num g-num">{short(r.tokens)}</td>
+                      <td class="sm-num g-num">{usd(r.cost_usd)}</td>
+                    </>
+                  ) : (
+                    // Tokens and price, which only updates since run_id have.
+                    <td class="sm-num sm-admin__unrecorded" colSpan={2}>
+                      {t('Not recorded')}
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {/* Outside the box, so the box's table margins stay out of the pop-up. */}
+      {open && <UpdateDetail r={open} onClose={() => setOpen(null)} />}
+    </>
+  )
+}
+
+/** One update's figures, and what each kind of AI work in it used. */
+function UpdateDetail({ r, onClose }: { r: Update; onClose: () => void }) {
+  const title = t('Update of {time}', { time: when(r.started_at) })
+  const line = [
+    STATUS[r.status] ?? r.status,
+    TRIGGER[r.trigger] ?? r.trigger,
+    networkList(r.networks, true),
+    r.seconds != null ? seconds(r.seconds) : null,
+  ].filter(Boolean)
+  return (
+    <Modal title={title} onClose={onClose}>
+      <div class="sm-admin__detail">
+        <h2>{title}</h2>
+        <p>{line.join(' · ')}</p>
+        {r.recorded ? (
+          <>
+            <dl class="sm-admin__rows">
+              <dt>{t('Posts read')}</dt>
+              <dd class="g-num">{fmt(r.posts)}</dd>
+              <dt>{t('Comments read')}</dt>
+              <dd class="g-num">
+                {fmt(r.comments)}
+                <span>{t('{n} new', { n: fmt(r.new_comments) })}</span>
+              </dd>
+              <dt>{t('Comments sorted')}</dt>
+              <dd class="g-num">{fmt(r.sorted)}</dd>
+              <dt>{t('AI calls')}</dt>
+              <dd class="g-num">{fmt(r.calls)}</dd>
+              <dt>{t('Input tokens')}</dt>
+              <dd class="g-num">{fmt(r.input)}</dd>
+              <dt>{t('Output tokens')}</dt>
+              <dd class="g-num">{fmt(r.output)}</dd>
+              <dt>{t('Cache read')}</dt>
+              <dd class="g-num">{fmt(r.cache_read)}</dd>
+              <dt>{t('Cache written')}</dt>
+              <dd class="g-num">{fmt(r.cache_write)}</dd>
+              <dt>{t('Total tokens')}</dt>
+              <dd class="g-num">{fmt(r.tokens)}</dd>
+              <dt>{t('API-equivalent price')}</dt>
+              <dd class="g-num">{usd(r.cost_usd)}</dd>
+            </dl>
+            {r.by_task.length > 0 && (
+              <SortTable
+                initial="usd"
+                rows={r.by_task}
+                cols={[
+                  {
+                    key: 'task',
+                    label: t('Task'),
+                    value: (g) => t(TASK[g.key ?? ''] ?? g.key ?? ''),
+                  },
+                  {
+                    key: 'calls',
+                    label: t('Calls'),
+                    value: (g) => g.calls,
+                    show: (g) => fmt(g.calls),
+                    wide: true,
+                  },
+                  {
+                    key: 'tokens',
+                    label: t('Tokens'),
+                    value: (g) => tokens(g),
+                    show: (g) => short(tokens(g)),
+                  },
+                  {
+                    key: 'usd',
+                    label: t('USD'),
+                    value: (g) => g.cost_usd,
+                    show: (g) => usd(g.cost_usd),
+                  },
+                ]}
+              />
+            )}
+          </>
+        ) : (
+          <p>
+            {t(
+              'This update ran before updates kept their AI usage, so what it read and used was not recorded.',
+            )}
+          </p>
+        )}
+      </div>
+    </Modal>
   )
 }
 

@@ -5099,6 +5099,87 @@ th[aria-sort='ascending'] .sm-sortbtn::after {
 .sm-shell .sm-box > .sm-box__head + .sm-admin__rows {
   margin-top: -10px;
 }
+/* Updates: the next one's estimate on one line above the history. */
+.sm-admin__next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 12px;
+}
+.sm-admin__next-label {
+  color: var(--c-text-2);
+}
+.sm-admin__next strong {
+  font-size: 20px;
+  font-weight: 600;
+}
+.sm-admin__next-note {
+  flex-basis: 100%;
+  color: var(--c-text-3);
+}
+.sm-admin__updates td {
+  white-space: nowrap;
+}
+.sm-admin__open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sm-admin__open:hover {
+  text-decoration: underline;
+}
+.sm-admin__status--error {
+  color: var(--g-danger);
+}
+.sm-admin__status--running {
+  color: var(--g-accent-text);
+}
+.sm-admin__unrecorded {
+  color: var(--c-text-3);
+}
+.sm-admin__detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  max-height: calc(100vh - 48px);
+  padding: 24px;
+  overflow-y: auto;
+}
+.sm-admin__detail h2 {
+  margin: 0;
+  padding-right: 32px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.sm-admin__detail > p {
+  margin: 0;
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-admin__detail .sm-admin__rows {
+  margin: 0;
+}
+.sm-admin__detail .sm-admin__rows dt {
+  padding-left: 0;
+}
+.sm-admin__detail .sm-admin__rows dd {
+  padding-right: 0;
+}
+.sm-shell .sm-admin__detail .sm-dtable th:first-child,
+.sm-shell .sm-admin__detail .sm-dtable td:first-child {
+  padding-left: 0;
+  white-space: normal;
+}
+.sm-shell .sm-admin__detail .sm-dtable th:last-child,
+.sm-shell .sm-admin__detail .sm-dtable td:last-child {
+  padding-right: 0;
+}
 @media (max-width: 560px) {
   .sm-shell .sm-admin__wide {
     display: none;
