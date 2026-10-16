@@ -721,6 +721,17 @@ export const ro: Dict = {
     'No Instagram account is linked to this Page.':
       'Niciun cont Instagram nu e legat de această pagină.',
     'Connect with Facebook': 'Conectează cu Facebook',
+    "A linked Instagram business account also lets SocialMonitor read other brands' public Instagram posts and counts.":
+      'Un cont Instagram de business legat îi permite lui SocialMonitor să citească și postările publice de Instagram ale altor branduri, cu cifrele lor.',
+    'Through {name}.': 'Prin {name}.',
+    'Official Meta API (your connected account): posts and comments.':
+      'API-ul oficial Meta (contul tău conectat): postări și comentarii.',
+    'Official Meta API (Business Discovery): posts and counts; comment text is not available.':
+      'API-ul oficial Meta (Business Discovery): postări și cifre; textul comentariilor nu este disponibil.',
+    'Official Meta API (Page Public Content Access): posts and counts.':
+      'API-ul oficial Meta (Page Public Content Access): postări și cifre.',
+    'Read from the web by the browser: posts, counts and, when signed in, comments.':
+      'Citit de pe web prin browser: postări, cifre și, cu autentificare, comentarii.',
     'Add META_APP_ID and META_APP_SECRET to .env first.':
       'Adaugă mai întâi META_APP_ID și META_APP_SECRET în .env.',
     'This address cannot receive Facebook sign-ins.':

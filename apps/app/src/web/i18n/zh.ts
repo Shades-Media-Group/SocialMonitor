@@ -685,6 +685,17 @@ export const zh: Dict = {
     'and Instagram @{name}': '以及 Instagram @{name}',
     'No Instagram account is linked to this Page.': '此主页未关联 Instagram 账号。',
     'Connect with Facebook': '通过 Facebook 连接',
+    "A linked Instagram business account also lets SocialMonitor read other brands' public Instagram posts and counts.":
+      '关联的 Instagram 商业账号还能让 SocialMonitor 读取其他品牌公开的 Instagram 帖子及其数据。',
+    'Through {name}.': '通过 {name}。',
+    'Official Meta API (your connected account): posts and comments.':
+      'Meta 官方 API（你已连接的账号）：帖子和评论。',
+    'Official Meta API (Business Discovery): posts and counts; comment text is not available.':
+      'Meta 官方 API（Business Discovery）：帖子和数据；无法获取评论内容。',
+    'Official Meta API (Page Public Content Access): posts and counts.':
+      'Meta 官方 API（Page Public Content Access）：帖子和数据。',
+    'Read from the web by the browser: posts, counts and, when signed in, comments.':
+      '由浏览器从网页读取：帖子、数据，登录后还有评论。',
     'Add META_APP_ID and META_APP_SECRET to .env first.':
       '请先在 .env 中添加 META_APP_ID 和 META_APP_SECRET。',
     'This address cannot receive Facebook sign-ins.': '此地址无法接收 Facebook 登录。',

@@ -718,6 +718,17 @@ export const ru: Dict = {
     'and Instagram @{name}': 'и Instagram @{name}',
     'No Instagram account is linked to this Page.': 'К этой странице не привязан Instagram.',
     'Connect with Facebook': 'Подключить через Facebook',
+    "A linked Instagram business account also lets SocialMonitor read other brands' public Instagram posts and counts.":
+      'Привязанный бизнес-аккаунт Instagram позволяет SocialMonitor читать и публичные посты Instagram других брендов вместе с их цифрами.',
+    'Through {name}.': 'Через {name}.',
+    'Official Meta API (your connected account): posts and comments.':
+      'Официальный API Meta (ваш подключённый аккаунт): посты и комментарии.',
+    'Official Meta API (Business Discovery): posts and counts; comment text is not available.':
+      'Официальный API Meta (Business Discovery): посты и цифры; текст комментариев недоступен.',
+    'Official Meta API (Page Public Content Access): posts and counts.':
+      'Официальный API Meta (Page Public Content Access): посты и цифры.',
+    'Read from the web by the browser: posts, counts and, when signed in, comments.':
+      'Читается с сайта через браузер: посты, цифры и, после входа, комментарии.',
     'Add META_APP_ID and META_APP_SECRET to .env first.':
       'Сначала добавьте META_APP_ID и META_APP_SECRET в .env.',
     'This address cannot receive Facebook sign-ins.':

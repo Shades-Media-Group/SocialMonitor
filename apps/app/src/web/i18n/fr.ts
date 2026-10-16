@@ -722,6 +722,17 @@ export const fr: Dict = {
     'No Instagram account is linked to this Page.':
       'Aucun compte Instagram n’est lié à cette page.',
     'Connect with Facebook': 'Connecter avec Facebook',
+    "A linked Instagram business account also lets SocialMonitor read other brands' public Instagram posts and counts.":
+      'Un compte Instagram professionnel lié permet aussi à SocialMonitor de lire les publications Instagram publiques d’autres marques et leurs chiffres.',
+    'Through {name}.': 'Via {name}.',
+    'Official Meta API (your connected account): posts and comments.':
+      'API officielle de Meta (votre compte connecté) : publications et commentaires.',
+    'Official Meta API (Business Discovery): posts and counts; comment text is not available.':
+      'API officielle de Meta (Business Discovery) : publications et chiffres ; le texte des commentaires n’est pas disponible.',
+    'Official Meta API (Page Public Content Access): posts and counts.':
+      'API officielle de Meta (Page Public Content Access) : publications et chiffres.',
+    'Read from the web by the browser: posts, counts and, when signed in, comments.':
+      'Lu sur le web par le navigateur : publications, chiffres et, une fois connecté, commentaires.',
     'Add META_APP_ID and META_APP_SECRET to .env first.':
       'Ajoutez d’abord META_APP_ID et META_APP_SECRET dans .env.',
     'This address cannot receive Facebook sign-ins.':

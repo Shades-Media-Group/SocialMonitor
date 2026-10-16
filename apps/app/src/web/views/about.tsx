@@ -16,6 +16,29 @@ const PLACEHOLDER: Record<Network, string> = {
   tiktok: 'https://www.tiktok.com/@brand',
 }
 
+type Route = 'connected' | 'discovery' | 'ppca' | 'browser'
+type Routes = Partial<Record<Network, { route: Route; via: string | null }>>
+
+/** How a saved Instagram or Facebook link is read, in one line under it. */
+function routeHint(r: Routes[Network]) {
+  if (!r) return undefined
+  const via = r.via ? ' ' + t('Through {name}.', { name: r.via }) : ''
+  switch (r.route) {
+    case 'connected':
+      return t('Official Meta API (your connected account): posts and comments.')
+    case 'discovery':
+      return (
+        t(
+          'Official Meta API (Business Discovery): posts and counts; comment text is not available.',
+        ) + via
+      )
+    case 'ppca':
+      return t('Official Meta API (Page Public Content Access): posts and counts.') + via
+    default:
+      return t('Read from the web by the browser: posts, counts and, when signed in, comments.')
+  }
+}
+
 /**
  * What the brand is, where it posts, and the kinds of positive and negative comments it gets.
  * The field of work and the description also go to the AI, so it sorts with context.
@@ -48,6 +71,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
   >({})
   const [error, setError] = useState<string | null>(null)
   const [confirm, setConfirm] = useState(false)
+  const [routes, setRoutes] = useState<Routes>({})
 
   useEffect(() => {
     api
@@ -55,6 +79,13 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
       .then(setTemplates)
       .catch(() => {})
   }, [])
+  // Saved links change which route reads them, so this follows the brand's profiles.
+  useEffect(() => {
+    api
+      .get<{ routes?: Routes }>(`/api/brands/${brand.id}/meta`)
+      .then((r) => setRoutes(r.routes ?? {}))
+      .catch(() => setRoutes({}))
+  }, [brand.id, brand.profiles])
 
   const save = async (e?: Event) => {
     e?.preventDefault()
@@ -238,7 +269,7 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
             <h2>{t('Networks')}</h2>
           </header>
           {NETS.map((n) => (
-            <Row label={NETWORK_NAME[n]}>
+            <Row label={NETWORK_NAME[n]} hint={routeHint(routes[n])}>
               <input
                 class="g-input"
                 type="url"
@@ -552,9 +583,11 @@ function MetaConnect({
   return (
     <Row
       label={t('Your Facebook Page')}
-      hint={t(
+      hint={`${t(
         'Connect the Page you manage, and the Instagram account linked to it, to read their posts and comments through Meta, with no signed-in browser. SocialMonitor only reads; it never posts.',
-      )}
+      )} ${t(
+        "A linked Instagram business account also lets SocialMonitor read other brands' public Instagram posts and counts.",
+      )}`}
     >
       {fb ? (
         <span class="sm-connected">
