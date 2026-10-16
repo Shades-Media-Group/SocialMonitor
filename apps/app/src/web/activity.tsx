@@ -32,6 +32,7 @@ const EVENT: Record<string, string> = {
   'person.disabled': t('Person blocked'),
   'person.enabled': t('Person unblocked'),
   'person.removed': t('Person removed'),
+  'person.joined': t('Joined with Shades login'),
   'brand.created': t('Brand added'),
   'brand.deleted': t('Brand deleted'),
   'network.connected': t('Network connected'),

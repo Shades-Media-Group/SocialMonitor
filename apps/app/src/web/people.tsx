@@ -77,6 +77,9 @@ export function People({ brands, me, notify, mode, actions }: AppState & { me: M
       <span class="sm-badge sm-badge--violet">{t('Super admin')}</span>
     ) : p.memberships.some((m) => m.role === 'admin') ? (
       <span class="sm-badge sm-badge--blue">{t('Admin')}</span>
+    ) : !p.memberships.length ? (
+      // New from Shades login, or with every brand taken away: Change access gives them one.
+      <span class="sm-badge sm-badge--amber">{t('No access')}</span>
     ) : (
       <span class="sm-badge">{t('Viewer')}</span>
     )

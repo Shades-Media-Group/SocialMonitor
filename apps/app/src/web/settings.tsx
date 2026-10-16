@@ -271,8 +271,11 @@ function Account({ me, notify }: Pick<AppState, 'me' | 'notify'>) {
   }
   const out = (path: string) => () =>
     api
-      .post(path)
-      .then(() => dispatchEvent(new Event('sm-signed-out')))
+      .post<{ logout?: string }>(path)
+      // A session from Shades login also signs out at Shades ID.
+      .then((r) =>
+        r.logout ? location.assign(r.logout) : dispatchEvent(new Event('sm-signed-out')),
+      )
       .catch((e: Error) => notify(e.message))
   const field = (key: keyof typeof blank, label: string, input: Record<string, unknown>) =>
     pw && (
