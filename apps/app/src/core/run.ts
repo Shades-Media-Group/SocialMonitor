@@ -258,6 +258,14 @@ async function aiStep(
   for (const [i, { postId, brand }] of touched.entries()) {
     step?.(i, touched.length)
     const post = store.getPost(db, postId)!
+    const use = {
+      db,
+      brandId: (
+        db.prepare('SELECT brand_id FROM profiles WHERE id = ?').get(post.profile_id) as
+          { brand_id: number } | undefined
+      )?.brand_id,
+      network: post.network,
+    }
     const unsorted = store.listComments(db, { postId, stale: true, others: true, limit: 2000 })
     try {
       // What the post shows comes first, so comments are read against it.
@@ -265,7 +273,10 @@ async function aiStep(
       if (!shows) {
         const top = store.listComments(db, { postId, others: true, limit: 5 }).map((c) => c.text)
         const image = post.thumb_url?.startsWith('/media/') ? join(DATA_DIR, post.thumb_url) : null
-        shows = await describePost(engine, brand, post.caption, top, image)
+        shows = await describePost(engine, brand, post.caption, top, image, {
+          ...use,
+          task: 'describe-post',
+        })
         store.setDescription(db, postId, shows)
       }
       if (unsorted.length) {
@@ -283,6 +294,7 @@ async function aiStep(
           unsorted.map((c) => ({ id: c.id, text: c.text, ...conversation(db, post, c) })),
           about,
           kinds,
+          { ...use, task: 'sort-comments' },
         )
         for (const [id, v] of verdicts) {
           store.setVerdict(db, id, v.label, v.needsReply, v.reason, v.urgency, v.emotion)
@@ -304,7 +316,8 @@ async function aiStep(
     const placed = await placeByAi(
       db,
       touched.map((x) => x.postId),
-      (brand, campaigns, posts) => pickCampaigns(engine, brand, campaigns, posts),
+      (brand, campaigns, posts, brandId) =>
+        pickCampaigns(engine, brand, campaigns, posts, { db, task: 'campaign-tags', brandId }),
     )
     if (placed) log(`Claude placed ${placed} posts in campaigns.`)
   } catch (e) {

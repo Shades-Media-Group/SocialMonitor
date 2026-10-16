@@ -154,7 +154,11 @@ export async function refreshSummary(db: DB, brandId: number, force = false) {
   const input = summaryInput(db, brandId, at)
   if (!input) return null
   const about = [brand.industry, brand.description].filter(Boolean).join('; ')
-  const paragraphs = await writeSummary(engine, brand.name, about, input)
+  const paragraphs = await writeSummary(engine, brand.name, about, input, {
+    db,
+    task: 'summary',
+    brandId,
+  })
   if (!paragraphs.length) throw new Error('Claude did not write a summary. Try again.')
   db.prepare(
     `INSERT INTO week_summaries (brand_id, from_day, to_day, text, created_at) VALUES (?, ?, ?, ?, ?)

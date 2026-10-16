@@ -268,6 +268,7 @@ export type AskCampaigns = (
   brand: string,
   campaigns: { id: number; name: string; hints: string }[],
   posts: { caption: string; about: string | null }[],
+  brandId: number,
 ) => Promise<string>
 
 /**
@@ -318,7 +319,7 @@ export async function placeByAi(db: DB, postIds: number[], ask: AskCampaigns) {
     for (let i = 0; i < todo.length; i += 25) {
       const batch = todo.slice(i, i + 25)
       const picks = parsePicks(
-        await ask(batch[0]!.brand, offer, batch),
+        await ask(batch[0]!.brand, offer, batch, brandId),
         new Set(campaigns.map((c) => c.id)),
       )
       for (const [n, id] of picks) {

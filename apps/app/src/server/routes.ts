@@ -67,6 +67,7 @@ import { audit, listAudit } from '../core/audit.ts'
 import type { AuditEvent } from '../core/audit.ts'
 import { setBranding } from '../core/branding.ts'
 import * as campaigns from '../core/campaigns.ts'
+import { adminUsage } from '../core/admin.ts'
 
 export class HttpError extends Error {
   status: number
@@ -129,6 +130,14 @@ export const r = (
   need,
   handle: handle as Route['handle'],
 })
+/** Throws unless the person asking may call the route. */
+export function guard(route: Route, c: Ctx) {
+  if (route.need === 'public') return
+  if (!c.user) throw new HttpError(401, 'Sign in first.')
+  if (route.need === 'super' && !c.user.super)
+    throw new HttpError(403, 'Only super admins can do that.')
+  if (typeof route.need === 'function') route.need(c as Signed)
+}
 /** Who did it and from where, for the audit log. */
 export const by = (c: Ctx) => ({ actor: c.user?.id ?? null, ip: c.ip, ua: c.ua })
 /** Logs a file someone took away (an export, a PDF, a saved report) and hands it on. */
@@ -682,6 +691,12 @@ export const routes: Route[] = [
       days: Number(query.get('days') ?? 30) || 0,
     }),
   ),
+  // The Admin tab: AI usage in tokens and API-equivalent USD, and every brand side by side.
+  r('GET', '/api/brands/:id/admin', 'super', ({ db, params }) => {
+    const brandId = id(params.id)
+    if (!store.getBrand(db, brandId)) throw new HttpError(404, 'No such brand.')
+    return adminUsage(db, brandId)
+  }),
   // Ideas for the next post: the latest kept, and new ones on an admin's request.
   r(
     'GET',
@@ -1094,7 +1109,7 @@ export const routes: Route[] = [
       )
     const c = db
       .prepare(
-        `SELECT c.text, c.author, c.category, p.caption, b.id AS brand_id, b.name, b.industry, b.description
+        `SELECT c.text, c.author, c.category, p.caption, p.network, b.id AS brand_id, b.name, b.industry, b.description
          FROM comments c JOIN posts p ON p.id = c.post_id
          JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id WHERE c.id = ?`,
       )
@@ -1104,6 +1119,7 @@ export const routes: Route[] = [
           author: string
           category: string | null
           caption: string
+          network: Network
           brand_id: number
           name: string
           industry: string | null
@@ -1114,7 +1130,9 @@ export const routes: Route[] = [
     const about = [c.industry, c.description].filter(Boolean).join('; ')
     // With saved replies, Claude picks the one that fits and fills it in; else a fresh draft.
     const saved = candidates(listReplies(db, c.brand_id), c.category)
-    if (!saved.length) return { draft: await draftReply(engine, c.name, about, c.caption, c.text) }
+    const use = { db, task: 'reply' as const, brandId: c.brand_id, network: c.network, items: 1 }
+    if (!saved.length)
+      return { draft: await draftReply(engine, c.name, about, c.caption, c.text, use) }
     const pick = await draftFromSaved(
       engine,
       c.name,
@@ -1122,6 +1140,7 @@ export const routes: Route[] = [
       c.caption,
       { text: c.text, author: c.author, kind: c.category },
       saved,
+      use,
     )
     const name = c.author.replace(/^@/, '')
     return {
@@ -1136,13 +1155,24 @@ export const routes: Route[] = [
         'No AI to translate with: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.',
       )
     const commentId = id(params.id)
-    const c = db.prepare('SELECT text, translation FROM comments WHERE id = ?').get(commentId) as
-      { text: string; translation: string | null } | undefined
+    const c = db
+      .prepare(
+        `SELECT c.text, c.translation, p.network, pr.brand_id FROM comments c
+         JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id WHERE c.id = ?`,
+      )
+      .get(commentId) as
+      { text: string; translation: string | null; network: Network; brand_id: number } | undefined
     if (!c) throw new Error('No such comment.')
     // The English translation is kept; other languages are made on request.
     const lang = String((body as { lang?: string }).lang ?? 'en')
     if (lang === 'en' && c.translation) return { translation: c.translation }
-    const translation = await translate(engine, c.text, lang)
+    const translation = await translate(engine, c.text, lang, {
+      db,
+      task: 'translate',
+      brandId: c.brand_id,
+      network: c.network,
+      items: 1,
+    })
     if (lang === 'en')
       db.prepare('UPDATE comments SET translation = ? WHERE id = ?').run(translation, commentId)
     return { translation }

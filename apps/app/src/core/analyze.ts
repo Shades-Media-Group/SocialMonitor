@@ -6,6 +6,8 @@ import type { Label } from './types.ts'
 import { LABELS } from './types.ts'
 import { hasClaudeCode } from './settings.ts'
 import type { Settings } from './settings.ts'
+import type { UsageContext } from './usage.ts'
+import { fromApi, fromClaudeCode, recordUsage } from './usage.ts'
 
 /**
  * The AI step, kept small on purpose. Comments go in as `n|text` lines and come back as
@@ -92,7 +94,12 @@ export interface Pic {
   path: string
 }
 
-async function viaClaudeCode(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
+async function viaClaudeCode(
+  prompt: string,
+  input: string,
+  pics: Pic[] = [],
+  use?: UsageContext,
+): Promise<string> {
   mkdirSync(join(DATA_DIR, 'cache'), { recursive: true })
   writeFileSync(EMPTY_MCP, '{"mcpServers":{}}')
   const image = pics.length > 0
@@ -119,19 +126,24 @@ async function viaClaudeCode(prompt: string, input: string, pics: Pic[] = []): P
     ...(image ? ['--allowedTools', 'Read'] : []),
   ]
   try {
-    return await claudeOnce(args, input, process.env)
+    return await claudeOnce(args, input, process.env, use)
   } catch (e) {
     // The setup token lasts a year. When it has run out, try the computer's own Claude Code sign-in
     // (`claude`, then /login, once), which renews itself, before giving up.
     if (!(e instanceof SignedOut) || !process.env.CLAUDE_CODE_OAUTH_TOKEN) throw e
     const { CLAUDE_CODE_OAUTH_TOKEN: _, ...rest } = process.env
-    return claudeOnce(args, input, rest)
+    return claudeOnce(args, input, rest, use)
   }
 }
 
 class SignedOut extends Error {}
 
-function claudeOnce(args: string[], input: string, env: NodeJS.ProcessEnv): Promise<string> {
+function claudeOnce(
+  args: string[],
+  input: string,
+  env: NodeJS.ProcessEnv,
+  use?: UsageContext,
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = execFile(
       'claude',
@@ -142,6 +154,8 @@ function claudeOnce(args: string[], input: string, env: NodeJS.ProcessEnv): Prom
           return reject(new Error(`Claude Code failed: ${err.message.split('\n')[0]}`))
         try {
           const d = JSON.parse(stdout) as { result?: string; is_error?: boolean }
+          // A failed call can still have used tokens, so it is counted before the error check.
+          recordUsage(use, fromClaudeCode(d))
           if (d.is_error)
             return reject(
               /authenticat|oauth|log ?in|credential/i.test(d.result ?? '')
@@ -161,14 +175,23 @@ function claudeOnce(args: string[], input: string, env: NodeJS.ProcessEnv): Prom
 }
 
 /** Claude Code first; when it fails and an Anthropic API key is set, the API instead. */
-export async function viaClaude(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
+export async function viaClaude(
+  prompt: string,
+  input: string,
+  pics: Pic[] = [],
+  use?: UsageContext,
+): Promise<string> {
   try {
-    return await viaClaudeCode(prompt, input, pics)
+    return await viaClaudeCode(prompt, input, pics, use)
   } catch (e) {
     if (!process.env.ANTHROPIC_API_KEY) throw e
-    return viaApi(prompt, input, pics)
+    return viaApi(prompt, input, pics, use)
   }
 }
+
+/** The engine's own path: Claude Code (with the API as fallback) or the API alone. */
+const ask = (engine: Engine, prompt: string, input: string, pics: Pic[], use?: UsageContext) =>
+  engine === 'claude' ? viaClaude(prompt, input, pics, use) : viaApi(prompt, input, pics, use)
 
 const MEDIA_TYPE: Record<string, string> = {
   png: 'image/png',
@@ -176,7 +199,12 @@ const MEDIA_TYPE: Record<string, string> = {
   gif: 'image/gif',
 }
 
-export async function viaApi(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
+export async function viaApi(
+  prompt: string,
+  input: string,
+  pics: Pic[] = [],
+  use?: UsageContext,
+): Promise<string> {
   const content: unknown[] = []
   const { readFileSync } = await import('node:fs')
   for (const p of pics) {
@@ -191,6 +219,7 @@ export async function viaApi(prompt: string, input: string, pics: Pic[] = []): P
     })
   }
   content.push({ type: 'text', text: input ? `${prompt}\n\n${input}` : prompt })
+  const started = Date.now()
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -204,7 +233,17 @@ export async function viaApi(prompt: string, input: string, pics: Pic[] = []): P
       messages: [{ role: 'user', content }],
     }),
   })
-  const d = (await r.json()) as { content?: { text?: string }[]; error?: { message?: string } }
+  const d = (await r.json()) as {
+    content?: { text?: string }[]
+    error?: { message?: string }
+    model?: string
+    usage?: unknown
+  }
+  if (d.usage)
+    recordUsage(use, {
+      ...fromApi(d.model ?? API_MODEL, d.usage),
+      durationMs: Date.now() - started,
+    })
   if (!r.ok) throw new Error(`Anthropic API: ${d.error?.message ?? r.status}`)
   return d.content?.map((c) => c.text ?? '').join('') ?? ''
 }
@@ -216,13 +255,11 @@ export async function draftReply(
   about: string,
   post: string,
   comment: string,
+  use?: UsageContext,
 ) {
   const prompt = `You answer comments for ${brand}${about ? ` (${clip(about, 240)})` : ''}. Post: ${clip(post, 300) || '(no caption)'}
 Write one reply to the comment below, in the comment's own language: warm, short (at most 3 sentences), specific, no hashtags, no promises the brand cannot keep. If it is a complaint, apologise once and say how to get help. Output only the reply.`
-  const text =
-    engine === 'claude'
-      ? await viaClaude(prompt, clip(comment, 800))
-      : await viaApi(prompt, clip(comment, 800))
+  const text = await ask(engine, prompt, clip(comment, 800), [], use)
   return text.trim().slice(0, 1200)
 }
 
@@ -251,6 +288,7 @@ export async function draftFromSaved(
   post: string,
   comment: { text: string; author: string; kind?: string | null },
   saved: { title: string; text: string; category: string | null }[],
+  use?: UsageContext,
 ) {
   const prompt = `You answer comments for ${brand}${about ? ` (${clip(about, 240)})` : ''}. Post: ${clip(post, 300) || '(no caption)'}
 The team keeps these saved replies, each a number, its title, the kind of comment it is for, then its text:
@@ -259,10 +297,7 @@ The comment below is by @${comment.author}${comment.kind ? `, kind ${comment.kin
 If one saved reply answers it, output its number, "|", then the reply: keep its wording, fill each {placeholder} from the comment ({name} is the commenter's name; use a first name when the username shows one), leave a placeholder you cannot fill as it is, and translate the reply only if the comment is in another language.
 If none fits, output "0|" then one new reply in the comment's own language: warm, short (at most 3 sentences), specific, no hashtags, no promises the brand cannot keep, and no facts (prices, times, rules) that the post or the saved replies do not give.
 Output only that, for example "2|Hi Ana, …".`
-  const text =
-    engine === 'claude'
-      ? await viaClaude(prompt, clip(comment.text, 800))
-      : await viaApi(prompt, clip(comment.text, 800))
+  const text = await ask(engine, prompt, clip(comment.text, 800), [], use)
   const pick = parsePick(text, saved.length)
   return { index: pick.index, text: pick.text.slice(0, 1200) }
 }
@@ -276,12 +311,9 @@ const LANGUAGE: Record<string, string> = {
 }
 
 /** The comment in the reader's language (English unless told otherwise). */
-export async function translate(engine: Engine, text: string, lang = 'en') {
+export async function translate(engine: Engine, text: string, lang = 'en', use?: UsageContext) {
   const prompt = `Translate this social media comment into natural ${LANGUAGE[lang] ?? 'English'}. Keep emoji. Output only the translation.`
-  const out =
-    engine === 'claude'
-      ? await viaClaude(prompt, clip(text, 1500))
-      : await viaApi(prompt, clip(text, 1500))
+  const out = await ask(engine, prompt, clip(text, 1500), [], use)
   return out.trim().slice(0, 2000)
 }
 
@@ -318,6 +350,7 @@ export async function sortComments(
   comments: { id: number; text: string; context?: string; image?: string }[],
   about = '',
   kinds: Kind[] = [],
+  use?: UsageContext,
 ): Promise<Map<number, Verdict>> {
   const out = new Map<number, Verdict>()
   const prompt = SORT(brand, clip(caption, 300), clip(about, 240), kinds)
@@ -335,8 +368,7 @@ export async function sortComments(
     const pics = batch.flatMap((c, j) =>
       c.image ? [{ label: `Comment ${j + 1}'s picture`, path: c.image }] : [],
     )
-    const text =
-      engine === 'claude' ? await viaClaude(prompt, input, pics) : await viaApi(prompt, input, pics)
+    const text = await ask(engine, prompt, input, pics, use && { ...use, items: batch.length })
     for (const [j, v] of parseVerdicts(text)) {
       const c = batch[j - 1]
       if (c) out.set(c.id, v)
@@ -354,6 +386,7 @@ export async function pickCampaigns(
   brand: string,
   campaigns: { id: number; name: string; hints: string }[],
   posts: { caption: string; about: string | null }[],
+  use?: UsageContext,
 ): Promise<string> {
   const prompt = `Brand: ${brand}. Its campaigns, one per line as "id|name|hints":
 ${campaigns.map((c) => `${c.id}|${clip(c.name, 80)}|${clip(c.hints, 300) || '-'}`).join('\n')}
@@ -364,7 +397,7 @@ For each post below, pick the one campaign it clearly belongs to, or - when none
         `${i + 1}|${clip(p.caption, 600) || '(no caption)'}${p.about ? ` [What the post shows: ${clip(p.about, 300)}]` : ''}`,
     )
     .join('\n')
-  return engine === 'claude' ? viaClaude(prompt, input) : viaApi(prompt, input)
+  return ask(engine, prompt, input, [], use && { ...use, items: posts.length })
 }
 
 /** One sentence about the post, from its caption, top comments and, when saved, its picture. */
@@ -374,13 +407,11 @@ export async function describePost(
   caption: string,
   topComments: string[],
   imagePath: string | null,
+  use?: UsageContext,
 ): Promise<string> {
   const input = `Caption: ${clip(caption, 1200) || '(none)'}${topComments.length ? `\nTop comments: ${topComments.map((c) => clip(c, 140)).join(' / ')}` : ''}`
   const pics = imagePath ? [{ label: "The post's picture", path: imagePath }] : []
-  const text =
-    engine === 'claude'
-      ? await viaClaude(DESCRIBE(brand), input, pics)
-      : await viaApi(DESCRIBE(brand), input, pics)
+  const text = await ask(engine, DESCRIBE(brand), input, pics, use && { ...use, items: 1 })
   return clip(text, 300)
 }
 
@@ -405,8 +436,14 @@ export function parseSummary(text: string): string[] {
 }
 
 /** A few lines on the brand's week, from compact numbers and clipped comments: never raw rows. */
-export async function writeSummary(engine: Engine, brand: string, about: string, input: string) {
+export async function writeSummary(
+  engine: Engine,
+  brand: string,
+  about: string,
+  input: string,
+  use?: UsageContext,
+) {
   const prompt = SUMMARY(brand, clip(about, 240))
-  const text = engine === 'claude' ? await viaClaude(prompt, input) : await viaApi(prompt, input)
+  const text = await ask(engine, prompt, input, [], use)
   return parseSummary(text)
 }
