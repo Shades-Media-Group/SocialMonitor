@@ -43,7 +43,7 @@ export function Palette({
 
   const all: Command[] = [
     ...(brand
-      ? tabsFor(brand.my_role).map(([k, text]) => ({
+      ? tabsFor(brand.my_role, me.super).map(([k, text]) => ({
           group: brand.name,
           label: t(text),
           icon: TAB_ICON[k],

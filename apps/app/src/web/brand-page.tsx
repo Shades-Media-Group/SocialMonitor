@@ -15,6 +15,7 @@ import { Calendar } from './views/calendar.tsx'
 import { Stats } from './views/stats.tsx'
 import { BrandSettings } from './views/brand-settings.tsx'
 import { Voice } from './views/voice.tsx'
+import { Admin } from './views/admin.tsx'
 
 /** One brand: its name and what it is, its own menu, and a network switch that filters every tab. */
 export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
@@ -150,6 +151,8 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
           <Schedules {...view} />
         ) : tab === 'settings' && brand.my_role === 'admin' ? (
           <BrandSettings {...view} />
+        ) : tab === 'admin' && props.me.super ? (
+          <Admin {...view} />
         ) : (
           <About {...view} />
         )}

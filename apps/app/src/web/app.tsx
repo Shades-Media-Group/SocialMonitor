@@ -32,12 +32,13 @@ export const TABS = [
   ['schedules', 'Schedules'],
   ['about', 'About'],
   ['settings', 'Settings'],
+  ['admin', 'Admin'],
 ] as const
 /** Tabs only a brand's admins (and super admins) see. */
 const ADMIN_TABS: string[] = ['schedules', 'settings']
-/** The tabs someone with this role on a brand sees. */
-export const tabsFor = (role: string | null | undefined) =>
-  TABS.filter(([k]) => role === 'admin' || !ADMIN_TABS.includes(k))
+/** The tabs someone with this role on a brand sees; Admin is for super admins alone. */
+export const tabsFor = (role: string | null | undefined, isSuper = false) =>
+  TABS.filter(([k]) => (k === 'admin' ? isSuper : role === 'admin' || !ADMIN_TABS.includes(k)))
 export type Tab = (typeof TABS)[number][0]
 export const TAB_ICON: Record<Tab, IconName> = {
   overview: 'grid',
@@ -50,6 +51,7 @@ export const TAB_ICON: Record<Tab, IconName> = {
   schedules: 'schedule',
   about: 'info',
   settings: 'settings',
+  admin: 'lock',
 }
 
 /** Where the app is: the brand list, a new brand, or one brand's tab. Kept in the address path. */
@@ -489,7 +491,7 @@ function Dashboard({ me }: { me: Me }) {
                   </a>
                   {open && route.page === 'brand' && (
                     <div class="sm-nav__sub">
-                      {tabsFor(b.my_role).map(([k, text]) => (
+                      {tabsFor(b.my_role, me.super).map(([k, text]) => (
                         <a
                           class="sm-nav__item"
                           href={`/b/${b.id}/${k}`}

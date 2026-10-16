@@ -447,19 +447,26 @@ export function LineChart({
   values,
   previous,
   label,
+  show = fmt,
 }: {
   days: string[]
   values: number[]
   previous: number[]
   label: string
+  /** How a value reads on the axis and in the tip; given, the scale also fits fractions (USD). */
+  show?: (n: number) => string
 }) {
   const [ref, W] = useWidth()
   const [hover, setHover] = useState<number | null>(null)
   const H2 = 240
-  const pad = { l: 36, r: 12, t: 24, b: 26 }
+  const pad = { l: show === fmt ? 36 : 48, r: 12, t: 24, b: 26 }
   const iw = W - pad.l - pad.r
   const ih = H2 - pad.t - pad.b
-  const max = niceMax(Math.max(1, ...values, ...previous))
+  const top = Math.max(...values, ...previous)
+  const max =
+    show !== fmt && top > 0
+      ? Math.ceil(top / 10 ** Math.floor(Math.log10(top))) * 10 ** Math.floor(Math.log10(top))
+      : niceMax(Math.max(1, top))
   const n = Math.max(1, days.length - 1)
   const x = (i: number) => pad.l + (i / n) * iw
   const y = (v: number) => pad.t + ih - (v / max) * ih
@@ -487,7 +494,7 @@ export function LineChart({
             <g>
               <line class="sm-grid" x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} />
               <text class="sm-axis" x={pad.l - 8} y={y(t) + 4} text-anchor="end">
-                {fmt(t)}
+                {show(t)}
               </text>
             </g>
           ))}
@@ -524,7 +531,7 @@ export function LineChart({
             <b>{dayLabel(days[h]!)}</b>
             <span>
               <i class="sm-swatch sm-line__key" aria-hidden="true" /> {label}{' '}
-              <b class="g-num">{fmt(values[h])}</b>
+              <b class="g-num">{show(values[h] ?? 0)}</b>
             </span>
             {oddAt(h) && (
               <span class="sm-tip__odd">
