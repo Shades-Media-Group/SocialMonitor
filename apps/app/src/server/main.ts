@@ -102,11 +102,12 @@ function serveStatic(res: ServerResponse, path: string) {
   if (!existsSync(target))
     return send(res, 503, 'The dashboard is not built yet: run yarn start.', 'text/plain')
   if (target.endsWith('index.html')) {
-    // The page: a fresh nonce on its scripts, and a CSP that runs nothing else.
+    // The page: a fresh nonce on its scripts, and a CSP that runs nothing else. no-transform keeps
+    // proxies, Cloudflare's analytics beacon included, from adding anything to it.
     const nonce = newNonce()
     res.writeHead(200, {
       'content-type': TYPES['.html'],
-      'cache-control': 'no-store',
+      'cache-control': 'no-store, no-transform',
       'content-security-policy': pageCsp(nonce),
     })
     return res.end(withNonce(readFileSync(target, 'utf8'), nonce))
