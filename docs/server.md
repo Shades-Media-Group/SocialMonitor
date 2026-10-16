@@ -34,7 +34,7 @@ Run `yarn start` under the server's own process manager, so it starts with the m
 
 ## Production
 
-Shades' own copy runs on the always-on Windows PC, inside WSL Ubuntu, at `~/shades/SocialMonitor`. It is reached at `app.socialmonitor.shades.md` through its own Cloudflare Tunnel, with Cloudflare Access in front. Development happens on the Mac. Code reaches the PC only through `main` on GitHub: the PC pulls by itself, and nobody copies files to it or edits it by hand.
+Shades' own copy runs on the always-on Windows PC, inside WSL Ubuntu, at `~/shades/SocialMonitor`. It is reached at `socialmonitor-app.shades.md` through its own Cloudflare Tunnel, with Cloudflare Access in front. Development happens on the Mac. Code reaches the PC only through `main` on GitHub: the PC pulls by itself, and nobody copies files to it or edits it by hand.
 
 ### From the Mac to the PC
 
@@ -100,7 +100,7 @@ In WSL Ubuntu, with the Server Remote chat:
    bash ~/shades/SocialMonitor/scripts/production-setup.sh
    ```
 
-4. Set up the tunnel as in [remote access](remote-access.md) (`cloudflared tunnel login`, then `node scripts/tunnel.mjs setup app.socialmonitor.shades.md`). Then run the setup again, which starts it as the `socialmonitor-tunnel` service.
+4. Set up the tunnel as in [remote access](remote-access.md) (`cloudflared tunnel login`, then `node scripts/tunnel.mjs setup socialmonitor-app.shades.md`). Then run the setup again, which starts it as the `socialmonitor-tunnel` service.
 5. In Windows PowerShell opened as administrator, run the command the setup prints last. It runs `scripts\windows-wsl-boot.ps1`, so WSL starts with Windows and stays up.
 6. At the PC's own screen, open the dashboard at `http://127.0.0.1:4400` and use "Sign in to networks". The browser window shows on the Windows desktop through WSLg.
 

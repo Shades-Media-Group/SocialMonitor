@@ -1,7 +1,7 @@
 // Checks production from the outside: `yarn deploy:verify`, from the Mac. Exits non-zero when any
 // check fails.
 //
-//   - the dashboard (app.socialmonitor.shades.md) is behind Cloudflare Access: a request without
+//   - the dashboard (socialmonitor-app.shades.md) is behind Cloudflare Access: a request without
 //     an Access session gets Access's sign-in, never the app
 //   - the website (socialmonitor.shades.md) is up and sends HSTS
 //   - with an Access service token in CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET (the
@@ -19,7 +19,7 @@ try {
 } catch {
   /* no .env */
 }
-const APP = (process.env.SOCIALMONITOR_APP_URL ?? 'https://app.socialmonitor.shades.md').replace(
+const APP = (process.env.SOCIALMONITOR_APP_URL ?? 'https://socialmonitor-app.shades.md').replace(
   /\/$/,
   '',
 )

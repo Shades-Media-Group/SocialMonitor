@@ -160,7 +160,7 @@ ask_secret() { # ask_secret KEY "question": hidden while typed, never printed
   set_value "$1" "$answer"
 }
 echo "Enter skips a value; run this again, or edit .env, to add it later."
-ask SOCIALMONITOR_PUBLIC_HOST "The dashboard's address" app.socialmonitor.shades.md
+ask SOCIALMONITOR_PUBLIC_HOST "The dashboard's address" socialmonitor-app.shades.md
 echo "Cloudflare Access (Zero Trust → Access → Applications → the dashboard's application):"
 ask CF_ACCESS_TEAM "  Team name (the part before .cloudflareaccess.com)"
 ask CF_ACCESS_AUD "  Application Audience (AUD) tag"
@@ -270,7 +270,7 @@ WantedBy=multi-user.target
 EOF
 unit socialmonitor-tunnel.service <<EOF
 [Unit]
-Description=SocialMonitor: its Cloudflare Tunnel (app.socialmonitor.shades.md only)
+Description=SocialMonitor: its Cloudflare Tunnel (socialmonitor-app.shades.md only)
 After=network-online.target socialmonitor.service
 Wants=network-online.target
 
@@ -340,7 +340,7 @@ if [ -f "$REPO/data/tunnel/credentials.json" ]; then
 else
   warn "No tunnel yet. Install cloudflared, then:
   cloudflared tunnel login
-  cd $REPO && node scripts/tunnel.mjs setup app.socialmonitor.shades.md
+  cd $REPO && node scripts/tunnel.mjs setup socialmonitor-app.shades.md
 and run this setup again to start it (docs/remote-access.md)."
 fi
 

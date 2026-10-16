@@ -41,7 +41,7 @@ Open the address and pass Cloudflare Access with the code it emails you. Then si
 
 ## Keep Access in front
 
-Cloudflare Access stays in front of the dashboard's address (for Shades, `app.socialmonitor.shades.md`) for as long as the tunnel exists. Never route the hostname without its Access application, not even for a quick test. The dashboard refuses requests without a valid Access token, but that check is the second line, not the first. If you remove the Access application, stop the tunnel too.
+Cloudflare Access stays in front of the dashboard's address (for Shades, `socialmonitor-app.shades.md`) for as long as the tunnel exists. Never route the hostname without its Access application, not even for a quick test. The dashboard refuses requests without a valid Access token, but that check is the second line, not the first. If you remove the Access application, stop the tunnel too.
 
 ## Rate limit sign-in
 
@@ -64,7 +64,7 @@ The list names the sign-in endpoints rather than all of `/api/auth/*`. The free 
 On **Pro or higher**, narrow the rule to the host, count over a minute and block for longer:
 
 ```
-(http.host eq "app.socialmonitor.shades.md" and starts_with(http.request.uri.path, "/api/auth/") and http.request.uri.path ne "/api/auth/me")
+(http.host eq "socialmonitor-app.shades.md" and starts_with(http.request.uri.path, "/api/auth/") and http.request.uri.path ne "/api/auth/me")
 ```
 
 Use IP, **10 requests per 1 minute**, Block for **10 minutes**. On Business, add `and http.request.method eq "POST"` and drop the exception for `/api/auth/me`.
