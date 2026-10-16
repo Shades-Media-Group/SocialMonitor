@@ -47,7 +47,7 @@ On the **Free plan** the rule can only match the path, and it counts and blocks 
 - **Expression** (Edit expression):
 
   ```
-  (http.request.uri.path in {"/api/auth/login" "/api/auth/code" "/api/auth/resend" "/api/auth/forgot" "/api/auth/setup" "/api/auth/accept"})
+  (http.request.uri.path in {"/api/auth/login" "/api/auth/code" "/api/auth/resend" "/api/auth/forgot" "/api/auth/setup" "/api/auth/accept" "/api/auth/shades/start" "/api/auth/shades/callback"})
   ```
 
 - **With the same characteristics:** IP.
