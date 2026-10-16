@@ -731,7 +731,8 @@ export const ro: Dict = {
     'Writing…': 'Se scrie…',
     'Write it again': 'Scrie din nou',
     'Write it now': 'Scrie acum',
-    'Nothing written yet. Claude writes it only when you ask.': 'Nimic scris încă. Claude îl scrie doar când îi ceri.',
+    'Nothing written yet. Claude writes it only when you ask.':
+      'Nimic scris încă. Claude îl scrie doar când îi ceri.',
     'The AI is off for this brand. Turn it on in Settings first.':
       'AI-ul este oprit pentru acest brand. Pornește-l mai întâi din Setări.',
     'Nothing to sum up: no comments in the last two weeks.':
@@ -1264,6 +1265,23 @@ export const ro: Dict = {
     'Waits for Claude until {time}': 'Așteaptă Claude până la {time}',
     Postponed: 'Amânată',
     'Update postponed': 'Actualizare amânată',
+    'Edit on Schedules': 'Editează în Programări',
+    'New posts and fresh numbers': 'Postări noi și cifre proaspete',
+    'New posts, plus fresh likes, views and comment counts for older posts: at every update in their first week, weekly for their first month, monthly for their first year, then every three months.':
+      'Postări noi, plus aprecieri, vizualizări și numere de comentarii proaspete pentru postările mai vechi: la fiecare actualizare în prima lor săptămână, săptămânal în prima lună, lunar în primul an, apoi o dată la trei luni.',
+    'Nothing runs by itself until a schedule is on. Update by itself, in the brand’s Settings, pauses or resumes all of its schedules. Each start moves by a few random minutes, and networks you are signed in to keep the gap set in Settings.':
+      'Nimic nu pornește singur până nu e pornit un program. Actualizare automată, din Setările brandului, pune pe pauză sau reia toate programele lui. Fiecare pornire se mută cu câteva minute aleatorii, iar rețelele pe care ești autentificat păstrează pauza setată în Setări.',
+    'Nothing runs until someone presses Update.':
+      'Nimic nu pornește până nu apasă cineva Actualizează.',
+    Schedule: 'Program',
+    'Schedules paused.': 'Programele sunt pe pauză.',
+    'Schedules resumed.': 'Programele au fost reluate.',
+    'The newest {n} posts on each network again, with all their comments.':
+      'Cele mai noi {n} postări din fiecare rețea, din nou, cu toate comentariile lor.',
+    'Updates that run by themselves. When, which networks and what they read are set on Schedules.':
+      'Actualizări care pornesc singure. Când, pe ce rețele și ce citesc se setează în Programări.',
+    'kind is "interval" (every_hours) or "times" (["09:00"]). range is "due" (new posts and fresh numbers) or "all" (the latest again). Add one without an id. next_run_at is read-only.':
+      'kind este "interval" (every_hours) sau "times" (["09:00"]). range este "due" (postări noi și cifre proaspete) sau "all" (cele mai noi, din nou). Adaugă unul fără id. next_run_at este doar pentru citire.',
   },
   nouns: {
     event: { one: 'eveniment', few: 'evenimente', other: 'de evenimente' },

@@ -190,7 +190,7 @@ export interface Schedule {
   /** For 'times': local times of day, "HH:MM". */
   times: string[]
   networks: Network[]
-  range: Range
+  range: ScheduleRange
   enabled: 0 | 1
   next_run_at: string | null
 }

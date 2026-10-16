@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
-import type { AiStatus, Network, Schedule } from '../api.ts'
+import type { AiStatus, Network } from '../api.ts'
+import type { ScheduleRange } from '../../core/types.ts'
 import type { Digest } from '../../core/types.ts'
 import { RUN } from '../../core/types.ts'
 import { api } from '../api.ts'
@@ -8,6 +9,14 @@ import { BadReport } from '../bad-report.tsx'
 import { t } from '../i18n.ts'
 import { NETWORK_NAME, NetworkMark, Row, Segmented, when } from '../ui.tsx'
 import { brandCategories } from '../rate.tsx'
+import {
+  READS,
+  describeSchedule,
+  nextOf,
+  readsHint,
+  schedulesHref,
+  useBrandSchedules,
+} from '../auto-update.tsx'
 
 interface SavedReply {
   id: number
@@ -167,8 +176,6 @@ import { Rivals } from './rivals.tsx'
 import { textOn, validColor } from '../../core/color.ts'
 import { CampaignSettings } from '../campaigns.tsx'
 
-type Range = 'new' | 'due' | 'all'
-
 const EVERY: [number, string][] = [
   [1, 'Every hour'],
   [2, 'Every 2 hours'],
@@ -199,28 +206,27 @@ const TRIGGERS: [Trigger, string, string][] = [
 ]
 
 /**
- * How SocialMonitor works for one brand on its own: whether it updates by itself and how often,
- * what it reads, whether Claude sorts the comments, and whether the negative-comments report
- * goes out after each update. Only the brand's admins and super admins see it.
+ * How SocialMonitor works for one brand on its own: whether it updates by itself (its schedules),
+ * whether Claude sorts the comments, and whether the negative-comments report goes out after
+ * each update. Only the brand's admins and super admins see it.
  */
 export function BrandSettings({ brand, reload, notify }: BrandView) {
-  const nets = brand.profiles.map((p) => p.network)
-  const [own, setOwn] = useState<Schedule | null | undefined>(undefined)
+  const nets = [...new Set(brand.profiles.map((p) => p.network))]
+  const { list: schedules, reload: loadSchedules } = useBrandSchedules(brand.id)
+  // The first schedule, set up here while the brand has none; afterwards it is edited on Schedules.
+  const [draft, setDraft] = useState<{ hours: number; networks: Network[]; range: ScheduleRange }>({
+    hours: 24,
+    networks: nets,
+    range: 'due',
+  })
   const [engine, setEngine] = useState<'claude' | 'api' | null | undefined>(undefined)
   const [aiError, setAiError] = useState<{ at: string; message: string } | null>(null)
   const [pause, setPause] = useState<AiStatus | null>(null)
   const [busy, setBusy] = useState(false)
   const [report, setReport] = useState(false)
 
-  const load = () =>
-    api
-      .get<Schedule[]>('/api/schedules')
-      .then((list) =>
-        setOwn(list.find((s) => s.brand_id === brand.id && s.kind === 'interval') ?? null),
-      )
-      .catch(() => setOwn(null))
   useEffect(() => {
-    void load()
+    setDraft({ hours: 24, networks: nets, range: 'due' })
     api
       .get<{
         engine: 'claude' | 'api' | null
@@ -235,38 +241,44 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
       .catch(() => setEngine(null))
   }, [brand.id])
 
-  if (own === undefined) return null
+  if (schedules === undefined) return null
 
-  const on = !!own?.enabled
-  const hours = own?.every_hours ?? 24
-  const chosen: Network[] = own?.networks?.length ? own.networks : nets
-  const range: Range = (own?.range as Range | undefined) ?? 'due'
+  const on = schedules.some((s) => s.enabled)
+  const chosen = draft.networks.filter((n) => nets.includes(n))
 
-  /** Saves the brand's one automatic schedule with these changes. */
-  const save = async (
-    patch: Partial<{ enabled: boolean; hours: number; networks: Network[]; range: Range }>,
-  ) => {
+  /**
+   * "Update by itself": with schedules, pauses or resumes them all; with none, turning it on
+   * creates the first one from the choices beneath.
+   */
+  const toggle = async (enabled: boolean) => {
     setBusy(true)
     try {
-      const body = {
-        brand_id: brand.id,
-        kind: 'interval',
-        every_hours: patch.hours ?? hours,
-        times: [],
-        networks: patch.networks ?? chosen,
-        range: patch.range ?? range,
-        enabled: (patch.enabled ?? on) ? 1 : 0,
+      if (schedules.length) {
+        await api.put(`/api/brands/${brand.id}/schedules`, { enabled })
+        notify(enabled ? t('Schedules resumed.') : t('Schedules paused.'))
+      } else if (enabled) {
+        await api.post('/api/schedules', {
+          brand_id: brand.id,
+          kind: 'interval',
+          every_hours: draft.hours,
+          times: [],
+          networks: chosen,
+          range: draft.range,
+          enabled: true,
+        })
+        notify(t('Saved.'))
       }
-      if (own) await api.put(`/api/schedules/${own.id}`, body)
-      else await api.post('/api/schedules', body)
-      await load()
-      notify(t('Saved.'))
+      await loadSchedules()
     } catch (e) {
       notify((e as Error).message)
     } finally {
       setBusy(false)
     }
   }
+  const waits =
+    pause?.paused && brand.ai_sort !== 0
+      ? ` · ${t('Waits for Claude until {time}', { time: when(pause.until) })}`
+      : ''
 
   const setAi = async (value: boolean) => {
     await api.patch(`/api/brands/${brand.id}`, { ai_sort: value })
@@ -320,16 +332,18 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
       <section class="sm-box">
         <header class="sm-box__head">
           <h2>{t('Automatic updates')}</h2>
+          {schedules.length > 0 && (
+            <a class="sm-box__link" href={schedulesHref(brand.id)}>
+              {t('Edit on Schedules')}
+            </a>
+          )}
         </header>
         <Row
           label={t('Update by itself')}
           hint={
-            on && own?.next_run_at
-              ? t('Next: {when}', { when: when(own.next_run_at) }) +
-                (pause?.paused && brand.ai_sort !== 0
-                  ? ` · ${t('Waits for Claude until {time}', { time: when(pause.until) })}`
-                  : '')
-              : t('Off: nothing runs until someone presses Update.')
+            on
+              ? t('Next: {when}', { when: when(nextOf(schedules)) }) + waits
+              : t('Nothing runs until someone presses Update.')
           }
         >
           <label class="g-check">
@@ -337,68 +351,77 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
               class="g-switch"
               type="checkbox"
               checked={on}
-              disabled={busy || !nets.length}
-              onChange={(e) => void save({ enabled: (e.target as HTMLInputElement).checked })}
+              disabled={busy || (!schedules.length && !chosen.length)}
+              onChange={(e) => void toggle((e.target as HTMLInputElement).checked)}
             />
             {on ? t('On') : t('Off')}
           </label>
         </Row>
-        <Row label={t('How often')}>
-          <select
-            class="g-select sm-select-sm"
-            value={String(hours)}
-            disabled={busy || !on}
-            onChange={(e) => void save({ hours: Number((e.target as HTMLSelectElement).value) })}
-          >
-            {EVERY.map(([h, label]) => (
-              <option value={String(h)}>{t(label)}</option>
-            ))}
-          </select>
-        </Row>
-        <Row label={t('Networks')}>
-          <span class="sm-setnets">
-            {nets.map((n) => (
-              <label class="g-check">
-                <input
-                  type="checkbox"
-                  checked={chosen.includes(n)}
-                  disabled={busy || !on || (chosen.length === 1 && chosen.includes(n))}
-                  onChange={(e) =>
-                    void save({
-                      networks: (e.target as HTMLInputElement).checked
-                        ? [...chosen, n]
-                        : chosen.filter((x) => x !== n),
-                    })
-                  }
-                />
-                <NetworkMark network={n} size={14} /> {NETWORK_NAME[n]}
-              </label>
-            ))}
-          </span>
-        </Row>
-        <Row
-          label={t('What it reads')}
-          hint={
-            range === 'new'
-              ? t('Only posts it has not seen yet.')
-              : range === 'due'
-                ? t(
-                    'New posts, plus older ones due for fresh numbers: weekly for a month, then monthly.',
-                  )
-                : t('The latest 15 posts on each network again, with all their comments.')
-          }
-        >
-          <Segmented
-            label={t('What it reads')}
-            value={range}
-            onChange={(v) => void save({ range: v })}
-            options={[
-              ['new', t('New posts')],
-              ['due', t('New and due')],
-              ['all', t('Latest, again')],
-            ]}
-          />
-        </Row>
+        {schedules.length ? (
+          <Row label={schedules.length > 1 ? t('Schedules') : t('Schedule')}>
+            <ul class="sm-schedlines">
+              {schedules.map((s) => (
+                <li>
+                  <span>{describeSchedule(s)}</span>
+                  {schedules.length > 1 && (
+                    <span class="sm-quiet">
+                      {s.enabled
+                        ? t('Next: {when}', { when: when(s.next_run_at) }) + waits
+                        : t('Paused')}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Row>
+        ) : (
+          <>
+            <Row label={t('How often')}>
+              <select
+                class="g-select sm-select-sm"
+                value={String(draft.hours)}
+                disabled={busy}
+                onChange={(e) =>
+                  setDraft({ ...draft, hours: Number((e.target as HTMLSelectElement).value) })
+                }
+              >
+                {EVERY.map(([h, label]) => (
+                  <option value={String(h)}>{t(label)}</option>
+                ))}
+              </select>
+            </Row>
+            <Row label={t('Networks')}>
+              <span class="sm-setnets">
+                {nets.map((n) => (
+                  <label class="g-check">
+                    <input
+                      type="checkbox"
+                      checked={chosen.includes(n)}
+                      disabled={busy || (chosen.length === 1 && chosen.includes(n))}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          networks: (e.target as HTMLInputElement).checked
+                            ? [...chosen, n]
+                            : chosen.filter((x) => x !== n),
+                        })
+                      }
+                    />
+                    <NetworkMark network={n} size={14} /> {NETWORK_NAME[n]}
+                  </label>
+                ))}
+              </span>
+            </Row>
+            <Row label={t('What it reads')} hint={readsHint(draft.range)}>
+              <Segmented
+                label={t('What it reads')}
+                value={draft.range}
+                onChange={(range) => setDraft({ ...draft, range })}
+                options={READS.map(([k, label]) => [k, t(label)])}
+              />
+            </Row>
+          </>
+        )}
       </section>
 
       <section class="sm-box">

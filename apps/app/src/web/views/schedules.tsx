@@ -2,7 +2,8 @@ import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { AiStatus, Network, Schedule } from '../api.ts'
 import { api } from '../api.ts'
-import { Chips, Empty, NETWORK_NAME, Row, Segmented, count, when } from '../ui.tsx'
+import { Chips, Empty, Row, Segmented, when } from '../ui.tsx'
+import { READS, describeSchedule, readsHint } from '../auto-update.tsx'
 import { JsonPanel } from '../json.tsx'
 import { t } from '../i18n.ts'
 
@@ -11,14 +12,6 @@ const NET_OPTIONS: [Network, string][] = [
   ['facebook', 'Facebook'],
   ['tiktok', 'TikTok'],
 ]
-
-function describe(s: Schedule) {
-  const what =
-    s.kind === 'interval'
-      ? t('Every {hours}', { hours: count(s.every_hours, 'hour') })
-      : t('Daily at {times}', { times: s.times.join(', ') })
-  return `${what} · ${s.networks.map((n) => NETWORK_NAME[n]).join(', ')} · ${s.range === 'all' ? t('all posts') : t('new posts')}`
-}
 
 export function Schedules({ brand, brands, notify, mode }: BrandView) {
   const brandId = brand.id
@@ -81,7 +74,7 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
         value={value}
         onSave={save}
         note={t(
-          'kind is "interval" (every_hours) or "times" (["09:00"]). Add one without an id. next_run_at is read-only.',
+          'kind is "interval" (every_hours) or "times" (["09:00"]). range is "due" (new posts and fresh numbers) or "all" (the latest again). Add one without an id. next_run_at is read-only.',
         )}
       />
     )
@@ -92,7 +85,7 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
     times: ['09:00'],
     every_hours: 6,
     networks: ['instagram', 'facebook', 'tiktok'],
-    range: 'new',
+    range: 'due',
     enabled: 1,
   })
 
@@ -115,7 +108,7 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
     <div class="sm-stack">
       <p class="sm-quiet">
         {t(
-          'Updates are manual unless you add a schedule. Networks you are signed in to wait at least the gap set in Settings between updates, and every start time moves by a few random minutes.',
+          'Nothing runs by itself until a schedule is on. Update by itself, in the brand’s Settings, pauses or resumes all of its schedules. Each start moves by a few random minutes, and networks you are signed in to keep the gap set in Settings.',
         )}
       </p>
       {scope.length ? (
@@ -124,7 +117,7 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
             <li class="sm-brand-row">
               <div class="sm-brand-row__main">
                 <h2>{brands.find((b) => b.id === s.brand_id)?.name}</h2>
-                <p class="sm-quiet">{describe(s)}</p>
+                <p class="sm-quiet">{describeSchedule(s)}</p>
                 <p class="sm-quiet">
                   {s.enabled
                     ? t('Next: {when}', { when: when(s.next_run_at) }) + waits(s.brand_id)
@@ -235,15 +228,12 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
               options={NET_OPTIONS}
             />
           </Row>
-          <Row label={t('Posts')}>
+          <Row label={t('What it reads')} hint={readsHint(form.range ?? 'due')}>
             <Segmented
-              label={t('Posts')}
-              value={form.range ?? 'new'}
+              label={t('What it reads')}
+              value={form.range ?? 'due'}
               onChange={(range) => setForm({ ...form, range })}
-              options={[
-                ['new', t('New since last update')],
-                ['all', t('Latest, again')],
-              ]}
+              options={READS.map(([k, label]) => [k, t(label)])}
             />
           </Row>
           {error && <p class="g-error">{error}</p>}

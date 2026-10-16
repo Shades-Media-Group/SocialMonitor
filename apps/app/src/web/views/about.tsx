@@ -252,7 +252,9 @@ export function About({ brand, mode, reload, notify, me }: BrandView) {
           <MetaConnect brand={brand} edit={edit} notify={notify} />
           <Row
             label={t('Automatic updates')}
-            hint={t('New posts and fresh numbers, read by themselves. More choices in Settings.')}
+            hint={t(
+              'Updates that run by themselves. When, which networks and what they read are set on Schedules.',
+            )}
           >
             <AutoUpdate brand={brand} />
           </Row>

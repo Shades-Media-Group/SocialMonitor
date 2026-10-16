@@ -696,7 +696,8 @@ export const zh: Dict = {
     'Writing…': '正在撰写…',
     'Write it again': '重新撰写',
     'Write it now': '立即撰写',
-    'Nothing written yet. Claude writes it only when you ask.': '尚未生成。只有在你要求时，Claude 才会撰写。',
+    'Nothing written yet. Claude writes it only when you ask.':
+      '尚未生成。只有在你要求时，Claude 才会撰写。',
     'The AI is off for this brand. Turn it on in Settings first.':
       '此品牌的 AI 已关闭。请先在设置中开启。',
     'Nothing to sum up: no comments in the last two weeks.': '没有可总结的内容：最近两周没有评论。',
@@ -1175,8 +1176,7 @@ export const zh: Dict = {
       '用户名须为3到32个字母、数字、点、短横线或下划线。',
     'A username is not an email. Leave it empty to sign in with your email.':
       '用户名不是邮箱。留空即可用邮箱登录。',
-    'That username is taken. Choose another.':
-      '该用户名已被占用，请换一个。',
+    'That username is taken. Choose another.': '该用户名已被占用，请换一个。',
     'Too many tries. Wait 15 minutes and try again.': '尝试次数过多。请等待15分钟后再试。',
     'Categories must be a list.': '类型必须是一个列表。',
     'Choose at least one brand.': '请至少选择一个品牌。',
@@ -1200,6 +1200,22 @@ export const zh: Dict = {
     'Waits for Claude until {time}': '等待 Claude 至 {time}',
     Postponed: '已推迟',
     'Update postponed': '更新已推迟',
+    'Edit on Schedules': '在“定时更新”中编辑',
+    'New posts and fresh numbers': '新帖和最新数据',
+    'New posts, plus fresh likes, views and comment counts for older posts: at every update in their first week, weekly for their first month, monthly for their first year, then every three months.':
+      '读取新帖，并为较早的帖子刷新点赞、播放量和评论数：发布后第一周每次更新都刷新，第一个月内每周一次，第一年内每月一次，之后每三个月一次。',
+    'Nothing runs by itself until a schedule is on. Update by itself, in the brand’s Settings, pauses or resumes all of its schedules. Each start moves by a few random minutes, and networks you are signed in to keep the gap set in Settings.':
+      '启用定时更新之前，不会自动运行任何更新。品牌“设置”中的“自动更新”开关可暂停或恢复该品牌的所有定时更新。每次开始时间会随机偏移几分钟，已登录的平台在两次更新之间保持“设置”中的间隔。',
+    'Nothing runs until someone presses Update.': '有人点击“更新”前不会运行。',
+    Schedule: '定时更新',
+    'Schedules paused.': '定时更新已暂停。',
+    'Schedules resumed.': '定时更新已恢复。',
+    'The newest {n} posts on each network again, with all their comments.':
+      '重新读取每个平台最新的{n}条帖子及其全部评论。',
+    'Updates that run by themselves. When, which networks and what they read are set on Schedules.':
+      '自动运行的更新。时间、平台和读取内容都在“定时更新”中设置。',
+    'kind is "interval" (every_hours) or "times" (["09:00"]). range is "due" (new posts and fresh numbers) or "all" (the latest again). Add one without an id. next_run_at is read-only.':
+      'kind为"interval"（every_hours）或"times"（["09:00"]）。range为"due"（新帖和最新数据）或"all"（重新读取最新帖子）。添加时不要带id。next_run_at为只读。',
   },
   nouns: {
     event: { other: '条记录' },

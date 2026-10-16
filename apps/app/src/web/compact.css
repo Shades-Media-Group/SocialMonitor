@@ -4592,6 +4592,23 @@ p.sm-postcamps .sm-postcamps__label {
   display: flex;
   gap: 4px;
 }
+/* The same schedules in a brand's Settings: one plain line each, its next start under it. */
+.sm-schedlines {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 7px 0 0;
+  list-style: none;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.sm-schedlines li {
+  display: grid;
+  gap: 1px;
+}
+.sm-schedlines .sm-quiet {
+  font-size: 12px;
+}
 
 /* The donut's segments are strokes only; tone classes that also set a fill must not paint them. */
 .sm-shell .sm-donut__seg {

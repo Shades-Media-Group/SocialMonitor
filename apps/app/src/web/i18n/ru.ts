@@ -728,7 +728,8 @@ export const ru: Dict = {
     'Writing…': 'Пишется…',
     'Write it again': 'Написать заново',
     'Write it now': 'Написать сейчас',
-    'Nothing written yet. Claude writes it only when you ask.': 'Пока ничего нет. Claude пишет сводку, только когда вы попросите.',
+    'Nothing written yet. Claude writes it only when you ask.':
+      'Пока ничего нет. Claude пишет сводку, только когда вы попросите.',
     'The AI is off for this brand. Turn it on in Settings first.':
       'ИИ выключен для этого бренда. Сначала включите его в настройках.',
     'Nothing to sum up: no comments in the last two weeks.':
@@ -1235,8 +1236,7 @@ export const ru: Dict = {
       'Имя пользователя: от 3 до 32 символов — буквы, цифры, точки, дефисы или подчёркивания.',
     'A username is not an email. Leave it empty to sign in with your email.':
       'Имя пользователя — не email. Оставьте поле пустым, чтобы входить по email.',
-    'That username is taken. Choose another.':
-      'Это имя пользователя уже занято. Выберите другое.',
+    'That username is taken. Choose another.': 'Это имя пользователя уже занято. Выберите другое.',
     'Too many tries. Wait 15 minutes and try again.':
       'Слишком много попыток. Подождите 15 минут и попробуйте снова.',
     'Categories must be a list.': 'Категории должны быть списком.',
@@ -1262,6 +1262,23 @@ export const ru: Dict = {
     'Waits for Claude until {time}': 'Ждёт Claude до {time}',
     Postponed: 'Отложено',
     'Update postponed': 'Обновление отложено',
+    'Edit on Schedules': 'Изменить в «Расписании»',
+    'New posts and fresh numbers': 'Новые посты и свежие цифры',
+    'New posts, plus fresh likes, views and comment counts for older posts: at every update in their first week, weekly for their first month, monthly for their first year, then every three months.':
+      'Новые посты, а для старых — свежие лайки, просмотры и число комментариев: при каждом обновлении в первую неделю, раз в неделю в первый месяц, раз в месяц в первый год, затем раз в три месяца.',
+    'Nothing runs by itself until a schedule is on. Update by itself, in the brand’s Settings, pauses or resumes all of its schedules. Each start moves by a few random minutes, and networks you are signed in to keep the gap set in Settings.':
+      'Само по себе ничего не запускается, пока не включено расписание. «Обновлять самостоятельно» в настройках бренда ставит на паузу или возобновляет все его расписания. Каждый запуск сдвигается на несколько случайных минут, а для сетей, в которые выполнен вход, выдерживается интервал из настроек.',
+    'Nothing runs until someone presses Update.':
+      'Ничего не запускается, пока кто-то не нажмёт «Обновить».',
+    Schedule: 'Расписание',
+    'Schedules paused.': 'Расписания на паузе.',
+    'Schedules resumed.': 'Расписания возобновлены.',
+    'The newest {n} posts on each network again, with all their comments.':
+      'Последние {n} постов в каждой сети заново, со всеми комментариями.',
+    'Updates that run by themselves. When, which networks and what they read are set on Schedules.':
+      'Обновления, которые запускаются сами. Когда, в каких сетях и что читать, задаётся в «Расписании».',
+    'kind is "interval" (every_hours) or "times" (["09:00"]). range is "due" (new posts and fresh numbers) or "all" (the latest again). Add one without an id. next_run_at is read-only.':
+      'kind: "interval" (every_hours) или "times" (["09:00"]). range: "due" (новые посты и свежие цифры) или "all" (последние, заново). Новое расписание добавляйте без id. next_run_at только для чтения.',
   },
   nouns: {
     event: { one: 'событие', few: 'события', many: 'событий', other: 'события' },
