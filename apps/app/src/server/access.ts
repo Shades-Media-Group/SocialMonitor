@@ -2,9 +2,11 @@ import { createPublicKey, verify } from 'node:crypto'
 import type { IncomingMessage } from 'node:http'
 
 /**
- * Remote access, for running the dashboard behind a Cloudflare Tunnel with Cloudflare Access in
- * front. Access checks who you are, and this checks Access: every request that came through the
- * tunnel must carry a valid Access token, or it is refused. Requests made on this computer pass.
+ * Remote access, for running the dashboard behind a Cloudflare Tunnel. Requests made on this
+ * computer pass. Through the tunnel, only the public hostname answers, and SocialMonitor's own
+ * sign-in (with its two-factor options) is the login, the same one every Shades product uses.
+ * Cloudflare Access in front is optional: when it is set up, every tunnel request must also carry
+ * a valid Access token.
  *
  *   SOCIALMONITOR_PUBLIC_HOST   the tunnel's hostname, e.g. socialmonitor-app.example.com
  *   CF_ACCESS_TEAM              the Zero Trust team, e.g. myteam (or myteam.cloudflareaccess.com)
@@ -123,16 +125,18 @@ export async function validAccessToken(
 
 export type Gate =
   | { ok: false; status: number; error: string }
-  /** `local`: made on this computer. `access`: came through the tunnel with a valid Access token. */
-  | { ok: true; local: boolean; access: boolean }
-
-let warned = false
+  /**
+   * `local`: made on this computer. `access`: came through the tunnel with a valid Access token.
+   * `tunnel`: came through the tunnel on the public hostname, so Cloudflare's headers count.
+   */
+  | { ok: true; local: boolean; access: boolean; tunnel?: true }
 
 /**
  * Decides whether a request may go on, before any routing. A Host outside the allow-list gets
  * 421. A request from this computer with no tunnel signs passes as local. Anything that came
- * through the tunnel passes only on the public hostname with a valid Access token; without
- * Access configured, it is refused (fail closed) and the log says why once.
+ * through the tunnel passes only on the public hostname, and then needs a signed-in session like
+ * any other request; with Access configured, it also needs a valid Access token. Without a public
+ * hostname set, tunnel requests are refused.
  */
 export async function gate(
   req: Pick<IncomingMessage, 'headers'> & { socket: { remoteAddress?: string } },
@@ -145,34 +149,27 @@ export async function gate(
     return { ok: false, status: 421, error: 'This dashboard does not answer to that address.' }
   if (!tunneled(req.headers, req.socket.remoteAddress, env))
     return { ok: true, local: true, access: false }
-  const config = accessConfig(env)
-  if (!config) {
-    if (!warned) {
-      warned = true
-      console.warn(
-        'A request came through the tunnel, but Cloudflare Access is not set up: set CF_ACCESS_TEAM and CF_ACCESS_AUD. Tunnel requests are refused until then.',
-      )
-    }
-    return { ok: false, status: 403, error: 'Remote access is not set up on this computer.' }
-  }
   if (host !== publicHost(env))
     return { ok: false, status: 403, error: 'This dashboard only answers on this computer.' }
+  const config = accessConfig(env)
+  if (!config) return { ok: true, local: false, access: false, tunnel: true }
   return (await validAccessToken(one(req.headers['cf-access-jwt-assertion']), config, fetcher))
-    ? { ok: true, local: false, access: true }
+    ? { ok: true, local: false, access: true, tunnel: true }
     : { ok: false, status: 403, error: 'Sign in through Cloudflare Access first.' }
 }
 
 /**
  * Who is asking, and from which country. cf-connecting-ip and cf-ipcountry are believed only on
- * a request whose Access token was valid; anything else gets the socket's own address.
+ * a request that came through the tunnel on the public hostname, where cloudflared sets them;
+ * anything else gets the socket's own address.
  */
 export function clientOf(
   headers: Headers,
   peer: string | undefined,
-  access: boolean,
+  tunnel: boolean,
 ): { ip: string; country: string | null } {
   const sock = (peer ?? '').replace(/^::ffff:/, '')
-  if (!access) return { ip: sock, country: null }
+  if (!tunnel) return { ip: sock, country: null }
   const ip = one(headers['cf-connecting-ip'])
   const country = one(headers['cf-ipcountry']).toUpperCase()
   return {

@@ -119,11 +119,11 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${HOST}`)
   for (const [k, v] of Object.entries(baseHeaders(false))) res.setHeader(k, v)
   // First the address and the tunnel: a Host outside the allow-list (DNS rebinding) gets nothing,
-  // and anything that came through Cloudflare needs a valid Access token.
+  // and anything that came through Cloudflare must use the public hostname.
   const pass = await gate(req, PORT)
   if (!pass.ok) return send(res, pass.status, { error: pass.error })
   // Through the tunnel the browser sees HTTPS: tell it to keep using it.
-  if (pass.access)
+  if (pass.tunnel)
     res.setHeader('strict-transport-security', baseHeaders(true)['strict-transport-security']!)
   // Only the dashboard itself may drive the API from a browser: its own origin, the dev UI and the
   // tunnel. Other local ports count as the same site to cookies, so they are refused by name.
@@ -134,8 +134,8 @@ const server = createServer(async (req, res) => {
     return send(res, 415, { error: 'Send JSON.' })
   // Then the person: everything except the app's own files and the sign-in endpoints needs a session.
   const secure = !pass.local
-  // The visitor's address and country: Cloudflare's headers count only with a valid Access token.
-  const who = clientOf(req.headers, req.socket.remoteAddress, pass.access)
+  // The visitor's address and country: Cloudflare's headers count only through the tunnel.
+  const who = clientOf(req.headers, req.socket.remoteAddress, !!pass.tunnel)
   const ip = who.ip
   const country = who.country
   const client = { ua: String(req.headers['user-agent'] ?? '').slice(0, 300), ip, country }

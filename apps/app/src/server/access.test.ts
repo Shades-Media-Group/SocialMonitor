@@ -145,6 +145,7 @@ describe('the request gate', () => {
       ok: true,
       local: false,
       access: true,
+      tunnel: true,
     })
     // Tunnel signs on a local address: refused, even with a token.
     for (const sign of [{ 'cf-connecting-ip': '1.2.3.4' }, { 'cf-ray': 'abc' }] as Record<
@@ -167,21 +168,35 @@ describe('the request gate', () => {
     })
   })
 
-  it('refuses the tunnel when Access is not set up', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  it('without Access, lets the tunnel through to the sign-in, on the public host only', async () => {
     const bare = { SOCIALMONITOR_PUBLIC_HOST: 'app.example.test' }
-    const r = req({ host: 'app.example.test', 'cf-ray': 'abc' })
-    expect(await gate(r, 4400, bare, f)).toMatchObject({ ok: false, status: 403 })
-    expect(await gate(r, 4400, bare, f)).toMatchObject({ ok: false, status: 403 })
-    expect(warn).toHaveBeenCalledTimes(1)
-    warn.mockRestore()
+    const r = req({ host: 'app.example.test', 'cf-ray': 'abc', 'cf-connecting-ip': '203.0.113.7' })
+    expect(await gate(r, 4400, bare, f)).toEqual({
+      ok: true,
+      local: false,
+      access: false,
+      tunnel: true,
+    })
+    // Tunnel signs on a local name: still refused. A foreign name: 421.
+    expect(await gate(req({ host: '127.0.0.1:4400', 'cf-ray': 'abc' }), 4400, bare, f)).toMatchObject(
+      { ok: false, status: 403 },
+    )
+    expect(await gate(req({ host: 'evil.example', 'cf-ray': 'abc' }), 4400, bare, f)).toMatchObject({
+      ok: false,
+      status: 421,
+    })
+    // No public host set: nothing through the tunnel at all.
+    expect(await gate(req({ host: '127.0.0.1:4400', 'cf-ray': 'abc' }), 4400, {}, f)).toMatchObject({
+      ok: false,
+      status: 403,
+    })
   })
 })
 
 describe('the client address', () => {
   const cf = { 'cf-connecting-ip': '203.0.113.7', 'cf-ipcountry': 'md' }
 
-  it('believes Cloudflare only after a valid Access token', () => {
+  it('believes Cloudflare only through the tunnel', () => {
     expect(clientOf(cf, '127.0.0.1', true)).toEqual({ ip: '203.0.113.7', country: 'MD' })
     expect(clientOf(cf, '127.0.0.1', false)).toEqual({ ip: '127.0.0.1', country: null })
     expect(clientOf(cf, '::ffff:127.0.0.1', false)).toEqual({ ip: '127.0.0.1', country: null })
