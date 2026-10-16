@@ -150,7 +150,7 @@
   "privacy": {
     "title": "プライバシーポリシー | SocialMonitor",
     "description": "Shades Media Groupは何も受け取りません。投稿とコメントはパソコンに残り、本文とカバー画像だけがあなたのキーでClaudeに送られます。",
-    "updated": "最終更新：2026年10月13日",
+    "updated": "最終更新：2026年10月16日",
     "intro": "SocialMonitorは、あなたが自分のパソコンで動かすアプリで、Shades Media Groupが制作しています。このポリシーは、アプリとこのWebサイトに適用されます。",
     "short": "Shades Media Groupは何も受け取りません。SocialMonitorが集めたものは、すべてあなたのパソコンに残ります。唯一の例外はClaudeに読ませる内容で、あなた自身のアカウントを通じてAnthropicに送られます。",
     "appTitle": "アプリが集めるもの、その行き先",
@@ -162,6 +162,7 @@
     "appMeta": "<strong>ブランド自身の Facebook ページを接続すると、</strong>Facebook はワンタイムコード付きでこのサイトの <code>/connect/meta/</code> ページに戻します。ページはそれをお使いのコンピューター上の SocialMonitor にそのまま渡し、何も保存しません。その後 SocialMonitor は Meta の API を通じて、ページとそれに紐づく Instagram アカウントの投稿とコメントを読み取り、アクセストークンとともにお使いのコンピューターにだけ保存します。",
     "appHibp": "<strong>誰かがパスワードを決めるとき、</strong>既知の漏えいと照合するため、その SHA-1 フィンガープリントの先頭 5 文字だけが <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned</a> に送られます。照合はお使いのコンピューター上で行われ、パスワードが外に出ることはありません。",
     "appMail": "<strong>サインイン用のメール</strong>は、メールを設定した場合に、招待した人へコードかリンクだけを、あなたが設定したメールサーバー経由で届けます。",
+    "appShades": "<strong>Shades ログイン（Shades login）</strong>は Shades Media Group 自身のインストール専用です。<code>SHADES_ID_*</code> の設定を入れない限りオフのままなので、ご自身で動かすコピーから Shades ID に何かが送られることはありません。有効な場合、ブラウザーはサインインのために Shades ID（id.shades.md）へ移動し、SocialMonitor は署名付きの ID トークンを受け取ります。そこには本人のアカウントの変わらない ID、メールアドレス、名前、ユーザー名と、2 段階目がどう行われたかが含まれます。SocialMonitor はその ID をアカウントとともに保存し（新しい人のアカウントにはメールアドレスと名前も入ります）、ID トークンは Shades ID からもサインアウトするためだけにセッションとともに保管します。それ以外は何も共有されません。",
     "appReports": "<strong>レポートとエクスポート</strong>は、あなたが保存するファイルです。置いた場所にだけ存在します。",
     "dutiesTitle": "あなたの責任",
     "duties": "コメントは個人データです。組織のためにSocialMonitorを使う場合、そのデータの管理者は組織です。見守る理由のあるプロフィールだけを追加し、データは必要な期間だけ保管し（Settings → Keep data for）、各SNSの規約を守ってください。ブランドを削除すると、その投稿とコメントもすべて削除されます。",

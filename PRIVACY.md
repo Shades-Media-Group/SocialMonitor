@@ -1,6 +1,6 @@
 # Privacy policy
 
-_Last updated: 15 October 2026_
+_Last updated: 16 October 2026_
 
 SocialMonitor is an app you run on your own computer, made by Shades Media Group. This policy covers the app and its website, socialmonitor.shades.md.
 
@@ -20,7 +20,7 @@ Shades Media Group receives nothing. Everything SocialMonitor collects stays on 
 - **If you connect a brand's own Facebook Page,** Facebook returns you to the website's `/connect/meta/` page with a one-time code, which it passes straight to SocialMonitor on your computer and keeps nothing. SocialMonitor then reads that Page's posts and comments, and those of the Instagram account linked to it, through Meta's API, and keeps them and the Page's access token on your computer only.
 - **Sign-in emails,** if you set up email, carry only a code or a link to the people you invite, through the mail server you configure.
 - **People's accounts** (names, emails, usernames and hashed passwords) stay in the database on your computer.
-- **Shades login,** only where it is set up (Shades Media Group's own install), sends the browser to Shades ID to sign in. SocialMonitor then fetches Shades ID's public settings and keys and trades a one-time code for a signed note of who signed in: their Shades account id, name and @shades.md email, kept in the database on your computer with the session it starts.
+- **Shades login** is only for Shades Media Group's own install: it stays off unless the `SHADES_ID_*` settings in `.env` are filled in, so a copy you run yourself sends nothing to Shades ID. Where it is on, the browser goes to Shades ID (`https://id.shades.md`) to sign in. SocialMonitor then fetches Shades ID's public settings and keys and trades a one-time code for a signed ID token with the person's stable Shades account id, @shades.md email, name and username, and how the second step was done. It stores that id with the account in the database on your computer (a new person's account also gets the email and name) and keeps the ID token with the session only to sign out at Shades ID. Nothing else is shared.
 - **When someone chooses a password,** the first five characters of its SHA-1 fingerprint go to [Have I Been Pwned](https://haveibeenpwned.com/Passwords), which answers with every breached fingerprint that starts with them; the match is made on your computer, so neither the password nor its full fingerprint leaves it. `SOCIALMONITOR_HIBP=off` in `.env` turns this check off.
 - **Two-step sign-in** (passkeys, authenticator codes, recovery codes) and the list of signed-in devices (browser, system, address and, through the tunnel, the country Cloudflare reports) stay in the database on your computer.
 - **Reports and exports** are files you save; they go wherever you put them.

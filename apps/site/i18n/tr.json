@@ -150,7 +150,7 @@
   "privacy": {
     "title": "Gizlilik politikası | SocialMonitor",
     "description": "Shades Media Group hiçbir şey almaz. SocialMonitor gönderileri ve yorumları bilgisayarınızda tutar; yalnızca metinler ve kapaklar anahtarınızla Claude'a gider.",
-    "updated": "Son güncelleme: 13 Ekim 2026",
+    "updated": "Son güncelleme: 16 Ekim 2026",
     "intro": "SocialMonitor, Shades Media Group'un yaptığı ve kendi bilgisayarınızda çalıştırdığınız bir uygulamadır. Bu politika uygulamayı ve bu web sitesini kapsar.",
     "short": "Shades Media Group hiçbir şey almaz. SocialMonitor'ın topladığı her şey bilgisayarınızda kalır. Tek istisna, Claude'a okuttuğu içeriktir; o da kendi hesabınız üzerinden Anthropic'e gider.",
     "appTitle": "Uygulama neleri toplar ve bunlar nereye gider",
@@ -162,6 +162,7 @@
     "appMeta": "<strong>Bir markanın kendi Facebook sayfasını bağlarsanız,</strong> Facebook sizi tek kullanımlık bir kodla bu sitenin <code>/connect/meta/</code> sayfasına döndürür; sayfa kodu doğrudan bilgisayarınızdaki SocialMonitor'a iletir ve hiçbir şey saklamaz. SocialMonitor ardından sayfanın ve ona bağlı Instagram hesabının gönderi ve yorumlarını Meta'nın API'si üzerinden okur ve bunları erişim belirteciyle birlikte yalnızca bilgisayarınızda tutar.",
     "appHibp": "<strong>Biri bir parola seçtiğinde,</strong> bilinen sızıntılarla karşılaştırmak için yalnızca SHA-1 parmak izinin ilk beş karakteri <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned</a>'e gider. Eşleştirme bilgisayarınızda yapılır; parola oradan hiç çıkmaz.",
     "appMail": "<strong>Giriş e-postaları,</strong> e-postayı kurarsanız, davet ettiğiniz kişilere yalnızca bir kod ya da bağlantı taşır ve sizin ayarladığınız posta sunucusundan gider.",
+    "appShades": "<strong>Shades ile giriş (Shades login)</strong> yalnızca Shades Media Group'un kendi kurulumu içindir: <code>SHADES_ID_*</code> ayarları doldurulmadıkça kapalı kalır, bu yüzden kendi çalıştırdığınız bir kopya Shades ID'ye hiçbir şey göndermez. Açık olduğu yerde tarayıcı giriş için Shades ID'ye (id.shades.md) gider ve SocialMonitor, kişinin değişmeyen hesap kimliğini, e-postasını, adını ve kullanıcı adını, ayrıca ikinci adımın nasıl yapıldığını içeren imzalı bir kimlik belirteci alır. Bu kimliği hesapla birlikte saklar (yeni birinin hesabına e-posta ve ad da yazılır) ve kimlik belirtecini yalnızca Shades ID'den de çıkış yapmak için oturumla birlikte tutar. Başka hiçbir şey paylaşılmaz.",
     "appReports": "<strong>Raporlar ve dışa aktarımlar</strong> sizin kaydettiğiniz dosyalardır; onları nereye koyarsanız oraya giderler.",
     "dutiesTitle": "Sorumluluklarınız",
     "duties": "Yorumlar kişisel veridir. SocialMonitor'ı bir kuruluş için çalıştırıyorsanız, bu verilerin sorumlusu o kuruluştur. Yalnızca takip etmek için bir nedeniniz olan profilleri izleyin, verileri gerektiğinden uzun tutmayın (Settings → Keep data for) ve ağların koşullarına uyun. Bir markayı silmek, tüm gönderilerini ve yorumlarını siler.",
