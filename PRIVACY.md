@@ -24,7 +24,7 @@ Shades Media Group receives nothing. Everything SocialMonitor collects stays on 
 - **Two-step sign-in** (passkeys, authenticator codes, recovery codes) and the list of signed-in devices (browser, system, address and, through the tunnel, the country Cloudflare reports) stay in the database on your computer.
 - **Reports and exports** are files you save; they go wherever you put them.
 - **Saved accounts** (usernames, passwords and notes you choose to keep) are encrypted on your computer and never leave it.
-- **Remote access**, if you set it up, passes through your own Cloudflare account and is limited to the people your Cloudflare Access policy allows.
+- **Remote access**, if you set it up, passes through your own Cloudflare account, and only people with a SocialMonitor account can sign in.
 
 ## Your responsibilities
 

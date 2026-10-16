@@ -1,6 +1,6 @@
 # Remote access
 
-SocialMonitor runs on your computer and answers only there. To reach it from another device, put it behind a Cloudflare Tunnel with Cloudflare Access in front. Access checks who you are, and the dashboard checks Access: every request through the tunnel must carry a valid Access token, or it is refused.
+SocialMonitor runs on your computer and answers only there. To reach it from another device, put it behind a Cloudflare Tunnel. Through the tunnel, SocialMonitor's own sign-in is the login: the same sign-in page every Shades product uses, with a password, an emailed code, and optional passkeys or an authenticator. Anyone who knows the address reaches that sign-in page, so every account needs a strong password, and two-step sign-in is worth turning on for each one.
 
 ## Set it up once
 
@@ -16,19 +16,7 @@ SocialMonitor runs on your computer and answers only there. To reach it from ano
    yarn tunnel setup socialmonitor-app.example.com
    ```
 
-3. **Protect the address with Cloudflare Access.** In the Cloudflare dashboard, open Zero Trust → Access → Applications → Add an application → Self-hosted:
-   - Application domain: the hostname from step 2.
-   - Policy: Allow, Include, Emails: only your own address.
-   - After saving, copy the application's **Audience (AUD) tag**, and your team domain (Zero Trust → Settings, ending in `.cloudflareaccess.com`).
-
-4. **Tell the dashboard about Access.** Add both to `.env`:
-
-   ```bash
-   CF_ACCESS_TEAM=yourteam                # or yourteam.cloudflareaccess.com
-   CF_ACCESS_AUD=the-audience-tag
-   ```
-
-   The older names `SOCIALMONITOR_ACCESS_TEAM` and `SOCIALMONITOR_ACCESS_AUD` still work. Until both are set, every request through the tunnel is refused, and the log says so once.
+3. **Restart the dashboard** so it reads `SOCIALMONITOR_PUBLIC_HOST`. It answers through the tunnel only on that hostname; any other name is refused.
 
 ## Run it
 
@@ -37,15 +25,22 @@ yarn start    # the dashboard, on 127.0.0.1:4400
 yarn tunnel   # in a second terminal: the tunnel
 ```
 
-Open the address and pass Cloudflare Access with the code it emails you. Then sign in to SocialMonitor itself: your password and the code it emails you. Access keeps strangers out; SocialMonitor's own roles decide which brands each person sees. See [people and sign-in](people.md).
+Open the address and sign in to SocialMonitor: your password and the code it emails you, or your passkey or authenticator. SocialMonitor's own roles decide which brands each person sees. See [people and sign-in](people.md).
 
-## Keep Access in front
+## Cloudflare Access, if you want it
 
-Cloudflare Access stays in front of the dashboard's address (for Shades, `socialmonitor-app.shades.md`) for as long as the tunnel exists. Never route the hostname without its Access application, not even for a quick test. The dashboard refuses requests without a valid Access token, but that check is the second line, not the first. If you remove the Access application, stop the tunnel too.
+Cloudflare Access can sit in front of the address as a second login, with its own page. Shades doesn't use it, because every Shades product keeps the same sign-in page. If you add it, put the application's team and **Audience (AUD) tag** in `.env`, and the dashboard then also checks the Access token on every request through the tunnel: its RS256 signature against the team's keys, the audience, the issuer and its expiry.
+
+```bash
+CF_ACCESS_TEAM=yourteam                # or yourteam.cloudflareaccess.com
+CF_ACCESS_AUD=the-audience-tag
+```
+
+The older names `SOCIALMONITOR_ACCESS_TEAM` and `SOCIALMONITOR_ACCESS_AUD` still work.
 
 ## Rate limit sign-in
 
-Strangers never get past Access, but someone who does, or a stolen Access session, could still guess passwords. Add a rate limiting rule in the Cloudflare dashboard: your domain → Security → WAF → Rate limiting rules → Create rule.
+The sign-in page is open to the internet, so slow down password guessing before it reaches the computer. SocialMonitor limits sign-in attempts per address itself, and checks new passwords against known breaches. Add a rate limiting rule in the Cloudflare dashboard: your domain → Security → WAF → Rate limiting rules → Create rule.
 
 On the **Free plan** the rule can only match the path, and it counts and blocks for 10 seconds at most. Use one rule for the whole zone; it covers every app there with the same paths:
 
@@ -87,8 +82,7 @@ The tunnel is only as safe as the computer it runs on. Go through the checklist 
 - The dashboard listens only on `127.0.0.1:4400`, never on a network address. The tunnel reaches it from inside your computer. Don't change that, and don't forward port 4400 on the router.
 - Saved account passwords are never revealed through the tunnel, only on the computer itself.
 - "Sign in to networks" opens a window on the computer itself, so it is refused remotely.
-- The dashboard still listens only on 127.0.0.1; the tunnel reaches it from inside your computer.
-- The dashboard checks the Access token itself: its RS256 signature against your team's keys, the audience tag, the issuer and its expiry. A request that carries Cloudflare's headers (`cf-connecting-ip`, `cf-ray`) or asks for the public hostname is refused without a valid one, even if a hostname is ever routed past Access by mistake.
+- Without a public hostname in `.env`, anything that carries Cloudflare's headers (`cf-connecting-ip`, `cf-ray`) is refused, so a tunnel can't open the dashboard by accident.
 - Every page carries a strict Content Security Policy with a fresh nonce, so only the dashboard's own scripts run and no other site can frame it; through the tunnel it also sends HSTS.
 - It answers only to `127.0.0.1:<port>`, `localhost:<port>` and the public hostname. Any other `Host` gets nothing, so a web page can't reach it through DNS rebinding.
-- The visitor's address and country (`cf-connecting-ip`, `cf-ipcountry`) are believed only on a request with a valid Access token; otherwise the connection's own address is used.
+- The visitor's address and country (`cf-connecting-ip`, `cf-ipcountry`) are believed only on a request that came through the tunnel on the public hostname, where cloudflared sets them; otherwise the connection's own address is used. Sign-in limits and the security log use that address.

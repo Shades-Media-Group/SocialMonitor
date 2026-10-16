@@ -34,7 +34,7 @@ Run `yarn start` under the server's own process manager, so it starts with the m
 
 ## Production
 
-Shades' own copy runs on the always-on Windows PC, inside WSL Ubuntu, at `~/shades/SocialMonitor`. It is reached at `socialmonitor-app.shades.md` through its own Cloudflare Tunnel, with Cloudflare Access in front. Development happens on the Mac. Code reaches the PC only through `main` on GitHub: the PC pulls by itself, and nobody copies files to it or edits it by hand.
+Shades' own copy runs on the always-on Windows PC, inside WSL Ubuntu, at `~/shades/SocialMonitor`. It is reached at `socialmonitor-app.shades.md` through its own Cloudflare Tunnel, and SocialMonitor's own sign-in is the login ([remote access](remote-access.md)). Development happens on the Mac. Code reaches the PC only through `main` on GitHub: the PC pulls by itself, and nobody copies files to it or edits it by hand.
 
 ### From the Mac to the PC
 
@@ -108,19 +108,12 @@ In WSL Ubuntu, with the Server Remote chat:
 
 `yarn deploy:verify` makes these checks:
 
-- The dashboard's address answers with Cloudflare Access's sign-in, not with the app.
+- The dashboard's address serves the sign-in page, with HSTS and a Content Security Policy.
+- Its API refuses a request without a session (401).
 - `socialmonitor.shades.md` is up and sends HSTS.
-- With a service token, `/api/health` is ok and runs the commit at the tip of `origin/main`.
+- `/api/health` is ok and runs the commit at the tip of `origin/main`.
 
-Each check prints PASS or FAIL, and the command exits non-zero when any check fails.
-
-To give it a service token, once:
-
-1. In Cloudflare Zero Trust, open Access → Service credentials → Service Tokens → Create Service Token. Name it `deploy-verify`. Copy the Client ID and the Client Secret; the secret is shown only once.
-2. Open Access → Applications, then the dashboard's application → Policies → Add a policy. Set Action to **Service Auth**, and Include → Service Token → `deploy-verify`.
-3. On the Mac, put both in the repository's `.env` (it is git-ignored): `CF_ACCESS_CLIENT_ID=…` and `CF_ACCESS_CLIENT_SECRET=…`.
-
-The token passes Access only, and only for the dashboard's address. It doesn't sign anyone in to SocialMonitor. `/api/health` is the one route it can read.
+Each check prints PASS or FAIL, and the command exits non-zero when any check fails. It needs no keys. If Cloudflare Access is ever put in front, an Access service token in `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` lets the checks through it.
 
 ### What is not certain yet
 

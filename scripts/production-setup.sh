@@ -161,9 +161,8 @@ ask_secret() { # ask_secret KEY "question": hidden while typed, never printed
 }
 echo "Enter skips a value; run this again, or edit .env, to add it later."
 ask SOCIALMONITOR_PUBLIC_HOST "The dashboard's address" socialmonitor-app.shades.md
-echo "Cloudflare Access (Zero Trust → Access → Applications → the dashboard's application):"
-ask CF_ACCESS_TEAM "  Team name (the part before .cloudflareaccess.com)"
-ask CF_ACCESS_AUD "  Application Audience (AUD) tag"
+# Cloudflare Access is optional: SocialMonitor's own sign-in is the login (docs/remote-access.md).
+# Only when an Access application is in front, add CF_ACCESS_TEAM and CF_ACCESS_AUD to .env by hand.
 echo "Email (docs/people.md):"
 ask SMTP_HOST "  SMTP host" smtp.gmail.com
 ask SMTP_PORT "  SMTP port" 465

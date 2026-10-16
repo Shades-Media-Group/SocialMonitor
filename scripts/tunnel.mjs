@@ -7,9 +7,8 @@
 // One tunnel per app: SocialMonitor never joins a tunnel another app runs, so revoking one leaves the
 // others up. Its only route is <hostname> -> http://127.0.0.1:4400, then 404 for everything else; the
 // config is rewritten that way on every run. The tunnel's files live in data/tunnel (git-ignored), and
-// its credentials file must stay readable by this user only (0600). Put Cloudflare Access in front of
-// the hostname before sharing it, and set CF_ACCESS_TEAM and CF_ACCESS_AUD so the dashboard checks the
-// Access token itself: see docs/remote-access.md.
+// its credentials file must stay readable by this user only (0600). Through the tunnel, SocialMonitor's
+// own sign-in is the login; Cloudflare Access in front is optional: see docs/remote-access.md.
 import { execFileSync, spawn } from 'node:child_process'
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -23,7 +22,7 @@ const credentials = join(dir, 'credentials.json')
 const cf = (...args) =>
   execFileSync('cloudflared', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
 const ACCESS_NOTE =
-  'Cloudflare Access must be in front of this hostname, and CF_ACCESS_TEAM and CF_ACCESS_AUD must be set in .env, so the dashboard refuses anything Access did not let in. See docs/remote-access.md.'
+  'Anyone who knows the address reaches the sign-in page: give every account a strong password and turn on two-step sign-in. See docs/remote-access.md.'
 
 function setEnv(key, value) {
   const file = join(root, '.env')
@@ -112,7 +111,6 @@ if (cmd === 'setup') {
   if (!publicHost) throw new Error('No tunnel yet: run `yarn tunnel setup <hostname>` first.')
   checkCredentials()
   writeConfig(publicHost)
-  if (!process.env.CF_ACCESS_TEAM || !process.env.CF_ACCESS_AUD) console.warn(ACCESS_NOTE)
   spawn('cloudflared', ['tunnel', '--config', config, 'run'], { stdio: 'inherit' }).on(
     'exit',
     (code) => process.exit(code ?? 0),
