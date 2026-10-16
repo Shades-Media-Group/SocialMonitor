@@ -456,6 +456,14 @@ function migrate(db: DatabaseSync) {
     db.exec('ALTER TABLE brands ADD COLUMN campaign_auto INTEGER NOT NULL DEFAULT 1')
   // When Claude last looked for a post's campaign, so it is asked again only after campaigns change.
   if (!has('posts', 'campaign_ai_at')) db.exec('ALTER TABLE posts ADD COLUMN campaign_ai_at TEXT')
+  // Shades login: the Shades ID subject a person is linked to (one each), and the ID token a
+  // session came with, kept server-side for signing out at Shades ID.
+  if (!has('users', 'shades_sub')) {
+    db.exec('ALTER TABLE users ADD COLUMN shades_sub TEXT')
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS users_shades_sub ON users(shades_sub)')
+  }
+  if (!has('sessions', 'shades_id_token'))
+    db.exec('ALTER TABLE sessions ADD COLUMN shades_id_token TEXT')
 }
 
 export const now = () => new Date().toISOString()

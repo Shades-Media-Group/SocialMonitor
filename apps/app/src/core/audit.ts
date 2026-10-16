@@ -21,6 +21,8 @@ export const AUDIT_EVENTS = [
   'person.disabled',
   'person.enabled',
   'person.removed',
+  // Someone new signed in with Shades login: an account with no access yet, for a super admin.
+  'person.joined',
   'brand.created',
   'brand.deleted',
   'network.connected',

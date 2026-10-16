@@ -105,6 +105,8 @@ export interface Ctx {
   client: Client
   /** The page's origin (checked against the allowed ones), for passkeys. */
   origin: string
+  /** The request's Cookie header, for the few routes that read a cookie besides the session's. */
+  cookie?: string
 }
 type Signed = Ctx & { user: User }
 /**

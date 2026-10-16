@@ -8,6 +8,7 @@ import { audit } from '../core/audit.ts'
 import { appUrl, securityEvent, signInFailed, signedIn } from '../core/security-events.ts'
 import * as tf from '../core/two-factor.ts'
 import * as pk from '../core/passkeys.ts'
+import * as shades from '../core/shades-id.ts'
 import type { Ctx } from './routes.ts'
 import { HttpError, by, r } from './routes.ts'
 
@@ -50,7 +51,7 @@ const who = (c: Ctx, userId: number) => ({ userId, ip: c.ip, ua: c.client.ua, co
  * Starts a session. Any session this browser already had ends, so the id always changes when
  * someone signs in.
  */
-const signIn = (c: Ctx, user: User, keep = false, method = 'password') => {
+export const signIn = (c: Ctx, user: User, keep = false, method = 'password') => {
   if (c.session) auth.deleteSession(c.db, c.session.id)
   const newDevice = !auth.knownDevice(c.db, user.id, c.client.ua)
   const s = auth.createSession(c.db, user, keep, c.client)
@@ -62,19 +63,24 @@ const signIn = (c: Ctx, user: User, keep = false, method = 'password') => {
 }
 const signOut = (c: Ctx) => c.cookies.push(auth.sessionCookie('', c.secure, 0))
 
-const me = (c: Ctx, user: User) => ({
-  id: user.id,
-  email: user.email,
-  username: user.username,
-  name: user.name,
-  super: !!user.super,
-  memberships: auth.memberships(c.db, user.id),
-  prefs: auth.readPrefs(c.db, user.id),
-  // Super admins are asked to add a passkey or an authenticator; until then, email codes only.
-  needs_second: !!user.super && !tf.hasSecondFactor(c.db, user.id),
-})
+export const me = (c: Ctx, user: User) => {
+  // A session from Shades ID; when Shades ID did the second step, it stands in for a passkey.
+  const viaShades = shades.shadesSession(c.db, c.session?.id)
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    name: user.name,
+    super: !!user.super,
+    memberships: auth.memberships(c.db, user.id),
+    prefs: auth.readPrefs(c.db, user.id),
+    // Super admins are asked to add a passkey or an authenticator; until then, email codes only.
+    needs_second: !!user.super && !viaShades?.mfa && !tf.hasSecondFactor(c.db, user.id),
+    shades: !!viaShades,
+  }
+}
 
-const mask = (email: string) =>
+export const mask = (email: string) =>
   email.replace(/^(.)(.*)(@.*)$/, (_, a, m: string, d) => a + '•'.repeat(Math.min(6, m.length)) + d)
 
 async function invite(c: Ctx & { user: User }, user: User) {
@@ -89,7 +95,12 @@ async function invite(c: Ctx & { user: User }, user: User) {
 }
 
 /** Emails a six-digit code for signing in; the ticket names it without revealing it. */
-async function sendCode(userId: number, email: string, lang: ReturnType<typeof langOf>, c: Ctx) {
+export async function sendCode(
+  userId: number,
+  email: string,
+  lang: ReturnType<typeof langOf>,
+  c: Ctx,
+) {
   const t = auth.issue(c.db, userId, 'code')
   await sendMail(email, codeMail(lang, t.secret))
   audit(c.db, { ...by(c), actor: userId, event: 'code.sent', target: email })
@@ -97,7 +108,7 @@ async function sendCode(userId: number, email: string, lang: ReturnType<typeof l
 }
 
 /** Which second steps this person can use instead of the emailed code. */
-const secondSteps = async (c: Ctx, userId: number, key: string) => {
+export const secondSteps = async (c: Ctx, userId: number, key: string) => {
   const f = tf.factors(c.db, userId)
   return {
     totp: f.totp,
@@ -242,6 +253,8 @@ export const authRoutes = [
     setup: auth.countUsers(c.db) === 0,
     local: c.local,
     mail: mailReady(),
+    // Shades login is offered only when Shades ID is configured (core/shades-id.ts).
+    shades: !!shades.shadesConfig(),
   })),
 
   // The first account, made on the computer SocialMonitor runs on. It is the super admin.
@@ -315,7 +328,9 @@ export const authRoutes = [
       )
     auth.checkRate(`resend:${owner.email}`, 3)
     auth.noteFailure(`resend:${owner.email}`)
-    return sendCode(owner.id, owner.email, langOf(c), c)
+    const out = await sendCode(owner.id, owner.email, langOf(c), c)
+    shades.ticketMoved(String(b(c).ticket ?? ''), out.ticket)
+    return out
   }),
 
   // The second step: the emailed code, an authenticator code or a recovery code.
@@ -355,6 +370,8 @@ export const authRoutes = [
     }
     const user = auth.getUser(c.db, userId)!
     signIn(c, user, x.keep === true, via)
+    // A Shades login that waited for this step: its session keeps the ID token for signing out.
+    shades.ticketUsed(c.db, ticket, c.session?.id)
     return me(c, user)
   }),
 
@@ -483,9 +500,13 @@ export const authRoutes = [
     return { codes }
   }),
 
-  r('POST', '/api/auth/logout', 'public', (c) => {
+  // Signing out; a session from Shades ID also signs out there: the page goes to `logout` next.
+  r('POST', '/api/auth/logout', 'public', async (c) => {
+    const from = shades.shadesSession(c.db, c.session?.id)
     if (c.session) auth.deleteSession(c.db, c.session.id)
     signOut(c)
+    const logout = from ? await shades.logoutUrl(shades.shadesConfig(), from.idToken) : null
+    return logout ? { logout } : { ok: true }
   }),
   r('POST', '/api/auth/logout-everywhere', 'user', (c) => {
     auth.endSessions(c.db, c.user.id)

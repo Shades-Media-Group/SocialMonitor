@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
 import { guard, HttpError, routes } from './routes.ts'
 import { authRoutes } from './auth-routes.ts'
+import { shadesRoutes } from './shades-routes.ts'
 import {
   cookieAge,
   cookieName,
@@ -179,7 +180,7 @@ const server = createServer(async (req, res) => {
     return serveStatic(res, url.pathname)
   }
   try {
-    for (const r of [...authRoutes, ...routes]) {
+    for (const r of [...authRoutes, ...shadesRoutes, ...routes]) {
       if (r.method !== req.method) continue
       const m = r.path.exec(url.pathname)
       if (!m) continue
@@ -198,6 +199,7 @@ const server = createServer(async (req, res) => {
         session,
         client,
         origin: origin ?? `${secure ? 'https' : 'http'}://${req.headers.host ?? HOST}`,
+        cookie: req.headers.cookie,
       }
       guard(r, ctx)
       const data = await r.handle(ctx)
