@@ -708,7 +708,9 @@ function RunNotice({
             ? t('Update stopped')
             : finished.status === 'error'
               ? t('Update failed')
-              : t('Update finished')}
+              : finished.status === 'postponed'
+                ? t('Update postponed')
+                : t('Update finished')}
         </b>
         <button class="g-icon-btn" type="button" aria-label={t('Close')} onClick={onClose}>
           <Icon name="close" size={14} />

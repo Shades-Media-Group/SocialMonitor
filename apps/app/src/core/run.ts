@@ -12,9 +12,20 @@ import type { Comment, Network, Profile, RunScope } from './types.ts'
 import { NETWORKS } from './types.ts'
 import { collectors } from './collect/index.ts'
 import { Challenge, closeBrowser, openBrowser, pause } from './collect/browser.ts'
-import { describePost, pickCampaigns, pickEngine, sortComments } from './analyze.ts'
+import { describePost, pickCampaigns, pickEngine, probeClaude, sortComments } from './analyze.ts'
 import { placeByAi } from './campaigns.ts'
-import type { Kind } from './analyze.ts'
+import type { Kind, Verdict } from './analyze.ts'
+import {
+  AiLimitError,
+  MARGIN_MS,
+  activePause,
+  afterPause,
+  clock,
+  needCatchUp,
+  pauseText,
+  takeCatchUp,
+} from './ai-limit.ts'
+import type { AiPause } from './ai-limit.ts'
 import { getSettings } from './settings.ts'
 import { buildReport } from './report.ts'
 
@@ -23,18 +34,35 @@ const SIGNED_IN: Network[] = ['instagram', 'facebook', 'tiktok']
 const MAX_COMMENTS = 300
 
 type Trigger = 'manual' | 'schedule' | 'mcp'
-const queue: { scope: RunScope; trigger: Trigger; runId: number }[] = []
+interface Job {
+  scope: RunScope
+  trigger: Trigger
+  runId: number
+  /** The schedule that started it, moved to the reset when Claude is at its limit. */
+  scheduleId?: number
+}
+const queue: Job[] = []
 let busy = false
 
 /** Queues an update and returns its run id. Updates run one at a time: the browser profile is shared. */
-export function queueRun(db: DB, scope: RunScope, trigger: Trigger): number {
+export function queueRun(
+  db: DB,
+  scope: RunScope,
+  trigger: Trigger,
+  opts: { scheduleId?: number } = {},
+): number {
   if (!scope.brandIds.length) throw new Error('Choose at least one brand.')
   if (!scope.networks.length) throw new Error('Choose at least one network.')
   const runId = store.startRun(db, trigger, scope)
   store.logRun(db, runId, busy ? 'Waiting for the update before it to finish.' : 'Starting.')
-  queue.push({ scope, trigger, runId })
+  queue.push({ scope, trigger, runId, scheduleId: opts.scheduleId })
   void drain(db)
   return runId
+}
+
+/** Resolves once no update or catch-up is running and none is queued (for tests). */
+export async function idle() {
+  while (busy || queue.length) await new Promise((r) => setTimeout(r, 5))
 }
 
 async function drain(db: DB) {
@@ -43,7 +71,7 @@ async function drain(db: DB) {
   try {
     while (queue.length) {
       const job = queue.shift()!
-      await execute(db, job.runId, job.scope).catch((e: Error) => {
+      await execute(db, job).catch((e: Error) => {
         store.logRun(db, job.runId, `Stopped: ${e.message}`)
         store.finishRun(db, job.runId, 'error', {}, `The update stopped: ${e.message}`)
       })
@@ -75,17 +103,34 @@ export function gaps(db: DB) {
     .filter((g) => g.until)
 }
 
-async function execute(db: DB, runId: number, scope: RunScope) {
+async function execute(db: DB, { runId, scope, trigger, scheduleId }: Job) {
   const log = (line: string) => store.logRun(db, runId, line)
   const since = now()
   const settings = getSettings(db)
   const touched: { postId: number; brand: string; brandId: number }[] = []
   const problems: string[] = []
   const skipped: string[] = []
+  const waiting: string[] = []
   let page: Page | null = null
   const stopped = () => store.stopAsked(db, runId)
   // Each brand's rivals are read with it, so its share of voice stays current.
   const brandIds = store.withCompetitors(db, scope.brandIds)
+
+  // Before any work: can Claude take it? At its usage limit, a scheduled update moves to the
+  // reset; one a person (or Claude through MCP) started reads now and leaves the sorting for later.
+  const aiWait = await aiPreflight(db, brandIds)
+  if (aiWait && trigger === 'schedule') {
+    const at = afterPause(aiWait)
+    if (scheduleId) store.setNextRun(db, scheduleId, at)
+    const text = `${pauseText(aiWait)} This update moves to ${clock(at)}.`
+    log(text)
+    store.finishRun(db, runId, 'postponed', {}, `# Update postponed\n\n${text}\n`)
+    return
+  }
+  if (aiWait)
+    log(
+      `${pauseText(aiWait)} Posts and comments are read now; Claude sorts them after ${clock(afterPause(aiWait))}.`,
+    )
   // Every profile this update reads, for "2 of 5" in the progress notice.
   const all = brandIds.flatMap((id) =>
     store.listProfiles(db, id).filter((p) => scope.networks.includes(p.network)),
@@ -183,20 +228,39 @@ async function execute(db: DB, runId: number, scope: RunScope) {
 
   // The AI step: describe new posts and sort every comment still unsorted on these brands,
   // including ones an earlier update could not sort.
+  const brands = new Set(touched.map((t) => t.brandId))
+  const posts = new Map(touched.map((t) => [t.postId, t]))
+  for (const p of pendingPosts(db))
+    if (brands.has(p.brandId) && !posts.has(p.postId)) posts.set(p.postId, p)
+  // Brands whose admins turned the AI off keep their comments unsorted.
+  const off = aiOff(db)
+  const todo = [...posts.values()].filter((p) => !off.has(p.brandId))
+  const later = (after: string) => needCatchUp(db, [...new Set(todo.map((p) => p.brandId))], after)
+  // Still paused (the limit was found before reading): no AI call is tried.
+  const paused = aiWait && activePause(db)
   try {
-    const brands = new Set(touched.map((t) => t.brandId))
-    const posts = new Map(touched.map((t) => [t.postId, t]))
-    for (const p of pendingPosts(db))
-      if (brands.has(p.brandId) && !posts.has(p.postId)) posts.set(p.postId, p)
-    // Brands whose admins turned the AI off keep their comments unsorted.
-    const off = aiOff(db)
-    const todo = [...posts.values()].filter((p) => !off.has(p.brandId))
-    if (!stopped() && todo.length)
+    if (!stopped() && todo.length && paused) {
+      const after = afterPause(paused)
+      waiting.push(
+        `${pauseText(paused)} ${todo.length} ${todo.length === 1 ? 'post waits' : 'posts wait'} to be described or have their comments sorted; Claude does it after ${clock(after)}.`,
+      )
+      log(`Sorting waits for Claude until ${clock(after)}.`)
+      later(after)
+    } else if (!stopped() && todo.length)
       await aiStep(db, todo, log, (done, total) =>
         store.setProgress(db, runId, { step: 'sort', done, total }),
       )
   } catch (e) {
-    problems.push((e as Error).message)
+    if (e instanceof AiLimitError) {
+      // At the limit no further call is made: what was read and sorted so far is kept, and the
+      // rest is sorted once the limit resets.
+      const after = new Date(e.until.getTime() + MARGIN_MS).toISOString()
+      waiting.push(
+        `${e.message} Sorting stopped there; what was read is kept, and Claude sorts the rest after ${clock(after)}.`,
+      )
+      log(`Stopped sorting: ${e.message}`)
+      later(after)
+    } else problems.push((e as Error).message)
   }
 
   // Photos and stickers for TikTok comments read before they were kept, from public pages.
@@ -230,10 +294,11 @@ async function execute(db: DB, runId: number, scope: RunScope) {
     touched.map((t) => t.postId),
     problems,
     skipped,
+    waiting,
   )
   const status = stopped()
     ? 'stopped'
-    : problems.length
+    : problems.length || waiting.length
       ? touched.length
         ? 'partial'
         : 'error'
@@ -267,6 +332,7 @@ async function aiStep(
       network: post.network,
     }
     const unsorted = store.listComments(db, { postId, stale: true, others: true, limit: 2000 })
+    let save: ((verdicts: Map<number, Verdict>) => void) | null = null
     try {
       // What the post shows comes first, so comments are read against it.
       let shows = post.description
@@ -287,25 +353,34 @@ async function aiStep(
           { industry: string | null; description: string | null; categories: string } | undefined
         const about = [b?.industry, b?.description].filter(Boolean).join('; ')
         const kinds = JSON.parse(b?.categories || '[]') as Kind[]
-        const verdicts = await sortComments(
-          engine,
-          brand,
-          `${post.caption}${shows ? ` (What the post shows: ${shows})` : ''}`,
-          unsorted.map((c) => ({ id: c.id, text: c.text, ...conversation(db, post, c) })),
-          about,
-          kinds,
-          { ...use, task: 'sort-comments' },
-        )
-        for (const [id, v] of verdicts) {
-          store.setVerdict(db, id, v.label, v.needsReply, v.reason, v.urgency, v.emotion)
-          // The brand's kind, unless a person already rated this comment.
-          const kind = kinds.find((k) => k.key === v.category)
-          const byPerson = unsorted.find((c) => c.id === id)?.sentiment_by === 'you'
-          if (!byPerson)
-            store.setSentiment(db, id, kind ? kind.sentiment : 'neutral', kind?.key ?? null, 'ai')
+        save = (verdicts) => {
+          for (const [id, v] of verdicts) {
+            store.setVerdict(db, id, v.label, v.needsReply, v.reason, v.urgency, v.emotion)
+            // The brand's kind, unless a person already rated this comment.
+            const kind = kinds.find((k) => k.key === v.category)
+            const byPerson = unsorted.find((c) => c.id === id)?.sentiment_by === 'you'
+            if (!byPerson)
+              store.setSentiment(db, id, kind ? kind.sentiment : 'neutral', kind?.key ?? null, 'ai')
+          }
         }
+        save(
+          await sortComments(
+            engine,
+            brand,
+            `${post.caption}${shows ? ` (What the post shows: ${shows})` : ''}`,
+            unsorted.map((c) => ({ id: c.id, text: c.text, ...conversation(db, post, c) })),
+            about,
+            kinds,
+            { ...use, task: 'sort-comments' },
+          ),
+        )
       }
     } catch (e) {
+      // At Claude's limit the batches sorted before it are kept, and nothing more is asked.
+      if (e instanceof AiLimitError) {
+        if (e.partial && save) save(e.partial as Map<number, Verdict>)
+        throw e
+      }
       // Kept so Settings can say why the AI stopped; the comments stay for the next update.
       store.setSetting(db, 'ai_error', JSON.stringify({ at: now(), message: (e as Error).message }))
       throw new Error(`AI: ${(e as Error).message}`, { cause: e })
@@ -321,6 +396,7 @@ async function aiStep(
     )
     if (placed) log(`Claude placed ${placed} posts in campaigns.`)
   } catch (e) {
+    if (e instanceof AiLimitError) throw e
     log(`Could not place posts in campaigns: ${(e as Error).message}`)
   }
   store.setSetting(db, 'ai_error', '')
@@ -377,6 +453,76 @@ const aiOff = (db: DB) =>
       (b) => b.id,
     ),
   )
+
+/**
+ * Whether these brands' AI step runs on the Claude subscription, the one thing with a usage
+ * limit: Claude Code is the engine and no API key is there to take over.
+ */
+function onSubscription(db: DB, brandIds: number[]) {
+  if (process.env.ANTHROPIC_API_KEY) return false
+  const off = aiOff(db)
+  if (!brandIds.some((id) => !off.has(id))) return false
+  return pickEngine(getSettings(db)) === 'claude'
+}
+
+/**
+ * Before an update that will use Claude: the pause, when the AI is paused; else one tiny call to
+ * see that Claude takes work, which pauses the AI when it is at its limit. Null when the update
+ * may go ahead. Any other failure lets it go ahead: the AI step reports it as before.
+ */
+export async function aiPreflight(db: DB, brandIds: number[]): Promise<AiPause | null> {
+  if (!onSubscription(db, brandIds)) return null
+  const paused = activePause(db)
+  if (paused) return paused
+  try {
+    await probeClaude(db)
+    return null
+  } catch (e) {
+    return e instanceof AiLimitError ? activePause(db) : null
+  }
+}
+
+/**
+ * Once a pause has ended, sorts what a limit left waiting: the brands' undescribed posts and
+ * unsorted comments, with the normal AI step, at most once per pause. A brand whose schedule
+ * runs within the hour is left to that update. Never beside an update. Returns how many posts
+ * it took on, or null when there was nothing to do yet.
+ */
+export async function catchUp(db: DB, at = new Date()): Promise<number | null> {
+  if (busy) return null
+  const brandIds = takeCatchUp(db, at)
+  if (!brandIds) return null
+  const soon = store.withCompetitors(
+    db,
+    store
+      .listSchedules(db)
+      .filter(
+        (s) => s.enabled && s.next_run_at && Date.parse(s.next_run_at) - at.getTime() < 3600_000,
+      )
+      .map((s) => s.brand_id),
+  )
+  const off = aiOff(db)
+  const rows = pendingPosts(db).filter(
+    (p) => brandIds.includes(p.brandId) && !soon.includes(p.brandId) && !off.has(p.brandId),
+  )
+  if (!rows.length) return 0
+  busy = true
+  try {
+    await aiStep(db, rows, () => {})
+  } catch (e) {
+    if (e instanceof AiLimitError)
+      needCatchUp(
+        db,
+        [...new Set(rows.map((r) => r.brandId))],
+        new Date(e.until.getTime() + MARGIN_MS).toISOString(),
+      )
+    else console.error(`Sorting after Claude's limit: ${(e as Error).message}`)
+  } finally {
+    busy = false
+    if (queue.length) void drain(db)
+  }
+  return rows.length
+}
 
 /** Sorts every comment the current sort has not read and describes every post without a description. Returns how many comments it sorted. */
 export async function sortPending(db: DB) {

@@ -68,6 +68,7 @@ import type { AuditEvent } from '../core/audit.ts'
 import { setBranding } from '../core/branding.ts'
 import * as campaigns from '../core/campaigns.ts'
 import { adminUsage } from '../core/admin.ts'
+import { activePause, afterPause, catchUpState } from '../core/ai-limit.ts'
 
 export class HttpError extends Error {
   status: number
@@ -244,6 +245,32 @@ const visible = <T>(c: Signed, rows: T[], brandOfRow: (row: T) => number | numbe
   })
 }
 
+/**
+ * The AI pause for the dashboard: whether Claude is at its usage limit, until when, when waiting
+ * work starts again, and which of the person's brands have comments waiting for it. With an API
+ * key the API takes over at a limit, so nothing waits.
+ */
+export function aiStatus(c: Signed) {
+  const p = process.env.ANTHROPIC_API_KEY ? null : activePause(c.db)
+  const waiting = catchUpState(c.db)
+  const mine = visibleBrands(c.db, c.user)
+  return {
+    paused: !!p,
+    until: p?.until ?? null,
+    resumes_at: p ? afterPause(p) : null,
+    kind: p?.kind ?? null,
+    reason: p?.reason ?? null,
+    set_at: p?.set_at ?? null,
+    reset_known: p?.reset_known ?? null,
+    waiting: waiting?.brands.length
+      ? {
+          after: waiting.after,
+          brands: waiting.brands.filter((id) => !mine || mine.includes(id)),
+        }
+      : null,
+  }
+}
+
 /** The commit this copy runs, read once: the updater and deploy:verify compare it with main. */
 const COMMIT = (() => {
   try {
@@ -272,13 +299,16 @@ export const routes: Route[] = [
   r('GET', '/api/health', 'public', ({ db }) => health(db)),
   r('GET', '/api/settings', 'user', ({ db }) => readSettings(db)),
   // Which AI sorts comments on this computer: Claude Code, an API key, or none yet.
-  r('GET', '/api/ai', 'user', ({ db }) => {
-    const last = store.getSetting(db, 'ai_error')
+  r('GET', '/api/ai', 'user', (c) => {
+    const last = store.getSetting(c.db, 'ai_error')
     return {
-      engine: pickEngine(getSettings(db)),
+      engine: pickEngine(getSettings(c.db)),
       error: last ? (JSON.parse(last) as { at: string; message: string }) : null,
+      pause: aiStatus(c),
     }
   }),
+  // Whether Claude is at its usage limit, until when, and which brands wait for it.
+  r('GET', '/api/ai/status', 'user', (c) => aiStatus(c)),
   r('PATCH', '/api/settings', 'super', (c) => {
     const out = writeSettings(c.db, b(c))
     audit(c.db, { ...by(c), event: 'settings.changed', detail: { keys: Object.keys(b(c)) } })

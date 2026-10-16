@@ -1,7 +1,7 @@
 import type { DB } from './db.ts'
 import * as store from './store.ts'
 import type { Schedule } from './types.ts'
-import { queueRun } from './run.ts'
+import { catchUp, queueRun } from './run.ts'
 import { sendDigests } from './alerts.ts'
 
 /** A few random minutes on every start, so updates never land on the same second twice. */
@@ -36,6 +36,8 @@ export function startScheduler(db: DB) {
         continue
       }
       if (new Date(s.next_run_at) > new Date()) continue
+      // The next start is set first: an update that finds Claude at its limit moves it to the reset.
+      store.setNextRun(db, s.id, nextRun(s)?.toISOString() ?? null)
       try {
         queueRun(
           db,
@@ -47,12 +49,14 @@ export function startScheduler(db: DB) {
             limit: 10,
           },
           'schedule',
+          { scheduleId: s.id },
         )
       } catch {
         /* a brand with no profiles left: skip quietly, the schedule stays */
       }
-      store.setNextRun(db, s.id, nextRun(s)?.toISOString() ?? null)
     }
+    // Comments a usage limit left unsorted, once Claude takes work again.
+    void catchUp(db).catch((e: Error) => console.error(`Catch-up: ${e.message}`))
     // Weekly and monthly summary emails, each sent once when its time comes.
     void sendDigests(db)
   }

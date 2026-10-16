@@ -20,6 +20,7 @@ import { seedFromFile } from './seed.ts'
 import { clientOf, gate, publicHost } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
 import { startScheduler } from '../core/schedule.ts'
+import { AiLimitError, LIMIT_TEXT } from '../core/ai-limit.ts'
 import { fillTikTok } from '../core/fill.ts'
 import { changed, onChange } from '../core/events.ts'
 import { baseHeaders, newNonce, pageCsp, withNonce } from './headers.ts'
@@ -224,6 +225,10 @@ const server = createServer(async (req, res) => {
     }
     send(res, 404, { error: 'No such endpoint.' })
   } catch (e) {
+    // Claude at its usage limit: the message stays a template the dashboard translates, with the
+    // time it can be tried again beside it, shown in the reader's own clock.
+    if (e instanceof AiLimitError)
+      return send(res, 503, { error: LIMIT_TEXT[e.kind], until: e.until.toISOString() })
     const status = e instanceof HttpError ? e.status : 400
     const extra = e instanceof HttpError ? e.extra : undefined
     send(res, status, { ...extra, error: e instanceof Error ? e.message : String(e) })

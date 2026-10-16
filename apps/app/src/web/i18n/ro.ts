@@ -1252,6 +1252,18 @@ export const ro: Dict = {
     'An account needs a network and a username.':
       'Un cont are nevoie de o rețea și de un nume de utilizator.',
     'No such account.': 'Contul nu există.',
+    'Claude is at its usage limit until {time}.':
+      'Claude a atins limita de utilizare până la {time}.',
+    'Claude is busy. It is tried again at {time}.':
+      'Claude este ocupat. Se încearcă din nou la {time}.',
+    'Comments here wait to be sorted; Claude sorts them after {time}.':
+      'Comentariile de aici așteaptă să fie sortate; Claude le sortează după {time}.',
+    'Usage limit': 'Limită de utilizare',
+    'Updates and sorting wait, then start again by themselves.':
+      'Actualizările și sortarea așteaptă, apoi pornesc din nou singure.',
+    'Waits for Claude until {time}': 'Așteaptă Claude până la {time}',
+    Postponed: 'Amânată',
+    'Update postponed': 'Actualizare amânată',
   },
   nouns: {
     event: { one: 'eveniment', few: 'evenimente', other: 'de evenimente' },

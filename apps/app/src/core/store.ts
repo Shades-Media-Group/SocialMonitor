@@ -721,7 +721,7 @@ export function logRun(db: DB, id: number, line: string) {
 export function finishRun(
   db: DB,
   id: number,
-  status: 'ok' | 'error' | 'partial' | 'stopped',
+  status: 'ok' | 'error' | 'partial' | 'stopped' | 'postponed',
   stats: unknown,
   report: string,
 ) {
