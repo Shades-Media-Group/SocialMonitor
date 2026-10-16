@@ -171,6 +171,16 @@ export interface RunScope {
 
 export type ScheduleKind = 'interval' | 'times'
 
+/**
+ * What a schedule reads: 'due', new posts plus fresh numbers for older posts whose turn has come
+ * (see duePosts); 'all', the newest posts again with all their comments. An older 'new' is 'due'.
+ */
+export type ScheduleRange = 'due' | 'all'
+export const scheduleRange = (r: unknown): ScheduleRange => (r === 'all' ? 'all' : 'due')
+
+/** The most posts per profile a scheduled update reads, newest first. */
+export const SCHEDULE_POSTS = 10
+
 export interface Schedule {
   id: number
   brand_id: number
@@ -180,7 +190,7 @@ export interface Schedule {
   /** For 'times': local times of day, "HH:MM". */
   times: string[]
   networks: Network[]
-  range: Range
+  range: ScheduleRange
   enabled: 0 | 1
   next_run_at: string | null
 }

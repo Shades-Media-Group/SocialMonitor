@@ -365,7 +365,7 @@ server.registerTool(
         every_hours: every_hours ?? 24,
         times,
         networks,
-        range: 'new',
+        range: 'due',
         enabled,
       }
       const s = await call<{ id: number }>(

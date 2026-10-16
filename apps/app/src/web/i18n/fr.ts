@@ -747,7 +747,8 @@ export const fr: Dict = {
     'Writing…': 'Rédaction…',
     'Write it again': 'Réécrire',
     'Write it now': 'Rédiger maintenant',
-    'Nothing written yet. Claude writes it only when you ask.': 'Rien d’écrit pour l’instant. Claude ne l’écrit que lorsque vous le demandez.',
+    'Nothing written yet. Claude writes it only when you ask.':
+      'Rien d’écrit pour l’instant. Claude ne l’écrit que lorsque vous le demandez.',
     'The AI is off for this brand. Turn it on in Settings first.':
       'L’IA est désactivée pour cette marque. Activez-la d’abord dans les Réglages.',
     'Nothing to sum up: no comments in the last two weeks.':
@@ -1318,6 +1319,23 @@ export const fr: Dict = {
     'Waits for Claude until {time}': "Attend Claude jusqu'à {time}",
     Postponed: 'Reportée',
     'Update postponed': 'Mise à jour reportée',
+    'Edit on Schedules': 'Modifier dans Planifications',
+    'New posts and fresh numbers': 'Nouvelles publications et chiffres frais',
+    'New posts, plus fresh likes, views and comment counts for older posts: at every update in their first week, weekly for their first month, monthly for their first year, then every three months.':
+      'Les nouvelles publications, plus des mentions J’aime, vues et nombres de commentaires à jour pour les plus anciennes : à chaque mise à jour pendant leur première semaine, chaque semaine pendant leur premier mois, chaque mois pendant leur première année, puis tous les trois mois.',
+    'Nothing runs by itself until a schedule is on. Update by itself, in the brand’s Settings, pauses or resumes all of its schedules. Each start moves by a few random minutes, and networks you are signed in to keep the gap set in Settings.':
+      'Rien ne tourne tout seul tant qu’aucune planification n’est active. Mise à jour automatique, dans les Paramètres de la marque, met en pause ou relance toutes ses planifications. Chaque départ varie de quelques minutes au hasard, et les réseaux où vous êtes connecté gardent l’intervalle défini dans Paramètres.',
+    'Nothing runs until someone presses Update.':
+      'Rien ne tourne tant que personne n’appuie sur Mettre à jour.',
+    Schedule: 'Planification',
+    'Schedules paused.': 'Planifications en pause.',
+    'Schedules resumed.': 'Planifications relancées.',
+    'The newest {n} posts on each network again, with all their comments.':
+      'Les {n} publications les plus récentes de chaque réseau à nouveau, avec tous leurs commentaires.',
+    'Updates that run by themselves. When, which networks and what they read are set on Schedules.':
+      'Des mises à jour qui tournent toutes seules. Quand, sur quels réseaux et ce qu’elles lisent se règle dans Planifications.',
+    'kind is "interval" (every_hours) or "times" (["09:00"]). range is "due" (new posts and fresh numbers) or "all" (the latest again). Add one without an id. next_run_at is read-only.':
+      'kind vaut "interval" (every_hours) ou "times" (["09:00"]). range vaut "due" (nouvelles publications et chiffres frais) ou "all" (les plus récentes, à nouveau). Ajoutez-en une sans id. next_run_at est en lecture seule.',
   },
   nouns: {
     event: { one: 'événement', many: 'd’événements', other: 'événements' },

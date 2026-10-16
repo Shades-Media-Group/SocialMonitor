@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS schedules (
   every_hours REAL,
   times TEXT NOT NULL DEFAULT '[]',
   networks TEXT NOT NULL,
-  range TEXT NOT NULL DEFAULT 'new',
+  range TEXT NOT NULL DEFAULT 'due',
   enabled INTEGER NOT NULL DEFAULT 1,
   next_run_at TEXT
 );
@@ -472,6 +472,8 @@ function migrate(db: DatabaseSync) {
   }
   if (!has('sessions', 'shades_id_token'))
     db.exec('ALTER TABLE sessions ADD COLUMN shades_id_token TEXT')
+  // A schedule for 'new' posts always ran as 'due' (new posts plus the numbers that are due).
+  db.exec("UPDATE schedules SET range = 'due' WHERE range = 'new'")
 }
 
 export const now = () => new Date().toISOString()

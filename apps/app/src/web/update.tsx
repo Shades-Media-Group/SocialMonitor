@@ -196,7 +196,7 @@ export function UpdateSheet({
         .filter((b) => ids.includes(String(b.id)) && b.my_role === 'admin')
         .map((b) => (
           <Row label={brands.length > 1 ? `${t('Automatic')} · ${b.name}` : t('Automatic')}>
-            <AutoUpdate brand={b} />
+            <AutoUpdate brand={b} onLeave={onClose} />
           </Row>
         ))}
       <Row label={t('At most')} hint={t('new posts per profile, newest first')}>
