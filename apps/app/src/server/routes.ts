@@ -48,6 +48,7 @@ import {
   tiktokReady,
 } from '../core/tiktok-api.ts'
 import * as meta from '../core/meta-api.ts'
+import { metaRoute, routeVia } from '../core/meta-public.ts'
 import { deleteSaved, getSaved, listSaved, readSaved, saveReport } from '../core/saved.ts'
 import { draftFromSaved, draftReply, pickEngine, translate } from '../core/analyze.ts'
 import {
@@ -1049,6 +1050,16 @@ export const routes: Route[] = [
   r('GET', '/api/brands/:id/meta', seeBrand, (c) => ({
     ready: meta.metaReady(),
     ...meta.connection(c.db, id(c.params.id)),
+    // How each of its Instagram and Facebook profiles is read, and through whose account.
+    routes: Object.fromEntries(
+      store
+        .listProfiles(c.db, id(c.params.id))
+        .filter((p) => p.network !== 'tiktok')
+        .map((p) => {
+          const route = metaRoute(c.db, p)
+          return [p.network, { route, via: routeVia(c.db, route) }]
+        }),
+    ),
   })),
   r('POST', '/api/brands/:id/meta/connect', adminBrand, (c) => ({
     url: meta.authorizeUrl(id(c.params.id), String((b(c) as { origin?: string }).origin ?? '')),

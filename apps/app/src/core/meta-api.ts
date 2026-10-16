@@ -23,6 +23,8 @@ export const META_SCOPES = [
   'business_management',
   'instagram_basic',
   'instagram_manage_comments',
+  // Business Discovery (other brands' public Instagram posts) asks for it with the two above.
+  'instagram_manage_insights',
 ]
 const REDIRECT = process.env.META_REDIRECT_URI ?? 'https://socialmonitor.shades.md/connect/meta/'
 
@@ -53,23 +55,43 @@ export function authorizeUrl(brandId: number, origin: string) {
 }
 
 interface GraphError {
-  error?: { message?: string; code?: number }
+  error?: { message?: string; code?: number; error_subcode?: number }
 }
 
-async function graph<T>(path: string, params: Record<string, string>): Promise<T> {
+/** Meta answered that the app or the person used up their calls for now (codes 4, 17, 32, 613). */
+export class MetaLimit extends Error {}
+/** Meta refused the request itself: a missing permission, a feature not approved, a wrong id. */
+export class MetaRefused extends Error {
+  constructor(
+    message: string,
+    readonly code: number | undefined,
+    readonly subcode: number | undefined,
+  ) {
+    super(message)
+  }
+}
+
+const LIMIT_CODES = new Set([4, 17, 32, 613])
+
+export async function graph<T>(path: string, params: Record<string, string>): Promise<T> {
   const url = path.startsWith('https://') ? path : `${GRAPH}${path}?${new URLSearchParams(params)}`
   const r = await fetch(url)
   const d = (await r.json()) as T & GraphError
   if (!r.ok || d.error) {
-    if (d.error?.code === 190)
+    const code = d.error?.code
+    if (code === 190)
       throw new Error('The Facebook connection expired: connect again on the About tab.')
-    throw new Error(`Meta: ${d.error?.message ?? r.status}`)
+    if (code !== undefined && LIMIT_CODES.has(code))
+      throw new MetaLimit(
+        "Meta's hourly limit for this app is reached; the next update tries again.",
+      )
+    throw new MetaRefused(`Meta: ${d.error?.message ?? r.status}`, code, d.error?.error_subcode)
   }
   return d
 }
 
 /** Every page of a Graph list, up to a number of items. */
-async function list<T>(path: string, params: Record<string, string>, max: number) {
+export async function list<T>(path: string, params: Record<string, string>, max: number) {
   const out: T[] = []
   let page = await graph<{ data: T[]; paging?: { next?: string } }>(path, params)
   for (;;) {
@@ -216,16 +238,65 @@ export const disconnect = (db: DB, brandId: number) =>
     )
     .run(brandId)
 
-interface FbComment {
-  id: string
-  message?: string
-  created_time?: string
-  like_count?: number
-  parent?: { id: string }
-  from?: { id: string; name: string }
-  attachment?: { media?: { image?: { src?: string } } }
+const SHORTCODE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+
+/**
+ * The id Instagram's own website gives a post, from its shortcode (the part after /p/ or /reel/
+ * in its link). Meta's API has its own ids; keeping the website's means a post read through the
+ * API and later from the web (or the other way round) stays one post with one history.
+ */
+export function webMediaId(shortcode: string | undefined): string | null {
+  const code = shortcode?.slice(0, 11)
+  if (!code || ![...code].every((ch) => SHORTCODE.includes(ch))) return null
+  let id = 0n
+  for (const ch of code) id = id * 64n + BigInt(SHORTCODE.indexOf(ch))
+  return id.toString()
 }
-interface FbPost {
+
+const shortcodeOf = (permalink: string | undefined) =>
+  permalink?.match(/instagram\.com\/(?:[\w.]+\/)?(?:p|reel|reels|tv)\/([\w-]+)/)?.[1]
+
+/** The website's kinds: reels, videos and photos (a carousel counts as photos there too). */
+export const igKind = (x: { media_type?: string; media_product_type?: string }) =>
+  x.media_product_type === 'REELS' ? 'reel' : x.media_type === 'VIDEO' ? 'video' : 'photo'
+
+/** A Facebook Graph post id is "{page}_{post}"; the website reads the post part alone. */
+export const fbPostId = (id: string) => id.split('_').pop() ?? id
+
+export interface IgMedia {
+  id: string
+  caption?: string
+  timestamp?: string
+  permalink?: string
+  shortcode?: string
+  media_type?: string
+  media_product_type?: string
+  media_url?: string
+  thumbnail_url?: string
+  like_count?: number
+  comments_count?: number
+  view_count?: number
+}
+
+/** One Instagram post from the Graph API as SocialMonitor keeps it, without comments. */
+export function igPost(x: IgMedia): CollectedPost {
+  return {
+    ext_id: webMediaId(x.shortcode ?? shortcodeOf(x.permalink)) ?? x.id,
+    url: x.permalink ?? 'https://www.instagram.com/',
+    posted_at: x.timestamp ? new Date(x.timestamp).toISOString() : null,
+    kind: igKind(x),
+    caption: x.caption ?? '',
+    thumb_url: (x.media_type === 'VIDEO' ? x.thumbnail_url : x.media_url) ?? null,
+    // Absent when the owner hides likes: unknown, never zero.
+    likes: x.like_count ?? null,
+    comments_count: x.comments_count ?? null,
+    shares: null,
+    views: x.view_count ?? null,
+    comments: [],
+  }
+}
+
+export interface FbPost {
   id: string
   message?: string
   created_time?: string
@@ -236,6 +307,36 @@ interface FbPost {
   reactions?: { summary?: { total_count?: number } }
   comments?: { summary?: { total_count?: number } }
 }
+
+export const FB_POST_FIELDS =
+  'id,message,created_time,permalink_url,full_picture,status_type,shares,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0)'
+
+/** One Facebook Page post from the Graph API as SocialMonitor keeps it, without comments. */
+export function fbPost(x: FbPost): CollectedPost {
+  return {
+    ext_id: fbPostId(x.id),
+    url: x.permalink_url ?? `https://www.facebook.com/${x.id}`,
+    posted_at: x.created_time ? new Date(x.created_time).toISOString() : null,
+    kind: x.status_type?.includes('video') ? 'video' : 'post',
+    caption: x.message ?? '',
+    thumb_url: x.full_picture ?? null,
+    likes: x.reactions?.summary?.total_count ?? null,
+    comments_count: x.comments?.summary?.total_count ?? null,
+    shares: x.shares?.count ?? 0,
+    views: null,
+    comments: [],
+  }
+}
+
+interface FbComment {
+  id: string
+  message?: string
+  created_time?: string
+  like_count?: number
+  parent?: { id: string }
+  from?: { id: string; name: string }
+  attachment?: { media?: { image?: { src?: string } } }
+}
 interface IgComment {
   id: string
   text?: string
@@ -243,17 +344,6 @@ interface IgComment {
   username?: string
   like_count?: number
   replies?: { data?: IgComment[] }
-}
-interface IgMedia {
-  id: string
-  caption?: string
-  timestamp?: string
-  permalink?: string
-  media_type?: string
-  media_url?: string
-  thumbnail_url?: string
-  like_count?: number
-  comments_count?: number
 }
 
 /**
@@ -273,15 +363,10 @@ export async function metaCollect(
   if (profile.network === 'facebook') {
     const posts = await list<FbPost>(
       `/${r.open_id}/posts`,
-      {
-        ...token,
-        fields:
-          'id,message,created_time,permalink_url,full_picture,status_type,shares,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0)',
-        limit: String(max),
-      },
+      { ...token, fields: FB_POST_FIELDS, limit: String(max) },
       max,
     )
-    const chosen = pick(posts, (x) => x.id, opt)
+    const chosen = pick(posts, (x) => fbPostId(x.id), opt)
     const out: CollectedPost[] = []
     for (const [i, x] of chosen.entries()) {
       if (opt.stopped?.()) break
@@ -301,16 +386,7 @@ export async function metaCollect(
           )
         : []
       out.push({
-        ext_id: x.id,
-        url: x.permalink_url ?? `https://www.facebook.com/${x.id}`,
-        posted_at: x.created_time ? new Date(x.created_time).toISOString() : null,
-        kind: x.status_type?.includes('video') ? 'video' : 'post',
-        caption: x.message ?? '',
-        thumb_url: x.full_picture ?? null,
-        likes: x.reactions?.summary?.total_count ?? null,
-        comments_count: x.comments?.summary?.total_count ?? null,
-        shares: x.shares?.count ?? 0,
-        views: null,
+        ...fbPost(x),
         comments: comments.map((c): CollectedComment => ({
           ext_id: c.id,
           parent_ext_id: c.parent?.id ?? null,
@@ -331,12 +407,12 @@ export async function metaCollect(
     {
       ...token,
       fields:
-        'id,caption,timestamp,permalink,media_type,media_url,thumbnail_url,like_count,comments_count',
+        'id,caption,timestamp,permalink,shortcode,media_type,media_product_type,media_url,thumbnail_url,like_count,comments_count',
       limit: String(max),
     },
     max,
   )
-  const chosen = pick(media, (x) => x.id, opt)
+  const chosen = pick(media, (x) => igPost(x).ext_id, opt)
   const out: CollectedPost[] = []
   for (const [i, x] of chosen.entries()) {
     if (opt.stopped?.()) break
@@ -363,21 +439,7 @@ export async function metaCollect(
       author_url: c.username ? `https://www.instagram.com/${c.username}/` : null,
     })
     out.push({
-      ext_id: x.id,
-      url: x.permalink ?? `https://www.instagram.com/`,
-      posted_at: x.timestamp ? new Date(x.timestamp).toISOString() : null,
-      kind:
-        x.media_type === 'VIDEO'
-          ? 'video'
-          : x.media_type === 'CAROUSEL_ALBUM'
-            ? 'carousel'
-            : 'image',
-      caption: x.caption ?? '',
-      thumb_url: (x.media_type === 'VIDEO' ? x.thumbnail_url : x.media_url) ?? null,
-      likes: x.like_count ?? null,
-      comments_count: x.comments_count ?? null,
-      shares: null,
-      views: null,
+      ...igPost(x),
       comments: top.flatMap((c) => [
         comment(c, null),
         ...(c.replies?.data ?? []).map((rep) => comment(rep, c.id)),

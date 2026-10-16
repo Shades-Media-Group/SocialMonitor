@@ -2,7 +2,7 @@ import { autoSendBad, instantAlerts } from './alerts.ts'
 import { saveImage } from './media.ts'
 import { fillTikTok } from './fill.ts'
 import { officialFigures } from './tiktok-api.ts'
-import { metaCollect, metaConnected } from './meta-api.ts'
+import { metaRoute, officialCollect } from './meta-public.ts'
 import type { Page } from 'playwright'
 import { join } from 'node:path'
 import type { DB } from './db.ts'
@@ -161,8 +161,10 @@ async function execute(db: DB, { runId, scope, trigger, scheduleId }: Job) {
           total,
         })
       progress()
-      // A Page connected through Meta is read through its API: no browser, no signed-in gap.
-      const viaMeta = metaConnected(db, brand.id, p.network)
+      // Meta's official API reads a connected Page, or another brand's public Instagram (Business
+      // Discovery) and, once approved, Facebook Page (PPCA): no browser, no signed-in gap.
+      const route = metaRoute(db, p)
+      const viaMeta = route !== 'browser'
       const waitUntil = viaMeta ? null : gapUntil(db, p)
       const readComments = !waitUntil
       if (waitUntil) {
@@ -196,9 +198,22 @@ async function execute(db: DB, { runId, scope, trigger, scheduleId }: Job) {
           step: progress,
           stopped,
         }
-        const posts =
-          (viaMeta ? await metaCollect(db, p, opt) : null) ??
-          (await collectors[p.network].collect(page!, p, opt))
+        const official = viaMeta
+          ? await officialCollect(db, p, opt, route).catch((e: Error) => {
+              // A connected Page's errors are the brand's to fix; for the public routes, the
+              // browser takes over for this update, as it read before.
+              if (route === 'connected') throw e
+              log(`${p.network} @${p.handle}: ${e.message} Reading it from the web this time.`)
+              return null
+            })
+          : null
+        if (!official && viaMeta && route !== 'connected') {
+          const gap = gapUntil(db, p)
+          opt.comments = !gap
+          if (gap) log(`${p.network}: inside the ${settings.gap_hours}-hour gap, so only counts.`)
+          page ??= (await openBrowser()).pages()[0] ?? (await (await openBrowser()).newPage())
+        }
+        const posts = official ?? (await collectors[p.network].collect(page!, p, opt))
         if (p.network === 'tiktok')
           await officialFigures(db, p, posts, log).catch((e: Error) =>
             log(`TikTok connection: ${e.message}`),
