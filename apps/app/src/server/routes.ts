@@ -1094,7 +1094,7 @@ export const routes: Route[] = [
       )
     const c = db
       .prepare(
-        `SELECT c.text, c.author, c.category, p.caption, b.id AS brand_id, b.name, b.industry, b.description
+        `SELECT c.text, c.author, c.category, p.caption, p.network, b.id AS brand_id, b.name, b.industry, b.description
          FROM comments c JOIN posts p ON p.id = c.post_id
          JOIN profiles pr ON pr.id = p.profile_id JOIN brands b ON b.id = pr.brand_id WHERE c.id = ?`,
       )
@@ -1104,6 +1104,7 @@ export const routes: Route[] = [
           author: string
           category: string | null
           caption: string
+          network: Network
           brand_id: number
           name: string
           industry: string | null
@@ -1114,7 +1115,9 @@ export const routes: Route[] = [
     const about = [c.industry, c.description].filter(Boolean).join('; ')
     // With saved replies, Claude picks the one that fits and fills it in; else a fresh draft.
     const saved = candidates(listReplies(db, c.brand_id), c.category)
-    if (!saved.length) return { draft: await draftReply(engine, c.name, about, c.caption, c.text) }
+    const use = { db, task: 'reply' as const, brandId: c.brand_id, network: c.network, items: 1 }
+    if (!saved.length)
+      return { draft: await draftReply(engine, c.name, about, c.caption, c.text, use) }
     const pick = await draftFromSaved(
       engine,
       c.name,
@@ -1122,6 +1125,7 @@ export const routes: Route[] = [
       c.caption,
       { text: c.text, author: c.author, kind: c.category },
       saved,
+      use,
     )
     const name = c.author.replace(/^@/, '')
     return {
@@ -1136,13 +1140,24 @@ export const routes: Route[] = [
         'No AI to translate with: sign in to Claude Code, or set ANTHROPIC_API_KEY in .env.',
       )
     const commentId = id(params.id)
-    const c = db.prepare('SELECT text, translation FROM comments WHERE id = ?').get(commentId) as
-      { text: string; translation: string | null } | undefined
+    const c = db
+      .prepare(
+        `SELECT c.text, c.translation, p.network, pr.brand_id FROM comments c
+         JOIN posts p ON p.id = c.post_id JOIN profiles pr ON pr.id = p.profile_id WHERE c.id = ?`,
+      )
+      .get(commentId) as
+      { text: string; translation: string | null; network: Network; brand_id: number } | undefined
     if (!c) throw new Error('No such comment.')
     // The English translation is kept; other languages are made on request.
     const lang = String((body as { lang?: string }).lang ?? 'en')
     if (lang === 'en' && c.translation) return { translation: c.translation }
-    const translation = await translate(engine, c.text, lang)
+    const translation = await translate(engine, c.text, lang, {
+      db,
+      task: 'translate',
+      brandId: c.brand_id,
+      network: c.network,
+      items: 1,
+    })
     if (lang === 'en')
       db.prepare('UPDATE comments SET translation = ? WHERE id = ?').run(translation, commentId)
     return { translation }

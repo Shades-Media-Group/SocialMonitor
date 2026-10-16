@@ -159,7 +159,11 @@ export async function suggestIdeas(
   if (!input) throw new Error('Ideas need at least 5 posts from the last 90 days. Run an update.')
   const about = [brand.industry, brand.description].filter(Boolean).join('; ')
   const prompt = PROMPT(`${brand.name}${about ? ` (${clip(about, 240)})` : ''}`)
-  const text = engine === 'claude' ? await viaClaude(prompt, input) : await viaApi(prompt, input)
+  const use = { db, task: 'ideas' as const, brandId }
+  const text =
+    engine === 'claude'
+      ? await viaClaude(prompt, input, [], use)
+      : await viaApi(prompt, input, [], use)
   const ideas = parseIdeas(text)
   if (!ideas.length) throw new Error('Claude answered without ideas. Try again.')
   const at = now()

@@ -284,6 +284,27 @@ CREATE TABLE IF NOT EXISTS passkeys (
   last_used_at TEXT
 );
 CREATE INDEX IF NOT EXISTS passkeys_user ON passkeys(user_id);
+-- Each AI call (core/usage.ts): which brand and task, the tokens and the API-equivalent price in
+-- USD. Only ever added to; no foreign key, so a removed brand's history stays for the Admin tab.
+CREATE TABLE IF NOT EXISTS ai_usage (
+  id INTEGER PRIMARY KEY,
+  at TEXT NOT NULL,
+  brand_id INTEGER,
+  task TEXT NOT NULL,
+  network TEXT,
+  engine TEXT NOT NULL CHECK (engine IN ('claude','api')),
+  model TEXT NOT NULL,
+  input_tokens INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cache_read_tokens INTEGER NOT NULL DEFAULT 0,
+  cache_write_tokens INTEGER NOT NULL DEFAULT 0,
+  cost_usd REAL NOT NULL DEFAULT 0,
+  items INTEGER NOT NULL DEFAULT 0,
+  duration_ms INTEGER
+);
+CREATE INDEX IF NOT EXISTS ai_usage_brand ON ai_usage(brand_id, at);
+CREATE TRIGGER IF NOT EXISTS ai_usage_no_update BEFORE UPDATE ON ai_usage
+BEGIN SELECT RAISE(ABORT, 'AI usage is append-only.'); END;
 `
 
 export type DB = DatabaseSync
