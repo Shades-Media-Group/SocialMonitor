@@ -1,6 +1,12 @@
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { DatabaseSync } from 'node:sqlite'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { openDb } from './db.ts'
 import { viaApi } from './analyze.ts'
+import { aiStep, sortPending } from './run.ts'
+import { addBrand, listProfiles, savePost, setSetting, startRun } from './store.ts'
 import { apiCost, fromApi, fromClaudeCode, recordUsage } from './usage.ts'
 
 afterEach(() => {
@@ -109,6 +115,116 @@ describe('AI usage', () => {
     expect(row.cost_usd).toBeCloseTo((2000 * 0.1 + 30 * 0.5) / 1e6, 12)
     // Append-only.
     expect(() => db.exec('UPDATE ai_usage SET cost_usd = 0')).toThrow(/append-only/)
+    vi.unstubAllEnvs()
+  })
+
+  it('adds run_id to an older database, keeping its rows and the append-only rule', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'sm-usage-'))
+    const file = join(dir, 'old.db')
+    const old = new DatabaseSync(file)
+    old.exec(`CREATE TABLE ai_usage (id INTEGER PRIMARY KEY, at TEXT NOT NULL, brand_id INTEGER,
+      task TEXT NOT NULL, network TEXT, engine TEXT NOT NULL, model TEXT NOT NULL,
+      input_tokens INTEGER NOT NULL DEFAULT 0, output_tokens INTEGER NOT NULL DEFAULT 0,
+      cache_read_tokens INTEGER NOT NULL DEFAULT 0, cache_write_tokens INTEGER NOT NULL DEFAULT 0,
+      cost_usd REAL NOT NULL DEFAULT 0, items INTEGER NOT NULL DEFAULT 0, duration_ms INTEGER);
+    CREATE TRIGGER ai_usage_no_update BEFORE UPDATE ON ai_usage
+    BEGIN SELECT RAISE(ABORT, 'AI usage is append-only.'); END;
+    INSERT INTO ai_usage (at, task, engine, model) VALUES ('2026-10-01T00:00:00.000Z', 'summary', 'api', 'm');
+    CREATE TABLE runs (id INTEGER PRIMARY KEY, trigger TEXT NOT NULL, scope TEXT NOT NULL,
+      started_at TEXT NOT NULL, finished_at TEXT, status TEXT NOT NULL DEFAULT 'running',
+      log TEXT NOT NULL DEFAULT '', stats TEXT, report TEXT);
+    INSERT INTO runs (trigger, scope, started_at) VALUES ('manual', '{}', '2026-10-01T00:00:00.000Z');`)
+    old.close()
+    const db = openDb(file)
+    try {
+      expect(db.prepare('SELECT task, run_id FROM ai_usage').all()).toEqual([
+        { task: 'summary', run_id: null },
+      ])
+      // The update from before: no tally, so the Admin tab says it was not recorded.
+      expect(db.prepare('SELECT tally FROM runs').get()).toEqual({ tally: null })
+      expect(() => db.exec('UPDATE ai_usage SET run_id = 1')).toThrow(/append-only/)
+      recordUsage({ db, task: 'reply', runId: 7 }, fromClaudeCode(claudeJson))
+      expect(db.prepare('SELECT run_id FROM ai_usage WHERE task = ?').get('reply')).toEqual({
+        run_id: 7,
+      })
+    } finally {
+      db.close()
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('ties every AI call an update makes to it, and leaves calls outside updates untied', async () => {
+    const db = openDb(':memory:')
+    vi.stubEnv('ANTHROPIC_API_KEY', 'test-key')
+    setSetting(db, 'settings', JSON.stringify({ analyzer: 'api' }))
+    const brand = addBrand(db, 'Tavelo', ['https://www.instagram.com/tavelo'])
+    const [profile] = listProfiles(db, brand.id)
+    const post = (ext: string, comments: string[]) =>
+      savePost(db, profile!, {
+        ext_id: ext,
+        url: `https://www.instagram.com/p/${ext}`,
+        posted_at: null,
+        kind: 'post',
+        caption: 'Summer bags',
+        thumb_url: null,
+        likes: 1,
+        comments_count: comments.length,
+        shares: 0,
+        views: 0,
+        comments: comments.map((text, i) => ({
+          ext_id: `${ext}-${i}`,
+          parent_ext_id: null,
+          author: `fan${i}`,
+          text,
+          likes: 0,
+          posted_at: null,
+        })),
+      }).post
+    const first = post('1', ['love it', 'too pricey'])
+    // A campaign with no hints, so Claude is asked where the post belongs.
+    db.prepare(
+      `INSERT INTO campaigns (brand_id, name, created_at, updated_at) VALUES (?, 'Autumn', ?, ?)`,
+    ).run(brand.id, '2026-10-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z')
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        const body = String(init.body)
+        const text = body.includes('Its campaigns')
+          ? '1|-'
+          : body.includes('Sort each comment')
+            ? '1|praise|0|0|happy|-|likes it\n2|complaint|1|1|frustrated|-|price'
+            : 'A summer bag on a beach.'
+        return Response.json({
+          model: 'claude-haiku-5-5',
+          content: [{ text }],
+          usage: { input_tokens: 100, output_tokens: 10 },
+        })
+      }),
+    )
+    const runId = startRun(db, 'manual', {
+      brandIds: [brand.id],
+      networks: ['instagram'],
+      range: 'new',
+      limit: 10,
+    })
+    await aiStep(db, [{ postId: first.id, brand: 'Tavelo' }], () => {}, undefined, runId)
+    // Sort now, outside any update.
+    post('2', ['when is the sale?'])
+    await sortPending(db)
+    const rows = db.prepare('SELECT task, brand_id, run_id FROM ai_usage ORDER BY id').all() as {
+      task: string
+      brand_id: number
+      run_id: number | null
+    }[]
+    expect(rows.map((r) => [r.task, r.run_id])).toEqual([
+      ['describe-post', runId],
+      ['sort-comments', runId],
+      ['campaign-tags', runId],
+      ['describe-post', null],
+      ['sort-comments', null],
+      ['campaign-tags', null],
+    ])
+    expect(rows.every((r) => r.brand_id === brand.id)).toBe(true)
     vi.unstubAllEnvs()
   })
 

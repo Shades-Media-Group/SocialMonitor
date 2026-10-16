@@ -158,6 +158,7 @@ async function execute(db: DB, runId: number, scope: RunScope) {
           await officialFigures(db, p, posts, log).catch((e: Error) =>
             log(`TikTok connection: ${e.message}`),
           )
+        const read = { posts: posts.length, comments: 0, new: 0 }
         for (const cp of posts) {
           cp.thumb_url = await saveImage(p.network, '', cp.ext_id, cp.thumb_url)
           for (const c of cp.comments) {
@@ -166,8 +167,12 @@ async function execute(db: DB, runId: number, scope: RunScope) {
           }
           const { post, newComments } = store.savePost(db, p, cp)
           touched.push({ postId: post.id, brand: brand.name, brandId: brand.id })
+          read.comments += cp.comments.length
+          read.new += newComments
           if (newComments) log(`  ${newComments} new comments on ${post.url}`)
         }
+        // What this update read for the brand, for the Admin tab's history of updates.
+        store.tallyRun(db, runId, brand.id, read)
         store.markProfile(db, p.id, 'ok', null, opt.usedSession)
       } catch (e) {
         const msg = (e as Error).message
@@ -192,8 +197,12 @@ async function execute(db: DB, runId: number, scope: RunScope) {
     const off = aiOff(db)
     const todo = [...posts.values()].filter((p) => !off.has(p.brandId))
     if (!stopped() && todo.length)
-      await aiStep(db, todo, log, (done, total) =>
-        store.setProgress(db, runId, { step: 'sort', done, total }),
+      await aiStep(
+        db,
+        todo,
+        log,
+        (done, total) => store.setProgress(db, runId, { step: 'sort', done, total }),
+        runId,
       )
   } catch (e) {
     problems.push((e as Error).message)
@@ -243,12 +252,16 @@ async function execute(db: DB, runId: number, scope: RunScope) {
   log('Done.')
 }
 
-/** Describes posts without a description and sorts unsorted comments, post by post. */
-async function aiStep(
+/**
+ * Describes posts without a description and sorts unsorted comments, post by post. Every AI call
+ * carries runId, the update it is part of; the Sort now button passes none.
+ */
+export async function aiStep(
   db: DB,
   touched: { postId: number; brand: string }[],
   log: (line: string) => void,
   step?: (done: number, total: number) => void,
+  runId?: number,
 ) {
   const engine = pickEngine(getSettings(db))
   if (!engine)
@@ -265,6 +278,7 @@ async function aiStep(
           { brand_id: number } | undefined
       )?.brand_id,
       network: post.network,
+      runId,
     }
     const unsorted = store.listComments(db, { postId, stale: true, others: true, limit: 2000 })
     try {
@@ -317,7 +331,12 @@ async function aiStep(
       db,
       touched.map((x) => x.postId),
       (brand, campaigns, posts, brandId) =>
-        pickCampaigns(engine, brand, campaigns, posts, { db, task: 'campaign-tags', brandId }),
+        pickCampaigns(engine, brand, campaigns, posts, {
+          db,
+          task: 'campaign-tags',
+          brandId,
+          runId,
+        }),
     )
     if (placed) log(`Claude placed ${placed} posts in campaigns.`)
   } catch (e) {

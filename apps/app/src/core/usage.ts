@@ -29,6 +29,8 @@ export interface UsageContext {
   network?: Network | null
   /** How many comments or posts the call covered. */
   items?: number
+  /** The update (runs.id) the call was made for; left out for calls outside updates. */
+  runId?: number | null
 }
 
 export interface Usage {
@@ -128,8 +130,8 @@ export function recordUsage(ctx: UsageContext | undefined, u: Usage | null) {
     ctx.db
       .prepare(
         `INSERT INTO ai_usage (at, brand_id, task, network, engine, model, input_tokens, output_tokens,
-           cache_read_tokens, cache_write_tokens, cost_usd, items, duration_ms)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           cache_read_tokens, cache_write_tokens, cost_usd, items, duration_ms, run_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         now(),
@@ -145,6 +147,7 @@ export function recordUsage(ctx: UsageContext | undefined, u: Usage | null) {
         u.costUsd,
         ctx.items ?? 0,
         u.durationMs,
+        ctx.runId ?? null,
       )
   } catch (e) {
     console.error(`Could not record AI usage: ${(e as Error).message}`)
