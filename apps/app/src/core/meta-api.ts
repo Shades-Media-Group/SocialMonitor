@@ -62,12 +62,12 @@ interface GraphError {
 export class MetaLimit extends Error {}
 /** Meta refused the request itself: a missing permission, a feature not approved, a wrong id. */
 export class MetaRefused extends Error {
-  constructor(
-    message: string,
-    readonly code: number | undefined,
-    readonly subcode: number | undefined,
-  ) {
+  readonly code: number | undefined
+  readonly subcode: number | undefined
+  constructor(message: string, code: number | undefined, subcode: number | undefined) {
     super(message)
+    this.code = code
+    this.subcode = subcode
   }
 }
 

@@ -8,6 +8,7 @@
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
