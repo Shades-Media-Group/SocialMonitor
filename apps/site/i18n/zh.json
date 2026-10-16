@@ -150,7 +150,7 @@
   "privacy": {
     "title": "隐私政策 | SocialMonitor",
     "description": "Shades Media Group 不接收任何数据。SocialMonitor 把帖子和评论保存在你的电脑上；只有文字和封面图会通过你的密钥发送给 Claude。",
-    "updated": "最后更新：2026 年 10 月 13 日",
+    "updated": "最后更新：2026 年 10 月 16 日",
     "intro": "SocialMonitor 是一款在你自己电脑上运行的应用，由 Shades Media Group 制作。本政策适用于该应用和本网站。",
     "short": "Shades Media Group 不接收任何数据。SocialMonitor 收集的一切都留在你的电脑上。唯一的例外是它请 Claude 读取的内容，会通过你自己的账户发送给 Anthropic。",
     "appTitle": "应用收集什么，以及去向",
@@ -162,6 +162,7 @@
     "appMeta": "<strong>如果你连接品牌自己的 Facebook 主页，</strong>Facebook 会带着一次性代码把你送回本网站的 <code>/connect/meta/</code> 页面，该页面直接把代码交给你电脑上的 SocialMonitor，不保留任何内容。随后 SocialMonitor 通过 Meta 的 API 读取该主页及其关联 Instagram 账号的帖子和评论，并只在你的电脑上保存它们和访问令牌。",
     "appHibp": "<strong>当有人设置密码时，</strong>只有其 SHA-1 指纹的前五个字符会发送到 <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned</a>，与已知泄露进行比对。比对在你的电脑上完成，密码不会离开电脑。",
     "appMail": "<strong>登录邮件：</strong>如果你设置了邮件，它只会通过你配置的邮件服务器，向你邀请的人发送一个验证码或一个链接。",
+    "appShades": "<strong>Shades 登录（Shades login）</strong>只用于 Shades Media Group 自己的安装：只要没有填写 <code>SHADES_ID_*</code> 设置，它就保持关闭，因此你自己运行的副本不会向 Shades ID 发送任何内容。在开启的地方，浏览器会前往 Shades ID（id.shades.md）登录，SocialMonitor 会收到一个签名的 ID 令牌，其中有此人账户的固定 ID、邮箱、姓名和用户名，以及第二步是如何完成的。它把这个 ID 和账户一起保存（新用户的账户还会记下邮箱和姓名），并把 ID 令牌随会话保存，只用于同时退出 Shades ID。除此之外不共享任何内容。",
     "appReports": "<strong>报告和导出文件</strong>由你保存，你放在哪里，它们就在哪里。",
     "dutiesTitle": "你的责任",
     "duties": "评论属于个人数据。如果你为某个组织运行 SocialMonitor，该组织就是这些数据的控制者。只关注你有理由关注的主页，数据保留时间不要超过所需（Settings → Keep data for），并遵守各网络的条款。删除一个品牌，即可删除它的所有帖子和评论。",

@@ -150,7 +150,7 @@
   "privacy": {
     "title": "Informativa sulla privacy | SocialMonitor",
     "description": "Shades Media Group non riceve nulla. SocialMonitor tiene post e commenti sul tuo computer; solo testi e copertine vanno a Claude, con la tua chiave.",
-    "updated": "Ultimo aggiornamento: 13 ottobre 2026",
+    "updated": "Ultimo aggiornamento: 16 ottobre 2026",
     "intro": "SocialMonitor è un’app che esegui sul tuo computer, creata da Shades Media Group. Questa informativa copre l’app e questo sito.",
     "short": "Shades Media Group non riceve nulla. Tutto ciò che SocialMonitor raccoglie resta sul tuo computer. L’unica eccezione è ciò che chiede a Claude di leggere, che va ad Anthropic tramite il tuo account.",
     "appTitle": "Cosa raccoglie l’app e dove va",
@@ -162,6 +162,7 @@
     "appMeta": "<strong>Se colleghi la pagina Facebook di un marchio,</strong> Facebook ti riporta alla pagina <code>/connect/meta/</code> di questo sito con un codice monouso, che lo passa direttamente a SocialMonitor sul tuo computer senza conservare nulla. SocialMonitor legge poi i post e i commenti della pagina e dell'account Instagram collegato tramite l'API di Meta e li conserva, insieme al token di accesso, solo sul tuo computer.",
     "appHibp": "<strong>Quando qualcuno sceglie una password,</strong> solo i primi cinque caratteri della sua impronta SHA-1 vanno a <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned</a> per il confronto con le violazioni note. Il confronto avviene sul tuo computer, quindi la password non lo lascia mai.",
     "appMail": "<strong>Le email di accesso,</strong> se configuri l'email, portano solo un codice o un link alle persone che inviti, attraverso il server di posta che configuri.",
+    "appShades": "<strong>L'accesso con Shades (Shades login)</strong> è solo per l'installazione di Shades Media Group: resta spento finché le impostazioni <code>SHADES_ID_*</code> non sono compilate, quindi una copia che esegui tu non invia nulla a Shades ID. Dove è attivo, il browser va su Shades ID (id.shades.md) per accedere e SocialMonitor riceve un token di identità firmato con l'id stabile dell'account della persona, la sua email, il nome e il nome utente, e il modo in cui è stato fatto il secondo passaggio. Salva quell'id con l'account (l'account di una persona nuova riceve anche l'email e il nome) e tiene il token di identità con la sessione solo per uscire anche da Shades ID. Nient'altro viene condiviso.",
     "appReports": "<strong>Report ed esportazioni</strong> sono file che salvi tu; vanno dove li metti.",
     "dutiesTitle": "Le tue responsabilità",
     "duties": "I commenti sono dati personali. Se usi SocialMonitor per un’organizzazione, è lei il titolare di quei dati. Segui solo profili che hai un motivo di seguire, conserva i dati solo per il tempo necessario (Settings → Keep data for) e rispetta i termini dei social. Elimina un brand per eliminare tutti i suoi post e commenti.",

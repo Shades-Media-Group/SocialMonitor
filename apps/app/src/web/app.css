@@ -1743,6 +1743,13 @@ a .sm-hit {
     margin-bottom: 44px;
   }
 }
+/* The account on the no-access screen: Gradient's chip, shown, not tapped. */
+.g-auth-who.sm-auth-who--still {
+  cursor: default;
+}
+.g-auth-who.sm-auth-who--still:hover {
+  background: var(--g-surface);
+}
 
 /* People */
 .sm-top__link {

@@ -464,6 +464,14 @@ function migrate(db: DatabaseSync) {
   // What an update read, per brand id: {"12": {"posts": 8, "comments": 140, "new": 22}}. Set to
   // {} when it starts; null marks updates from before reads and AI calls were tied to them.
   if (!has('runs', 'tally')) db.exec('ALTER TABLE runs ADD COLUMN tally TEXT')
+  // Shades login: the Shades ID subject a person is linked to (one each), and the ID token a
+  // session came with, kept server-side for signing out at Shades ID.
+  if (!has('users', 'shades_sub')) {
+    db.exec('ALTER TABLE users ADD COLUMN shades_sub TEXT')
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS users_shades_sub ON users(shades_sub)')
+  }
+  if (!has('sessions', 'shades_id_token'))
+    db.exec('ALTER TABLE sessions ADD COLUMN shades_id_token TEXT')
 }
 
 export const now = () => new Date().toISOString()

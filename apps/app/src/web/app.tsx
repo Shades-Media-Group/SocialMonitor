@@ -16,7 +16,7 @@ import { Home } from './home.tsx'
 import { BrandPage } from './brand-page.tsx'
 import { PrintBad, PrintCampaign, PrintReport } from './print.tsx'
 import type { AuthInfo, Me } from './auth.tsx'
-import { AuthScreen, linkFromPath } from './auth.tsx'
+import { AuthScreen, NoAccess, linkFromPath, signOut } from './auth.tsx'
 import { People } from './people.tsx'
 import { Compare } from './compare.tsx'
 import { Activity } from './activity.tsx'
@@ -159,6 +159,8 @@ export function App() {
   }
   if (!info.user || link)
     return <AuthScreen info={info} onIn={(user) => setInfo({ ...info, user, setup: false })} />
+  // No brand and not a super admin: nothing to show until a super admin gives a role.
+  if (!info.user.super && !info.user.memberships.length) return <NoAccess me={info.user} />
   return <Dashboard me={info.user} />
 }
 
@@ -396,13 +398,7 @@ function Dashboard({ me }: { me: Me }) {
               items={[
                 { label: me.name || me.email, onSelect: () => setSettingsOpen(true) },
                 { label: t('Settings'), onSelect: () => setSettingsOpen(true) },
-                {
-                  label: t('Sign out'),
-                  onSelect: () =>
-                    api
-                      .post('/api/auth/logout')
-                      .then(() => dispatchEvent(new Event('sm-signed-out'))),
-                },
+                { label: t('Sign out'), onSelect: () => void signOut() },
               ]}
             >
               <span class="sm-nav__avatar" aria-hidden="true">
@@ -519,9 +515,7 @@ function Dashboard({ me }: { me: Me }) {
               class="sm-navpanel__out"
               type="button"
               title={me.name || me.email}
-              onClick={() =>
-                api.post('/api/auth/logout').then(() => dispatchEvent(new Event('sm-signed-out')))
-              }
+              onClick={() => void signOut()}
             >
               {t('Sign out')}
             </button>

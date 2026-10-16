@@ -1,4 +1,4 @@
-import { useId, useState } from 'preact/hooks'
+import { useEffect, useId, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { startAuthentication } from '@simplewebauthn/browser'
 import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser'
@@ -16,6 +16,8 @@ export interface Me {
   prefs?: Record<string, unknown>
   /** A super admin without a passkey or authenticator yet. */
   needs_second?: boolean
+  /** This session came from Shades login. */
+  shades?: boolean
 }
 /** What the password step answers: a ticket, and the second steps besides the emailed code. */
 interface Ticket {
@@ -116,7 +118,42 @@ export interface AuthInfo {
   setup: boolean
   local: boolean
   mail: boolean
+  /** Shades login is configured, so the sign-in page offers it. */
+  shades?: boolean
 }
+
+/** Why a Shades login came back to the sign-in page, as the callback names it (?shades=…). */
+const SHADES_WHY: Record<string, string> = {
+  failed: 'Shades login did not work. Try again.',
+  expired: 'Shades login took too long. Try again.',
+  unavailable: 'Shades ID cannot be reached right now. Try again in a moment.',
+  cancelled: 'Shades login was cancelled.',
+  domain: 'Shades login is only for @shades.md accounts.',
+  unverified: 'Confirm your email at Shades ID first, then try again.',
+  blocked: 'This account is blocked. Ask a super admin.',
+  conflict: 'This email belongs to another Shades account here. Ask a super admin.',
+  rate: 'Too many tries. Wait 15 minutes and try again.',
+}
+/** The reason in the address, once: it is taken out so a reload doesn't show it again. */
+function shadesReason() {
+  const why = new URLSearchParams(location.search).get('shades')
+  if (!why) return null
+  history.replaceState(null, '', location.pathname + location.hash)
+  return t(SHADES_WHY[why] ?? SHADES_WHY.failed!)
+}
+/** A Shades login waiting for SocialMonitor's own second step: its ticket, from #shades=…. */
+function shadesTicket() {
+  const m = /^#shades=([\w-]+)$/.exec(location.hash)
+  if (m) history.replaceState(null, '', location.pathname + location.search)
+  return m?.[1] ?? null
+}
+
+/** Signs out; a session from Shades login also signs out at Shades ID, which then comes back here. */
+export const signOut = () =>
+  api.post<{ logout?: string }>('/api/auth/logout').then((r) => {
+    if (r.logout) location.assign(r.logout)
+    else dispatchEvent(new Event('sm-signed-out'))
+  })
 
 /** A link from an email: /invite/<token> or /reset/<token> (older emails: #/invite/<token>). */
 export function linkFromPath() {
@@ -311,12 +348,31 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
     email: '',
   })
   const [ticket, setTicket] = useState<Ticket | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  // Why a Shades login came back, if it did: shown once, and never marks the password wrong.
+  const [why] = useState(shadesReason)
+  const [error, setError] = useState<string | null>(why)
   const [busy, setBusy] = useState(false)
   const [resent, setResent] = useState(false)
   // The cursor starts where typing begins: the password when the login is remembered.
   const [known] = useState(() => !!f.login)
   const set = (k: keyof typeof f) => (e: Event) => setF({ ...f, [k]: value(e) })
+
+  // Back from Shades login without Shades ID's second step: SocialMonitor's own comes next.
+  useEffect(() => {
+    const id = shadesTicket()
+    if (!id) return
+    setBusy(true)
+    api
+      .post<Ticket & { login: string; keep: boolean }>('/api/auth/shades/ticket', { ticket: id })
+      .then((r) => {
+        setTicket(r)
+        setF((x) => ({ ...x, login: r.login, keep: r.keep, password: '', code: '' }))
+        if (r.second) setSecond(firstSecond(r.second))
+        setStep(r.second ? 'second' : 'code')
+      })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setBusy(false))
+  }, [])
 
   const go = (fn: () => Promise<void>) => async (e: Event) => {
     e.preventDefault()
@@ -775,7 +831,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
         label={t('Password')}
         required
         autocomplete="current-password"
-        aria-invalid={error ? true : undefined}
+        aria-invalid={error && error !== why ? true : undefined}
         value={f.password}
         onInput={set('password')}
         inputRef={known ? focus : undefined}
@@ -792,6 +848,58 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
       {submit(t('Sign in'))}
       <button class="g-btn g-btn--ghost" type="button" onClick={() => setStep('forgot')}>
         {t('Forgot your password?')}
+      </button>
+      {/* Gradient's Shades login (auth.css, g-auth-or and g-auth-sso), the same in every product. */}
+      {info.shades && (
+        <>
+          <p class="g-auth-or">{t('or')}</p>
+          <a class="g-auth-sso" href={`/api/auth/shades/start${f.keep ? '?keep=1' : ''}`}>
+            <ShadesMark />
+            {t('Shades login')}
+          </a>
+        </>
+      )}
+    </Frame>
+  )
+}
+
+/**
+ * Signed in, but with no brand and no super admin role yet: someone new from Shades login, or
+ * someone whose access was taken away. One calm screen until a super admin gives them a role.
+ */
+export function NoAccess({ me }: { me: Me }) {
+  const [busy, setBusy] = useState(false)
+  const run = (fn: () => Promise<unknown>) => () => {
+    setBusy(true)
+    fn().catch(() => setBusy(false))
+  }
+  // Signing in again picks up a role given since; through Shades ID that takes one click.
+  const again = () =>
+    me.shades
+      ? Promise.resolve(location.assign('/api/auth/shades/start'))
+      : api.post('/api/auth/logout').then(() => dispatchEvent(new Event('sm-signed-out')))
+  return (
+    <Frame title={t('Ask a super admin for access')} busy={busy}>
+      <span class="g-auth-who sm-auth-who--still">
+        <span class="g-avatar g-avatar--sm" aria-hidden="true">
+          {me.email.charAt(0).toUpperCase()}
+        </span>
+        <span>{me.email}</span>
+      </span>
+      <p class="g-auth-text">
+        {me.shades
+          ? t(
+              'Your Shades account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.',
+            )
+          : t(
+              'Your account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.',
+            )}
+      </p>
+      <button class="g-btn g-btn--primary" type="button" disabled={busy} onClick={run(again)}>
+        {t('Sign in again')}
+      </button>
+      <button class="g-btn g-btn--ghost" type="button" disabled={busy} onClick={run(signOut)}>
+        {t('Sign out')}
       </button>
     </Frame>
   )
