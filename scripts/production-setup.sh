@@ -192,8 +192,8 @@ if [ ! -s "$REPO/data/socialmonitor.db" ]; then
   ask SOCIALMONITOR_ADMIN_NAME "  Name"
   ask_secret SOCIALMONITOR_ADMIN_PASSWORD "  Password (at least 10 characters)"
 fi
-echo "Off-site backups to Cloudflare R2 (docs/server.md#backups):"
-ask RESTIC_REPOSITORY "  RESTIC_REPOSITORY (s3:https://<account-id>.r2.cloudflarestorage.com/socialmonitor-backup)"
+echo "Off-site backups to Cloudflare R2 or a folder such as OneDrive (docs/server.md#backups):"
+ask RESTIC_REPOSITORY "  RESTIC_REPOSITORY (s3:https://<account-id>.r2.cloudflarestorage.com/socialmonitor-backup, or /mnt/c/Users/<you>/OneDrive/SocialMonitor-backup)"
 if [ -n "$(get RESTIC_REPOSITORY)" ] && [ -z "$(get RESTIC_PASSWORD_FILE)" ]; then
   read -r -s -p "  The restic password (from your password manager): " restic_password </dev/tty
   echo
@@ -203,8 +203,13 @@ if [ -n "$(get RESTIC_REPOSITORY)" ] && [ -z "$(get RESTIC_PASSWORD_FILE)" ]; th
   fi
   unset restic_password
 fi
-ask AWS_ACCESS_KEY_ID "  R2 access key ID (Object Read & Write, this bucket only)"
-ask_secret AWS_SECRET_ACCESS_KEY "  R2 secret access key"
+# A folder repository (for example OneDrive under /mnt/c) needs no keys; only R2 does.
+case "$(get RESTIC_REPOSITORY)" in
+  s3:*)
+    ask AWS_ACCESS_KEY_ID "  R2 access key ID (Object Read & Write, this bucket only)"
+    ask_secret AWS_SECRET_ACCESS_KEY "  R2 secret access key"
+    ;;
+esac
 chmod 600 "$ENV"
 echo ".env is ready, readable by you only."
 
