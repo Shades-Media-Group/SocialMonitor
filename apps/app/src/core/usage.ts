@@ -18,6 +18,7 @@ export const AI_TASKS = [
   'ideas',
   'reply',
   'translate',
+  'limit-check',
 ] as const
 export type AiTask = (typeof AI_TASKS)[number]
 

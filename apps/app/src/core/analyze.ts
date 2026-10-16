@@ -8,6 +8,9 @@ import { hasClaudeCode } from './settings.ts'
 import type { Settings } from './settings.ts'
 import type { UsageContext } from './usage.ts'
 import { fromApi, fromClaudeCode, recordUsage } from './usage.ts'
+import { AiLimitError, classify, clearPause, notePause } from './ai-limit.ts'
+import type { ClaudeAnswer } from './ai-limit.ts'
+import type { DB } from './db.ts'
 
 /**
  * The AI step, kept small on purpose. Comments go in as `n|text` lines and come back as
@@ -126,15 +129,29 @@ async function viaClaudeCode(
     ...(image ? ['--allowedTools', 'Read'] : []),
   ]
   try {
-    return await claudeOnce(args, input, process.env, use)
+    const out = await claudeOnce(args, input, process.env, use).catch((e: unknown) => {
+      // The setup token lasts a year. When it has run out, try the computer's own Claude Code
+      // sign-in (`claude`, then /login, once), which renews itself, before giving up.
+      if (!(e instanceof SignedOut) || !process.env.CLAUDE_CODE_OAUTH_TOKEN) throw e
+      const { CLAUDE_CODE_OAUTH_TOKEN: _, ...rest } = process.env
+      return claudeOnce(args, input, rest, use)
+    })
+    // An answer means the limit, if there was one, has reset.
+    if (use?.db) clearPause(use.db)
+    return out
   } catch (e) {
-    // The setup token lasts a year. When it has run out, try the computer's own Claude Code sign-in
-    // (`claude`, then /login, once), which renews itself, before giving up.
-    if (!(e instanceof SignedOut) || !process.env.CLAUDE_CODE_OAUTH_TOKEN) throw e
-    const { CLAUDE_CODE_OAUTH_TOKEN: _, ...rest } = process.env
-    return claudeOnce(args, input, rest, use)
+    // A usage limit pauses the AI until it resets; the error then says until when.
+    if (e instanceof AiLimitError && use?.db) notePause(use.db, e)
+    throw e
   }
 }
+
+/**
+ * Whether Claude can take work now: the smallest call there is, on the cheapest model, with no
+ * tools. Throws AiLimitError (and pauses the AI) when the subscription is at its limit.
+ */
+export const probeClaude = (db: DB) =>
+  viaClaudeCode('Reply with exactly: ok', '', [], { db, task: 'limit-check' })
 
 class SignedOut extends Error {}
 
@@ -153,17 +170,21 @@ function claudeOnce(
         if (err && !stdout)
           return reject(new Error(`Claude Code failed: ${err.message.split('\n')[0]}`))
         try {
-          const d = JSON.parse(stdout) as { result?: string; is_error?: boolean }
+          const d = JSON.parse(stdout) as ClaudeAnswer
           // A failed call can still have used tokens, so it is counted before the error check.
           recordUsage(use, fromClaudeCode(d))
-          if (d.is_error)
+          if (d.is_error) {
+            const why = classify(d)
             return reject(
-              /authenticat|oauth|log ?in|credential/i.test(d.result ?? '')
-                ? new SignedOut(
-                    'Claude Code is signed out. On this computer run  claude setup-token  and put CLAUDE_CODE_OAUTH_TOKEN=… in .env (it lasts a year), then restart SocialMonitor.',
-                  )
-                : new Error(`Claude Code: ${d.result}`),
+              why.kind === 'limit'
+                ? new AiLimitError(why.limit, why.resetAt, d.result ?? '')
+                : why.kind === 'signed-out'
+                  ? new SignedOut(
+                      'Claude Code is signed out. On this computer run  claude setup-token  and put CLAUDE_CODE_OAUTH_TOKEN=… in .env (it lasts a year), then restart SocialMonitor.',
+                    )
+                  : new Error(`Claude Code: ${d.result}`),
             )
+          }
           resolve(d.result ?? '')
         } catch {
           reject(new Error('Claude Code answered something that is not JSON.'))
@@ -244,6 +265,15 @@ export async function viaApi(
       ...fromApi(d.model ?? API_MODEL, d.usage),
       durationMs: Date.now() - started,
     })
+  // A rate limit or an overloaded API stops the AI work at once, like Claude Code's limit.
+  if (r.status === 429 || r.status === 529) {
+    const wait = Number(r.headers.get('retry-after'))
+    throw new AiLimitError(
+      'busy',
+      wait > 0 ? new Date(Date.now() + wait * 1000) : null,
+      d.error?.message ?? String(r.status),
+    )
+  }
   if (!r.ok) throw new Error(`Anthropic API: ${d.error?.message ?? r.status}`)
   return d.content?.map((c) => c.text ?? '').join('') ?? ''
 }
@@ -368,7 +398,17 @@ export async function sortComments(
     const pics = batch.flatMap((c, j) =>
       c.image ? [{ label: `Comment ${j + 1}'s picture`, path: c.image }] : [],
     )
-    const text = await ask(engine, prompt, input, pics, use && { ...use, items: batch.length })
+    const text = await ask(
+      engine,
+      prompt,
+      input,
+      pics,
+      use && { ...use, items: batch.length },
+    ).catch((e: unknown) => {
+      // At a limit no further batch is sent; the ones already sorted go back with the error.
+      if (e instanceof AiLimitError) e.partial = out
+      throw e
+    })
     for (const [j, v] of parseVerdicts(text)) {
       const c = batch[j - 1]
       if (c) out.set(c.id, v)
