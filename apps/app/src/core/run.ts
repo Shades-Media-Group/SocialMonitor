@@ -17,7 +17,6 @@ import { placeByAi } from './campaigns.ts'
 import type { Kind } from './analyze.ts'
 import { getSettings } from './settings.ts'
 import { buildReport } from './report.ts'
-import { refreshSummary } from './summary.ts'
 
 /** Comment text comes from a signed-in session on these; their updates keep the gap. */
 const SIGNED_IN: Network[] = ['instagram', 'facebook', 'tiktok']
@@ -198,17 +197,6 @@ async function execute(db: DB, runId: number, scope: RunScope) {
       )
   } catch (e) {
     problems.push((e as Error).message)
-  }
-
-  // The weekly summary of each brand read, once a day, for brands that let Claude read them.
-  if (!stopped()) {
-    const off = aiOff(db)
-    for (const brandId of new Set(touched.map((t) => t.brandId))) {
-      if (off.has(brandId)) continue
-      await refreshSummary(db, brandId).catch((e: Error) =>
-        log(`Could not write the weekly summary: ${e.message}`),
-      )
-    }
   }
 
   // Photos and stickers for TikTok comments read before they were kept, from public pages.

@@ -140,7 +140,7 @@ interface WeekSummary {
 
 /**
  * Claude's few lines on the brand's week: what people said, what changed against the week
- * before, what to answer first. Written at the end of an update; admins can ask for it again.
+ * before, what to answer first. Written only when an admin presses the button, never on its own.
  */
 function Week({
   v,
@@ -198,9 +198,7 @@ function Week({
           ))}
         </div>
       ) : (
-        <p class="sm-quiet">
-          {t('Claude writes a few lines on the week at the end of the next update.')}
-        </p>
+        <p class="sm-quiet">{t('Nothing written yet. Claude writes it only when you ask.')}</p>
       )}
     </section>
   )
@@ -412,8 +410,6 @@ export function Overview(v: BrandView) {
 
   return (
     <div class="sm-overview sm-ga">
-      {/* The summary covers every network, so it stays out of a one-network view. */}
-      {!network && <Week v={v} summary={week} onChange={setWeek} />}
       <section class="sm-box sm-ga__report">
         <div class="sm-ga__cards" role="tablist" aria-label={t('What to chart')}>
           {CARDS.map(([k, label]) => {
@@ -727,6 +723,8 @@ export function Overview(v: BrandView) {
         </div>
 
         <FansAndCritics brandId={brand.id} network={network} days={days} version={version} />
+        {/* The summary covers every network, so it stays out of a one-network view. */}
+        {!network && <Week v={v} summary={week} onChange={setWeek} />}
       </div>
 
       <PostDrawer post={openPost} brands={brands} onClose={() => setOpenPost(null)} />

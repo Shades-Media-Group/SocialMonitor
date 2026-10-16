@@ -731,8 +731,7 @@ export const fr: Dict = {
     'Writing…': 'Rédaction…',
     'Write it again': 'Réécrire',
     'Write it now': 'Rédiger maintenant',
-    'Claude writes a few lines on the week at the end of the next update.':
-      'Claude rédige quelques lignes sur la semaine à la fin de la prochaine mise à jour.',
+    'Nothing written yet. Claude writes it only when you ask.': 'Rien d’écrit pour l’instant. Claude ne l’écrit que lorsque vous le demandez.',
     'The AI is off for this brand. Turn it on in Settings first.':
       'L’IA est désactivée pour cette marque. Activez-la d’abord dans les Réglages.',
     'Nothing to sum up: no comments in the last two weeks.':

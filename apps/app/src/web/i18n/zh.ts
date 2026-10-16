@@ -696,8 +696,7 @@ export const zh: Dict = {
     'Writing…': '正在撰写…',
     'Write it again': '重新撰写',
     'Write it now': '立即撰写',
-    'Claude writes a few lines on the week at the end of the next update.':
-      '下次更新结束时，Claude 会就本周写几句总结。',
+    'Nothing written yet. Claude writes it only when you ask.': '尚未生成。只有在你要求时，Claude 才会撰写。',
     'The AI is off for this brand. Turn it on in Settings first.':
       '此品牌的 AI 已关闭。请先在设置中开启。',
     'Nothing to sum up: no comments in the last two weeks.': '没有可总结的内容：最近两周没有评论。',

@@ -731,8 +731,7 @@ export const ro: Dict = {
     'Writing…': 'Se scrie…',
     'Write it again': 'Scrie din nou',
     'Write it now': 'Scrie acum',
-    'Claude writes a few lines on the week at the end of the next update.':
-      'Claude scrie câteva rânduri despre săptămână la finalul următoarei actualizări.',
+    'Nothing written yet. Claude writes it only when you ask.': 'Nimic scris încă. Claude îl scrie doar când îi ceri.',
     'The AI is off for this brand. Turn it on in Settings first.':
       'AI-ul este oprit pentru acest brand. Pornește-l mai întâi din Setări.',
     'Nothing to sum up: no comments in the last two weeks.':

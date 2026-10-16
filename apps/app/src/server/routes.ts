@@ -608,7 +608,7 @@ export const routes: Route[] = [
       ).n,
     }
   }),
-  // The weekly summary Claude wrote at the end of an update, and writing it again on request.
+  // The weekly summary, written only when an admin asks for it.
   r('GET', '/api/brands/:id/week', seeBrand, ({ db, params }) => ({
     summary: latestSummary(db, id(params.id)),
   })),

@@ -728,8 +728,7 @@ export const ru: Dict = {
     'Writing…': 'Пишется…',
     'Write it again': 'Написать заново',
     'Write it now': 'Написать сейчас',
-    'Claude writes a few lines on the week at the end of the next update.':
-      'Claude напишет несколько строк о неделе в конце следующего обновления.',
+    'Nothing written yet. Claude writes it only when you ask.': 'Пока ничего нет. Claude пишет сводку, только когда вы попросите.',
     'The AI is off for this brand. Turn it on in Settings first.':
       'ИИ выключен для этого бренда. Сначала включите его в настройках.',
     'Nothing to sum up: no comments in the last two weeks.':
