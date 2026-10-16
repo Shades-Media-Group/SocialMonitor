@@ -27,7 +27,7 @@ export const tiktokReady = () =>
 
 /** Where the website's hand-back page may return people: this computer or our own domain. */
 export const DASHBOARD_ORIGIN =
-  /^(http:\/\/(127\.0\.0\.1|localhost)(:\d{2,5})?|https:\/\/([a-z0-9-]+\.)*socialmonitor\.shades\.md)$/
+  /^(http:\/\/(127\.0\.0\.1|localhost)(:\d{2,5})?|https:\/\/(([a-z0-9-]+\.)*socialmonitor|socialmonitor-app)\.shades\.md)$/
 
 const pending = new Map<string, { brandId: number; userId: number; at: number }>()
 

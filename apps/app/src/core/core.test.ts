@@ -362,6 +362,7 @@ describe('TikTok sign-in hand-back', () => {
       'http://127.0.0.1:4400',
       'http://localhost:4400',
       'https://socialmonitor-app.shades.md',
+      'https://app.socialmonitor.shades.md',
     ])
       expect(DASHBOARD_ORIGIN.test(ok)).toBe(true)
     for (const bad of [
@@ -369,6 +370,9 @@ describe('TikTok sign-in hand-back', () => {
       'http://socialmonitor-app.shades.md',
       'https://socialmonitor.shades.md.evil.com',
       'http://127.0.0.1.evil.com',
+      'https://socialmonitor-app.shades.md.evil.com',
+      'https://x.socialmonitor-app.shades.md',
+      'https://evilsocialmonitor-app.shades.md',
     ])
       expect(DASHBOARD_ORIGIN.test(bad)).toBe(false)
   })

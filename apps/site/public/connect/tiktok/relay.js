@@ -13,7 +13,7 @@
   })()
   const ok =
     /^http:\/\/(127\.0\.0\.1|localhost)(:\d{2,5})?$/.test(origin) ||
-    /^https:\/\/([a-z0-9-]+\.)*socialmonitor\.shades\.md$/.test(origin)
+    /^https:\/\/(([a-z0-9-]+\.)*socialmonitor|socialmonitor-app)\.shades\.md$/.test(origin)
   if (ok) location.replace(`${origin}/api/auth/tiktok/callback${location.search}`)
   else
     document.getElementById('msg').textContent =
