@@ -128,7 +128,9 @@ The sign-in Claude Code keeps after `/login` expires, and an unattended server c
 claude setup-token      # once, on the server; it opens the browser to approve
 ```
 
-Put the token it prints in `.env` as `CLAUDE_CODE_OAUTH_TOKEN=…` and restart SocialMonitor. On Windows, install the native Claude Code (`irm https://claude.ai/install.ps1 | iex`), not the npm one. If sorting stops anyway, the brand's Settings tab shows the last problem, and the comments it could not sort are sorted on the next update.
+Put the token it prints in `.env` as `CLAUDE_CODE_OAUTH_TOKEN=…` and restart SocialMonitor.
+
+For a second line, also sign Claude Code in on the server itself, as the user SocialMonitor runs as: run `claude`, then `/login`, once. When the token runs out or is revoked, SocialMonitor tries that sign-in, which renews itself while it is used. Renew the token each year anyway (`claude setup-token` again, replace the line, restart): the token is what keeps sorting working when the server's own sign-in lapses. On Windows, install the native Claude Code (`irm https://claude.ai/install.ps1 | iex`), not the npm one. If sorting stops anyway, the brand's Settings tab shows the last problem, and the comments it could not sort are sorted on the next update.
 
 ## Protect the saved accounts
 

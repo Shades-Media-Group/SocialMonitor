@@ -92,7 +92,7 @@ export interface Pic {
   path: string
 }
 
-function viaClaudeCode(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
+async function viaClaudeCode(prompt: string, input: string, pics: Pic[] = []): Promise<string> {
   mkdirSync(join(DATA_DIR, 'cache'), { recursive: true })
   writeFileSync(EMPTY_MCP, '{"mcpServers":{}}')
   const image = pics.length > 0
@@ -118,11 +118,25 @@ function viaClaudeCode(prompt: string, input: string, pics: Pic[] = []): Promise
     image ? 'Read' : '',
     ...(image ? ['--allowedTools', 'Read'] : []),
   ]
+  try {
+    return await claudeOnce(args, input, process.env)
+  } catch (e) {
+    // The setup token lasts a year. When it has run out, try the computer's own Claude Code sign-in
+    // (`claude`, then /login, once), which renews itself, before giving up.
+    if (!(e instanceof SignedOut) || !process.env.CLAUDE_CODE_OAUTH_TOKEN) throw e
+    const { CLAUDE_CODE_OAUTH_TOKEN: _, ...rest } = process.env
+    return claudeOnce(args, input, rest)
+  }
+}
+
+class SignedOut extends Error {}
+
+function claudeOnce(args: string[], input: string, env: NodeJS.ProcessEnv): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = execFile(
       'claude',
       args,
-      { cwd: join(DATA_DIR, 'cache'), timeout: 180000, maxBuffer: 8 << 20 },
+      { cwd: join(DATA_DIR, 'cache'), timeout: 180000, maxBuffer: 8 << 20, env },
       (err, stdout) => {
         if (err && !stdout)
           return reject(new Error(`Claude Code failed: ${err.message.split('\n')[0]}`))
@@ -130,11 +144,11 @@ function viaClaudeCode(prompt: string, input: string, pics: Pic[] = []): Promise
           const d = JSON.parse(stdout) as { result?: string; is_error?: boolean }
           if (d.is_error)
             return reject(
-              new Error(
-                /authenticat|oauth|log ?in|credential/i.test(d.result ?? '')
-                  ? 'Claude Code is signed out. On this computer run  claude setup-token  and put CLAUDE_CODE_OAUTH_TOKEN=… in .env (it lasts a year), then restart SocialMonitor.'
-                  : `Claude Code: ${d.result}`,
-              ),
+              /authenticat|oauth|log ?in|credential/i.test(d.result ?? '')
+                ? new SignedOut(
+                    'Claude Code is signed out. On this computer run  claude setup-token  and put CLAUDE_CODE_OAUTH_TOKEN=… in .env (it lasts a year), then restart SocialMonitor.',
+                  )
+                : new Error(`Claude Code: ${d.result}`),
             )
           resolve(d.result ?? '')
         } catch {
