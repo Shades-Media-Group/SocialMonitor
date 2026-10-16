@@ -1233,6 +1233,10 @@ export const ru: Dict = {
     'Give a valid email.': 'Укажите корректный email.',
     'A username is 3 to 32 letters, digits, dots, dashes or underscores.':
       'Имя пользователя: от 3 до 32 символов — буквы, цифры, точки, дефисы или подчёркивания.',
+    'A username is not an email. Leave it empty to sign in with your email.':
+      'Имя пользователя — не email. Оставьте поле пустым, чтобы входить по email.',
+    'That username is taken. Choose another.':
+      'Это имя пользователя уже занято. Выберите другое.',
     'Too many tries. Wait 15 minutes and try again.':
       'Слишком много попыток. Подождите 15 минут и попробуйте снова.',
     'Categories must be a list.': 'Категории должны быть списком.',

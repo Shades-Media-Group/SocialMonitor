@@ -1173,6 +1173,10 @@ export const zh: Dict = {
     'Give a valid email.': '请输入有效的邮箱。',
     'A username is 3 to 32 letters, digits, dots, dashes or underscores.':
       '用户名须为3到32个字母、数字、点、短横线或下划线。',
+    'A username is not an email. Leave it empty to sign in with your email.':
+      '用户名不是邮箱。留空即可用邮箱登录。',
+    'That username is taken. Choose another.':
+      '该用户名已被占用，请换一个。',
     'Too many tries. Wait 15 minutes and try again.': '尝试次数过多。请等待15分钟后再试。',
     'Categories must be a list.': '类型必须是一个列表。',
     'Choose at least one brand.': '请至少选择一个品牌。',

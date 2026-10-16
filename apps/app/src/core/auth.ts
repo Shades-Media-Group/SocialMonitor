@@ -412,10 +412,15 @@ export function validEmail(e: unknown) {
 export function validUsername(u: unknown) {
   const s = String(u ?? '').trim()
   if (!s) return null
+  if (s.includes('@'))
+    throw new Error('A username is not an email. Leave it empty to sign in with your email.')
   if (!/^[a-z0-9._-]{3,32}$/i.test(s))
     throw new Error('A username is 3 to 32 letters, digits, dots, dashes or underscores.')
   return s
 }
+/** Whether another account already signs in with this username (case does not matter). */
+export const usernameTaken = (db: DB, username: string, userId: number) =>
+  !!db.prepare('SELECT 1 FROM users WHERE username = ? AND id <> ?').get(username, userId)
 
 export function createUser(
   db: DB,

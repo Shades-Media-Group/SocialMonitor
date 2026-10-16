@@ -1242,6 +1242,10 @@ export const fr: Dict = {
     'Give a valid email.': 'Indiquez un e-mail valide.',
     'A username is 3 to 32 letters, digits, dots, dashes or underscores.':
       'Un nom d’utilisateur compte de 3 à 32 lettres, chiffres, points, tirets ou tirets bas.',
+    'A username is not an email. Leave it empty to sign in with your email.':
+      'Un nom d’utilisateur n’est pas un email. Laissez-le vide pour vous connecter avec votre email.',
+    'That username is taken. Choose another.':
+      'Ce nom d’utilisateur est déjà pris. Choisissez-en un autre.',
     'Too many tries. Wait 15 minutes and try again.':
       'Trop de tentatives. Attendez 15 minutes et réessayez.',
     'Categories must be a list.': 'Les catégories doivent être une liste.',

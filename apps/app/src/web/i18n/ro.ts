@@ -1233,6 +1233,10 @@ export const ro: Dict = {
     'Give a valid email.': 'Scrie un email valid.',
     'A username is 3 to 32 letters, digits, dots, dashes or underscores.':
       'Un nume de utilizator are între 3 și 32 de litere, cifre, puncte, cratime sau liniuțe de subliniere.',
+    'A username is not an email. Leave it empty to sign in with your email.':
+      'Un nume de utilizator nu este un email. Lasă-l gol ca să te conectezi cu emailul.',
+    'That username is taken. Choose another.':
+      'Numele de utilizator este deja folosit. Alege altul.',
     'Too many tries. Wait 15 minutes and try again.':
       'Prea multe încercări. Așteaptă 15 minute și încearcă din nou.',
     'Categories must be a list.': 'Categoriile trebuie să fie o listă.',

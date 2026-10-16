@@ -328,3 +328,48 @@ describe('changing how someone signs in', () => {
     expect(await call('POST', '/api/auth/totp/start')).toHaveProperty('uri')
   })
 })
+
+describe('accepting an invitation', () => {
+  const invited = () => {
+    const db = openDb(':memory:')
+    const u = auth.createUser(db, { email: `new${++n}@example.com` })
+    const t = auth.issue(db, u.id, 'invite')
+    return { db, u, token: `${t.id}.${t.secret}` }
+  }
+
+  it('keeps the link working after a mistake in the form, then signs the person in', async () => {
+    const { db, u, token } = invited()
+    auth.createUser(db, { email: `taken${n}@example.com`, username: 'taken.name', verified: true })
+    const call = browser(db)
+    const send = (username: string) =>
+      call('POST', '/api/auth/accept', {
+        token,
+        kind: 'invite',
+        name: 'New Person',
+        username,
+        password: 'a long enough password',
+      })
+
+    await expect(send(u.email)).rejects.toThrow('A username is not an email.')
+    await expect(send('Taken.Name')).rejects.toThrow('That username is taken.')
+    expect(auth.getUser(db, u.id)!.verified_at).toBeNull()
+
+    const out = await send('new.person')
+    expect(out.me).toMatchObject({ email: u.email, username: 'new.person', name: 'New Person' })
+    expect(await call('GET', '/api/auth/me')).toMatchObject({ user: { email: u.email } })
+    // Done its job: the link is gone.
+    await expect(send('other.name')).rejects.toThrow('This link has expired.')
+  })
+
+  it('still refuses a wrong secret', async () => {
+    const { db, token } = invited()
+    const [id] = token.split('.')
+    await expect(
+      browser(db)('POST', '/api/auth/accept', {
+        token: `${id}.wrong`,
+        kind: 'invite',
+        password: 'a long enough password',
+      }),
+    ).rejects.toThrow('This link is not valid.')
+  })
+})

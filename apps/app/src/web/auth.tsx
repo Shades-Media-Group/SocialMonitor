@@ -390,13 +390,19 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
         }
         busy={busy}
         onSubmit={go(async () => {
-          const r = await api.post<{ email: string }>('/api/auth/accept', {
+          const r = await api.post<{ email: string; me?: Me }>('/api/auth/accept', {
             token: link.token,
             kind: link.kind,
             password: f.password,
             ...(link.kind === 'invite' ? { name: f.name, username: f.username } : {}),
             ...(await withSecond()),
           })
+          // A finished invitation comes back signed in: straight to the dashboard.
+          if (r.me) {
+            navigate('/')
+            onIn(r.me)
+            return
+          }
           setNeed(null)
           setF({ ...f, login: r.email, password: '' })
           navigate('/')

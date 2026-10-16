@@ -525,7 +525,9 @@ export const authRoutes = [
     const password = await auth.newPassword(x.password)
     const [tid = '', secret = ''] = String(x.token ?? '').split('.')
     const purpose = x.kind === 'reset' ? 'reset' : 'invite'
-    const userId = auth.consume(c.db, tid, secret, purpose, purpose === 'reset')
+    // The link is checked but kept until it has done its job, so a mistake in the form (a taken
+    // or malformed username, a missing second step) leaves it working for the next try.
+    const userId = auth.consume(c.db, tid, secret, purpose, true)
     if (purpose === 'reset') {
       const how = await secondFor(c, userId, x, `reset:${tid}`, tid)
       auth.dropToken(c.db, tid)
@@ -535,20 +537,22 @@ export const authRoutes = [
         ...who(c, userId),
         detail: { how: 'reset link', second: how },
       })
-    } else {
-      auth.updateUser(c.db, userId, {
-        password,
-        ...(x.name !== undefined ? { name: String(x.name) } : {}),
-        ...(x.username ? { username: String(x.username) } : {}),
-      })
-      audit(c.db, {
-        ...from(c),
-        actor: userId,
-        event: 'invite.accepted',
-        target: auth.getUser(c.db, userId)!.email,
-      })
+      return { email: auth.getUser(c.db, userId)!.email }
     }
-    return { email: auth.getUser(c.db, userId)!.email }
+    const username = x.username ? auth.validUsername(x.username) : null
+    if (username && auth.usernameTaken(c.db, username, userId))
+      throw new Error('That username is taken. Choose another.')
+    auth.updateUser(c.db, userId, {
+      password,
+      ...(x.name !== undefined ? { name: String(x.name) } : {}),
+      ...(username ? { username } : {}),
+    })
+    auth.dropToken(c.db, tid)
+    const user = auth.getUser(c.db, userId)!
+    audit(c.db, { ...from(c), actor: userId, event: 'invite.accepted', target: user.email })
+    // The emailed link already proved the address, as a code would: the new account is signed in.
+    signIn(c, user, false, 'invite')
+    return { email: user.email, me: me(c, user) }
   }),
 
   // A forgotten password: a six-digit code by email. The answer is the same whether or not the
