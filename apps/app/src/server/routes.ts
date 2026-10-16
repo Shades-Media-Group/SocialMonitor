@@ -67,6 +67,7 @@ import { audit, listAudit } from '../core/audit.ts'
 import type { AuditEvent } from '../core/audit.ts'
 import { setBranding } from '../core/branding.ts'
 import * as campaigns from '../core/campaigns.ts'
+import { adminUsage } from '../core/admin.ts'
 
 export class HttpError extends Error {
   status: number
@@ -129,6 +130,14 @@ export const r = (
   need,
   handle: handle as Route['handle'],
 })
+/** Throws unless the person asking may call the route. */
+export function guard(route: Route, c: Ctx) {
+  if (route.need === 'public') return
+  if (!c.user) throw new HttpError(401, 'Sign in first.')
+  if (route.need === 'super' && !c.user.super)
+    throw new HttpError(403, 'Only super admins can do that.')
+  if (typeof route.need === 'function') route.need(c as Signed)
+}
 /** Who did it and from where, for the audit log. */
 export const by = (c: Ctx) => ({ actor: c.user?.id ?? null, ip: c.ip, ua: c.ua })
 /** Logs a file someone took away (an export, a PDF, a saved report) and hands it on. */
@@ -682,6 +691,12 @@ export const routes: Route[] = [
       days: Number(query.get('days') ?? 30) || 0,
     }),
   ),
+  // The Admin tab: AI usage in tokens and API-equivalent USD, and every brand side by side.
+  r('GET', '/api/brands/:id/admin', 'super', ({ db, params }) => {
+    const brandId = id(params.id)
+    if (!store.getBrand(db, brandId)) throw new HttpError(404, 'No such brand.')
+    return adminUsage(db, brandId)
+  }),
   // Ideas for the next post: the latest kept, and new ones on an admin's request.
   r(
     'GET',

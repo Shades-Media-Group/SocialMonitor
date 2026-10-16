@@ -4,7 +4,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
-import { HttpError, routes } from './routes.ts'
+import { guard, HttpError, routes } from './routes.ts'
 import { authRoutes } from './auth-routes.ts'
 import {
   cookieAge,
@@ -199,12 +199,7 @@ const server = createServer(async (req, res) => {
         client,
         origin: origin ?? `${secure ? 'https' : 'http'}://${req.headers.host ?? HOST}`,
       }
-      if (r.need !== 'public') {
-        if (!user) throw new HttpError(401, 'Sign in first.')
-        if (r.need === 'super' && !user.super)
-          throw new HttpError(403, 'Only super admins can do that.')
-        if (typeof r.need === 'function') r.need({ ...ctx, user })
-      }
+      guard(r, ctx)
       const data = await r.handle(ctx)
       if (ctx.cookies.length) res.setHeader('set-cookie', ctx.cookies)
       if (req.method !== 'GET' && !url.pathname.startsWith('/api/auth/')) changed()
