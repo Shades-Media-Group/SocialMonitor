@@ -48,7 +48,23 @@ export interface RunRow {
   progress?: string | null
 }
 
-import { lang, t } from './i18n.ts'
+/** GET /api/ai/status: whether Claude is at its usage limit, and what waits for it. */
+export interface AiStatus {
+  paused: boolean
+  /** When Claude is tried again. */
+  until: string | null
+  /** When waiting updates and sorting start (a couple of minutes after until). */
+  resumes_at: string | null
+  /** 'usage': the subscription's limit; 'busy': a rate limit or an overloaded service. */
+  kind: 'usage' | 'busy' | null
+  reason: string | null
+  set_at: string | null
+  reset_known: boolean | null
+  /** Brands with comments a limit left unsorted, sorted after this time. */
+  waiting: { after: string; brands: number[] } | null
+}
+
+import { lang, locale, t } from './i18n.ts'
 
 /** An error from the server, with whatever else it sent beside the message. */
 export class ApiError extends Error {
@@ -76,13 +92,24 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   // The session ended (signed out elsewhere, expired, blocked): back to the sign-in screen.
   if (res.status === 401 && !path.startsWith('/api/auth/'))
     dispatchEvent(new Event('sm-signed-out'))
-  if (!res.ok)
+  if (!res.ok) {
+    // Claude's usage limit names when it can be tried again, shown in the reader's own clock.
+    const until = (data as { until?: string }).until
     throw new ApiError(
       t((data as { error?: string }).error ?? 'The server answered {status}.', {
         status: res.status,
+        time: until
+          ? new Date(until).toLocaleString(locale, {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '',
       }),
       data as Record<string, unknown>,
     )
+  }
   return data as T
 }
 
