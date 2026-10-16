@@ -626,7 +626,7 @@ export function issue(db: DB, userId: number, purpose: Purpose, asCode = purpose
     hash(`${id}:${secret}`),
     new Date(Date.now() + minutes * 60_000).toISOString(),
   )
-  return { id, secret }
+  return { id, secret, minutes }
 }
 
 /** Whether a secret is the one a token was issued with. */

@@ -102,7 +102,7 @@ export async function sendCode(
   c: Ctx,
 ) {
   const t = auth.issue(c.db, userId, 'code')
-  await sendMail(email, codeMail(lang, t.secret))
+  await sendMail(email, codeMail(lang, t.secret, 'signin', t.minutes))
   audit(c.db, { ...by(c), actor: userId, event: 'code.sent', target: email })
   return { ticket: t.id, to: mask(email), mail: mailReady() }
 }
@@ -588,8 +588,8 @@ export const authRoutes = [
     const u = auth.findLogin(c.db, login)
     if (u && !u.disabled && u.verified_at) {
       const t = auth.issue(c.db, u.id, 'reset', true)
-      void sendMail(u.email, codeMail(langOf(c), t.secret, 'reset')).catch((e: unknown) =>
-        console.error(`A password code could not be sent: ${String(e)}`),
+      void sendMail(u.email, codeMail(langOf(c), t.secret, 'reset', t.minutes)).catch(
+        (e: unknown) => console.error(`A password code could not be sent: ${String(e)}`),
       )
       return { ticket: t.id, mail: mailReady() }
     }
@@ -627,7 +627,7 @@ export const authRoutes = [
     auth.checkRate(`forgot:${c.user.email}`, 3)
     auth.noteFailure(`forgot:${c.user.email}`)
     const t = auth.issue(c.db, c.user.id, 'reset', true)
-    await sendMail(c.user.email, codeMail(langOf(c), t.secret, 'reset'))
+    await sendMail(c.user.email, codeMail(langOf(c), t.secret, 'reset', t.minutes))
     return { ticket: t.id, to: mask(c.user.email), mail: mailReady() }
   }),
   r('POST', '/api/auth/password', 'user', async (c) => {

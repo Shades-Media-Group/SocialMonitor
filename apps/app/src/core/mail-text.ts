@@ -9,6 +9,7 @@ type Key =
   | 'codeHeading'
   | 'codeLabel'
   | 'codeValid'
+  | 'codePreheader'
   | 'codeStub'
   | 'resetCodeSubject'
   | 'resetCodeHeading'
@@ -90,7 +91,8 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeSubject: '{code} is your SocialMonitor sign-in code',
     codeHeading: 'Your sign-in code',
     codeLabel: 'Sign-in code',
-    codeValid: 'Works for 10 minutes',
+    codeValid: 'Works for {time}',
+    codePreheader: 'Your SocialMonitor code is {code} · works for {time}',
     codeStub: 'If you did not just sign in, change your password: someone knows it.',
     resetCodeSubject: '{code} is your SocialMonitor password code',
     resetCodeHeading: 'Your code to change your password',
@@ -179,7 +181,8 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeSubject: '{code} este codul tău de conectare SocialMonitor',
     codeHeading: 'Codul tău de conectare',
     codeLabel: 'Cod de conectare',
-    codeValid: 'Valabil 10 minute',
+    codeValid: 'Valabil {time}',
+    codePreheader: 'Codul tău SocialMonitor este {code} · valabil {time}',
     codeStub: 'Dacă nu tocmai te-ai conectat, schimbă-ți parola: cineva o cunoaște.',
     resetCodeSubject: '{code} este codul tău SocialMonitor pentru parolă',
     resetCodeHeading: 'Codul tău pentru schimbarea parolei',
@@ -269,7 +272,8 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeSubject: '{code} — ваш код для входа в SocialMonitor',
     codeHeading: 'Ваш код для входа',
     codeLabel: 'Код для входа',
-    codeValid: 'Действует 10 минут',
+    codeValid: 'Действует {time}',
+    codePreheader: 'Ваш код SocialMonitor: {code} · действует {time}',
     codeStub: 'Если вы сейчас не входили, смените пароль: его кто-то знает.',
     resetCodeSubject: '{code} — ваш код SocialMonitor для смены пароля',
     resetCodeHeading: 'Ваш код для смены пароля',
@@ -356,7 +360,8 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeSubject: '{code} est votre code de connexion SocialMonitor',
     codeHeading: 'Votre code de connexion',
     codeLabel: 'Code de connexion',
-    codeValid: 'Valable 10 minutes',
+    codeValid: 'Valable {time}',
+    codePreheader: 'Votre code SocialMonitor est {code} · valable {time}',
     codeStub:
       'Si vous ne venez pas de vous connecter, changez votre mot de passe : quelqu’un le connaît.',
     resetCodeSubject: '{code} est votre code SocialMonitor pour le mot de passe',
@@ -448,7 +453,8 @@ const TEXT: Record<MailLang, Record<Key, string>> = {
     codeSubject: '{code} 是你的 SocialMonitor 登录验证码',
     codeHeading: '你的登录验证码',
     codeLabel: '登录验证码',
-    codeValid: '10 分钟内有效',
+    codeValid: '{time}内有效',
+    codePreheader: '你的 SocialMonitor 验证码是 {code} · {time}内有效',
     codeStub: '如果不是你本人在登录，请修改密码：有人知道了它。',
     resetCodeSubject: '{code} 是你的 SocialMonitor 密码验证码',
     resetCodeHeading: '你的修改密码验证码',

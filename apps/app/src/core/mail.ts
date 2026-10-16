@@ -75,26 +75,43 @@ const action = (lang: string, label: string, link: string, note: string) => [
 
 /**
  * A six-digit code, on Gradient's ink pass so mail apps offer to copy it: for signing in, or for
- * choosing a new password (`reset`). The subject leads with the code and the preheader says how
- * long it works (gradient/docs/guides/email.md).
+ * choosing a new password (`reset`). For Gmail's "Copy code" card the subject leads with the bare
+ * code, and the preheader, which Gradient also makes the plain text's first line, reads "Your
+ * SocialMonitor code is 716428 · works for 10 minutes" (gradient/docs/guides/email.md).
+ * `minutes` is how long the code really works, as auth.issue set it.
  */
-export function codeMail(lang: string, code: string, kind: 'signin' | 'reset' = 'signin'): Mail {
+export function codeMail(
+  lang: string,
+  code: string,
+  kind: 'signin' | 'reset' = 'signin',
+  minutes = 10,
+): Mail {
   const k = kind === 'reset'
-  const label = mailText(lang, k ? 'resetCodeLabel' : 'codeLabel')
+  const l = mailLang(lang)
+  let time = `${minutes} min`
+  try {
+    time = new Intl.NumberFormat(LOCALE[l], {
+      style: 'unit',
+      unit: 'minute',
+      unitDisplay: 'long',
+    }).format(minutes)
+  } catch {
+    /* keep the short form */
+  }
   return build(
-    lang,
-    mailText(lang, k ? 'resetCodeSubject' : 'codeSubject', { code }),
-    mailText(lang, k ? 'resetCodeHeading' : 'codeHeading'),
+    l,
+    mailText(l, k ? 'resetCodeSubject' : 'codeSubject', { code }),
+    mailText(l, k ? 'resetCodeHeading' : 'codeHeading'),
     undefined,
     [
       ui.code(
-        label,
+        mailText(l, k ? 'resetCodeLabel' : 'codeLabel'),
         code,
-        mailText(lang, 'codeValid'),
-        mailText(lang, k ? 'resetCodeStub' : 'codeStub'),
+        mailText(l, 'codeValid', { time }),
+        mailText(l, k ? 'resetCodeStub' : 'codeStub'),
       ),
     ],
-    `${label}: ${code} · ${mailText(lang, 'codeValid')}`,
+    mailText(l, 'codePreheader', { code, time }),
   )
 }
 
@@ -368,15 +385,24 @@ export function securityMail(
   )
 }
 
+/**
+ * The one sender of every email: SMTP_FROM, or the account itself when that is unset. Nothing
+ * sets Sender, Reply-To or the envelope, so the address people see is the one the SMTP server
+ * signs for, and SPF and DKIM align with it (Gmail's code card favours that).
+ */
+export const mailFrom = () => process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim() || ''
+
 export async function sendMail(
   to: string,
   mail: Mail,
   attachments: { filename: string; content: Buffer }[] = [],
 ) {
   const { subject, html, text } = mail
+  const from = mailFrom()
   if (!mailReady()) {
     const files = attachments.map((a) => `\n[attached] ${a.filename}`).join('')
-    console.log(`\n[mail not set up] To: ${to}\nSubject: ${subject}\n\n${text}${files}\n`)
+    const sender = from ? `From: ${from}\n` : ''
+    console.log(`\n[mail not set up] ${sender}To: ${to}\nSubject: ${subject}\n\n${text}${files}\n`)
     return
   }
   const port = Number(process.env.SMTP_PORT ?? 465)
@@ -388,7 +414,7 @@ export async function sendMail(
     auth: { user: process.env.SMTP_USER?.trim(), pass: process.env.SMTP_PASS?.replace(/\s/g, '') },
   })
   await transport.sendMail({
-    from: process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim(),
+    from,
     to,
     subject,
     text,

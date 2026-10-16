@@ -1,4 +1,14 @@
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+
+// The SMTP transport, caught: these tests read what would be handed to the server, nothing is sent.
+const sent = vi.hoisted(() => [] as Record<string, unknown>[])
+vi.mock('nodemailer', () => ({
+  createTransport: () => ({
+    sendMail: async (m: Record<string, unknown>) => {
+      sent.push(m)
+    },
+  }),
+}))
 import {
   accessMail,
   badMail,
@@ -8,6 +18,7 @@ import {
   instantMail,
   linkMail,
   securityMail,
+  sendMail,
 } from './mail.ts'
 import type { SecurityKind } from './mail.ts'
 
@@ -21,14 +32,14 @@ describe('emails in Gradient’s design', () => {
     expect(m.html).toContain('socialmonitor.shades.md/email/logo.png')
     expect(m.text).toContain('716428')
     expect(m.text).toContain('change your password')
-    // Gmail's preview line says how long the code works.
-    expect(m.html).toContain('Sign-in code: 716428 · Works for 10 minutes')
+    // Gmail's preview line names the code and says how long it works.
+    expect(m.html).toContain('Your SocialMonitor code is 716428 · works for 10 minutes')
   })
 
   it('sends a password code the same way, with its own words', () => {
     const m = codeMail('en', '402913', 'reset')
     expect(m.subject).toBe('402913 is your SocialMonitor password code')
-    expect(m.html).toContain('Password code: 402913 · Works for 10 minutes')
+    expect(m.html).toContain('Your SocialMonitor code is 402913 · works for 10 minutes')
     expect(m.text).toContain('402913')
     expect(m.text).toContain('did not ask to change your password')
     for (const l of ['ro', 'ru', 'fr', 'zh'])
@@ -171,5 +182,70 @@ describe('emails in Gradient’s design', () => {
       ),
     ).toBe('Safari · iOS')
     expect(deviceName('curl/8.7.1')).toBe('')
+  })
+})
+
+// Gmail's "Copy code" card: the bare code leads the subject, the plain text opens with the
+// preheader that names it, the digits sit on the code pass, and the mail comes from SMTP_FROM.
+describe('code emails for Gmail’s copy card', () => {
+  const env = { ...process.env }
+  beforeAll(() => {
+    Object.assign(process.env, {
+      SMTP_HOST: 'smtp.example.test',
+      SMTP_PORT: '465',
+      SMTP_USER: 'account@shades.md',
+      SMTP_PASS: 'not-a-real-password',
+      SMTP_FROM: 'SocialMonitor <no-reply@shades.md>',
+    })
+  })
+  afterAll(() => {
+    for (const k of ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'])
+      if (env[k] === undefined) delete process.env[k]
+      else process.env[k] = env[k]
+  })
+
+  const kinds = [
+    { kind: 'signin', label: 'Sign-in code' },
+    { kind: 'reset', label: 'Password code' },
+  ] as const
+  const first = (text: string) => text.split('\n')[0]
+
+  for (const { kind, label } of kinds)
+    it(`builds the ${kind} code for the card and sends it from SMTP_FROM`, async () => {
+      const m = codeMail('en', '716428', kind)
+      expect(m.subject.startsWith('716428 ')).toBe(true)
+      expect(first(m.text)).toBe('Your SocialMonitor code is 716428 · works for 10 minutes')
+      // Gradient's ink pass, with the label next to the digits as plain text.
+      expect(m.html).toContain('g-e-pass-ink')
+      expect(m.text).toContain(`${label}: 716428`)
+
+      sent.length = 0
+      await sendMail('ana@example.test', m)
+      expect(sent).toHaveLength(1)
+      const out = sent[0]!
+      expect(out.from).toBe('SocialMonitor <no-reply@shades.md>')
+      expect(out.subject).toBe(m.subject)
+      expect(first(String(out.text))).toBe(first(m.text))
+      // Nothing may move the sender away from SMTP_FROM.
+      for (const k of ['sender', 'envelope', 'replyTo']) expect(out).not.toHaveProperty(k)
+    })
+
+  it('says the real lifetime, and keeps the code first in every language', () => {
+    expect(first(codeMail('en', '402913', 'reset', 30).text)).toBe(
+      'Your SocialMonitor code is 402913 · works for 30 minutes',
+    )
+    const want: Record<string, string> = {
+      ro: 'Codul tău SocialMonitor este 402913 · valabil 10 minute',
+      ru: 'Ваш код SocialMonitor: 402913 · действует 10 минут',
+      fr: 'Votre code SocialMonitor est 402913 · valable 10 minutes',
+      zh: '你的 SocialMonitor 验证码是 402913 · 10分钟内有效',
+    }
+    for (const [lang, line] of Object.entries(want))
+      for (const kind of ['signin', 'reset'] as const) {
+        const m = codeMail(lang, '402913', kind)
+        expect(m.subject.startsWith('402913 ')).toBe(true)
+        expect(first(m.text)).toBe(line)
+        expect(m.html).toContain('g-e-pass-ink')
+      }
   })
 })
