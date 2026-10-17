@@ -29,8 +29,11 @@ import type { AiPause } from './ai-limit.ts'
 import { getSettings } from './settings.ts'
 import { buildReport } from './report.ts'
 
-/** Comment text comes from a signed-in session on these; their updates keep the gap. */
-const SIGNED_IN: Network[] = ['instagram', 'facebook', 'tiktok']
+/**
+ * Comment text comes from a signed-in session on these; their updates keep the gap. TikTok is
+ * read logged out, so it never waits.
+ */
+const SIGNED_IN: Network[] = ['instagram', 'facebook']
 const MAX_COMMENTS = 300
 
 type Trigger = 'manual' | 'schedule' | 'mcp'
@@ -180,7 +183,8 @@ async function execute(db: DB, { runId, scope, trigger, scheduleId }: Job) {
         )
       }
       try {
-        if (!viaMeta)
+        // TikTok opens its own logged-out browser; the shared profile is never opened for it.
+        if (!viaMeta && p.network !== 'tiktok')
           page ??= (await openBrowser()).pages()[0] ?? (await (await openBrowser()).newPage())
         log(`${brand.name}: reading ${p.network} @${p.handle}.`)
         const opt = {

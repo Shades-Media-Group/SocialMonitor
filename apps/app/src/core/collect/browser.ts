@@ -45,6 +45,42 @@ export async function openBrowser({ visible = false } = {}): Promise<BrowserCont
   return shared
 }
 
+/**
+ * A throwaway, logged-out browser for reading what anyone can see: its own process and an
+ * empty, in-memory context, never the profile in data/browser, so no network session can
+ * reach it. Its cookies are only what the sites hand any visitor, and they go when it closes.
+ * It loads pages whole, like any visitor, and introduces itself as the Chrome it is, without
+ * the "Headless" a hidden window adds to its name.
+ */
+export async function openLoggedOut(): Promise<{
+  context: BrowserContext
+  close: () => Promise<void>
+}> {
+  const browser = await chromium.launch({
+    channel: hasChrome() ? 'chrome' : undefined,
+    headless: true,
+    ignoreDefaultArgs: ['--enable-automation'],
+    args: ['--disable-blink-features=AutomationControlled'],
+  })
+  const context = await browser.newContext({
+    viewport: { width: 1366, height: 900 },
+    userAgent: plainUserAgent(browser.version()),
+  })
+  return { context, close: () => browser.close().catch(() => {}) }
+}
+
+/** Chrome's ordinary user agent for this computer's system and the given version. */
+export function plainUserAgent(version: string, platform: string = process.platform) {
+  const os =
+    platform === 'darwin'
+      ? 'Macintosh; Intel Mac OS X 10_15_7'
+      : platform === 'win32'
+        ? 'Windows NT 10.0; Win64; x64'
+        : 'X11; Linux x86_64'
+  const major = version.split('.')[0] || '130'
+  return `Mozilla/5.0 (${os}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${major}.0.0.0 Safari/537.36`
+}
+
 export async function closeBrowser() {
   await shared?.close().catch(() => {})
   shared = null
@@ -109,8 +145,12 @@ export async function readScroll(page: Page, steps = 3, selector?: string) {
 
 /** Thrown when a network shows a captcha, a checkpoint or a login wall. The update stops there for that network. */
 export class Challenge extends Error {
-  constructor(network: string, what: string) {
-    super(`${network}: ${what}. Open "Sign in to networks", check the account, then update again.`)
+  constructor(
+    network: string,
+    what: string,
+    next = 'Open "Sign in to networks", check the account, then update again.',
+  ) {
+    super(`${network}: ${what}. ${next}`)
     this.name = 'Challenge'
   }
 }
