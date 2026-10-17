@@ -1,0 +1,60 @@
+{
+  "status_code": 0,
+  "comments": [
+    {
+      "aweme_id": "7696861285295656213",
+      "cid": "7697189699925279494",
+      "text": "Acum hai să numărăm și pasul spre Moldtelecom pentru portarea numărului tău. 💙",
+      "create_time": 1792141670,
+      "digg_count": 0,
+      "reply_id": "7697145192738276103",
+      "reply_to_reply_id": "0",
+      "user": {
+        "unique_id": "moldtelecom.md",
+        "nickname": "Moldtelecom",
+        "avatar_thumb": {
+          "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/avatar.jpeg"]
+        }
+      },
+      "reply_comment": null
+    },
+    {
+      "aweme_id": "7696861285295656213",
+      "cid": "7697190106381714192",
+      "text": "Deja ma gandesc la portare, care este viteza internetului?",
+      "create_time": 1792141740,
+      "digg_count": 0,
+      "reply_id": "7697145192738276103",
+      "reply_to_reply_id": "7697189699925279494",
+      "user": {
+        "unique_id": "fan_1",
+        "nickname": "fan_1",
+        "avatar_thumb": {
+          "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/fan_1.jpeg"]
+        },
+        "follower_count": 0
+      },
+      "reply_comment": null
+    },
+    {
+      "aweme_id": "7696861285295656213",
+      "cid": "7697198032172925702",
+      "text": "Depinde și de abonamentul ales 😊 Viteza internetului mobil 5G poate varia în funcție de planul tarifar, zonă și dispozitiv. Scrie-ne în privat chiar acum.",
+      "create_time": 1792143589,
+      "digg_count": 0,
+      "reply_id": "7697145192738276103",
+      "reply_to_reply_id": "7697190106381714192",
+      "user": {
+        "unique_id": "moldtelecom.md",
+        "nickname": "Moldtelecom",
+        "avatar_thumb": {
+          "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/avatar.jpeg"]
+        }
+      },
+      "reply_comment": null
+    }
+  ],
+  "cursor": 3,
+  "has_more": 0,
+  "total": 3
+}

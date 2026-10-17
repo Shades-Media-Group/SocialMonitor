@@ -1,0 +1,158 @@
+{
+  "status_code": 0,
+  "comments": [
+    {
+      "aweme_id": "7696861285295656213",
+      "cid": "7697145192738276103",
+      "text": "Eu am numarat 25 de sarituri",
+      "create_time": 1792131284,
+      "digg_count": 0,
+      "reply_id": "0",
+      "reply_to_reply_id": "0",
+      "user": {
+        "unique_id": "fan_1",
+        "nickname": "fan_1",
+        "avatar_thumb": {
+          "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/fan_1.jpeg"]
+        },
+        "follower_count": 0
+      },
+      "reply_comment": [
+        {
+          "aweme_id": "7696861285295656213",
+          "cid": "7697189699925279494",
+          "text": "Acum hai să numărăm și pasul spre Moldtelecom pentru portarea numărului tău. 💙",
+          "create_time": 1792141670,
+          "digg_count": 0,
+          "reply_id": "7697145192738276103",
+          "reply_to_reply_id": "0",
+          "user": {
+            "unique_id": "moldtelecom.md",
+            "nickname": "Moldtelecom",
+            "avatar_thumb": {
+              "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/avatar.jpeg"]
+            }
+          },
+          "reply_comment": null
+        }
+      ],
+      "reply_comment_total": 3
+    },
+    {
+      "aweme_id": "7696861285295656213",
+      "cid": "7697144668031435523",
+      "text": "câte sedii moldtelecom sunt în orhei?",
+      "create_time": 1792131199,
+      "digg_count": 1,
+      "reply_id": "0",
+      "reply_to_reply_id": "0",
+      "user": {
+        "unique_id": "fan_2",
+        "nickname": "fan_2",
+        "avatar_thumb": {
+          "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/fan_2.jpeg"]
+        },
+        "follower_count": 0
+      },
+      "reply_comment": [
+        {
+          "aweme_id": "7696861285295656213",
+          "cid": "7697188499358843649",
+          "text": "În Orhei ne găsești la adresa str. Vasile Mahu 119. Te așteptăm în magazinul Moldtelecom!",
+          "create_time": 1792141370,
+          "digg_count": 0,
+          "reply_id": "7697144668031435523",
+          "reply_to_reply_id": "0",
+          "user": {
+            "unique_id": "moldtelecom.md",
+            "nickname": "Moldtelecom",
+            "avatar_thumb": {
+              "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/avatar.jpeg"]
+            }
+          },
+          "reply_comment": null
+        }
+      ],
+      "reply_comment_total": 1
+    },
+    {
+      "aweme_id": "7696861285295656213",
+      "cid": "7696953456422748936",
+      "text": "eu am văzut un patriotism adevărat?",
+      "create_time": 1792086640,
+      "digg_count": 0,
+      "reply_id": "0",
+      "reply_to_reply_id": "0",
+      "user": {
+        "unique_id": "fan_3",
+        "nickname": "fan_3",
+        "avatar_thumb": {
+          "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/fan_3.jpeg"]
+        },
+        "follower_count": 0
+      },
+      "reply_comment": [
+        {
+          "aweme_id": "7696861285295656213",
+          "cid": "7696970857978282804",
+          "text": "Când vine din suflet, se vede imediat 💙🇲🇩",
+          "create_time": 1792090716,
+          "digg_count": 1,
+          "reply_id": "7696953456422748936",
+          "reply_to_reply_id": "0",
+          "user": {
+            "unique_id": "moldtelecom.md",
+            "nickname": "Moldtelecom",
+            "avatar_thumb": {
+              "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/avatar.jpeg"]
+            }
+          },
+          "reply_comment": null
+        }
+      ],
+      "reply_comment_total": 1
+    },
+    {
+      "aweme_id": "7696861285295656213",
+      "cid": "7696928173288227600",
+      "text": "♥️♥️♥️♥️♥️♥️",
+      "create_time": 1792080751,
+      "digg_count": 0,
+      "reply_id": "0",
+      "reply_to_reply_id": "0",
+      "user": {
+        "unique_id": "fan_4",
+        "nickname": "fan_4",
+        "avatar_thumb": {
+          "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/fan_4.jpeg"]
+        },
+        "follower_count": 0
+      },
+      "reply_comment": [
+        {
+          "aweme_id": "7696861285295656213",
+          "cid": "7696966936170005249",
+          "text": "😍😍",
+          "create_time": 1792089805,
+          "digg_count": 0,
+          "reply_id": "7696928173288227600",
+          "reply_to_reply_id": "0",
+          "user": {
+            "unique_id": "moldtelecom.md",
+            "nickname": "Moldtelecom",
+            "avatar_thumb": {
+              "url_list": ["https://p16-sign-va.tiktokcdn.com/obj/avatar.jpeg"]
+            }
+          },
+          "reply_comment": null
+        }
+      ],
+      "reply_comment_total": 1
+    }
+  ],
+  "cursor": 50,
+  "has_more": 0,
+  "total": 10,
+  "has_fold_comment": true,
+  "fold_comment_cursor": 9
+}

@@ -1,0 +1,75 @@
+{
+  "statusCode": 0,
+  "hasMorePrevious": true,
+  "itemList": [
+    {
+      "id": "7697258124079615252",
+      "desc": "    🔐 Un internet mai sigur începe cu fiecare dintre noi. Cu ocazia Lunii Europene a Securității Cibernetice, Moldtelecom desfășoară proiectul „Securitatea digitală pentru elevi”, prin sesiuni educative în liceele din capitală. 📍 Prima întâlnire a avut loc la Liceul Teoretic „Alexandru Ioan Cuza”, unde am discutat despre fraude online, parole sigure și protecția datelor personale. 🛡️ Pentru a fi în siguranță, no stop! Activează serviciul Securitatea digitală de la Moldtelecom, direct din aplicația My Moldtelecom. 👉mtc.md/securitate-mobila   #Moldtelecom #SecuritateDigitală #CybersecurityMonth #EducațieDigitală #MyMoldtelecom",
+      "createTime": 1792157571,
+      "stats": {
+        "collectCount": 2,
+        "commentCount": 2,
+        "diggCount": 28,
+        "playCount": 723,
+        "shareCount": 0
+      },
+      "statsV2": {
+        "collectCount": "2",
+        "commentCount": "2",
+        "diggCount": "28",
+        "playCount": "723",
+        "repostCount": "0",
+        "shareCount": "0"
+      },
+      "video": {
+        "cover": "https://p16-sign-va.tiktokcdn.com/obj/cover.jpeg"
+      }
+    },
+    {
+      "id": "7697243915866459413",
+      "desc": "🔐 Cu ocazia Lunii Europene a Securității Cibernetice, Moldtelecom te încurajează să acorzi mai multă atenție siguranței tale online. Unele aplicații pot păstra accesul la datele contului tău Google chiar și după ce nu le mai folosești ✅ Verifică periodic aplicațiile conectate. ✅ Elimină accesul celor pe care nu le mai folosești. ✅ Protejează-ți datele înainte să apară o problemă. 👉 Activează acum Securitatea Digitală din MyMoldtelecom. Vezi aici cum se activează: mtc.md/securitate-mobila 🛡️ Pentru un internet mai sigur, în fiecare zi! 💙 Moldtelecom. Operatorul moldovenilor",
+      "createTime": 1792154261,
+      "stats": {
+        "collectCount": 1,
+        "commentCount": 1,
+        "diggCount": 40,
+        "playCount": 1087,
+        "shareCount": 0
+      },
+      "statsV2": {
+        "collectCount": "1",
+        "commentCount": "1",
+        "diggCount": "40",
+        "playCount": "1087",
+        "repostCount": "0",
+        "shareCount": "0"
+      },
+      "video": {
+        "cover": "https://p16-sign-va.tiktokcdn.com/obj/cover.jpeg"
+      }
+    },
+    {
+      "id": "7696861285295656213",
+      "desc": "@Satoshi s-a portat deja! Tu ce mai aștepți?💙",
+      "createTime": 1792065172,
+      "stats": {
+        "collectCount": 29,
+        "commentCount": 17,
+        "diggCount": 238,
+        "playCount": 3998,
+        "shareCount": 12
+      },
+      "statsV2": {
+        "collectCount": "29",
+        "commentCount": "17",
+        "diggCount": "238",
+        "playCount": "3998",
+        "repostCount": "0",
+        "shareCount": "12"
+      },
+      "video": {
+        "cover": "https://p16-sign-va.tiktokcdn.com/obj/cover.jpeg"
+      }
+    }
+  ]
+}
