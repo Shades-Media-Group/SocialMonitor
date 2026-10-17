@@ -63,9 +63,10 @@ export function routeVia(db: DB, route: MetaRoute) {
   return route === 'discovery' && a.username ? `@${a.username}` : (a.name ?? null)
 }
 
-/** The media fields Business Discovery returns for another professional account. */
+/** The media fields Business Discovery returns for another professional account. Meta refuses
+ * `shortcode` here (#100), so the website id is worked out from the permalink. */
 export const DISCOVERY_MEDIA_FIELDS =
-  'id,caption,timestamp,permalink,shortcode,media_type,media_product_type,media_url,thumbnail_url,like_count,comments_count,view_count'
+  'id,caption,timestamp,permalink,media_type,media_product_type,media_url,thumbnail_url,like_count,comments_count,view_count'
 
 interface Discovered {
   business_discovery?: {

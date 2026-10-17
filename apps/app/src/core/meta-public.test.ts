@@ -192,7 +192,7 @@ describe('Business Discovery', () => {
 
   it('follows the cursor for the next page', () => {
     expect(discoveryFields('a.b', 10, 'QVF')).toBe(
-      'business_discovery.username(a.b){username,followers_count,media_count,media.after(QVF).limit(10){id,caption,timestamp,permalink,shortcode,media_type,media_product_type,media_url,thumbnail_url,like_count,comments_count,view_count}}',
+      'business_discovery.username(a.b){username,followers_count,media_count,media.after(QVF).limit(10){id,caption,timestamp,permalink,media_type,media_product_type,media_url,thumbnail_url,like_count,comments_count,view_count}}',
     )
   })
 
