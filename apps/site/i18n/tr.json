@@ -196,7 +196,7 @@
   },
   "consent": {
     "title": "Gizliliğin",
-    "text": "Bu site yalnızca çalışması için gerekenleri, örneğin görünüm ayarlarını saklar. Analiz veya pazarlama araçları ancak onay verirsen çalışır.",
+    "text": "Bu site yalnızca çalışması için gerekenleri saklar. Gerisi onayını bekler.",
     "acceptAll": "Tümünü kabul et",
     "necessaryOnly": "Yalnızca gerekli",
     "customize": "Özelleştir",

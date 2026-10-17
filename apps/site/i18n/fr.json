@@ -196,7 +196,7 @@
   },
   "consent": {
     "title": "Votre vie privée",
-    "text": "Ce site ne garde que ce dont il a besoin pour fonctionner, comme vos réglages d’affichage. Les outils d’analyse ou de marketing ne fonctionneraient qu’avec votre accord.",
+    "text": "Ce site ne garde que ce dont il a besoin pour fonctionner. Le reste attend votre accord.",
     "acceptAll": "Tout accepter",
     "necessaryOnly": "Le nécessaire seulement",
     "customize": "Personnaliser",

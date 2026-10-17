@@ -196,7 +196,7 @@
   },
   "consent": {
     "title": "Your privacy",
-    "text": "This site keeps only what it needs to work, like your display settings. Analytics or marketing tools would run only with your yes.",
+    "text": "This site keeps only what it needs to work. Anything else waits for your yes.",
     "acceptAll": "Accept all",
     "necessaryOnly": "Only necessary",
     "customize": "Customise",

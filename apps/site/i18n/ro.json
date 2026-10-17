@@ -196,7 +196,7 @@
   },
   "consent": {
     "title": "Confidențialitatea ta",
-    "text": "Acest site păstrează doar ce îi trebuie ca să funcționeze, cum ar fi setările de afișare. Instrumentele de analiză sau marketing ar rula doar cu acordul tău.",
+    "text": "Acest site păstrează doar ce îi trebuie ca să funcționeze. Restul așteaptă acordul tău.",
     "acceptAll": "Accept tot",
     "necessaryOnly": "Doar necesare",
     "customize": "Personalizează",

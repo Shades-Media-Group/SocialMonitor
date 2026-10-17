@@ -196,7 +196,7 @@
   },
   "consent": {
     "title": "La tua privacy",
-    "text": "Questo sito conserva solo ciò che serve per funzionare, come le impostazioni di visualizzazione. Strumenti di analisi o marketing funzionerebbero solo con il tuo consenso.",
+    "text": "Questo sito conserva solo ciò che serve per funzionare. Il resto aspetta il tuo consenso.",
     "acceptAll": "Accetta tutto",
     "necessaryOnly": "Solo necessari",
     "customize": "Personalizza",
