@@ -110,6 +110,8 @@ export interface Ctx {
   origin: string
   /** The request's Cookie header, for the few routes that read a cookie besides the session's. */
   cookie?: string
+  /** The request body, unread, on routes that take a file (raw); body is then {}. */
+  stream?: AsyncIterable<Uint8Array>
 }
 type Signed = Ctx & { user: User }
 /**
@@ -117,11 +119,13 @@ type Signed = Ctx & { user: User }
  * or a check that throws for everyone else. Every route names one, so nothing is open by default.
  */
 export type Need = 'public' | 'user' | 'super' | ((c: Signed) => void)
-interface Route {
+export interface Route {
   method: string
   path: RegExp
   need: Need
   handle: (c: Ctx) => unknown
+  /** Takes a file as application/octet-stream, streamed to the handler (Ctx.stream), not JSON. */
+  raw?: boolean
 }
 
 export const r = (

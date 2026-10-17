@@ -50,6 +50,9 @@ const EVENT: Record<string, string> = {
   'security.second_factor_removed': t('Second factor removed'),
   'security.failed_signins': t('Five failed sign-ins'),
   'security.new_admin': t('New admin'),
+  'backup.downloaded': t('Backup downloaded'),
+  'backup.restore_started': t('Restore started'),
+  'backup.restored': t('Backup restored'),
 }
 
 const KINDS: [string, string][] = [
@@ -63,6 +66,7 @@ const KINDS: [string, string][] = [
   ['account', t('Saved accounts')],
   ['export', t('Exports')],
   ['download', t('Downloads')],
+  ['backup', t('Backups')],
   ['security', t('Security alerts')],
 ]
 

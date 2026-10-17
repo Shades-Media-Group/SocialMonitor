@@ -43,6 +43,12 @@ export const AUDIT_EVENTS = [
   'session.revoked',
   'security.recovery_used',
   'security.recovery_new',
+  // A copy of the whole database taken from Settings, and one put back.
+  'backup.downloaded',
+  // Written into the database being replaced, so its safety copy says why it was made.
+  'backup.restore_started',
+  // Written into the restored database after the swap, so the trail survives it.
+  'backup.restored',
 ] as const
 export type AuditEvent = (typeof AUDIT_EVENTS)[number]
 

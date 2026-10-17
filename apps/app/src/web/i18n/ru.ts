@@ -2,6 +2,44 @@ import type { Dict } from '../i18n.ts'
 
 export const ru: Dict = {
   strings: {
+    Backups: 'Резервные копии',
+    'The database only: media and reports stay as files on the computer SocialMonitor runs on.':
+      'Только база данных: медиа и отчёты остаются файлами на компьютере, где работает SocialMonitor.',
+    'Download backup': 'Скачать резервную копию',
+    'Restore from backup': 'Восстановить из копии',
+    'Automatic copies': 'Автоматические копии',
+    'Made before each release and each restore, in data/backups.':
+      'Создаются перед каждым выпуском и каждым восстановлением, в data/backups.',
+    'And {n} older.': 'И ещё {n} старше.',
+    'Everything in SocialMonitor now is replaced by {file} ({size}): brands, posts, comments, people and settings.':
+      'Всё, что сейчас есть в SocialMonitor, заменяется файлом {file} ({size}): бренды, посты, комментарии, люди и настройки.',
+    'A safety copy of the current database is saved in data/backups first. Then everyone is signed out, you too, and signs in with the accounts in the backup.':
+      'Сначала копия текущей базы данных сохраняется в data/backups. Затем все выходят из системы, включая вас, и входят с учётными записями из копии.',
+    'Saved network passwords open only when SOCIALMONITOR_VAULT_KEY is the same as when the backup was made. Media and reports are not in the backup.':
+      'Сохранённые пароли сетей откроются, только если SOCIALMONITOR_VAULT_KEY тот же, что и при создании копии. Медиа и отчётов в копии нет.',
+    'Type {word} to confirm': 'Введите {word} для подтверждения',
+    'Restoring…': 'Восстановление…',
+    'Replace everything': 'Заменить всё',
+    'The backup was restored and everyone was signed out. Sign in with an account from it.':
+      'Копия восстановлена, и все вышли из системы. Войдите с учётной записью из неё.',
+    'Backup downloaded': 'Резервная копия скачана',
+    'Restore started': 'Восстановление начато',
+    'Backup restored': 'Резервная копия восстановлена',
+    'The file is larger than 1 GB.': 'Файл больше 1 ГБ.',
+    'Choose a backup file.': 'Выберите файл резервной копии.',
+    'This file is not a SocialMonitor backup.': 'Этот файл не резервная копия SocialMonitor.',
+    'This backup is damaged.': 'Эта копия повреждена.',
+    'This backup comes from a newer version of SocialMonitor. Update SocialMonitor first.':
+      'Эта копия сделана более новой версией SocialMonitor. Сначала обновите SocialMonitor.',
+    'This backup could not be brought up to this version.':
+      'Эту копию не удалось привести к этой версии.',
+    'A restore is already under way.': 'Восстановление уже идёт.',
+    'An update is running. Restore when it has finished.':
+      'Идёт обновление. Восстановите, когда оно закончится.',
+    'A backup is being restored. Try again in a minute.':
+      'Идёт восстановление из копии. Попробуйте через минуту.',
+    'Send the file as application/octet-stream.': 'Отправьте файл как application/octet-stream.',
+    'This database is not a file.': 'Эта база данных не файл.',
     'No problems named in this period.': 'За этот период проблем не названо.',
     'Saved reports and exports': 'Сохранённые отчёты и выгрузки',
     'Every PDF, Excel and CSV made for this brand, kept to open again':

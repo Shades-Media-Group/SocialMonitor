@@ -7,6 +7,7 @@ import { NETWORK_NAME, Row, Segmented, Sheet, ago, count, when } from './ui.tsx'
 import { JsonPanel } from './json.tsx'
 import { Accounts } from './accounts.tsx'
 import { TwoStep } from './security.tsx'
+import { Backups } from './backups.tsx'
 import type { Lang } from './i18n.ts'
 import { LANGS, lang, locale, setLang, t } from './i18n.ts'
 import { flushPrefs, setPref } from './prefs.ts'
@@ -234,6 +235,7 @@ export function SettingsSheet({
               />
             </div>
           </Row>
+          <Backups open={open} />
         </>
       )}
       <p class="sm-credit">

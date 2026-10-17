@@ -2,6 +2,45 @@ import type { Dict } from '../i18n.ts'
 
 export const ro: Dict = {
   strings: {
+    Backups: 'Copii de rezervă',
+    'The database only: media and reports stay as files on the computer SocialMonitor runs on.':
+      'Doar baza de date: media și rapoartele rămân fișiere pe computerul pe care rulează SocialMonitor.',
+    'Download backup': 'Descarcă o copie de rezervă',
+    'Restore from backup': 'Restaurează dintr-o copie',
+    'Automatic copies': 'Copii automate',
+    'Made before each release and each restore, in data/backups.':
+      'Făcute înainte de fiecare versiune nouă și de fiecare restaurare, în data/backups.',
+    'And {n} older.': 'Și încă {n} mai vechi.',
+    'Everything in SocialMonitor now is replaced by {file} ({size}): brands, posts, comments, people and settings.':
+      'Tot ce este acum în SocialMonitor este înlocuit cu {file} ({size}): branduri, postări, comentarii, persoane și setări.',
+    'A safety copy of the current database is saved in data/backups first. Then everyone is signed out, you too, and signs in with the accounts in the backup.':
+      'Mai întâi se salvează o copie de siguranță a bazei de date actuale în data/backups. Apoi toți sunt deconectați, inclusiv tu, și se autentifică cu conturile din copie.',
+    'Saved network passwords open only when SOCIALMONITOR_VAULT_KEY is the same as when the backup was made. Media and reports are not in the backup.':
+      'Parolele salvate ale rețelelor se deschid doar dacă SOCIALMONITOR_VAULT_KEY este aceeași ca atunci când s-a făcut copia. Media și rapoartele nu sunt în copie.',
+    'Type {word} to confirm': 'Scrie {word} ca să confirmi',
+    'Restoring…': 'Se restaurează…',
+    'Replace everything': 'Înlocuiește tot',
+    'The backup was restored and everyone was signed out. Sign in with an account from it.':
+      'Copia a fost restaurată și toți au fost deconectați. Autentifică-te cu un cont din ea.',
+    'Backup downloaded': 'Copie de rezervă descărcată',
+    'Restore started': 'Restaurare începută',
+    'Backup restored': 'Copie de rezervă restaurată',
+    'The file is larger than 1 GB.': 'Fișierul este mai mare de 1 GB.',
+    'Choose a backup file.': 'Alege un fișier de rezervă.',
+    'This file is not a SocialMonitor backup.':
+      'Acest fișier nu este o copie de rezervă SocialMonitor.',
+    'This backup is damaged.': 'Această copie este deteriorată.',
+    'This backup comes from a newer version of SocialMonitor. Update SocialMonitor first.':
+      'Această copie vine dintr-o versiune mai nouă a SocialMonitor. Actualizează mai întâi SocialMonitor.',
+    'This backup could not be brought up to this version.':
+      'Această copie nu a putut fi adusă la această versiune.',
+    'A restore is already under way.': 'O restaurare este deja în curs.',
+    'An update is running. Restore when it has finished.':
+      'Rulează o actualizare. Restaurează după ce se termină.',
+    'A backup is being restored. Try again in a minute.':
+      'Se restaurează o copie de rezervă. Încearcă din nou peste un minut.',
+    'Send the file as application/octet-stream.': 'Trimite fișierul ca application/octet-stream.',
+    'This database is not a file.': 'Această bază de date nu este un fișier.',
     'No problems named in this period.': 'Nicio problemă numită în această perioadă.',
     'Saved reports and exports': 'Rapoarte și exporturi salvate',
     'Every PDF, Excel and CSV made for this brand, kept to open again':

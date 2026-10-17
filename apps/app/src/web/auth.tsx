@@ -141,6 +141,14 @@ function shadesReason() {
   history.replaceState(null, '', location.pathname + location.hash)
   return t(SHADES_WHY[why] ?? SHADES_WHY.failed!)
 }
+/** Back from a restore (?restored=1): everyone was signed out, so the sign-in screen says why. */
+function restoredNote() {
+  const q = new URLSearchParams(location.search)
+  if (!q.has('restored')) return null
+  q.delete('restored')
+  history.replaceState(null, '', location.pathname + (q.size ? `?${q}` : '') + location.hash)
+  return t('The backup was restored and everyone was signed out. Sign in with an account from it.')
+}
 /** A Shades login waiting for SocialMonitor's own second step: its ticket, from #shades=…. */
 function shadesTicket() {
   const m = /^#shades=([\w-]+)$/.exec(location.hash)
@@ -350,6 +358,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   const [ticket, setTicket] = useState<Ticket | null>(null)
   // Why a Shades login came back, if it did: shown once, and never marks the password wrong.
   const [why] = useState(shadesReason)
+  const [restored] = useState(restoredNote)
   const [error, setError] = useState<string | null>(why)
   const [busy, setBusy] = useState(false)
   const [resent, setResent] = useState(false)
@@ -805,6 +814,7 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
   return (
     <Frame
       title={t('Sign in to SocialMonitor')}
+      lead={restored ?? undefined}
       busy={busy}
       onSubmit={go(async () => {
         const r = await api.post<Ticket>('/api/auth/login', {

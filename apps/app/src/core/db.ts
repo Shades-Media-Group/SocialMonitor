@@ -312,10 +312,16 @@ export type DB = DatabaseSync
 export function openDb(file = join(DATA_DIR, 'socialmonitor.db')): DB {
   if (file !== ':memory:') mkdirSync(dirname(file), { recursive: true })
   const db = new DatabaseSync(file)
+  upgradeDb(db)
+  return db
+}
+
+/** Brings an open database to this version's schema: new tables, then the migrations. Also run on
+ * the live handle after a restore (core/backup.ts) put an older database's contents under it. */
+export function upgradeDb(db: DB) {
   db.exec(SCHEMA)
   migrate(db)
   closeAnswered(db)
-  return db
 }
 
 /**

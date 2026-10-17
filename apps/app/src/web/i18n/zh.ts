@@ -2,6 +2,41 @@ import type { Dict } from '../i18n.ts'
 
 export const zh: Dict = {
   strings: {
+    Backups: '备份',
+    'The database only: media and reports stay as files on the computer SocialMonitor runs on.':
+      '仅数据库：媒体和报告仍以文件形式保存在运行 SocialMonitor 的电脑上。',
+    'Download backup': '下载备份',
+    'Restore from backup': '从备份恢复',
+    'Automatic copies': '自动副本',
+    'Made before each release and each restore, in data/backups.':
+      '每次发布新版本和每次恢复前生成，保存在 data/backups。',
+    'And {n} older.': '另有 {n} 个更早的。',
+    'Everything in SocialMonitor now is replaced by {file} ({size}): brands, posts, comments, people and settings.':
+      'SocialMonitor 中现有的一切都将被 {file}（{size}）替换：品牌、帖子、评论、人员和设置。',
+    'A safety copy of the current database is saved in data/backups first. Then everyone is signed out, you too, and signs in with the accounts in the backup.':
+      '会先把当前数据库的安全副本保存到 data/backups。然后所有人（包括你）都会退出登录，并使用备份中的账户登录。',
+    'Saved network passwords open only when SOCIALMONITOR_VAULT_KEY is the same as when the backup was made. Media and reports are not in the backup.':
+      '只有 SOCIALMONITOR_VAULT_KEY 与备份时相同，保存的网络密码才能打开。备份不包含媒体和报告。',
+    'Type {word} to confirm': '输入 {word} 以确认',
+    'Restoring…': '正在恢复…',
+    'Replace everything': '全部替换',
+    'The backup was restored and everyone was signed out. Sign in with an account from it.':
+      '备份已恢复，所有人都已退出登录。请使用备份中的账户登录。',
+    'Backup downloaded': '已下载备份',
+    'Restore started': '已开始恢复',
+    'Backup restored': '已恢复备份',
+    'The file is larger than 1 GB.': '文件超过 1 GB。',
+    'Choose a backup file.': '请选择备份文件。',
+    'This file is not a SocialMonitor backup.': '此文件不是 SocialMonitor 备份。',
+    'This backup is damaged.': '此备份已损坏。',
+    'This backup comes from a newer version of SocialMonitor. Update SocialMonitor first.':
+      '此备份来自更新版本的 SocialMonitor。请先更新 SocialMonitor。',
+    'This backup could not be brought up to this version.': '无法将此备份升级到当前版本。',
+    'A restore is already under way.': '已有恢复正在进行。',
+    'An update is running. Restore when it has finished.': '有更新正在运行。请在完成后再恢复。',
+    'A backup is being restored. Try again in a minute.': '正在恢复备份。请一分钟后再试。',
+    'Send the file as application/octet-stream.': '请以 application/octet-stream 发送文件。',
+    'This database is not a file.': '此数据库不是文件。',
     'No problems named in this period.': '这段时间没有人提到问题。',
     'Saved reports and exports': '已保存的报告和导出',
     'Every PDF, Excel and CSV made for this brand, kept to open again':

@@ -1,12 +1,13 @@
 import { createServer } from 'node:http'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, readFileSync, rmSync, statSync } from 'node:fs'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
 import { guard, HttpError, routes } from './routes.ts'
 import { authRoutes } from './auth-routes.ts'
 import { shadesRoutes } from './shades-routes.ts'
+import { backupRoutes } from './backup-routes.ts'
 import {
   cookieAge,
   cookieName,
@@ -58,6 +59,8 @@ closeStaleRuns(db)
 startScheduler(db)
 // Photos and stickers for older TikTok comments, from public pages, a few seconds after start.
 setTimeout(() => void fillTikTok(db, (l) => console.log(l)).catch(() => {}), 5000)
+
+const ALL = [...authRoutes, ...shadesRoutes, ...backupRoutes, ...routes]
 
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -132,9 +135,14 @@ const server = createServer(async (req, res) => {
   // tunnel. Other local ports count as the same site to cookies, so they are refused by name.
   const origin = req.headers.origin
   if (origin && !ORIGINS.has(origin)) return send(res, 403, { error: 'Forbidden origin.' })
-  // A form or text/plain POST skips the browser's CORS check; JSON can't be sent cross-site without it.
-  if (req.method === 'POST' && !/^application\/json\b/.test(req.headers['content-type'] ?? ''))
-    return send(res, 415, { error: 'Send JSON.' })
+  // A form or text/plain POST skips the browser's CORS check; JSON can't be sent cross-site without
+  // it, and neither can application/octet-stream, which the routes that take a file (raw) ask for.
+  const raw = ALL.some((r) => r.raw && r.method === req.method && r.path.test(url.pathname))
+  const wants = raw ? /^application\/octet-stream\b/ : /^application\/json\b/
+  if (req.method === 'POST' && !wants.test(req.headers['content-type'] ?? ''))
+    return send(res, 415, {
+      error: raw ? 'Send the file as application/octet-stream.' : 'Send JSON.',
+    })
   // Then the person: everything except the app's own files and the sign-in endpoints needs a session.
   const secure = !pass.local
   // The visitor's address and country: Cloudflare's headers count only through the tunnel.
@@ -182,7 +190,7 @@ const server = createServer(async (req, res) => {
     return serveStatic(res, url.pathname)
   }
   try {
-    for (const r of [...authRoutes, ...shadesRoutes, ...routes]) {
+    for (const r of ALL) {
       if (r.method !== req.method) continue
       const m = r.path.exec(url.pathname)
       if (!m) continue
@@ -190,7 +198,8 @@ const server = createServer(async (req, res) => {
         db,
         params: m.groups ?? {},
         query: url.searchParams,
-        body: req.method === 'GET' ? {} : await body(req),
+        body: req.method === 'GET' || r.raw ? {} : await body(req),
+        stream: r.raw ? (req as AsyncIterable<Uint8Array>) : undefined,
         local: pass.local,
         user,
         cookies,
@@ -210,6 +219,26 @@ const server = createServer(async (req, res) => {
       if (data && typeof data === 'object' && '__redirect' in data) {
         res.writeHead(302, { location: (data as { __redirect: string }).__redirect })
         return res.end()
+      }
+      // A file on disk, streamed (a database backup can be large), then its folder removed.
+      if (data && typeof data === 'object' && '__file' in data) {
+        const d = data as { __file: string; name: string; type: string; cleanup?: string }
+        const done = () => {
+          if (d.cleanup) rmSync(d.cleanup, { recursive: true, force: true })
+        }
+        res.writeHead(200, {
+          'content-type': d.type,
+          'content-length': statSync(d.__file).size,
+          'content-disposition': `attachment; filename="${d.name}"`,
+          'cache-control': 'no-store',
+        })
+        const file = createReadStream(d.__file)
+        file.on('error', () => res.destroy())
+        res.on('close', () => {
+          file.destroy()
+          done()
+        })
+        return file.pipe(res)
       }
       if (data && typeof data === 'object' && '__download' in data) {
         const d = data as { __download: string; data: unknown; type?: string }

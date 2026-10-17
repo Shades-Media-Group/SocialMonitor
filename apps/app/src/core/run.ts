@@ -46,6 +46,25 @@ interface Job {
 }
 const queue: Job[] = []
 let busy = false
+/** A restore holds the updates: nothing starts, and new ones are refused, until it lets go. */
+let held = false
+
+/**
+ * Stops updates and catch-up sorting from starting, for a restore that replaces the database.
+ * False, and nothing held, when one is running or waiting: the restore must wait for it.
+ */
+export function holdRuns(): boolean {
+  if (busy || queue.length || held) return false
+  busy = true
+  held = true
+  return true
+}
+/** Lets updates run again after holdRuns. */
+export function releaseRuns() {
+  if (!held) return
+  held = false
+  busy = false
+}
 
 /** Queues an update and returns its run id. Updates run one at a time: the browser profile is shared. */
 export function queueRun(
@@ -54,6 +73,7 @@ export function queueRun(
   trigger: Trigger,
   opts: { scheduleId?: number } = {},
 ): number {
+  if (held) throw new Error('A backup is being restored. Try again in a minute.')
   if (!scope.brandIds.length) throw new Error('Choose at least one brand.')
   if (!scope.networks.length) throw new Error('Choose at least one network.')
   const runId = store.startRun(db, trigger, scope)

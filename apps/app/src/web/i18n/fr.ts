@@ -2,6 +2,45 @@ import type { Dict } from '../i18n.ts'
 
 export const fr: Dict = {
   strings: {
+    Backups: 'Sauvegardes',
+    'The database only: media and reports stay as files on the computer SocialMonitor runs on.':
+      'La base de données seulement : les médias et les rapports restent des fichiers sur l’ordinateur où tourne SocialMonitor.',
+    'Download backup': 'Télécharger une sauvegarde',
+    'Restore from backup': 'Restaurer une sauvegarde',
+    'Automatic copies': 'Copies automatiques',
+    'Made before each release and each restore, in data/backups.':
+      'Faites avant chaque nouvelle version et chaque restauration, dans data/backups.',
+    'And {n} older.': 'Et {n} plus anciennes.',
+    'Everything in SocialMonitor now is replaced by {file} ({size}): brands, posts, comments, people and settings.':
+      'Tout ce qui est dans SocialMonitor est remplacé par {file} ({size}) : marques, publications, commentaires, personnes et réglages.',
+    'A safety copy of the current database is saved in data/backups first. Then everyone is signed out, you too, and signs in with the accounts in the backup.':
+      'Une copie de sécurité de la base actuelle est d’abord enregistrée dans data/backups. Puis tout le monde est déconnecté, vous aussi, et se reconnecte avec les comptes de la sauvegarde.',
+    'Saved network passwords open only when SOCIALMONITOR_VAULT_KEY is the same as when the backup was made. Media and reports are not in the backup.':
+      'Les mots de passe des réseaux enregistrés ne s’ouvrent que si SOCIALMONITOR_VAULT_KEY est la même qu’au moment de la sauvegarde. Les médias et les rapports n’y sont pas.',
+    'Type {word} to confirm': 'Tapez {word} pour confirmer',
+    'Restoring…': 'Restauration…',
+    'Replace everything': 'Tout remplacer',
+    'The backup was restored and everyone was signed out. Sign in with an account from it.':
+      'La sauvegarde a été restaurée et tout le monde a été déconnecté. Connectez-vous avec un compte qu’elle contient.',
+    'Backup downloaded': 'Sauvegarde téléchargée',
+    'Restore started': 'Restauration commencée',
+    'Backup restored': 'Sauvegarde restaurée',
+    'The file is larger than 1 GB.': 'Le fichier dépasse 1 Go.',
+    'Choose a backup file.': 'Choisissez un fichier de sauvegarde.',
+    'This file is not a SocialMonitor backup.':
+      'Ce fichier n’est pas une sauvegarde SocialMonitor.',
+    'This backup is damaged.': 'Cette sauvegarde est endommagée.',
+    'This backup comes from a newer version of SocialMonitor. Update SocialMonitor first.':
+      'Cette sauvegarde vient d’une version plus récente de SocialMonitor. Mettez d’abord SocialMonitor à jour.',
+    'This backup could not be brought up to this version.':
+      'Cette sauvegarde n’a pas pu être mise à niveau vers cette version.',
+    'A restore is already under way.': 'Une restauration est déjà en cours.',
+    'An update is running. Restore when it has finished.':
+      'Une mise à jour est en cours. Restaurez quand elle sera terminée.',
+    'A backup is being restored. Try again in a minute.':
+      'Une sauvegarde est en cours de restauration. Réessayez dans une minute.',
+    'Send the file as application/octet-stream.': 'Envoyez le fichier en application/octet-stream.',
+    'This database is not a file.': 'Cette base de données n’est pas un fichier.',
     'No problems named in this period.': 'Aucun problème signalé sur cette période.',
     'Saved reports and exports': 'Rapports et exports enregistrés',
     'Every PDF, Excel and CSV made for this brand, kept to open again':
