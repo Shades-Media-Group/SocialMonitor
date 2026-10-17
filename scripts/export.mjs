@@ -11,7 +11,11 @@
 import { mkdirSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { checkDb, snapshotDb } from './backup.mjs'
+
+// node:sqlite still prints an "experimental" warning on stderr; callers log stderr, so this script
+// stays quiet. Loaded after the listener is gone, since the warning fires when node:sqlite loads.
+process.removeAllListeners('warning')
+const { checkDb, snapshotDb } = await import('./backup.mjs')
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const out = process.argv[2]
