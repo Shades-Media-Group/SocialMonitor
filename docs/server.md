@@ -186,6 +186,18 @@ Its only route is that hostname to `http://127.0.0.1:4400`; everything else gets
 
 Every run writes to `data/backup.log` and puts its result in `data/backup-status.json`. It exits with an error when something fails, so Task Scheduler or launchd shows the failure.
 
+### Download and restore in Settings
+
+Super admins have a **Backups** row in Settings:
+
+- **Download backup** saves a consistent copy of the database, taken while SocialMonitor runs, as `socialmonitor-<YYYY-MM-DD-HHmm>.db`. It is the database only: media and reports stay as files in `data/`. Each download goes in the audit log.
+- **Restore from backup** puts such a file back in place of everything. Type `RESTORE` to confirm. The server checks the file first: it must be SQLite, pass `PRAGMA integrity_check`, have SocialMonitor's tables, and hold nothing this version does not know (a file from a newer version is refused; an older one is migrated). It refuses while an update runs, and holds new updates until it is done. It saves the current database as `data/backups/pre-restore-<time>.db`, beside the updater's pre-release copies, then copies the file into the live database with SQLite's backup API, on the same open handle, and runs the migrations. The restore is logged in the old database (so the safety copy says why it exists) and in the restored one. Everyone is signed out and signs in with the accounts in the backup. Uploads are capped at 1 GB and streamed to disk.
+- **Automatic copies** lists `data/backups`, read-only.
+
+Saved network passwords in a restored database open only with the same `SOCIALMONITOR_VAULT_KEY`.
+
+On the Windows PC, a daily job keeps a copy in `C:\Users\crist\Documents\Shades Backups\SocialMonitor`. It runs `node scripts/export.mjs <outfile>` from the repository.
+
 ### Set up the bucket, once
 
 1. **Create the bucket.** In Cloudflare, open R2 → Create bucket and name it, for example, `socialmonitor-backup`. Note your account ID from the R2 overview.
