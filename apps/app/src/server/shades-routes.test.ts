@@ -554,6 +554,54 @@ describe('giving someone new a role', () => {
   })
 })
 
+describe('an account set up in advance by the Shades roles API', () => {
+  const SUB = '8f14e45f-ceea-4f6a-9d2b-0d4c1a6f0001'
+  const preset = (
+    db: DB,
+    x: { sub?: string | null; email?: string; approved?: number; disabled?: number },
+  ) => {
+    const u = auth.createUser(db, { email: x.email ?? 'ana@shades.md', name: 'Placeholder' })
+    db.prepare('UPDATE users SET shades_sub = ?, approved = ?, disabled = ? WHERE id = ?').run(
+      x.sub === undefined ? SUB : x.sub,
+      x.approved ?? 1,
+      x.disabled ?? 0,
+      u.id,
+    )
+    return u
+  }
+
+  it('is picked up by subject: a member goes straight in, with the name and email from Shades ID', async () => {
+    const db = openDb(':memory:')
+    const u = preset(db, { email: 'ana.old@shades.md' })
+    const { back, b } = await signInWithShades(db)
+    expect(back).toBe('/')
+    expect(auth.countUsers(db)).toBe(1)
+    expect(events(db, 'person.joined')).toHaveLength(0)
+    const s = b.session()!
+    expect(s.user).toMatchObject({ id: u.id, email: 'ana@shades.md', name: 'Ana Pop' })
+    expect(s.user.verified_at).toBeTruthy()
+    const me = (await b.call('GET', '/api/auth/me')).out.user as Record<string, unknown>
+    expect(me).toMatchObject({ approved: true, super: false, memberships: [] })
+  })
+
+  it('is picked up by email when it has no subject yet, and linked', async () => {
+    const db = openDb(':memory:')
+    const u = preset(db, { sub: null, email: 'Ana@Shades.md' })
+    const { back, b } = await signInWithShades(db)
+    expect(back).toBe('/')
+    expect(b.session()!.user.id).toBe(u.id)
+    expect(sub(db, u.id)).toBe(SUB)
+  })
+
+  it('at level none, is kept out with the blocked state', async () => {
+    const db = openDb(':memory:')
+    preset(db, { approved: 0, disabled: 1 })
+    const { back, b } = await signInWithShades(db)
+    expect(back).toBe('/?shades=blocked')
+    expect(b.session()).toBeNull()
+  })
+})
+
 describe('ID token signatures', () => {
   const cfg = () => shades.shadesConfig()!
   const check = (token: string) => shades.verifyIdToken(token, DOC, cfg(), 'n')

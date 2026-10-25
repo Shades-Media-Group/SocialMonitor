@@ -455,7 +455,25 @@ export function checkAccount(
       now(),
       user.id,
     )
+  if (!created) refreshFromToken(db, user.id, user.email, email, c)
   return { userId: user.id, created }
+}
+
+/**
+ * Shades ID is where a linked person's name and address live: each sign-in brings them here.
+ * The address changes only when no other account here has it already.
+ */
+function refreshFromToken(db: DB, id: number, had: string, email: string, c: IdClaims) {
+  const name = String(c.name ?? '')
+    .trim()
+    .slice(0, 100)
+  if (name) db.prepare('UPDATE users SET name = ? WHERE id = ? AND name <> ?').run(name, id, name)
+  if (email.toLowerCase() !== had.toLowerCase()) {
+    const taken = db
+      .prepare('SELECT 1 FROM users WHERE lower(email) = lower(?) AND id <> ?')
+      .get(email, id)
+    if (!taken) db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, id)
+  }
 }
 
 // --- Sessions and signing out -----------------------------------------------------------------
