@@ -112,6 +112,8 @@ export interface Ctx {
   cookie?: string
   /** The request body, unread, on routes that take a file (raw); body is then {}. */
   stream?: AsyncIterable<Uint8Array>
+  /** The request headers, lower-case names, for the server-to-server routes (Shades roles). */
+  headers?: Record<string, string | string[] | undefined>
 }
 type Signed = Ctx & { user: User }
 /**

@@ -8,6 +8,7 @@ import { guard, HttpError, routes } from './routes.ts'
 import { authRoutes } from './auth-routes.ts'
 import { shadesRoutes } from './shades-routes.ts'
 import { backupRoutes } from './backup-routes.ts'
+import { shadesRolesRoutes } from './shades-roles-routes.ts'
 import {
   cookieAge,
   cookieName,
@@ -60,7 +61,7 @@ startScheduler(db)
 // Photos and stickers for older TikTok comments, from public pages, a few seconds after start.
 setTimeout(() => void fillTikTok(db, (l) => console.log(l)).catch(() => {}), 5000)
 
-const ALL = [...authRoutes, ...shadesRoutes, ...backupRoutes, ...routes]
+const ALL = [...authRoutes, ...shadesRoutes, ...shadesRolesRoutes, ...backupRoutes, ...routes]
 
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -166,6 +167,8 @@ const server = createServer(async (req, res) => {
     needsUser &&
     !user &&
     !url.pathname.startsWith('/api/auth/') &&
+    // The Shades roles API checks its own bearer token (shades-roles-routes.ts), never a session.
+    !url.pathname.startsWith('/api/shades-roles/') &&
     url.pathname !== '/api/health'
   )
     return send(res, 401, { error: 'Sign in first.', signin: true })
@@ -211,11 +214,16 @@ const server = createServer(async (req, res) => {
         client,
         origin: origin ?? `${secure ? 'https' : 'http'}://${req.headers.host ?? HOST}`,
         cookie: req.headers.cookie,
+        headers: req.headers,
       }
       guard(r, ctx)
       const data = await r.handle(ctx)
       if (ctx.cookies.length) res.setHeader('set-cookie', ctx.cookies)
       if (req.method !== 'GET' && !url.pathname.startsWith('/api/auth/')) changed()
+      if (data && typeof data === 'object' && '__status' in data) {
+        res.writeHead((data as { __status: number }).__status, { 'cache-control': 'no-store' })
+        return res.end()
+      }
       if (data && typeof data === 'object' && '__redirect' in data) {
         res.writeHead(302, { location: (data as { __redirect: string }).__redirect })
         return res.end()
