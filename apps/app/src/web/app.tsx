@@ -159,8 +159,10 @@ export function App() {
   }
   if (!info.user || link)
     return <AuthScreen info={info} onIn={(user) => setInfo({ ...info, user, setup: false })} />
-  // No brand and not a super admin: nothing to show until a super admin gives a role.
-  if (!info.user.super && !info.user.memberships.length) return <NoAccess me={info.user} />
+  // No brand and not a super admin: nothing to show until a super admin gives a role, unless
+  // the person was approved (the Shades roles API's "member") and simply has no brand yet.
+  if (!info.user.super && !info.user.approved && !info.user.memberships.length)
+    return <NoAccess me={info.user} />
   return <Dashboard me={info.user} />
 }
 

@@ -72,6 +72,7 @@ export const me = (c: Ctx, user: User) => {
     username: user.username,
     name: user.name,
     super: !!user.super,
+    approved: !!user.approved,
     memberships: auth.memberships(c.db, user.id),
     prefs: auth.readPrefs(c.db, user.id),
     // Super admins are asked to add a passkey or an authenticator; until then, email codes only.

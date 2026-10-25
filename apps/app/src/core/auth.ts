@@ -31,6 +31,8 @@ export interface User {
   created_at: string
   last_seen_at: string | null
   lang: string
+  /** Let in without a brand (the Shades roles API's "member"): no waiting screen. */
+  approved: number
 }
 interface UserRow extends User {
   pass_hash: string | null
@@ -386,7 +388,7 @@ export function readCookie(header: string | undefined, name = SESSION_COOKIE) {
 // --- People ------------------------------------------------------------------------------
 
 const COLS =
-  'id, email, username, name, super, verified_at, disabled, session_version, created_at, last_seen_at, lang'
+  'id, email, username, name, super, verified_at, disabled, session_version, created_at, last_seen_at, lang, approved'
 
 export const countUsers = (db: DB) =>
   (db.prepare('SELECT count(*) AS n FROM users').get() as { n: number }).n

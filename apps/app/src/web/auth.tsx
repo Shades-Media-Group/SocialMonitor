@@ -12,6 +12,8 @@ export interface Me {
   username: string | null
   name: string
   super: boolean
+  /** Let in without a brand (approved in the CRM): the dashboard, not the waiting screen. */
+  approved?: boolean
   memberships: { brand_id: number; role: 'viewer' | 'admin' }[]
   prefs?: Record<string, unknown>
   /** A super admin without a passkey or authenticator yet. */

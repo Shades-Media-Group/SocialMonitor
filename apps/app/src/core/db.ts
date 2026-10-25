@@ -478,6 +478,10 @@ function migrate(db: DatabaseSync) {
   }
   if (!has('sessions', 'shades_id_token'))
     db.exec('ALTER TABLE sessions ADD COLUMN shades_id_token TEXT')
+  // Let in without a brand: set by the Shades roles API (level "member"), so a person approved
+  // in the CRM signs in to the dashboard instead of the waiting screen, even before any brand.
+  if (!has('users', 'approved'))
+    db.exec('ALTER TABLE users ADD COLUMN approved INTEGER NOT NULL DEFAULT 0')
   // A schedule for 'new' posts always ran as 'due' (new posts plus the numbers that are due).
   db.exec("UPDATE schedules SET range = 'due' WHERE range = 'new'")
 }
