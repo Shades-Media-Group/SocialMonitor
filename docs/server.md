@@ -152,6 +152,20 @@ Set it as `SOCIALMONITOR_VAULT_KEY` in the service's environment (a systemd cred
 
 Set the `SMTP_*` keys and `SOCIALMONITOR_JWT_SECRET` as in [people and sign-in](people.md), in the service's environment rather than in `.env`. Then open the dashboard at the server's own screen once to create the first account, or set the `SOCIALMONITOR_ADMIN_*` keys from [the first account](people.md#the-first-account) so the first start creates it. After that start, remove `SOCIALMONITOR_ADMIN_PASSWORD` from the environment: the account exists and its password is kept hashed in the database.
 
+## Shades roles API
+
+The Shades CRM sets who may use SocialMonitor through `/api/shades-roles`, server to server. Set `SHADES_ROLES_TOKEN` (at least 32 characters, e.g. `openssl rand -hex 32`) in the service's environment, and the same value in the CRM. Without it, or shorter, every route answers 503 `{"error":"not configured"}`.
+
+Every call sends `Authorization: Bearer <token>` (else 401) and `X-Acting-User: <email>` of the CRM person acting (else 400). Ten wrong tokens from one address lock it out for 15 minutes (429). The routes never use a browser session.
+
+| Route                                    | Does                                                                                                                                                                                                                                    |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/shades-roles/roles`            | `{levels, accounts:[{sub, email, name, level, active, lastSignInAt}]}`: every account linked to a Shades subject, those set up in advance included (`lastSignInAt` null). Local password accounts are not listed.                       |
+| `PUT /api/shades-roles/accounts/:sub`    | Body `{email, name, level}`. Changes the account linked to `sub`; else links the account here with that email and no subject; else sets one up in advance (no password, Shades login only; `email` then required). Answers `{account}`. |
+| `DELETE /api/shades-roles/accounts/:sub` | Level `none`, history kept; an account set up in advance and never used is removed. 204; unknown `sub` 404.                                                                                                                             |
+
+Levels: `none` ("No access": blocked, Shades login says so; or someone who signed in but was never let in), `member` ("Member": signs in to the dashboard and sees only the brands they belong to, which stay managed in SocialMonitor) and `super` ("Super admin"). `active` is false for a blocked account. Nobody changes their own level (403), and a change that would leave no active super admin is refused (409). Losing access or losing super ends the person's sessions. Every change goes to the audit log as `person.role` (or `person.removed`), with the acting email, the subject and the level before and after.
+
 ## Sign in to the networks
 
 "Sign in to networks" opens a browser window on the server itself, so do it once at the server's screen or over remote desktop. Through the tunnel the button is refused on purpose.
