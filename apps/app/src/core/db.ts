@@ -305,6 +305,79 @@ CREATE TABLE IF NOT EXISTS ai_usage (
 CREATE INDEX IF NOT EXISTS ai_usage_brand ON ai_usage(brand_id, at);
 CREATE TRIGGER IF NOT EXISTS ai_usage_no_update BEFORE UPDATE ON ai_usage
 BEGIN SELECT RAISE(ABORT, 'AI usage is append-only.'); END;
+
+-- Which dashboards a brand has, set by super admins in its Admin tab. A brand without a row has
+-- the defaults: Share of voice on (as every brand had before), Ads off. Kept apart from brands so
+-- no SELECT * on brands carries the Ads switch to a brand's own people.
+CREATE TABLE IF NOT EXISTS brand_dashboards (
+  brand_id INTEGER PRIMARY KEY REFERENCES brands(id) ON DELETE CASCADE,
+  competition INTEGER NOT NULL DEFAULT 1,
+  ads INTEGER NOT NULL DEFAULT 0,
+  -- The country the Ad Library is searched in: ISO code, or ALL.
+  ads_country TEXT NOT NULL DEFAULT 'MD',
+  updated_at TEXT,
+  updated_by INTEGER
+);
+-- The Ads dashboard (super admins only): the Facebook Pages a brand watches in Meta's public Ad
+-- Library, its own and its competitors', by numeric Page ID.
+CREATE TABLE IF NOT EXISTS ad_advertisers (
+  id INTEGER PRIMARY KEY,
+  brand_id INTEGER NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+  page_id TEXT NOT NULL,
+  label TEXT,
+  own INTEGER NOT NULL DEFAULT 0,
+  page_name TEXT,
+  last_read_at TEXT,
+  last_status TEXT,
+  last_error TEXT,
+  last_total INTEGER,
+  created_at TEXT NOT NULL,
+  UNIQUE (brand_id, page_id)
+);
+-- Every ad read from the Ad Library, by its Library ID. Never deleted: an ad that stops keeps its
+-- row, with last_seen_at the last read that found it. No foreign key, so removing an advertiser or
+-- a brand keeps the history. Lists (platforms, categories) are JSON.
+CREATE TABLE IF NOT EXISTS ads (
+  library_id TEXT PRIMARY KEY,
+  page_id TEXT NOT NULL,
+  page_name TEXT,
+  active INTEGER NOT NULL DEFAULT 0,
+  started_on TEXT,
+  ended_on TEXT,
+  platforms TEXT NOT NULL DEFAULT '[]',
+  body TEXT NOT NULL DEFAULT '',
+  title TEXT,
+  caption TEXT,
+  link_url TEXT,
+  cta TEXT,
+  format TEXT,
+  media_kind TEXT,
+  media_path TEXT,
+  versions INTEGER,
+  categories TEXT NOT NULL DEFAULT '[]',
+  reach TEXT,
+  spend TEXT,
+  impressions TEXT,
+  country TEXT,
+  first_seen_at TEXT NOT NULL,
+  last_seen_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ads_page ON ads(page_id, started_on DESC);
+-- Each Ads read: who started it, where it is, and what it found. Apart from runs, so it never
+-- shows in the update notice or the update history a brand's people see.
+CREATE TABLE IF NOT EXISTS ad_runs (
+  id INTEGER PRIMARY KEY,
+  brand_id INTEGER NOT NULL,
+  started_by INTEGER,
+  started_at TEXT NOT NULL,
+  finished_at TEXT,
+  status TEXT NOT NULL DEFAULT 'running',
+  progress TEXT,
+  stop INTEGER NOT NULL DEFAULT 0,
+  log TEXT NOT NULL DEFAULT '',
+  stats TEXT
+);
+CREATE INDEX IF NOT EXISTS ad_runs_brand ON ad_runs(brand_id, started_at DESC);
 `
 
 export type DB = DatabaseSync
