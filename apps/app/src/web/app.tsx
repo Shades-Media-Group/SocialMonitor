@@ -20,32 +20,18 @@ import { AuthScreen, NoAccess, linkFromPath, signOut } from './auth.tsx'
 import { People } from './people.tsx'
 import { Compare } from './compare.tsx'
 import { Activity } from './activity.tsx'
+import type { Tab } from './tabs.ts'
+import { TABS, tabsFor } from './tabs.ts'
 
-export const TABS = [
-  ['overview', 'Overview'],
-  ['posts', 'Posts'],
-  ['stats', 'Statistics'],
-  ['voice', 'Share of voice'],
-  ['comments', 'Comments'],
-  ['calendar', 'Calendar'],
-  ['reports', 'Reports'],
-  ['schedules', 'Schedules'],
-  ['about', 'About'],
-  ['settings', 'Settings'],
-  ['admin', 'Admin'],
-] as const
-/** Tabs only a brand's admins (and super admins) see. */
-const ADMIN_TABS: string[] = ['schedules', 'settings']
-/** The tabs someone with this role on a brand sees; Admin is for super admins alone. */
-export const tabsFor = (role: string | null | undefined, isSuper = false) =>
-  TABS.filter(([k]) => (k === 'admin' ? isSuper : role === 'admin' || !ADMIN_TABS.includes(k)))
-export type Tab = (typeof TABS)[number][0]
+export { TABS, tabsFor }
+export type { Tab }
 export const TAB_ICON: Record<Tab, IconName> = {
   overview: 'grid',
   comments: 'chat',
   posts: 'image',
   stats: 'arrowOutward',
   voice: 'contrast',
+  ads: 'badge',
   calendar: 'calendar',
   reports: 'file',
   schedules: 'schedule',
@@ -489,7 +475,7 @@ function Dashboard({ me }: { me: Me }) {
                   </a>
                   {open && route.page === 'brand' && (
                     <div class="sm-nav__sub">
-                      {tabsFor(b.my_role, me.super).map(([k, text]) => (
+                      {tabsFor(b, me.super).map(([k, text]) => (
                         <a
                           class="sm-nav__item"
                           href={`/b/${b.id}/${k}`}

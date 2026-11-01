@@ -2,6 +2,79 @@ import type { Dict } from '../i18n.ts'
 
 export const ru: Dict = {
   strings: {
+    // The Ads dashboard and the dashboard switches (super admins).
+    'The ads did not load.': 'Объявления не загрузились.',
+    Ads: 'Реклама',
+    '{shown} of {n} ads, running first': '{shown} из {n} объявлений, сначала активные',
+    '{n} ads, running first': 'Объявлений: {n}, сначала активные',
+    Advertiser: 'Рекламодатель',
+    'Every advertiser': 'Все рекламодатели',
+    'Running now': 'Активны сейчас',
+    Platform: 'Платформа',
+    'Every platform': 'Все платформы',
+    'Clear filters': 'Сбросить фильтры',
+    'No ads match these filters.': 'Нет объявлений под эти фильтры.',
+    'Clear a filter to see more.': 'Снимите фильтр, чтобы увидеть больше.',
+    'Press Update ads to read what the Ad Library shows for these Pages.':
+      'Нажмите «Обновить рекламу», чтобы прочитать, что Библиотека рекламы показывает для этих страниц.',
+    '{n} ads use this creative': 'Этот креатив используют объявлений: {n}',
+    'Reach {n}': 'Охват {n}',
+    'Impressions {n}': 'Показы {n}',
+    'Spent {n}': 'Потрачено {n}',
+    'Open in the Ad Library': 'Открыть в Библиотеке рекламы',
+    Running: 'Активно',
+    'No text.': 'Без текста.',
+    'Library ID {id}': 'ID в библиотеке {id}',
+    'Stop watching {name}? The ads already read stay.':
+      'Перестать следить за {name}? Уже прочитанные объявления останутся.',
+    Advertisers: 'Рекламодатели',
+    'From Meta’s public Ad Library, read logged out':
+      'Из публичной Библиотеки рекламы Meta, без входа в аккаунт',
+    Country: 'Страна',
+    'All countries': 'Все страны',
+    'Reading {name}, Page {at} of {of}. {n} ads so far.':
+      'Читаем {name}, страница {at} из {of}. Пока объявлений: {n}.',
+    'Meta asked for a login, so the read stopped. Nothing was signed in to. Try again later.':
+      'Meta попросила войти, поэтому чтение остановлено. Вход нигде не выполнялся. Попробуйте позже.',
+    'The last read failed. Its log says why.':
+      'Последнее чтение не удалось. Причина в его журнале.',
+    'Last read {when}: {read} ads, {fresh} new.':
+      'Последнее чтение {when}: объявлений {read}, новых {fresh}.',
+    'Not read yet.': 'Ещё не прочитано.',
+    'Stop reading': 'Остановить чтение',
+    'Update ads': 'Обновить рекламу',
+    Page: 'Страница',
+    'Started this week': 'Запущены на этой неделе',
+    Kept: 'Сохранено',
+    'First and latest start': 'Первый и последний запуск',
+    'Starts by month': 'Запуски по месяцам',
+    'This brand': 'Этот бренд',
+    Competitor: 'Конкурент',
+    'Last read failed': 'Последнее чтение не удалось',
+    'No Pages yet.': 'Страниц пока нет.',
+    'Add the brand’s own Facebook Page and its competitors’ by Page ID. The Ad Library link of a Page carries it after view_all_page_id=.':
+      'Добавьте страницу бренда в Facebook и страницы конкурентов по ID страницы. В ссылке на страницу в Библиотеке рекламы он стоит после view_all_page_id=.',
+    'Page ID or Ad Library link': 'ID страницы или ссылка из Библиотеки рекламы',
+    'Name (optional)': 'Название (необязательно)',
+    'This brand’s own Page': 'Собственная страница бренда',
+    'Add Page': 'Добавить страницу',
+    'Any start date': 'Любая дата запуска',
+    'Started in the last 7 days': 'Запущены за последние 7 дней',
+    'Started in the last 30 days': 'Запущены за последние 30 дней',
+    'Started in the last 90 days': 'Запущены за последние 90 дней',
+    'Started in the last 12 months': 'Запущены за последние 12 месяцев',
+    Dashboards: 'Панели',
+    'Only super admins change these': 'Меняют только суперадмины',
+    'The brand against its rivals, for everyone who sees the brand.':
+      'Бренд в сравнении с конкурентами, для всех, кто видит бренд.',
+    'Hidden for everyone, Settings included. Updates skip the rivals; what they read stays.':
+      'Скрыто для всех, в том числе в Настройках. Обновления пропускают конкурентов; прочитанное остаётся.',
+    'Meta ads of the brand and its competitors, from the public Ad Library. Only super admins see it.':
+      'Реклама бренда и конкурентов в Meta из публичной Библиотеки рекламы. Её видят только суперадмины.',
+    'of {n} in the Library': 'из {n} в библиотеке',
+    'Show {n} more ads': 'Показать ещё объявлений: {n}',
+    'Open Ads': 'Открыть рекламу',
+    'Dashboards changed': 'Панели изменены',
     Backups: 'Резервные копии',
     'The database only: media and reports stay as files on the computer SocialMonitor runs on.':
       'Только база данных: медиа и отчёты остаются файлами на компьютере, где работает SocialMonitor.',

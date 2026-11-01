@@ -2,6 +2,79 @@ import type { Dict } from '../i18n.ts'
 
 export const fr: Dict = {
   strings: {
+    // The Ads dashboard and the dashboard switches (super admins).
+    'The ads did not load.': 'Les publicités ne se sont pas chargées.',
+    Ads: 'Publicités',
+    '{shown} of {n} ads, running first': '{shown} sur {n} publicités, actives d’abord',
+    '{n} ads, running first': '{n} publicités, actives d’abord',
+    Advertiser: 'Annonceur',
+    'Every advertiser': 'Tous les annonceurs',
+    'Running now': 'Actives',
+    Platform: 'Plateforme',
+    'Every platform': 'Toutes les plateformes',
+    'Clear filters': 'Effacer les filtres',
+    'No ads match these filters.': 'Aucune publicité ne correspond à ces filtres.',
+    'Clear a filter to see more.': 'Retirez un filtre pour en voir plus.',
+    'Press Update ads to read what the Ad Library shows for these Pages.':
+      'Appuyez sur Mettre à jour les publicités pour lire ce que la Bibliothèque publicitaire montre pour ces Pages.',
+    '{n} ads use this creative': '{n} publicités utilisent ce visuel',
+    'Reach {n}': 'Couverture {n}',
+    'Impressions {n}': 'Impressions {n}',
+    'Spent {n}': 'Dépensé {n}',
+    'Open in the Ad Library': 'Ouvrir dans la Bibliothèque publicitaire',
+    Running: 'Active',
+    'No text.': 'Sans texte.',
+    'Library ID {id}': 'ID de bibliothèque {id}',
+    'Stop watching {name}? The ads already read stay.':
+      'Ne plus suivre {name} ? Les publicités déjà lues restent.',
+    Advertisers: 'Annonceurs',
+    'From Meta’s public Ad Library, read logged out':
+      'Depuis la Bibliothèque publicitaire publique de Meta, lue sans connexion',
+    Country: 'Pays',
+    'All countries': 'Tous les pays',
+    'Reading {name}, Page {at} of {of}. {n} ads so far.':
+      'Lecture de {name}, Page {at} sur {of}. {n} publicités pour l’instant.',
+    'Meta asked for a login, so the read stopped. Nothing was signed in to. Try again later.':
+      'Meta a demandé une connexion, la lecture s’est donc arrêtée. Aucune connexion n’a été faite. Réessayez plus tard.',
+    'The last read failed. Its log says why.':
+      'La dernière lecture a échoué. Son journal dit pourquoi.',
+    'Last read {when}: {read} ads, {fresh} new.':
+      'Dernière lecture {when} : {read} publicités, {fresh} nouvelles.',
+    'Not read yet.': 'Pas encore lu.',
+    'Stop reading': 'Arrêter la lecture',
+    'Update ads': 'Mettre à jour les publicités',
+    Page: 'Page',
+    'Started this week': 'Lancées cette semaine',
+    Kept: 'Conservées',
+    'First and latest start': 'Premier et dernier lancement',
+    'Starts by month': 'Lancements par mois',
+    'This brand': 'Cette marque',
+    Competitor: 'Concurrent',
+    'Last read failed': 'Dernière lecture échouée',
+    'No Pages yet.': 'Aucune Page pour l’instant.',
+    'Add the brand’s own Facebook Page and its competitors’ by Page ID. The Ad Library link of a Page carries it after view_all_page_id=.':
+      'Ajoutez la Page Facebook de la marque et celles de ses concurrents par ID de Page. Le lien d’une Page dans la Bibliothèque publicitaire le contient après view_all_page_id=.',
+    'Page ID or Ad Library link': 'ID de Page ou lien de la Bibliothèque publicitaire',
+    'Name (optional)': 'Nom (facultatif)',
+    'This brand’s own Page': 'La Page de cette marque',
+    'Add Page': 'Ajouter la Page',
+    'Any start date': 'Toute date de lancement',
+    'Started in the last 7 days': 'Lancées ces 7 derniers jours',
+    'Started in the last 30 days': 'Lancées ces 30 derniers jours',
+    'Started in the last 90 days': 'Lancées ces 90 derniers jours',
+    'Started in the last 12 months': 'Lancées ces 12 derniers mois',
+    Dashboards: 'Tableaux de bord',
+    'Only super admins change these': 'Seuls les super admins les modifient',
+    'The brand against its rivals, for everyone who sees the brand.':
+      'La marque face à ses concurrents, pour tous ceux qui voient la marque.',
+    'Hidden for everyone, Settings included. Updates skip the rivals; what they read stays.':
+      'Masqué pour tous, Réglages compris. Les mises à jour ignorent les concurrents ; ce qui a été lu reste.',
+    'Meta ads of the brand and its competitors, from the public Ad Library. Only super admins see it.':
+      'Les publicités Meta de la marque et de ses concurrents, depuis la Bibliothèque publicitaire publique. Seuls les super admins les voient.',
+    'of {n} in the Library': 'sur {n} dans la bibliothèque',
+    'Show {n} more ads': 'Afficher {n} publicités de plus',
+    'Open Ads': 'Ouvrir Publicités',
+    'Dashboards changed': 'Tableaux de bord modifiés',
     Backups: 'Sauvegardes',
     'The database only: media and reports stay as files on the computer SocialMonitor runs on.':
       'La base de données seulement : les médias et les rapports restent des fichiers sur l’ordinateur où tourne SocialMonitor.',

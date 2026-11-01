@@ -2,6 +2,78 @@ import type { Dict } from '../i18n.ts'
 
 export const ro: Dict = {
   strings: {
+    // The Ads dashboard and the dashboard switches (super admins).
+    'The ads did not load.': 'Reclamele nu s-au încărcat.',
+    Ads: 'Reclame',
+    '{shown} of {n} ads, running first': '{shown} din {n} reclame, întâi cele active',
+    '{n} ads, running first': '{n} reclame, întâi cele active',
+    Advertiser: 'Advertiser',
+    'Every advertiser': 'Toți advertiserii',
+    'Running now': 'Active acum',
+    Platform: 'Platformă',
+    'Every platform': 'Toate platformele',
+    'Clear filters': 'Șterge filtrele',
+    'No ads match these filters.': 'Nicio reclamă nu se potrivește acestor filtre.',
+    'Clear a filter to see more.': 'Șterge un filtru ca să vezi mai multe.',
+    'Press Update ads to read what the Ad Library shows for these Pages.':
+      'Apasă Actualizează reclamele ca să citești ce arată Biblioteca de reclame pentru aceste pagini.',
+    '{n} ads use this creative': '{n} reclame folosesc acest material',
+    'Reach {n}': 'Acoperire {n}',
+    'Impressions {n}': 'Afișări {n}',
+    'Spent {n}': 'Cheltuit {n}',
+    'Open in the Ad Library': 'Deschide în Biblioteca de reclame',
+    Running: 'Activă',
+    'No text.': 'Fără text.',
+    'Library ID {id}': 'ID în bibliotecă {id}',
+    'Stop watching {name}? The ads already read stay.':
+      'Nu mai urmărești {name}? Reclamele deja citite rămân.',
+    Advertisers: 'Advertiseri',
+    'From Meta’s public Ad Library, read logged out':
+      'Din Biblioteca publică de reclame Meta, citită fără autentificare',
+    Country: 'Țara',
+    'All countries': 'Toate țările',
+    'Reading {name}, Page {at} of {of}. {n} ads so far.':
+      'Se citește {name}, pagina {at} din {of}. {n} reclame până acum.',
+    'Meta asked for a login, so the read stopped. Nothing was signed in to. Try again later.':
+      'Meta a cerut autentificare, așa că citirea s-a oprit. Nu ne-am autentificat nicăieri. Încearcă mai târziu.',
+    'The last read failed. Its log says why.': 'Ultima citire a eșuat. Jurnalul ei spune de ce.',
+    'Last read {when}: {read} ads, {fresh} new.':
+      'Ultima citire {when}: {read} reclame, {fresh} noi.',
+    'Not read yet.': 'Încă necitit.',
+    'Stop reading': 'Oprește citirea',
+    'Update ads': 'Actualizează reclamele',
+    Page: 'Pagină',
+    'Started this week': 'Pornite săptămâna aceasta',
+    Kept: 'Păstrate',
+    'First and latest start': 'Prima și ultima pornire',
+    'Starts by month': 'Porniri pe luni',
+    'This brand': 'Acest brand',
+    Competitor: 'Concurent',
+    'Last read failed': 'Ultima citire a eșuat',
+    'No Pages yet.': 'Încă nicio pagină.',
+    'Add the brand’s own Facebook Page and its competitors’ by Page ID. The Ad Library link of a Page carries it after view_all_page_id=.':
+      'Adaugă pagina de Facebook a brandului și pe cele ale concurenților după ID-ul paginii. Linkul paginii din Biblioteca de reclame îl conține după view_all_page_id=.',
+    'Page ID or Ad Library link': 'ID-ul paginii sau link din Biblioteca de reclame',
+    'Name (optional)': 'Nume (opțional)',
+    'This brand’s own Page': 'Pagina acestui brand',
+    'Add Page': 'Adaugă pagina',
+    'Any start date': 'Orice dată de pornire',
+    'Started in the last 7 days': 'Pornite în ultimele 7 zile',
+    'Started in the last 30 days': 'Pornite în ultimele 30 de zile',
+    'Started in the last 90 days': 'Pornite în ultimele 90 de zile',
+    'Started in the last 12 months': 'Pornite în ultimele 12 luni',
+    Dashboards: 'Panouri',
+    'Only super admins change these': 'Doar super adminii le schimbă',
+    'The brand against its rivals, for everyone who sees the brand.':
+      'Brandul față de concurenți, pentru toți cei care văd brandul.',
+    'Hidden for everyone, Settings included. Updates skip the rivals; what they read stays.':
+      'Ascuns pentru toți, inclusiv în Setări. Actualizările sar peste concurenți; ce s-a citit rămâne.',
+    'Meta ads of the brand and its competitors, from the public Ad Library. Only super admins see it.':
+      'Reclamele Meta ale brandului și ale concurenților, din Biblioteca publică de reclame. Doar super adminii le văd.',
+    'of {n} in the Library': 'din {n} în bibliotecă',
+    'Show {n} more ads': 'Arată încă {n} reclame',
+    'Open Ads': 'Deschide Reclame',
+    'Dashboards changed': 'Panouri schimbate',
     Backups: 'Copii de rezervă',
     'The database only: media and reports stay as files on the computer SocialMonitor runs on.':
       'Doar baza de date: media și rapoartele rămân fișiere pe computerul pe care rulează SocialMonitor.',

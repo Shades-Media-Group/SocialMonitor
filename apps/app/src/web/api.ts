@@ -6,6 +6,10 @@ export type BrandRow = Brand & {
   counts: Record<string, number>
   /** What the signed-in person may do here. */
   my_role: 'viewer' | 'admin'
+  /** Share of voice is on for this brand. */
+  competition: boolean
+  /** The Ads dashboard is on; sent to super admins only. */
+  ads?: boolean
 }
 export type PostRow = Post & {
   brand_id: number

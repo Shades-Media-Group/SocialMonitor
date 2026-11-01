@@ -570,7 +570,7 @@ export function BrandSettings({ brand, reload, notify }: BrandView) {
       </section>
 
       <SavedReplies brand={brand} notify={notify} />
-      <Rivals brand={brand} notify={notify} />
+      {brand.competition !== false && <Rivals brand={brand} notify={notify} />}
       <ReportBranding brand={brand} reload={reload} notify={notify} />
 
       <BadReport

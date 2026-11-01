@@ -6,7 +6,7 @@ import { api } from '../api.ts'
 import { LineChart } from '../charts.tsx'
 import { JsonPanel } from '../json.tsx'
 import { locale, t } from '../i18n.ts'
-import { Empty, Modal, NETWORK_NAME, count, fmt, short, when } from '../ui.tsx'
+import { Empty, Modal, NETWORK_NAME, Row, count, fmt, short, when } from '../ui.tsx'
 import { usePref } from '../prefs.ts'
 
 interface Totals {
@@ -277,7 +277,97 @@ type Metric = 'cost' | 'tokens' | 'calls'
  * Super admins only: what the brand's AI work used over the last 30 days, in tokens and in what
  * the same tokens would cost on the Anthropic API, beside how much data it holds and every brand.
  */
-export function Admin({ brand, mode, version }: BrandView) {
+export function Admin(props: BrandView) {
+  return (
+    <>
+      {props.mode !== 'json' && <Dashboards {...props} />}
+      <Usage {...props} />
+    </>
+  )
+}
+
+/**
+ * The owner's switches for this brand: Share of voice (on for every brand until turned off) and
+ * the Ads dashboard (off until turned on, and only ever shown to super admins).
+ */
+function Dashboards({ brand, reload }: BrandView) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const competition = brand.competition !== false
+  const ads = brand.ads === true
+  const set = async (patch: { competition?: boolean; ads?: boolean }) => {
+    setBusy(true)
+    setError('')
+    try {
+      await api.put(`/api/brands/${brand.id}/dashboards`, patch)
+      await reload()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <section class="sm-box sm-admin__dash">
+      <header class="sm-box__head">
+        <h2>{t('Dashboards')}</h2>
+        <span class="sm-box__meta">{t('Only super admins change these')}</span>
+      </header>
+      <Row
+        label={t('Share of voice')}
+        hint={
+          competition
+            ? t('The brand against its rivals, for everyone who sees the brand.')
+            : t(
+                'Hidden for everyone, Settings included. Updates skip the rivals; what they read stays.',
+              )
+        }
+      >
+        <label class="g-check">
+          <input
+            class="g-switch"
+            type="checkbox"
+            checked={competition}
+            disabled={busy}
+            onChange={(e) => void set({ competition: (e.target as HTMLInputElement).checked })}
+          />
+          {competition ? t('On') : t('Off')}
+        </label>
+      </Row>
+      <Row
+        label={t('Ads')}
+        hint={t(
+          'Meta ads of the brand and its competitors, from the public Ad Library. Only super admins see it.',
+        )}
+      >
+        <span class="sm-inline">
+          <label class="g-check">
+            <input
+              class="g-switch"
+              type="checkbox"
+              checked={ads}
+              disabled={busy}
+              onChange={(e) => void set({ ads: (e.target as HTMLInputElement).checked })}
+            />
+            {ads ? t('On') : t('Off')}
+          </label>
+          {ads && (
+            <a class="sm-box__link" href={`/b/${brand.id}/ads`}>
+              {t('Open Ads')}
+            </a>
+          )}
+        </span>
+      </Row>
+      {error && (
+        <p class="g-error" role="alert">
+          {error}
+        </p>
+      )}
+    </section>
+  )
+}
+
+function Usage({ brand, mode, version }: BrandView) {
   const [u, setU] = useState<Usage | null>(null)
   const [failed, setFailed] = useState('')
   const [metric, setMetric] = usePref<Metric>('admin.metric', 'cost')

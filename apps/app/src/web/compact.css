@@ -5245,3 +5245,220 @@ th[aria-sort='ascending'] .sm-sortbtn::after {
     display: none;
   }
 }
+
+/* The Admin tab's dashboard switches, above the AI figures. */
+.sm-admin__dash {
+  margin-bottom: var(--sm-gap);
+}
+
+/* Ads (super admins): the Pages watched in Meta's Ad Library, then their ads, densest first. */
+.sm-ads__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.sm-ads__country {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text-2);
+}
+.sm-ads__status {
+  flex: 1 1 240px;
+  margin: 0;
+  color: var(--c-text-2);
+}
+.sm-ads__table tr.is-current td {
+  background: var(--c-hover);
+}
+.sm-ads__page {
+  min-width: 180px;
+}
+.sm-ads__pick {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.sm-ads__pick:hover {
+  text-decoration: underline;
+}
+.sm-ads__pick:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 2px;
+  border-radius: var(--g-radius-xs);
+}
+.sm-ads__sub {
+  display: block;
+  color: var(--c-text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.sm-ads__err {
+  color: var(--g-danger);
+}
+.sm-ads__spread {
+  display: block;
+  width: 84px;
+  height: 20px;
+}
+.sm-ads__spread rect {
+  fill: var(--c-line);
+}
+.sm-ads__spread rect.is-on {
+  fill: var(--c-text-2);
+}
+.sm-ads__add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-line-2);
+}
+.sm-ads__field {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 160px;
+  color: var(--c-text-2);
+  font-size: 12px;
+}
+.sm-ads__field--wide {
+  flex: 2 1 260px;
+}
+.sm-ads__own {
+  min-height: var(--c-control);
+}
+.sm-ads__error {
+  flex-basis: 100%;
+  margin: 0;
+}
+.sm-ads__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.sm-ads__list {
+  display: grid;
+  margin: 0 calc(-1 * var(--c-pad)) calc(-1 * var(--c-pad));
+  padding: 0;
+  list-style: none;
+}
+.sm-ad {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px var(--c-pad);
+  border-top: 1px solid var(--c-line-2);
+}
+.sm-ad__media {
+  position: relative;
+  display: block;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: var(--g-radius-sm);
+  background: var(--c-hover);
+}
+.sm-ad__media img,
+.sm-ad__blank {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sm-ad__media:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 2px;
+}
+.sm-ad__kind {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  padding: 0 5px;
+  border-radius: var(--g-radius-xs);
+  background: var(--g-ink-950);
+  color: var(--g-ink-0);
+  font-size: 12px;
+  line-height: 18px;
+}
+.sm-ad__main {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+}
+.sm-ad__main p {
+  margin: 0;
+}
+.sm-ad__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.sm-ad__state {
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-ad__state.is-on {
+  color: var(--g-success);
+  font-weight: 600;
+}
+.sm-ad__title {
+  font-weight: 600;
+}
+.sm-ad__body {
+  display: -webkit-box;
+  overflow: hidden;
+  max-width: 78ch;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+.sm-ad__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-ad__meta a {
+  color: var(--c-text-2);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.sm-ad__meta a:hover {
+  color: var(--c-text);
+  text-decoration: underline;
+}
+@media (max-width: 760px) {
+  .sm-ads__wide {
+    display: none;
+  }
+  .sm-ad {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .sm-ad__media {
+    width: 56px;
+    height: 56px;
+  }
+}
+.sm-ads__more {
+  display: flex;
+  justify-content: center;
+  padding: 12px var(--c-pad);
+  border-top: 1px solid var(--c-line-2);
+}
+.sm-admin__dash .sm-inline {
+  align-items: center;
+  gap: 8px 16px;
+}
