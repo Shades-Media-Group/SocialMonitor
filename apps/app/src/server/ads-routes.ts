@@ -1,6 +1,7 @@
 import * as store from '../core/store.ts'
 import {
   CAP,
+  MAX_ADVERTISERS,
   addAdvertiser,
   adsView,
   dashboards,
@@ -57,16 +58,28 @@ export const adsRoutes: Route[] = [
   }),
   r('GET', '/api/brands/:id/ads', ads, ({ db, params, query }) => {
     const brandId = id(params.id)
-    const status = query.get('status') === 'active' ? 'active' : 'all'
+    const s = query.get('status')
+    const status = s === 'active' || s === 'stopped' ? s : 'all'
+    const one = (k: string) => query.get(k)?.slice(0, 120) || undefined
     return {
       country: dashboards(db, brandId).ads_country,
       cap: CAP,
       run: lastAdRun(db, brandId),
       ...adsView(db, brandId, {
-        page: query.get('page') ?? undefined,
+        // Page IDs, comma-separated; adsView keeps only the brand's own advertisers.
+        pages: (query.get('page') ?? '')
+          .split(',')
+          .map((p) => p.trim())
+          .filter((p) => /^\d{5,20}$/.test(p))
+          .slice(0, MAX_ADVERTISERS),
         status,
-        platform: query.get('platform') ?? undefined,
-        since: query.get('since') ?? undefined,
+        platform: one('platform'),
+        media: one('media'),
+        since: one('since'),
+        until: one('until'),
+        cta: one('cta'),
+        q: one('q'),
+        sort: one('sort'),
         limit: Number(query.get('limit')) || undefined,
       }),
     }

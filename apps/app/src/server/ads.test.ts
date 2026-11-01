@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { openDb } from '../core/db.ts'
 import type { DB } from '../core/db.ts'
@@ -9,16 +12,18 @@ import {
   adsView,
   dashboards,
   saveAds,
+  type SavedAd,
   setDashboards,
   startAdsRead,
 } from '../core/ads.ts'
-import type { LibraryAd } from '../core/collect/ad-library.ts'
+import type { LibraryMedia } from '../core/collect/ad-library.ts'
 import { Challenge } from '../core/collect/browser.ts'
 import { listAudit } from '../core/audit.ts'
 import { tabsFor } from '../web/tabs.ts'
 import type { Ctx, Route } from './routes.ts'
 import { guard, routes } from './routes.ts'
 import { adsRoutes } from './ads-routes.ts'
+import { mediaFile } from './media.ts'
 
 const ALL = [...adsRoutes, ...routes]
 const find = (method: string, path: string) =>
@@ -67,7 +72,7 @@ function setup() {
   return { db, brand, rival, owner, lead, viewer }
 }
 
-const ad = (over: Partial<LibraryAd> = {}): LibraryAd => ({
+const ad = (over: Partial<SavedAd> = {}): SavedAd => ({
   library_id: '1001',
   page_id: '111111111111',
   page_name: 'Tavelo',
@@ -289,5 +294,198 @@ describe('advertisers and their ads', () => {
     expect(JSON.parse(run.stats)).toMatchObject({ wall: 'login', read: 0 })
     expect(asked).toEqual(['111111111111'])
     expect(closed).toBe(true)
+  })
+})
+
+const creative = (position: number, over: Partial<LibraryMedia> = {}): LibraryMedia => ({
+  position,
+  kind: 'image',
+  image_url: `https://scontent.example/${position}.jpg`,
+  original_url: null,
+  video_url: null,
+  video_hd_url: null,
+  title: null,
+  body: null,
+  link_url: null,
+  caption: null,
+  cta: null,
+  cta_type: null,
+  link_description: null,
+  ...over,
+})
+
+describe('creatives, filters and sorting', () => {
+  function seeded() {
+    const s = setup()
+    addAdvertiser(s.db, s.brand.id, { page: '111111111111', own: true })
+    addAdvertiser(s.db, s.brand.id, { page: '222222222222' })
+    saveAds(
+      s.db,
+      [
+        ad({
+          library_id: 'v1',
+          format: 'VIDEO',
+          media_type: 'video',
+          media_set: 'single',
+          cta_type: 'LEARN_MORE',
+          cta: 'Learn more',
+          media: [
+            creative(0, {
+              kind: 'video',
+              video_url: 'https://video.example.fbcdn.net/v.mp4?oe=6AEDB260',
+            }),
+          ],
+          files: [{ path: '/media/ads/v1.jpg', width: 1080, height: 1920 }],
+          started_on: '2026-10-01',
+          versions: 5,
+        }),
+        ad({
+          library_id: 'c1',
+          page_id: '222222222222',
+          active: false,
+          started_on: '2026-06-01',
+          ended_on: '2026-08-30',
+          platforms: ['facebook'],
+          body: 'Fibre at home',
+          format: 'CAROUSEL',
+          media_type: 'carousel',
+          media_set: 'carousel',
+          cta_type: 'SHOP_NOW',
+          cta: 'Shop now',
+          media: [creative(0, { title: 'First card' }), creative(1, { title: 'Router 100%_off' })],
+          files: [{ path: '/media/ads/c1.jpg', width: 600, height: 600 }, null],
+        }),
+        // Read before creatives were kept: no media, a call to action in words only.
+        ad({ library_id: 'old', cta: 'Learn more', started_on: '2026-10-20' }),
+      ],
+      'MD',
+    )
+    return s
+  }
+  const today = new Date('2026-11-01T12:00:00Z')
+
+  it('keeps each creative with its own words, size and the video link’s expiry', () => {
+    const { db, brand } = seeded()
+    const v = adsView(db, brand.id, {}, today)
+    const video = v.ads.find((a) => a.library_id === 'v1')!
+    expect(video).toMatchObject({ media_type: 'video', media_width: 1080, media_height: 1920 })
+    expect(video.media[0]).toMatchObject({ kind: 'video', width: 1080, height: 1920 })
+    expect(video.media[0]!.expires_at).toBe(new Date(0x6aedb260 * 1000).toISOString())
+    const carousel = v.ads.find((a) => a.library_id === 'c1')!
+    expect(carousel.media.map((m) => [m.position, m.title, m.path])).toEqual([
+      [0, 'First card', '/media/ads/c1.jpg'],
+      [1, 'Router 100%_off', null],
+    ])
+    // A later read that brings no creatives keeps what the row has.
+    saveAds(db, [ad({ library_id: 'c1', page_id: '222222222222' })], 'MD')
+    const again = adsView(db, brand.id, {}, today).ads.find((a) => a.library_id === 'c1')!
+    expect(again.media).toHaveLength(2)
+    expect(again.media_type).toBe('carousel')
+    // An old row without a saved picture has no creatives, and still lists.
+    expect(v.ads.find((a) => a.library_id === 'old')!.media).toEqual([])
+  })
+
+  it('filters by advertisers, status, media, call to action, words and dates, with counts', () => {
+    const { db, brand } = seeded()
+    const ids = (f: Parameters<typeof adsView>[2]) =>
+      adsView(db, brand.id, f, today)
+        .ads.map((a) => a.library_id)
+        .sort()
+    expect(ids({ pages: ['222222222222'] })).toEqual(['c1'])
+    expect(ids({ pages: ['111111111111', '222222222222'] })).toEqual(['c1', 'old', 'v1'])
+    // A Page that is not this brand's is ignored, never read.
+    expect(ids({ pages: ['999999999999'] })).toEqual(['c1', 'old', 'v1'])
+    expect(ids({ status: 'stopped' })).toEqual(['c1'])
+    expect(ids({ status: 'active' })).toEqual(['old', 'v1'])
+    expect(ids({ media: 'video' })).toEqual(['v1'])
+    expect(ids({ media: 'carousel' })).toEqual(['c1'])
+    expect(ids({ media: 'text' })).toEqual(['old'])
+    // Old rows match by their call to action's words.
+    expect(ids({ cta: 'LEARN_MORE' })).toEqual(['old', 'v1'])
+    expect(ids({ cta: 'learn more; DROP TABLE ads' })).toEqual(['c1', 'old', 'v1'])
+    expect(ids({ q: 'fibre' })).toEqual(['c1'])
+    // A card's own title is searched, and % and _ are plain characters.
+    expect(ids({ q: '100%_' })).toEqual(['c1'])
+    expect(ids({ q: '_' })).toEqual(['c1'])
+    expect(ids({ since: '2026-09-01', until: '2026-10-10' })).toEqual(['v1'])
+
+    const f = adsView(db, brand.id, { media: 'video', status: 'active' }, today).facets
+    // Each filter's counts leave out its own choice and keep the others.
+    expect(f.media).toEqual({ video: 1, text: 1 })
+    expect(f.status).toEqual({ active: 1, stopped: 0 })
+    expect(f.pages).toEqual({ '111111111111': 1 })
+    expect(f.platform).toEqual({ facebook: 1, instagram: 1 })
+    expect(f.cta).toEqual([{ type: 'LEARN_MORE', text: 'Learn more', n: 1 }])
+  })
+
+  it('sorts by newest start, longest running and most versions', () => {
+    const { db, brand } = seeded()
+    const order = (sort: string) =>
+      adsView(db, brand.id, { sort }, today).ads.map((a) => [a.library_id, a.days])
+    expect(order('newest').map(([id]) => id)).toEqual(['old', 'v1', 'c1'])
+    // A running ad counts to today; a stopped one to its end; both days count.
+    expect(order('longest')).toEqual([
+      ['c1', 91],
+      ['v1', 32],
+      ['old', 13],
+    ])
+    expect(order('versions').map(([id]) => id)).toEqual(['v1', 'c1', 'old'])
+  })
+
+  it('answers the route with the new filters, for super admins only', async () => {
+    const { db, brand, owner, lead, viewer } = seeded()
+    setDashboards(db, brand.id, { ads: true }, owner.id)
+    const get = find('GET', '/api/brands/1/ads')
+    const params = { id: String(brand.id) }
+    const q =
+      'page=222222222222,abc&status=stopped&media=carousel&cta=SHOP_NOW&q=fibre&sort=longest'
+    const v = (await call(get, ctx(db, owner, params, {}, q))) as {
+      ads: { library_id: string }[]
+      matching: number
+    }
+    expect(v.ads.map((a) => a.library_id)).toEqual(['c1'])
+    expect(v.matching).toBe(1)
+    for (const who of [lead, viewer])
+      await expect(call(get, ctx(db, who, params, {}, q))).rejects.toMatchObject({ status: 403 })
+  })
+})
+
+describe('ad pictures on disk', () => {
+  const root = join(mkdtempSync(join(tmpdir(), 'sm-media-')), 'media')
+  mkdirSync(join(root, 'ads', 'pages'), { recursive: true })
+  mkdirSync(join(root, 'instagram'), { recursive: true })
+  writeFileSync(join(root, 'ads', '1001-2.jpg'), 'x')
+  writeFileSync(join(root, 'ads', 'pages', '111111111111.jpg'), 'x')
+  writeFileSync(join(root, 'instagram', 'p.jpg'), 'x')
+  writeFileSync(join(root, '..', 'outside.txt'), 'x')
+
+  it('go to super admins only, the Pages’ pictures included, by any spelling', () => {
+    const ads = [
+      '/media/ads/1001-2.jpg',
+      '/media/ads/pages/111111111111.jpg',
+      '/media/instagram/../ads/1001-2.jpg',
+      '/media/instagram/..%2Fads%2F1001-2.jpg',
+      '/media/./ads/1001-2.jpg',
+      '/media/ads//pages/111111111111.jpg',
+    ]
+    for (const p of ads) {
+      expect(mediaFile(root, p, false), p).toBeNull()
+      expect(mediaFile(root, p, true), p).not.toBeNull()
+    }
+    expect(mediaFile(root, '/media/instagram/p.jpg', false)).toBe(join(root, 'instagram', 'p.jpg'))
+  })
+
+  it('never leave the media folder, nor answer folders or broken paths', () => {
+    for (const p of [
+      '/media/../outside.txt',
+      '/media/..%2Foutside.txt',
+      '/media/%2e%2e/outside.txt',
+      '/media/ads/..%2F..%2Foutside.txt',
+      '/media/ads',
+      '/media/ads/pages',
+      '/media/%E0%A4%A',
+      '/media/ads/1001-2.jpg%00.png',
+    ])
+      for (const isSuper of [false, true]) expect(mediaFile(root, p, isSuper), p).toBeNull()
   })
 })

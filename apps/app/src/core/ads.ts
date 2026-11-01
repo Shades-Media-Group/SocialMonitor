@@ -1,11 +1,11 @@
 import type { DB } from './db.ts'
 import { now } from './db.ts'
 import { changed } from './events.ts'
-import { saveImage } from './media.ts'
+import { saveImage, savedImageSize } from './media.ts'
 import { beginSideJob, endSideJob } from './run.ts'
 import { Challenge, openLoggedOut, pause } from './collect/browser.ts'
 import type { LibraryAd } from './collect/ad-library.ts'
-import { country, pageIdFrom, readAdvertiser } from './collect/ad-library.ts'
+import { country, linkExpiry, pageIdFrom, readAdvertiser } from './collect/ad-library.ts'
 
 /**
  * The Ads dashboard: what Meta's public Ad Library shows for a brand's own Facebook Page and its
@@ -130,20 +130,65 @@ export function removeAdvertiser(db: DB, brandId: number, id: number) {
 
 // Ads
 
+/** What the reader added after the first release; a saved ad may come without it. */
+type Later =
+  | 'page_avatar_url'
+  | 'page_url'
+  | 'page_likes'
+  | 'page_categories'
+  | 'cta_type'
+  | 'link_description'
+  | 'disclaimer'
+  | 'digital_media'
+  | 'countries'
+  | 'media'
+  | 'media_set'
+  | 'media_type'
+
+/** A saved picture: its /media/ path and size, where the file could be measured. */
+export interface SavedFile {
+  path: string
+  width: number | null
+  height: number | null
+}
+
+/** One ad to keep, with its pictures saved: files[i] belongs to media[i]. */
+export type SavedAd = Omit<LibraryAd, Later> &
+  Partial<Pick<LibraryAd, Later>> & {
+    media_path?: string | null
+    page_avatar?: string | null
+    files?: (SavedFile | null)[]
+  }
+
 /**
  * Keeps what one read found. New ads are added; known ones get today's status, dates and text,
  * and last_seen_at moves. Nothing is deleted: an ad that stops keeps its row and its history.
  */
-export function saveAds(db: DB, ads: (LibraryAd & { media_path?: string | null })[], cc: string) {
+export function saveAds(db: DB, ads: SavedAd[], cc: string) {
   const at = now()
   let fresh = 0
   const known = db.prepare('SELECT 1 FROM ads WHERE library_id = ?')
   const put = db.prepare(
     `INSERT INTO ads (library_id, page_id, page_name, active, started_on, ended_on, platforms, body,
        title, caption, link_url, cta, format, media_kind, media_path, versions, categories, reach,
-       spend, impressions, country, first_seen_at, last_seen_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       spend, impressions, country, first_seen_at, last_seen_at, media_type, media_set, media_width,
+       media_height, page_avatar, page_url, page_likes, page_categories, cta_type, link_description,
+       disclaimer, digital_media, countries)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+       ?, ?, ?, ?, ?, ?)
      ON CONFLICT (library_id) DO UPDATE SET page_name = coalesce(excluded.page_name, ads.page_name),
+       media_type = coalesce(excluded.media_type, ads.media_type),
+       media_set = coalesce(excluded.media_set, ads.media_set),
+       media_width = coalesce(excluded.media_width, ads.media_width),
+       media_height = coalesce(excluded.media_height, ads.media_height),
+       page_avatar = coalesce(excluded.page_avatar, ads.page_avatar),
+       page_url = coalesce(excluded.page_url, ads.page_url),
+       page_likes = coalesce(excluded.page_likes, ads.page_likes),
+       page_categories = excluded.page_categories,
+       cta_type = coalesce(excluded.cta_type, ads.cta_type),
+       link_description = coalesce(excluded.link_description, ads.link_description),
+       disclaimer = coalesce(excluded.disclaimer, ads.disclaimer),
+       digital_media = excluded.digital_media, countries = excluded.countries,
        active = excluded.active, started_on = coalesce(excluded.started_on, ads.started_on),
        ended_on = excluded.ended_on, platforms = excluded.platforms,
        body = CASE WHEN excluded.body != '' THEN excluded.body ELSE ads.body END,
@@ -157,10 +202,19 @@ export function saveAds(db: DB, ads: (LibraryAd & { media_path?: string | null }
        impressions = coalesce(excluded.impressions, ads.impressions), country = excluded.country,
        last_seen_at = excluded.last_seen_at`,
   )
+  const clear = db.prepare('DELETE FROM ad_media WHERE library_id = ?')
+  const putMedia = db.prepare(
+    `INSERT INTO ad_media (library_id, position, kind, path, width, height, image_url, video_url,
+       video_hd_url, expires_at, title, body, link_url, caption, cta, cta_type, link_description)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  )
   db.exec('BEGIN')
   try {
     for (const a of ads) {
       if (!known.get(a.library_id)) fresh++
+      const media = a.media ?? []
+      const files = a.files ?? []
+      const first = files[0] ?? null
       put.run(
         a.library_id,
         a.page_id,
@@ -185,7 +239,43 @@ export function saveAds(db: DB, ads: (LibraryAd & { media_path?: string | null }
         cc,
         at,
         at,
+        // A read from before creatives were kept says nothing; the row keeps what it has.
+        a.media ? (a.media_type ?? null) : null,
+        a.media_set ?? null,
+        first?.width ?? null,
+        first?.height ?? null,
+        a.page_avatar ?? null,
+        a.page_url ?? null,
+        a.page_likes ?? null,
+        JSON.stringify(a.page_categories ?? []),
+        a.cta_type ?? null,
+        a.link_description ?? null,
+        a.disclaimer ?? null,
+        a.digital_media ? 1 : 0,
+        JSON.stringify(a.countries ?? []),
       )
+      if (!media.length) continue
+      clear.run(a.library_id)
+      for (const [i, m] of media.entries())
+        putMedia.run(
+          a.library_id,
+          m.position,
+          m.kind,
+          files[i]?.path ?? null,
+          files[i]?.width ?? null,
+          files[i]?.height ?? null,
+          m.image_url,
+          m.video_url,
+          m.video_hd_url,
+          linkExpiry(m.video_url),
+          m.title,
+          m.body,
+          m.link_url,
+          m.caption,
+          m.cta,
+          m.cta_type,
+          m.link_description,
+        )
     }
     db.exec('COMMIT')
   } catch (e) {
@@ -221,25 +311,127 @@ export interface AdRow {
   country: string | null
   first_seen_at: string
   last_seen_at: string
+  media_type: string | null
+  media_set: string | null
+  media_width: number | null
+  media_height: number | null
+  page_avatar: string | null
+  page_url: string | null
+  page_likes: number | null
+  /** JSON list */
+  page_categories: string
+  cta_type: string | null
+  link_description: string | null
+  disclaimer: string | null
+  digital_media: number
+  /** JSON list */
+  countries: string
+  /** Days it ran: to its end, or to today while it runs. */
+  days: number | null
+  media: AdMediaRow[]
 }
 
+export interface AdMediaRow {
+  position: number
+  kind: string
+  path: string | null
+  width: number | null
+  height: number | null
+  video_url: string | null
+  video_hd_url: string | null
+  expires_at: string | null
+  title: string | null
+  body: string | null
+  link_url: string | null
+  caption: string | null
+  cta: string | null
+  cta_type: string | null
+  link_description: string | null
+}
+
+export const MEDIA_TYPES = ['image', 'video', 'carousel', 'text'] as const
+export const SORTS = ['newest', 'longest', 'versions'] as const
+
 export interface AdFilter {
-  /** One Page ID, or every advertiser of the brand. */
+  /** Some of the brand's advertisers by Page ID; none: all of them. */
+  pages?: string[]
+  /** One Page ID (the first release's filter); joins pages. */
   page?: string
-  /** 'active' keeps ads running at the last read. */
-  status?: 'active' | 'all'
+  /** active: running at the last read; stopped: not. */
+  status?: 'active' | 'stopped' | 'all'
   platform?: string
-  /** Started on or after (YYYY-MM-DD). */
+  media?: string
+  /** Started on or after, and on or before (YYYY-MM-DD). */
   since?: string
+  until?: string
+  /** A call to action's kind: LEARN_MORE, SHOP_NOW… */
+  cta?: string
+  /** Words in the headline, text, caption or link, the cards' included. */
+  q?: string
+  sort?: string
   limit?: number
 }
 
 const PLATFORMS = ['facebook', 'instagram', 'messenger', 'audience_network', 'whatsapp', 'threads']
+const DAY = /^\d{4}-\d{2}-\d{2}$/
+
+/** What an ad mostly is, for rows read before media_type was kept. */
+const MEDIA_SQL = `coalesce(media_type, CASE media_kind WHEN 'video' THEN 'video' WHEN 'image' THEN 'image' ELSE 'text' END)`
+/** The call to action's kind, from its words for rows read before cta_type was kept. */
+const CTA_SQL = `coalesce(cta_type, upper(replace(trim(cta), ' ', '_')))`
+
+type Facet = 'pages' | 'status' | 'platform' | 'media' | 'cta'
+
+/**
+ * The WHERE clause of a filter. `skip` leaves one filter out, so its own choices can be counted
+ * against everything else that is chosen.
+ */
+function whereOf(f: AdFilter, pages: string[], skip?: Facet) {
+  const asked = [...(f.pages ?? []), ...(f.page ? [f.page] : [])].filter((p) => pages.includes(p))
+  const want = skip !== 'pages' && asked.length ? asked : pages
+  const where = [`page_id IN (${want.map(() => '?').join(',') || "''"})`]
+  const args: (string | number)[] = [...want]
+  if (skip !== 'status' && f.status === 'active') where.push('active = 1')
+  if (skip !== 'status' && f.status === 'stopped') where.push('active = 0')
+  if (skip !== 'platform' && f.platform && PLATFORMS.includes(f.platform)) {
+    where.push('EXISTS (SELECT 1 FROM json_each(ads.platforms) WHERE value = ?)')
+    args.push(f.platform)
+  }
+  if (skip !== 'media' && f.media && (MEDIA_TYPES as readonly string[]).includes(f.media)) {
+    where.push(`${MEDIA_SQL} = ?`)
+    args.push(f.media)
+  }
+  if (skip !== 'cta' && f.cta && /^[A-Z_]{2,40}$/.test(f.cta)) {
+    where.push(`${CTA_SQL} = ?`)
+    args.push(f.cta)
+  }
+  if (f.since && DAY.test(f.since)) {
+    where.push('started_on >= ?')
+    args.push(f.since)
+  }
+  if (f.until && DAY.test(f.until)) {
+    where.push('started_on <= ?')
+    args.push(f.until)
+  }
+  const q = f.q?.trim().slice(0, 100)
+  if (q) {
+    const like = `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`
+    const has = (col: string) => `${col} LIKE ? ESCAPE '\\'`
+    const cols = ['title', 'body', 'caption', 'link_url'].map(has)
+    const card = ['m.title', 'm.body', 'm.link_url'].map(has)
+    where.push(
+      `(${cols.join(' OR ')} OR EXISTS (SELECT 1 FROM ad_media m WHERE m.library_id = ads.library_id AND (${card.join(' OR ')})))`,
+    )
+    for (let i = 0; i < cols.length + card.length; i++) args.push(like)
+  }
+  return { sql: where.join(' AND '), args }
+}
 
 /** The brand's advertisers with their figures, and the ads that match the filters. */
 export function adsView(db: DB, brandId: number, f: AdFilter = {}, today = new Date()) {
   const advertisers = listAdvertisers(db, brandId)
   const week = new Date(today.getTime() - 7 * 86_400_000).toISOString().slice(0, 10)
+  const day = today.toISOString().slice(0, 10)
   // Twelve calendar months, oldest first, ending with this one.
   const months = Array.from({ length: 12 }, (_, i) => {
     const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 11 + i, 1))
@@ -249,7 +441,8 @@ export function adsView(db: DB, brandId: number, f: AdFilter = {}, today = new D
     const n = db
       .prepare(
         `SELECT count(*) AS total, coalesce(sum(active), 0) AS active,
-           coalesce(sum(started_on >= ?), 0) AS week, min(started_on) AS first, max(started_on) AS last
+           coalesce(sum(started_on >= ?), 0) AS week, min(started_on) AS first, max(started_on) AS last,
+           max(page_avatar) AS avatar
          FROM ads WHERE page_id = ?`,
       )
       .get(week, a.page_id) as {
@@ -258,6 +451,7 @@ export function adsView(db: DB, brandId: number, f: AdFilter = {}, today = new D
       week: number
       first: string | null
       last: string | null
+      avatar: string | null
     }
     const byMonth = new Map(
       (
@@ -275,37 +469,135 @@ export function adsView(db: DB, brandId: number, f: AdFilter = {}, today = new D
       new_week: n.week,
       first_start: n.first,
       last_start: n.last,
+      avatar: n.avatar,
       months: months.map((m) => byMonth.get(m) ?? 0),
     }
   })
   const pages = advertisers.map((a) => a.page_id)
-  const want = f.page && pages.includes(f.page) ? [f.page] : pages
-  const where = [`page_id IN (${want.map(() => '?').join(',') || "''"})`]
-  const args: (string | number)[] = [...want]
-  if (f.status === 'active') where.push('active = 1')
-  if (f.platform && PLATFORMS.includes(f.platform)) {
-    where.push('EXISTS (SELECT 1 FROM json_each(ads.platforms) WHERE value = ?)')
-    args.push(f.platform)
-  }
-  if (f.since && /^\d{4}-\d{2}-\d{2}$/.test(f.since)) {
-    where.push('started_on >= ?')
-    args.push(f.since)
-  }
-  const sql = where.join(' AND ')
+  const { sql, args } = whereOf(f, pages)
   const matching = (
     db.prepare(`SELECT count(*) AS n FROM ads WHERE ${sql}`).get(...args) as { n: number }
   ).n
   const limit = Math.max(1, Math.min(500, f.limit ?? 200))
+  // An ad runs to its end day, or to today while it runs; both days count.
+  const days = `CAST(julianday(CASE WHEN active = 1 OR ended_on IS NULL THEN ? ELSE ended_on END)
+    - julianday(started_on) AS INTEGER) + 1`
+  const order =
+    f.sort === 'longest'
+      ? 'days IS NULL, days DESC, library_id DESC'
+      : f.sort === 'versions'
+        ? `coalesce(versions, 1) DESC,
+           (SELECT count(*) FROM ad_media m WHERE m.library_id = ads.library_id) DESC,
+           coalesce(started_on, '') DESC, library_id DESC`
+        : "coalesce(started_on, '') DESC, active DESC, library_id DESC"
   const ads = db
-    .prepare(
-      `SELECT * FROM ads WHERE ${sql}
-       ORDER BY active DESC, coalesce(started_on, '') DESC, library_id DESC LIMIT ?`,
+    .prepare(`SELECT *, ${days} AS days FROM ads WHERE ${sql} ORDER BY ${order} LIMIT ?`)
+    .all(day, ...args, limit) as unknown as AdRow[]
+  const media = db.prepare(
+    `SELECT position, kind, path, width, height, video_url, video_hd_url, expires_at, title, body,
+       link_url, caption, cta, cta_type, link_description
+     FROM ad_media WHERE library_id = ? ORDER BY position`,
+  )
+  for (const a of ads) {
+    a.media = media.all(a.library_id) as unknown as AdMediaRow[]
+    // A row read before creatives were kept: its one picture, measured from the file.
+    if (!a.media.length && a.media_path) {
+      const size = savedImageSize(a.media_path)
+      a.media = [
+        {
+          position: 0,
+          kind: a.media_kind === 'video' ? 'video' : 'image',
+          path: a.media_path,
+          width: size?.width ?? null,
+          height: size?.height ?? null,
+          video_url: null,
+          video_hd_url: null,
+          expires_at: null,
+          title: null,
+          body: null,
+          link_url: null,
+          caption: null,
+          cta: null,
+          cta_type: null,
+          link_description: null,
+        },
+      ]
+    }
+  }
+  return { advertisers: per, months, ads, matching, facets: facets(db, f, pages) }
+}
+
+/** How many ads each choice of each filter would show, with the other filters as they are. */
+function facets(db: DB, f: AdFilter, pages: string[]) {
+  type Row = { k: string | number | null; n: number }
+  const map = (rows: Row[]) =>
+    Object.fromEntries(rows.filter((r) => r.k != null).map((r) => [String(r.k), r.n]))
+  const count = (skip: Facet, group: string) => {
+    const { sql, args } = whereOf(f, pages, skip)
+    return map(
+      db
+        .prepare(`SELECT ${group} AS k, count(*) AS n FROM ads WHERE ${sql} GROUP BY k`)
+        .all(...args) as Row[],
     )
-    .all(...args, limit) as unknown as AdRow[]
-  return { advertisers: per, months, ads, matching }
+  }
+  const status = count('status', 'active')
+  const p = whereOf(f, pages, 'platform')
+  const platform = map(
+    db
+      .prepare(
+        `SELECT j.value AS k, count(*) AS n FROM ads, json_each(ads.platforms) j
+         WHERE ${p.sql} GROUP BY k`,
+      )
+      .all(...p.args) as Row[],
+  )
+  const c = whereOf(f, pages, 'cta')
+  const cta = (
+    db
+      .prepare(
+        `SELECT ${CTA_SQL} AS type, max(cta) AS text, count(*) AS n FROM ads WHERE ${c.sql}
+         GROUP BY type ORDER BY n DESC`,
+      )
+      .all(...c.args) as { type: string | null; text: string | null; n: number }[]
+  ).filter((r) => !!r.type && /^[A-Z_]{2,40}$/.test(r.type))
+  return {
+    pages: count('pages', 'page_id'),
+    status: { active: status['1'] ?? 0, stopped: status['0'] ?? 0 },
+    platform,
+    media: count('media', MEDIA_SQL),
+    cta,
+  }
 }
 
 // Reading
+
+/**
+ * A picture bigger than this is not kept. Meta's resized pictures are 20–80 KB and a video's
+ * still up to about 250 KB; the full-size originals (up to 600 KB and more) are never fetched.
+ */
+export const MEDIA_MAX_BYTES = 1_500_000
+
+/**
+ * Saves an ad's pictures in data/media/ads: each creative's picture or video still (the first
+ * under the ad's own id, as the first release saved it, the others as <id>-<n>), and the Page's
+ * small picture once in pages/. Videos are not downloaded: they play from Meta's link while it
+ * works, and the next read brings a fresh link.
+ */
+export async function saveCreatives(ad: LibraryAd): Promise<SavedAd> {
+  const files: (SavedFile | null)[] = []
+  for (const m of ad.media) {
+    const id = m.position ? `${ad.library_id}-${m.position}` : ad.library_id
+    const path = await saveImage('ads', '', id, m.image_url, MEDIA_MAX_BYTES)
+    const size = path ? savedImageSize(path) : null
+    files.push(path ? { path, width: size?.width ?? null, height: size?.height ?? null } : null)
+  }
+  return {
+    ...ad,
+    files,
+    media_path:
+      files[0]?.path ?? (await saveImage('ads', '', ad.library_id, ad.media_url, MEDIA_MAX_BYTES)),
+    page_avatar: await saveImage('ads', 'pages', ad.page_id, ad.page_avatar_url, 200_000),
+  }
+}
 
 export interface AdRun {
   id: number
@@ -427,12 +719,11 @@ async function readAll(
           log: (l) => log(db, id, l),
           stopped,
         })
-        const withMedia = []
-        for (const ad of got.ads)
-          withMedia.push({
-            ...ad,
-            media_path: await saveImage('ads', '', ad.library_id, ad.media_url),
-          })
+        const withMedia: SavedAd[] = []
+        for (const ad of got.ads) {
+          if (stopped()) break
+          withMedia.push(await saveCreatives(ad))
+        }
         const saved = saveAds(db, withMedia, cc)
         stats.pages++
         stats.read += saved.read

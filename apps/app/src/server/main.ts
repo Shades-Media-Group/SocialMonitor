@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createReadStream, existsSync, readFileSync, rmSync, statSync } from 'node:fs'
-import { extname, join, normalize, sep } from 'node:path'
+import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
 import { guard, HttpError, routes } from './routes.ts'
@@ -10,6 +10,7 @@ import { shadesRoutes } from './shades-routes.ts'
 import { backupRoutes } from './backup-routes.ts'
 import { shadesRolesRoutes } from './shades-roles-routes.ts'
 import { adsRoutes } from './ads-routes.ts'
+import { mediaFile } from './media.ts'
 import { closeStaleAdRuns } from '../core/ads.ts'
 import {
   cookieAge,
@@ -285,13 +286,8 @@ const server = createServer(async (req, res) => {
 })
 
 function serveMedia(res: ServerResponse, path: string, isSuper: boolean) {
-  const root = join(DATA_DIR, 'media')
-  const file = normalize(join(root, decodeURIComponent(path.slice('/media/'.length))))
-  // Ad pictures belong to the owner's Ads dashboard: nobody else gets them, by any spelling.
-  const ads = join(root, 'ads')
-  if ((file === ads || file.startsWith(ads + sep)) && !isSuper)
-    return send(res, 404, { error: 'No such file.' })
-  if (!file.startsWith(root) || !existsSync(file)) return send(res, 404, { error: 'No such file.' })
+  const file = mediaFile(join(DATA_DIR, 'media'), path, isSuper)
+  if (!file) return send(res, 404, { error: 'No such file.' })
   res.writeHead(200, {
     'content-type': TYPES[extname(file)] ?? 'application/octet-stream',
     'cache-control': 'max-age=86400',

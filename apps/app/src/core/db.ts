@@ -555,6 +555,49 @@ function migrate(db: DatabaseSync) {
   // in the CRM signs in to the dashboard instead of the waiting screen, even before any brand.
   if (!has('users', 'approved'))
     db.exec('ALTER TABLE users ADD COLUMN approved INTEGER NOT NULL DEFAULT 0')
+  // Ads (super admins only): what the Ad Library card and its details show beyond the first
+  // picture. The Page's picture and address, the call to action's kind, "Paid for by", the
+  // countries named, and what the ad mostly is (image, video, carousel or text), so it can be
+  // filtered. Older rows keep working with these empty until the next read fills them.
+  if (!has('ads', 'media_type')) {
+    db.exec('ALTER TABLE ads ADD COLUMN media_type TEXT')
+    db.exec('ALTER TABLE ads ADD COLUMN media_set TEXT')
+    db.exec('ALTER TABLE ads ADD COLUMN media_width INTEGER')
+    db.exec('ALTER TABLE ads ADD COLUMN media_height INTEGER')
+    db.exec('ALTER TABLE ads ADD COLUMN page_avatar TEXT')
+    db.exec('ALTER TABLE ads ADD COLUMN page_url TEXT')
+    db.exec('ALTER TABLE ads ADD COLUMN page_likes INTEGER')
+    db.exec("ALTER TABLE ads ADD COLUMN page_categories TEXT NOT NULL DEFAULT '[]'")
+    db.exec('ALTER TABLE ads ADD COLUMN cta_type TEXT')
+    db.exec('ALTER TABLE ads ADD COLUMN link_description TEXT')
+    db.exec('ALTER TABLE ads ADD COLUMN disclaimer TEXT')
+    db.exec('ALTER TABLE ads ADD COLUMN digital_media INTEGER NOT NULL DEFAULT 0')
+    db.exec("ALTER TABLE ads ADD COLUMN countries TEXT NOT NULL DEFAULT '[]'")
+  }
+  // Each creative of an ad, in the Library's order: a carousel's cards, a dynamic ad's versions,
+  // or its one picture or video, with the card's own words. path is the picture (or a video's
+  // still) saved in data/media/ads; width and height are that file's. A video plays from Meta's
+  // own link (video_url), which stops working at expires_at; the next read gets a fresh one.
+  db.exec(`CREATE TABLE IF NOT EXISTS ad_media (
+    library_id TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    path TEXT,
+    width INTEGER,
+    height INTEGER,
+    image_url TEXT,
+    video_url TEXT,
+    video_hd_url TEXT,
+    expires_at TEXT,
+    title TEXT,
+    body TEXT,
+    link_url TEXT,
+    caption TEXT,
+    cta TEXT,
+    cta_type TEXT,
+    link_description TEXT,
+    PRIMARY KEY (library_id, position)
+  )`)
   // A schedule for 'new' posts always ran as 'due' (new posts plus the numbers that are due).
   db.exec("UPDATE schedules SET range = 'due' WHERE range = 'new'")
 }
