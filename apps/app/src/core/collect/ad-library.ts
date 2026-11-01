@@ -33,7 +33,53 @@ export interface LibraryAd {
   reach: string | null
   spend: string | null
   impressions: string | null
+  /** The Page's small picture (Meta's 60 px), its public address, likes and categories. */
+  page_avatar_url: string | null
+  page_url: string | null
+  page_likes: number | null
+  page_categories: string[]
+  /** LEARN_MORE, SHOP_NOW, SEE_DETAILS… as Meta names it; `cta` is its words. */
+  cta_type: string | null
+  link_description: string | null
+  /** "Paid for by", where Meta shows it (political and issue ads). */
+  disclaimer: string | null
+  /** Meta's flag for an ad made or changed digitally (AI), shown as a label in the Library. */
+  digital_media: boolean
+  /** The countries the Library names for the ad, where it names any. */
+  countries: string[]
+  /**
+   * Every creative the ad shows, in order: a carousel's cards, a dynamic ad's versions, the
+   * pictures of a multi-picture ad, or its one picture or video.
+   */
+  media: LibraryMedia[]
+  /** versions: a dynamic ad's alternatives; carousel: cards seen side by side; single: one. */
+  media_set: 'versions' | 'carousel' | 'single' | null
+  /** What the ad is, for filtering: cards seen side by side make a carousel. */
+  media_type: 'image' | 'video' | 'carousel' | 'text'
 }
+
+/** One creative of an ad, with its own words where a card or version has them. */
+export interface LibraryMedia {
+  position: number
+  kind: 'image' | 'video'
+  /** The picture, or a video's still. */
+  image_url: string | null
+  /** The full-size picture, for the record. */
+  original_url: string | null
+  /** A video's file at standard and high definition. Meta's links expire after some days. */
+  video_url: string | null
+  video_hd_url: string | null
+  title: string | null
+  body: string | null
+  link_url: string | null
+  caption: string | null
+  cta: string | null
+  cta_type: string | null
+  link_description: string | null
+}
+
+/** Most creatives kept per ad: a dynamic ad can carry dozens of versions. */
+export const MEDIA_CAP = 30
 
 const PAGE_ID = /^\d{5,20}$/
 
@@ -115,6 +161,8 @@ export function toAd(r: Raw): LibraryAd {
     text(card.resized_image_url) ??
     text(card.original_image_url) ??
     null
+  const media = mediaOf(s, cards, images, videos)
+  const format = text(s.display_format)
   const impressions = r.impressions_with_index as { impressions_text?: unknown } | null
   const amount = (v: unknown) =>
     typeof v === 'string'
@@ -153,6 +201,88 @@ export function toAd(r: Raw): LibraryAd {
         ? amount(r.spend)
         : [amount(r.spend), text(r.currency)].filter(Boolean).join(' '),
     impressions: text(impressions?.impressions_text),
+    page_avatar_url: text(s.page_profile_picture_url),
+    page_url: text(s.page_profile_uri),
+    page_likes: num(s.page_like_count),
+    page_categories: list(s.page_categories),
+    cta_type: text(s.cta_type) ?? text(card.cta_type),
+    link_description: real(s.link_description) ?? real(card.link_description),
+    // disclaimer_label says which words go before it ("PAID_FOR_BY"); byline is who paid.
+    disclaimer: text(s.byline),
+    digital_media: r.contains_digital_created_media === true,
+    countries: list(r.targeted_or_reached_countries).map((c) => c.toUpperCase()),
+    media,
+    media_set:
+      media.length > 1
+        ? format === 'DCO'
+          ? 'versions'
+          : 'carousel'
+        : media.length
+          ? 'single'
+          : null,
+    // A dynamic ad's versions are alternatives, shown one at a time: it is what its first one is.
+    media_type:
+      media.length > 1 && format !== 'DCO'
+        ? 'carousel'
+        : media[0]?.kind === 'video'
+          ? 'video'
+          : media.length
+            ? 'image'
+            : 'text',
+  }
+}
+
+const list = (v: unknown) =>
+  (Array.isArray(v) ? v : []).map((x) => (typeof x === 'string' ? x.trim() : '')).filter(Boolean)
+
+/**
+ * The ad's creatives in the order the Library shows them: its cards (a carousel's cards or a
+ * dynamic ad's versions), else its videos and pictures, then the extra ones some formats carry.
+ */
+function mediaOf(s: Card, cards: Card[], images: Card[], videos: Card[]): LibraryMedia[] {
+  const out: LibraryMedia[] = []
+  const add = (c: Card, own: boolean) => {
+    if (out.length >= MEDIA_CAP) return
+    const video = text(c.video_sd_url) ?? text(c.video_hd_url)
+    const still = text(c.video_preview_image_url)
+    const image = text(c.resized_image_url) ?? text(c.original_image_url)
+    if (!video && !still && !image) return
+    out.push({
+      position: out.length,
+      kind: video || still ? 'video' : 'image',
+      image_url: video || still ? still : image,
+      original_url: video || still ? null : text(c.original_image_url),
+      video_url: video,
+      video_hd_url: text(c.video_hd_url),
+      // A card's own words; plain pictures and videos share the ad's.
+      title: own ? real(c.title) : null,
+      body: own ? real(c.body) : null,
+      link_url: own ? text(c.link_url) : null,
+      caption: own ? real(c.caption) : null,
+      cta: own ? text(c.cta_text) : null,
+      cta_type: own ? text(c.cta_type) : null,
+      link_description: own ? real(c.link_description) : null,
+    })
+  }
+  for (const c of cards) add(c, true)
+  if (!out.length) {
+    for (const v of videos) add(v, false)
+    for (const i of images) add(i, false)
+  }
+  for (const v of (Array.isArray(s.extra_videos) ? s.extra_videos : []) as Card[]) add(v, false)
+  for (const i of (Array.isArray(s.extra_images) ? s.extra_images : []) as Card[]) add(i, false)
+  return out
+}
+
+/** When a signed Meta link stops working: its oe parameter is the Unix time in hex. */
+export function linkExpiry(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    const oe = new URL(url).searchParams.get('oe')
+    if (!oe || !/^[0-9a-f]{6,10}$/i.test(oe)) return null
+    return new Date(parseInt(oe, 16) * 1000).toISOString()
+  } catch {
+    return null
   }
 }
 

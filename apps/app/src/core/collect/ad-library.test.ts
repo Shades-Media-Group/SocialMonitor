@@ -7,6 +7,8 @@ import {
   country,
   graphqlJson,
   libraryUrl,
+  linkExpiry,
+  MEDIA_CAP,
   pageIdFrom,
   scriptJson,
   wallIn,
@@ -95,8 +97,88 @@ describe('reading the page', () => {
     expect(political.spend).toBe('<€100')
     expect(political.impressions).toBe('4K - 5K')
     expect(political.categories).toEqual(['POLITICAL'])
+    expect(political.disclaimer).toBe('Partidului Politic "Mișcarea Alternativă Națională"')
+    expect(political.page_avatar_url).toMatch(/^https:\/\/scontent\./)
     expect(connectionIn(roots[0])).toMatchObject({ more: true })
     expect(graphqlJson(`for (;;);${JSON.stringify({ a: 1 })}`)).toEqual([{ a: 1 }])
+  })
+
+  it('keeps every creative at its own shape: a 9:16 video, a carousel, versions, a picture', () => {
+    // Orange Moldova's Page in Moldova, read logged out on 2026-11-02: four of its ads.
+    const ads = graphqlJson(fixture('orange.json')).flatMap(adsIn)
+    const by = (id: string) => ads.find((a) => a.library_id === id)!
+    expect(ads).toHaveLength(4)
+
+    const video = by('973795511694566')
+    expect(video).toMatchObject({
+      media_type: 'video',
+      media_set: 'single',
+      cta: 'See details',
+      cta_type: 'SEE_DETAILS',
+      versions: 5,
+      page_url: 'https://www.facebook.com/Orange.Moldova/',
+      page_likes: 31839084,
+      page_categories: ['Public Utility'],
+      digital_media: false,
+      disclaimer: null,
+    })
+    expect(video.page_avatar_url).toMatch(/^https:\/\/scontent\..*s60x60/)
+    expect(video.media).toHaveLength(1)
+    expect(video.media[0]).toMatchObject({ position: 0, kind: 'video' })
+    expect(video.media[0]!.video_url).toMatch(/^https:\/\/video\..*\.fbcdn\.net\//)
+    expect(video.media[0]!.video_hd_url).toMatch(/^https:\/\/video\./)
+    // The still the video shows before it plays.
+    expect(video.media[0]!.image_url).toMatch(/^https:\/\/scontent\./)
+    expect(linkExpiry(video.media[0]!.video_url)).toMatch(/^2026-/)
+
+    const carousel = by('1012324434833410')
+    expect(carousel).toMatchObject({ format: 'MULTI_IMAGES', media_type: 'carousel' })
+    expect(carousel.media_set).toBe('carousel')
+    expect(carousel.media.map((m) => m.position)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8])
+    expect(carousel.media.every((m) => m.kind === 'image' && !!m.original_url)).toBe(true)
+
+    // A dynamic ad's versions: alternatives with their own words, not cards side by side.
+    const dco = by('2212694622925696')
+    expect(dco).toMatchObject({ format: 'DCO', media_set: 'versions', media_type: 'image' })
+    expect(dco.media).toHaveLength(2)
+    expect(dco.media[0]).toMatchObject({ cta: 'See Details', cta_type: 'SEE_DETAILS' })
+    expect(dco.media[0]!.body).toMatch(/^Doar 140 lei/)
+    expect(dco.media[0]!.link_url).toMatch(/^https:\/\/www\.orange\.md\/GigaFibra/)
+
+    const picture = by('2295562687874886')
+    expect(picture).toMatchObject({
+      active: true,
+      media_type: 'image',
+      media_set: 'single',
+      title: 'My Orange | Orange Moldova',
+      link_description: expect.stringMatching(/^Întregul univers My Orange/),
+    })
+  })
+
+  it('reads a signed link’s expiry, and nothing from links without one', () => {
+    expect(linkExpiry('https://video.example.fbcdn.net/v.mp4?oe=6AEDB260&x=1')).toBe(
+      new Date(0x6aedb260 * 1000).toISOString(),
+    )
+    expect(linkExpiry('https://video.example.fbcdn.net/v.mp4')).toBeNull()
+    expect(linkExpiry('https://x.example/?oe=zz')).toBeNull()
+    expect(linkExpiry(null)).toBeNull()
+  })
+
+  it('caps the creatives of one ad and skips cards with nothing to show', () => {
+    const card = (i: number) => ({ resized_image_url: `https://scontent.example/${i}.jpg` })
+    const [ad] = adsIn({
+      ad_archive_id: '1',
+      page_id: '2',
+      snapshot: {
+        display_format: 'CAROUSEL',
+        cards: [{ title: 'empty' }, ...Array.from({ length: MEDIA_CAP + 5 }, (_, i) => card(i))],
+      },
+    })
+    expect(ad!.media).toHaveLength(MEDIA_CAP)
+    expect(ad!.media[0]!.image_url).toBe('https://scontent.example/0.jpg')
+    expect(ad!.media_type).toBe('carousel')
+    const [bare] = adsIn({ ad_archive_id: '3', page_id: '2', snapshot: { body: { text: 'Hi' } } })
+    expect(bare).toMatchObject({ media: [], media_set: null, media_type: 'text' })
   })
 
   it('tells a login wall or a captcha from the Library’s own Log in link', () => {
