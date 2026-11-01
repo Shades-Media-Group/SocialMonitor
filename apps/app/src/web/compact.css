@@ -3262,6 +3262,34 @@ a.sm-b__avatar:hover {
 .sm-shell .sm-body .sm-ga__report .sm-line {
   padding: 10px 14px 0;
 }
+/* A box header's quiet notes and link at its end; on a phone they drop under the title. */
+.sm-box__metas {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0 12px;
+  min-width: 0;
+  line-height: 1.5;
+}
+@media (max-width: 700px) {
+  .sm-shell .sm-box__head:has(> .sm-box__metas) {
+    flex-wrap: wrap;
+    align-items: baseline;
+    row-gap: 2px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .sm-box__metas {
+    justify-content: flex-start;
+  }
+}
+/* Where the figures come from, under the chart. */
+.sm-ga__source {
+  margin: 0;
+  padding: 6px 14px 0;
+  text-align: right;
+}
 .sm-line__now {
   fill: none;
   stroke: #3b5bdb;
@@ -4812,6 +4840,18 @@ p.sm-postcamps .sm-postcamps__label {
   border-top: 1px solid var(--c-line, #e4e6ea);
   font-size: 13.5px;
   font-weight: 650;
+}
+/* The same break with a quiet note at its end, such as where the posts come from. */
+.sm-shell .sm-section.sm-section-head {
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.sm-shell .sm-section-head > h2 {
+  margin: 0;
+  font: inherit;
+}
+.sm-shell .sm-section-head > .sm-box__meta {
+  font-weight: 400;
 }
 
 .sm-auto {

@@ -776,6 +776,7 @@ export const ru: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Этот вход через Facebook истёк. Попробуйте снова.',
     'Facebook and Instagram connected.': 'Facebook и Instagram подключены.',
+    'From public Page data': 'Из публичных данных страницы',
     'Instant alerts': 'Мгновенные оповещения',
     'Urgent comments': 'Срочные комментарии',
     'An email as soon as an update finds a comment that needs an answer urgently.':

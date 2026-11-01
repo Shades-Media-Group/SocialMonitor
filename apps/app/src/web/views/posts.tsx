@@ -6,10 +6,12 @@ import {
   Empty,
   NETWORK_NAME,
   NetworkMark,
+  PageSource,
   Scroller,
   Segmented,
   count,
   fmt,
+  hasFacebook,
   short,
   when,
 } from '../ui.tsx'
@@ -305,6 +307,7 @@ export function Posts({
         <section class="sm-box">
           <header class="sm-box__head">
             <h2>{count(rows.length, 'post')}</h2>
+            <PageSource show={hasFacebook(rows)} />
           </header>
           <div class="sm-scroll">
             <table class="sm-dtable sm-dtable--rows">
@@ -376,7 +379,10 @@ export function Posts({
         </section>
       ) : (
         <>
-          <h2 class="sm-section">{count(rows.length, 'post')}</h2>
+          <div class="sm-section sm-section-head">
+            <h2>{count(rows.length, 'post')}</h2>
+            <PageSource show={hasFacebook(rows)} />
+          </div>
           <div class={`sm-wall sm-wall--${cols}`} style={{ '--cols': cols }}>
             {rows.map((p) => (
               <PostCard p={p} onOpen={setOpenPost} />

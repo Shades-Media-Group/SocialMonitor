@@ -780,6 +780,7 @@ export const fr: Dict = {
       'La connexion Facebook a expiré : reconnectez-la dans l’onglet À propos.',
     'This Facebook sign-in expired. Try again.': 'Cette connexion Facebook a expiré. Réessayez.',
     'Facebook and Instagram connected.': 'Facebook et Instagram connectés.',
+    'From public Page data': 'Données publiques de la page',
     'Instant alerts': 'Alertes immédiates',
     'Urgent comments': 'Commentaires urgents',
     'An email as soon as an update finds a comment that needs an answer urgently.':

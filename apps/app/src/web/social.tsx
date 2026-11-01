@@ -223,6 +223,7 @@ export function PostDrawer({
               <small>
                 {NETWORK_NAME[post.network]} · {when(post.posted_at)}
               </small>
+              {post.network === 'facebook' && <small>{t('From public Page data')}</small>}
             </span>
             <a
               class="g-btn g-btn--ghost g-btn--sm"
@@ -303,6 +304,7 @@ export function FeedCard({
         <span class="sm-viewer__who">
           <b>@{post.handle}</b>
           <small>{when(post.posted_at)}</small>
+          {post.network === 'facebook' && <small>{t('From public Page data')}</small>}
         </span>
         <MoodStrip p={post} />
       </header>

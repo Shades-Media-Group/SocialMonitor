@@ -219,6 +219,16 @@ export const Row = ({
   </div>
 )
 
+/**
+ * Where Facebook figures come from, said once in the header of a box that shows Facebook posts,
+ * their comments or numbers made from them. Never on each row.
+ */
+export const PageSource = ({ show }: { show: boolean }) =>
+  show ? <span class="sm-box__meta">{t('From public Page data')}</span> : null
+
+export const hasFacebook = (rows: { network: Network }[]) =>
+  rows.some((x) => x.network === 'facebook')
+
 export function Segmented<T extends string>({
   value,
   options,

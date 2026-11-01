@@ -11,11 +11,13 @@ import {
   Menu,
   NETWORK_NAME,
   NetworkMark,
+  PageSource,
   Scroller,
   Segmented,
   ago,
   count,
   fmt,
+  hasFacebook,
   span,
   when,
 } from '../ui.tsx'
@@ -776,7 +778,10 @@ export function Comments({
           <section class="sm-box sm-box--table">
             <header class="sm-box__head">
               <h2>{count(rows.filter((c) => !c.parent_ext_id).length, 'comment')}</h2>
-              <span class="sm-box__meta">{t('Click a row to read and answer it')}</span>
+              <span class="sm-box__metas">
+                <span class="sm-box__meta">{t('Click a row to read and answer it')}</span>
+                <PageSource show={hasFacebook(rows)} />
+              </span>
             </header>
             <CommentTable rows={rows} brands={brands} posts={posts} onOpen={setOpenComment} />
           </section>
@@ -800,6 +805,7 @@ export function Comments({
             head={
               <header class="sm-box__head">
                 <h2>{count(rows.filter((c) => !c.parent_ext_id).length, 'comment')}</h2>
+                <PageSource show={hasFacebook(rows)} />
               </header>
             }
           >

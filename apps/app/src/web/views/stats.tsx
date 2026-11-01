@@ -6,7 +6,7 @@ import { GrowthChart, Sparkline } from '../charts.tsx'
 import type { Growth } from '../charts.tsx'
 import { t } from '../i18n.ts'
 import { usePref } from '../prefs.ts'
-import { count, Empty, fmt, NetworkMark, Segmented, when } from '../ui.tsx'
+import { count, Empty, fmt, hasFacebook, NetworkMark, PageSource, Segmented, when } from '../ui.tsx'
 
 type Metric = 'views' | 'likes' | 'comments' | 'shares'
 type Reading = {
@@ -163,14 +163,17 @@ export function Stats({ brand, network, days, version }: BrandView) {
               ? t('{n} posts, day by day', { n: shown.length })
               : t('How the post grew, day by day')}
           </h2>
-          <span class="sm-box__meta">
-            {t('Pick posts in the table to compare them, up to {n}.', { n: MAX })}
-            {picked.length > 1 && ' '}
-            {picked.length > 1 && (
-              <button class="sm-textbtn" type="button" onClick={() => setPicked([])}>
-                {t('Clear')}
-              </button>
-            )}
+          <span class="sm-box__metas">
+            <span class="sm-box__meta">
+              {t('Pick posts in the table to compare them, up to {n}.', { n: MAX })}
+              {picked.length > 1 && ' '}
+              {picked.length > 1 && (
+                <button class="sm-textbtn" type="button" onClick={() => setPicked([])}>
+                  {t('Clear')}
+                </button>
+              )}
+            </span>
+            <PageSource show={hasFacebook(shown)} />
           </span>
         </header>
         {series.some((s) => s.points.length > 1) ? (
@@ -246,8 +249,11 @@ export function Stats({ brand, network, days, version }: BrandView) {
       <section class="sm-box">
         <header class="sm-box__head">
           <h2>{count(rows.length, 'post')}</h2>
-          <span class="sm-box__meta">
-            {t('Trend: {metric} at each update', { metric: metricName })}
+          <span class="sm-box__metas">
+            <span class="sm-box__meta">
+              {t('Trend: {metric} at each update', { metric: metricName })}
+            </span>
+            <PageSource show={hasFacebook(rows)} />
           </span>
         </header>
         <div class="sm-scroll">

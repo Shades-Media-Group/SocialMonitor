@@ -738,6 +738,7 @@ export const zh: Dict = {
       'Facebook 连接已过期：请在“关于”标签页重新连接。',
     'This Facebook sign-in expired. Try again.': '此 Facebook 登录已过期，请重试。',
     'Facebook and Instagram connected.': 'Facebook 和 Instagram 已连接。',
+    'From public Page data': '来自主页公开数据',
     'Instant alerts': '即时提醒',
     'Urgent comments': '紧急评论',
     'An email as soon as an update finds a comment that needs an answer urgently.':

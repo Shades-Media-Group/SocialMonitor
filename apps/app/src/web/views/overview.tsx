@@ -6,9 +6,11 @@ import {
   Icon,
   NETWORK_NAME,
   NetworkMark,
+  PageSource,
   Scroller,
   ago,
   fmt,
+  hasFacebook,
   short,
   when,
   navigate,
@@ -407,6 +409,9 @@ export function Overview(v: BrandView) {
   const maxWord = Math.max(1, ...(ins?.words ?? []).map((w) => w.n))
   const split = byLabel.filter((x) => x.n)
   const splitTotal = split.reduce((n, x) => n + x.n, 0)
+  // The figures above the chart count Facebook whenever the brand has a Facebook Page in view.
+  const fbFigures = network ? network === 'facebook' : hasFacebook(s.profiles)
+  const shownPosts = posts.slice(0, 8)
 
   return (
     <div class="sm-overview sm-ga">
@@ -451,6 +456,11 @@ export function Overview(v: BrandView) {
             previous={series.before.map((d) => d[active[0]])}
             label={active[1]}
           />
+        )}
+        {fbFigures && (
+          <p class="sm-ga__source">
+            <PageSource show />
+          </p>
         )}
       </section>
 
@@ -616,9 +626,12 @@ export function Overview(v: BrandView) {
           head={
             <header class="sm-box__head">
               <h2>{reply.length ? t('Answer first') : t('Newest comments')}</h2>
-              <a class="sm-box__link" href={`/b/${brand.id}/comments`}>
-                {t('All comments')}
-              </a>
+              <span class="sm-box__metas">
+                <PageSource show={hasFacebook(stream)} />
+                <a class="sm-box__link" href={`/b/${brand.id}/comments`}>
+                  {t('All comments')}
+                </a>
+              </span>
             </header>
           }
         >
@@ -637,9 +650,12 @@ export function Overview(v: BrandView) {
         <section class="sm-box sm-box--table sm-span-12">
           <header class="sm-box__head">
             <h2>{t('Posts')}</h2>
-            <a class="sm-box__link" href={`/b/${brand.id}/posts`}>
-              {t('All {n} posts', { n: fmt(s.posts) })}
-            </a>
+            <span class="sm-box__metas">
+              <PageSource show={hasFacebook(shownPosts)} />
+              <a class="sm-box__link" href={`/b/${brand.id}/posts`}>
+                {t('All {n} posts', { n: fmt(s.posts) })}
+              </a>
+            </span>
           </header>
           <div class="sm-scroll">
             <table class="sm-dtable sm-dtable--rows">
@@ -656,7 +672,7 @@ export function Overview(v: BrandView) {
                 </tr>
               </thead>
               <tbody>
-                {posts.slice(0, 8).map((p) => (
+                {shownPosts.map((p) => (
                   <tr class="sm-ctable__row" onClick={() => setOpenPost(p)}>
                     <td>
                       <span class="sm-postcell">
