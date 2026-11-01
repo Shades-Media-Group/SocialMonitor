@@ -11,3 +11,4 @@ The guides are written as each part ships. Version 0.1 will cover:
 - **[Remote access](remote-access.md):** a Cloudflare Tunnel with Cloudflare Access in front.
 - **[Running on a server](server.md):** an always-on machine, next to other apps.
 - **[People, roles and sign-in](people.md):** accounts, viewers and admins per brand, email codes.
+- **[Ads](ads.md):** the owner's view of Meta's public Ad Library, and the dashboard switches per brand.

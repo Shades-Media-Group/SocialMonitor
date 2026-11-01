@@ -170,6 +170,8 @@ Levels: `none` ("No access": blocked, Shades login says so; or someone who signe
 
 "Sign in to networks" opens a browser window on the server itself, so do it once at the server's screen or over remote desktop. Through the tunnel the button is refused on purpose.
 
+The [Ads](ads.md) read needs no sign-in: it starts its own logged-out Chrome for each read and closes it after, so it works through the tunnel too.
+
 ## Lock down the server
 
 The tunnel only dials out, so nothing on the server needs to be reachable from the internet. Check these once, and again after any big update:
