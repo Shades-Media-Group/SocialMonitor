@@ -49,6 +49,9 @@ export const AUDIT_EVENTS = [
   'backup.restore_started',
   // Written into the restored database after the swap, so the trail survives it.
   'backup.restored',
+  // A super admin turned a brand's Share of voice or Ads dashboard on or off. Kept without the
+  // brand's id, so only super admins see it.
+  'dashboards.changed',
 ] as const
 export type AuditEvent = (typeof AUDIT_EVENTS)[number]
 

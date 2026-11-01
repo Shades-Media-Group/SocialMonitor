@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createReadStream, existsSync, readFileSync, rmSync, statSync } from 'node:fs'
-import { extname, join, normalize } from 'node:path'
+import { extname, join, normalize, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DATA_DIR, openDb } from '../core/db.ts'
 import { guard, HttpError, routes } from './routes.ts'
@@ -9,6 +9,8 @@ import { authRoutes } from './auth-routes.ts'
 import { shadesRoutes } from './shades-routes.ts'
 import { backupRoutes } from './backup-routes.ts'
 import { shadesRolesRoutes } from './shades-roles-routes.ts'
+import { adsRoutes } from './ads-routes.ts'
+import { closeStaleAdRuns } from '../core/ads.ts'
 import {
   cookieAge,
   cookieName,
@@ -57,11 +59,19 @@ const db = openDb()
 seedAdmin(db)
 seedFromFile(db)
 closeStaleRuns(db)
+closeStaleAdRuns(db)
 startScheduler(db)
 // Photos and stickers for older TikTok comments, from public pages, a few seconds after start.
 setTimeout(() => void fillTikTok(db, (l) => console.log(l)).catch(() => {}), 5000)
 
-const ALL = [...authRoutes, ...shadesRoutes, ...shadesRolesRoutes, ...backupRoutes, ...routes]
+const ALL = [
+  ...authRoutes,
+  ...shadesRoutes,
+  ...shadesRolesRoutes,
+  ...backupRoutes,
+  ...adsRoutes,
+  ...routes,
+]
 
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -189,7 +199,7 @@ const server = createServer(async (req, res) => {
     return
   }
   if (!url.pathname.startsWith('/api/')) {
-    if (url.pathname.startsWith('/media/')) return serveMedia(res, url.pathname)
+    if (url.pathname.startsWith('/media/')) return serveMedia(res, url.pathname, !!user?.super)
     return serveStatic(res, url.pathname)
   }
   try {
@@ -274,9 +284,13 @@ const server = createServer(async (req, res) => {
   }
 })
 
-function serveMedia(res: ServerResponse, path: string) {
+function serveMedia(res: ServerResponse, path: string, isSuper: boolean) {
   const root = join(DATA_DIR, 'media')
   const file = normalize(join(root, decodeURIComponent(path.slice('/media/'.length))))
+  // Ad pictures belong to the owner's Ads dashboard: nobody else gets them, by any spelling.
+  const ads = join(root, 'ads')
+  if ((file === ads || file.startsWith(ads + sep)) && !isSuper)
+    return send(res, 404, { error: 'No such file.' })
   if (!file.startsWith(root) || !existsSync(file)) return send(res, 404, { error: 'No such file.' })
   res.writeHead(200, {
     'content-type': TYPES[extname(file)] ?? 'application/octet-stream',

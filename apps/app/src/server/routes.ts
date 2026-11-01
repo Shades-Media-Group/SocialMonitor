@@ -70,6 +70,7 @@ import type { AuditEvent } from '../core/audit.ts'
 import { setBranding } from '../core/branding.ts'
 import * as campaigns from '../core/campaigns.ts'
 import { adminUsage } from '../core/admin.ts'
+import { dashboards } from '../core/ads.ts'
 import { activePause, afterPause, catchUpState } from '../core/ai-limit.ts'
 
 export class HttpError extends Error {
@@ -220,6 +221,19 @@ const byBrand = (c: Signed) => {
   const brand = c.query.get('brand')
   if (brand) sees(c, id(brand))
   else if (!c.user.super) throw new HttpError(403, 'Choose a brand.')
+}
+/** Share of voice and its rivals answer only while a super admin leaves them on for the brand. */
+const voiceOn = (c: Signed) => {
+  if (!store.competitionOn(c.db, id(c.params.id)))
+    throw new HttpError(404, 'Share of voice is off for this brand.')
+}
+const seeVoice = (c: Signed) => {
+  seeBrand(c)
+  voiceOn(c)
+}
+const adminVoice = (c: Signed) => {
+  adminBrand(c)
+  voiceOn(c)
 }
 const seeComment = (c: Signed) => sees(c, commentBrand(c.db, id(c.params.id)))
 const adminComment = (c: Signed) => runs(c, commentBrand(c.db, id(c.params.id)))
@@ -427,12 +441,18 @@ export const routes: Route[] = [
       c,
       store.listBrands(c.db).filter((br) => !br.competitor_of),
       (br) => br.id,
-    ).map((brand) => ({
-      my_role: roleFor(c.db, c.user, brand.id),
-      ...brand,
-      profiles: store.listProfiles(c.db, brand.id),
-      counts: store.labelCounts(c.db, brand.id),
-    })),
+    ).map((brand) => {
+      const dash = dashboards(c.db, brand.id)
+      return {
+        my_role: roleFor(c.db, c.user, brand.id),
+        ...brand,
+        profiles: store.listProfiles(c.db, brand.id),
+        counts: store.labelCounts(c.db, brand.id),
+        // Which dashboards it has. The Ads switch is the owner's: only super admins hear of it.
+        competition: dash.competition,
+        ...(c.user.super ? { ads: dash.ads } : {}),
+      }
+    }),
   ),
   r('POST', '/api/brands', 'super', (c) => {
     const { name, links, website } = b(c) as { name?: string; links?: string[]; website?: string }
@@ -875,23 +895,23 @@ export const routes: Route[] = [
       }),
   ),
   // The rivals a brand watches, with their profiles: its people see them, its admins change them.
-  r('GET', '/api/brands/:id/competitors', seeBrand, ({ db, params }) =>
+  r('GET', '/api/brands/:id/competitors', seeVoice, ({ db, params }) =>
     store.listCompetitors(db, id(params.id)).map((c) => ({
       ...c,
       profiles: store.listProfiles(db, c.id),
     })),
   ),
-  r('POST', '/api/brands/:id/competitors', adminBrand, (c) => {
+  r('POST', '/api/brands/:id/competitors', adminVoice, (c) => {
     const x = b(c) as { name?: string; links?: string[] }
     return store.addCompetitor(c.db, id(c.params.id), String(x.name ?? ''), x.links ?? [])
   }),
-  r('DELETE', '/api/brands/:id/competitors/:rival', adminBrand, ({ db, params }) => {
+  r('DELETE', '/api/brands/:id/competitors/:rival', adminVoice, ({ db, params }) => {
     const rival = store.getBrand(db, id(params.rival))
     if (rival?.competitor_of !== id(params.id)) throw new HttpError(404, 'No such rival.')
     store.deleteBrand(db, rival.id)
   }),
   // Share of voice: the brand first, then its rivals, over the same window and network.
-  r('GET', '/api/brands/:id/voice', seeBrand, ({ db, params, query }) => {
+  r('GET', '/api/brands/:id/voice', seeVoice, ({ db, params, query }) => {
     const brandId = id(params.id)
     const ids = [brandId, ...store.listCompetitors(db, brandId).map((c) => c.id)]
     const rows = compare(db, Number(query.get('days') ?? 30) || 0, ids, net(query.get('network')))
