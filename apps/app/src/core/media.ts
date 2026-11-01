@@ -18,7 +18,7 @@ const EXT: Record<string, string> = {
  * keeps its real type: stickers are animated WebP, photos JPEG.
  */
 export async function saveImage(
-  network: Network,
+  network: Network | 'ads',
   folder: string,
   id: string,
   url: string | null | undefined,
