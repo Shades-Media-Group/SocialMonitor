@@ -13,6 +13,8 @@ import type { CollectedComment, CollectedPost, Profile } from './types.ts'
  *
  * Keys come from .env: META_APP_ID and META_APP_SECRET. Facebook returns people to a fixed https
  * address, the website's /connect/meta/ page, which hands the one-time code back to the dashboard.
+ * A Business app signs in with Facebook Login for Business: META_LOGIN_CONFIG_ID names the login
+ * configuration made in the app dashboard, which carries the permissions instead of a scope list.
  */
 
 const GRAPH = 'https://graph.facebook.com/v23.0'
@@ -34,6 +36,9 @@ export const metaReady = () =>
 const DASHBOARD_ORIGIN =
   /^(http:\/\/(127\.0\.0\.1|localhost)(:\d{2,5})?|https:\/\/(([a-z0-9-]+\.)*socialmonitor|socialmonitor-app)\.shades\.md)$/
 
+/** The Facebook Login for Business configuration, or '' to ask for META_SCOPES instead. */
+export const loginConfigId = () => process.env.META_LOGIN_CONFIG_ID?.trim() ?? ''
+
 const pending = new Map<string, { brandId: number; at: number }>()
 
 /** The Facebook sign-in address for one brand, valid for ten minutes. */
@@ -44,11 +49,13 @@ export function authorizeUrl(brandId: number, origin: string) {
   for (const [k, v] of pending) if (Date.now() - v.at > 600_000) pending.delete(k)
   const nonce = randomBytes(24).toString('base64url')
   pending.set(nonce, { brandId, at: Date.now() })
+  const config = loginConfigId()
   const q = new URLSearchParams({
     client_id: process.env.META_APP_ID!.trim(),
     redirect_uri: REDIRECT,
     state: `${nonce}.${Buffer.from(origin).toString('base64url')}`,
-    scope: META_SCOPES.join(','),
+    // Facebook Login for Business takes the configuration, which carries the permissions.
+    ...(config ? { config_id: config } : { scope: META_SCOPES.join(',') }),
     response_type: 'code',
   })
   return `https://www.facebook.com/v23.0/dialog/oauth?${q}`
@@ -147,14 +154,16 @@ async function keepPage(db: DB, brandId: number, code: string) {
     grant_type: 'fb_exchange_token',
     fb_exchange_token: short.access_token,
   })
-  const pages = await list<Page>(
-    '/me/accounts',
-    {
-      access_token: long.access_token,
-      fields: 'id,name,username,link,access_token,instagram_business_account{id,username}',
-      limit: '100',
+  const accounts = (fields: string) =>
+    list<Page>('/me/accounts', { access_token: long.access_token, fields, limit: '100' }, 200)
+  const base = 'id,name,username,link,access_token'
+  // Without the Instagram permissions Meta can refuse the linked account's field. A sign-in that
+  // granted Facebook only, or a Page with no Instagram, still connects for Facebook.
+  const pages = await accounts(`${base},instagram_business_account{id,username}`).catch(
+    (e: unknown) => {
+      if (e instanceof MetaRefused) return accounts(base)
+      throw e
     },
-    200,
   )
   const profiles = db
     .prepare('SELECT network, handle, url FROM profiles WHERE brand_id = ?')
@@ -196,7 +205,7 @@ async function keepPage(db: DB, brandId: number, code: string) {
         network,
         id,
         page.access_token,
-        META_SCOPES.join(','),
+        loginConfigId() ? `config:${loginConfigId()}` : META_SCOPES.join(','),
         JSON.stringify(account),
         now(),
       )

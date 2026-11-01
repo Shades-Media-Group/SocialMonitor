@@ -12,7 +12,10 @@ SocialMonitor reads Facebook and Instagram from the web through its own browser.
 ```bash
 META_APP_ID=
 META_APP_SECRET=
+META_LOGIN_CONFIG_ID=
 ```
+
+`META_LOGIN_CONFIG_ID` is for a Business app. Facebook Login for Business takes a login configuration instead of a list of permissions: in Facebook Login for Business → Configurations, create one with the permissions above (or the ones Meta approved) and paste its configuration id here. SocialMonitor then sends `config_id` and no `scope`. Left empty, it asks for the permissions above by name, as a Consumer app does. A configuration without the Instagram permissions still works: the Page connects for Facebook alone, as does a Page with no Instagram linked.
 
 5. Restart, open the brand's About page and press **Connect with Facebook**. Pick the brand's Page; its Instagram comes with it.
 
