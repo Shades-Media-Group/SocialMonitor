@@ -127,9 +127,37 @@ export const listBrands = (db: DB) => all<Brand>(db, 'SELECT * FROM brands ORDER
 export const listCompetitors = (db: DB, brandId: number) =>
   all<Brand>(db, 'SELECT * FROM brands WHERE competitor_of = ? ORDER BY name', brandId)
 
-/** Brands with the rivals each one watches, for updates: reading a brand reads its rivals too. */
+/**
+ * Whether a brand's Share of voice is on (its Admin switch; on unless a super admin turned it
+ * off). A rival answers for the brand that watches it.
+ */
+export function competitionOn(db: DB, brandId: number) {
+  const owner =
+    one<{ competitor_of: number | null }>(
+      db,
+      'SELECT competitor_of FROM brands WHERE id = ?',
+      brandId,
+    )?.competitor_of ?? brandId
+  return (
+    one<{ v: number }>(
+      db,
+      'SELECT coalesce((SELECT competition FROM brand_dashboards WHERE brand_id = ?), 1) AS v',
+      owner,
+    )?.v !== 0
+  )
+}
+
+/**
+ * Brands with the rivals each one watches, for updates: reading a brand reads its rivals too,
+ * unless its Share of voice is off, since nobody sees them then.
+ */
 export const withCompetitors = (db: DB, brandIds: number[]) => [
-  ...new Set(brandIds.flatMap((id) => [id, ...listCompetitors(db, id).map((c) => c.id)])),
+  ...new Set(
+    brandIds.flatMap((id) => [
+      id,
+      ...(competitionOn(db, id) ? listCompetitors(db, id).map((c) => c.id) : []),
+    ]),
+  ),
 ]
 
 /**

@@ -54,11 +54,27 @@ let held = false
  * False, and nothing held, when one is running or waiting: the restore must wait for it.
  */
 export function holdRuns(): boolean {
-  if (busy || queue.length || held) return false
+  if (busy || queue.length || held || side) return false
   busy = true
   held = true
   return true
 }
+/**
+ * Work beside the updates that opens its own browser and writes to the database (the Ads read).
+ * It starts only when no update runs and no restore holds; updates queued meanwhile wait for it.
+ */
+let side = 0
+export function beginSideJob() {
+  if (held) throw new Error('A backup is being restored. Try again in a minute.')
+  if (busy || queue.length) throw new Error('An update is running. Try again when it ends.')
+  side++
+}
+export function endSideJob() {
+  side = Math.max(0, side - 1)
+  if (side === 0 && queue.length) void drain(dbOfQueue!)
+}
+let dbOfQueue: DB | null = null
+
 /** Lets updates run again after holdRuns. */
 export function releaseRuns() {
   if (!held) return
@@ -77,7 +93,7 @@ export function queueRun(
   if (!scope.brandIds.length) throw new Error('Choose at least one brand.')
   if (!scope.networks.length) throw new Error('Choose at least one network.')
   const runId = store.startRun(db, trigger, scope)
-  store.logRun(db, runId, busy ? 'Waiting for the update before it to finish.' : 'Starting.')
+  store.logRun(db, runId, busy || side ? 'Waiting for the work before it to finish.' : 'Starting.')
   queue.push({ scope, trigger, runId, scheduleId: opts.scheduleId })
   void drain(db)
   return runId
@@ -89,7 +105,9 @@ export async function idle() {
 }
 
 async function drain(db: DB) {
-  if (busy) return
+  dbOfQueue = db
+  // An Ads read is on: the queue starts when it ends (endSideJob).
+  if (busy || side) return
   busy = true
   try {
     while (queue.length) {
@@ -547,7 +565,7 @@ export async function aiPreflight(db: DB, brandIds: number[]): Promise<AiPause |
  * it took on, or null when there was nothing to do yet.
  */
 export async function catchUp(db: DB, at = new Date()): Promise<number | null> {
-  if (busy) return null
+  if (busy || side) return null
   const brandIds = takeCatchUp(db, at)
   if (!brandIds) return null
   const soon = store.withCompetitors(
