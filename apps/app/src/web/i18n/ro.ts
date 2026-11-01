@@ -780,7 +780,10 @@ export const ro: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Această autentificare Facebook a expirat. Încearcă din nou.',
     'Facebook and Instagram connected.': 'Facebook și Instagram conectate.',
+    'Facebook connected.': 'Facebook conectat.',
     'From public Page data': 'Din datele publice ale paginii',
+    "SocialMonitor reads this Page's public posts and comments to sort them; it never posts.":
+      'SocialMonitor citește postările și comentariile publice ale acestei pagini ca să le sorteze; nu publică niciodată.',
     'Instant alerts': 'Alerte imediate',
     'Urgent comments': 'Comentarii urgente',
     'An email as soon as an update finds a comment that needs an answer urgently.':

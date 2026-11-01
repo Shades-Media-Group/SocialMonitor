@@ -776,7 +776,10 @@ export const ru: Dict = {
     'This Facebook sign-in expired. Try again.':
       'Этот вход через Facebook истёк. Попробуйте снова.',
     'Facebook and Instagram connected.': 'Facebook и Instagram подключены.',
+    'Facebook connected.': 'Facebook подключён.',
     'From public Page data': 'Из публичных данных страницы',
+    "SocialMonitor reads this Page's public posts and comments to sort them; it never posts.":
+      'SocialMonitor читает публичные посты и комментарии этой страницы, чтобы их сортировать; сам он ничего не публикует.',
     'Instant alerts': 'Мгновенные оповещения',
     'Urgent comments': 'Срочные комментарии',
     'An email as soon as an update finds a comment that needs an answer urgently.':

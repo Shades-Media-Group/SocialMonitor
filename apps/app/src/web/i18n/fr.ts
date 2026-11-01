@@ -780,7 +780,10 @@ export const fr: Dict = {
       'La connexion Facebook a expiré : reconnectez-la dans l’onglet À propos.',
     'This Facebook sign-in expired. Try again.': 'Cette connexion Facebook a expiré. Réessayez.',
     'Facebook and Instagram connected.': 'Facebook et Instagram connectés.',
+    'Facebook connected.': 'Facebook connecté.',
     'From public Page data': 'Données publiques de la page',
+    "SocialMonitor reads this Page's public posts and comments to sort them; it never posts.":
+      'SocialMonitor lit les publications et commentaires publics de cette page pour les trier ; il ne publie jamais.',
     'Instant alerts': 'Alertes immédiates',
     'Urgent comments': 'Commentaires urgents',
     'An email as soon as an update finds a comment that needs an answer urgently.':

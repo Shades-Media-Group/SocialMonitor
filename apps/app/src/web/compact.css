@@ -4530,6 +4530,9 @@ p.sm-postcamps .sm-postcamps__label {
   color: var(--c-text-3);
   font-size: 11.5px;
 }
+.sm-connected small.sm-connected__note {
+  margin-top: 4px;
+}
 
 /* Signing out is always one click away, at the foot of the side panel. */
 .sm-navpanel__out {

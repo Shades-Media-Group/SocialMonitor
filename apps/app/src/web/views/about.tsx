@@ -570,13 +570,22 @@ function MetaConnect({
   const load = () =>
     api
       .get<NonNullable<typeof state>>(`/api/brands/${brand.id}/meta`)
-      .then(setState)
-      .catch(() => setState(null))
+      .then((s) => {
+        setState(s)
+        return s
+      })
+      .catch(() => {
+        setState(null)
+        return null
+      })
   useEffect(() => {
-    void load()
     const back = new URLSearchParams(location.search).get('meta')
-    if (back === 'connected') notify(t('Facebook and Instagram connected.'))
-    else if (back) setError(back)
+    // A Page with no Instagram linked connects for Facebook alone; say only what connected.
+    void load().then((s) => {
+      if (back === 'connected')
+        notify(s?.instagram ? t('Facebook and Instagram connected.') : t('Facebook connected.'))
+    })
+    if (back && back !== 'connected') setError(back)
   }, [brand.id])
   if (!state) return null
   const fb = state.facebook
@@ -597,6 +606,11 @@ function MetaConnect({
               {state.instagram?.username
                 ? t('and Instagram @{name}', { name: state.instagram.username })
                 : t('No Instagram account is linked to this Page.')}
+            </small>
+            <small class="sm-connected__note">
+              {t(
+                "SocialMonitor reads this Page's public posts and comments to sort them; it never posts.",
+              )}
             </small>
           </span>
           {edit && (
