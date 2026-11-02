@@ -370,6 +370,8 @@ export interface AdFilter {
   q?: string
   sort?: string
   limit?: number
+  /** One ad to return beside the list, by its Library ID. */
+  ad?: string
 }
 
 const PLATFORMS = ['facebook', 'instagram', 'messenger', 'audience_network', 'whatsapp', 'threads']
@@ -479,9 +481,6 @@ export function adsView(db: DB, brandId: number, f: AdFilter = {}, today = new D
     db.prepare(`SELECT count(*) AS n FROM ads WHERE ${sql}`).get(...args) as { n: number }
   ).n
   const limit = Math.max(1, Math.min(500, f.limit ?? 200))
-  // An ad runs to its end day, or to today while it runs; both days count.
-  const days = `CAST(julianday(CASE WHEN active = 1 OR ended_on IS NULL THEN ? ELSE ended_on END)
-    - julianday(started_on) AS INTEGER) + 1`
   const order =
     f.sort === 'longest'
       ? 'days IS NULL, days DESC, library_id DESC'
@@ -491,8 +490,29 @@ export function adsView(db: DB, brandId: number, f: AdFilter = {}, today = new D
            coalesce(started_on, '') DESC, library_id DESC`
         : "coalesce(started_on, '') DESC, active DESC, library_id DESC"
   const ads = db
-    .prepare(`SELECT *, ${days} AS days FROM ads WHERE ${sql} ORDER BY ${order} LIMIT ?`)
+    .prepare(`SELECT *, ${DAYS_SQL} AS days FROM ads WHERE ${sql} ORDER BY ${order} LIMIT ?`)
     .all(day, ...args, limit) as unknown as AdRow[]
+  // One ad asked for by its Library ID (a linked pop-up), wherever it falls in the list, if it
+  // belongs to one of this brand's advertisers.
+  const focus =
+    f.ad && /^[\w-]{1,40}$/.test(f.ad)
+      ? ((db
+          .prepare(
+            `SELECT *, ${DAYS_SQL} AS days FROM ads WHERE library_id = ?
+             AND page_id IN (${pages.map(() => '?').join(',') || "''"})`,
+          )
+          .get(day, f.ad, ...pages) as unknown as AdRow | undefined) ?? null)
+      : null
+  withMedia(db, focus ? [...ads, focus] : ads)
+  return { advertisers: per, months, ads, matching, focus, facets: facets(db, f, pages) }
+}
+
+/** An ad runs to its end day, or to today (the one parameter) while it runs; both days count. */
+const DAYS_SQL = `CAST(julianday(CASE WHEN active = 1 OR ended_on IS NULL THEN ? ELSE ended_on END)
+  - julianday(started_on) AS INTEGER) + 1`
+
+/** Adds each ad's creatives, in order. */
+function withMedia(db: DB, ads: AdRow[]) {
   const media = db.prepare(
     `SELECT position, kind, path, width, height, video_url, video_hd_url, expires_at, title, body,
        link_url, caption, cta, cta_type, link_description
@@ -524,7 +544,6 @@ export function adsView(db: DB, brandId: number, f: AdFilter = {}, today = new D
       ]
     }
   }
-  return { advertisers: per, months, ads, matching, facets: facets(db, f, pages) }
 }
 
 /** How many ads each choice of each filter would show, with the other filters as they are. */

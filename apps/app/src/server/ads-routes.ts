@@ -80,6 +80,7 @@ export const adsRoutes: Route[] = [
         cta: one('cta'),
         q: one('q'),
         sort: one('sort'),
+        ad: one('ad'),
         limit: Number(query.get('limit')) || undefined,
       }),
     }

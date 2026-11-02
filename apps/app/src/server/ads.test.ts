@@ -445,6 +445,15 @@ describe('creatives, filters and sorting', () => {
     }
     expect(v.ads.map((a) => a.library_id)).toEqual(['c1'])
     expect(v.matching).toBe(1)
+    // A linked ad comes back beside the list, filtered out or not; another brand's never.
+    const linked = (await call(get, ctx(db, owner, params, {}, `${q}&ad=v1`))) as {
+      focus: { library_id: string; media: unknown[] } | null
+    }
+    expect(linked.focus?.library_id).toBe('v1')
+    expect(linked.focus?.media).toHaveLength(1)
+    saveAds(db, [ad({ library_id: '777', page_id: '333333333333' })], 'MD')
+    const other = (await call(get, ctx(db, owner, params, {}, 'ad=777'))) as { focus: unknown }
+    expect(other.focus).toBeNull()
     for (const who of [lead, viewer])
       await expect(call(get, ctx(db, who, params, {}, q))).rejects.toMatchObject({ status: 403 })
   })
