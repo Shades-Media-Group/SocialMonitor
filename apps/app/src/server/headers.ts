@@ -16,6 +16,9 @@ const IMAGE_HOSTS = [
   'https://*.cdninstagram.com',
 ]
 
+/** Meta's video servers, for the Ad Library videos on the Ads dashboard. */
+const VIDEO_HOSTS = ['https://*.fbcdn.net']
+
 export const newNonce = () => randomBytes(16).toString('base64')
 
 export const pageCsp = (nonce: string) =>
@@ -26,7 +29,8 @@ export const pageCsp = (nonce: string) =>
     `img-src 'self' data: blob: ${IMAGE_HOSTS.join(' ')}`,
     "font-src 'self'",
     "connect-src 'self'",
-    "media-src 'self' blob:",
+    // An ad's video on the owner's Ads dashboard plays from Meta's video servers, only when pressed.
+    `media-src 'self' blob: ${VIDEO_HOSTS.join(' ')}`,
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'self'",

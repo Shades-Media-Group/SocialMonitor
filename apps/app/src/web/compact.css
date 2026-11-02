@@ -5458,6 +5458,696 @@ th[aria-sort='ascending'] .sm-sortbtn::after {
   padding: 12px var(--c-pad);
   border-top: 1px solid var(--c-line-2);
 }
+
+/* Ads as cards (super admins): each ad drawn as it runs in a feed, its creative at its own shape,
+   in columns of natural heights; the filters above them, the pop-up with everything kept. */
+.sm-adsbar .sm-box__head {
+  justify-content: flex-start;
+}
+.sm-adsbar__view {
+  margin-left: auto;
+}
+.sm-adsbar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.sm-adsbar__dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-text-3);
+}
+.sm-adsbar__dates .g-input {
+  width: auto;
+}
+.sm-adpicks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sm-adpick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--c-control);
+  padding: 0 10px 0 4px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--g-radius-pill);
+  background: var(--c-card);
+  color: var(--c-text);
+  font: inherit;
+  cursor: pointer;
+}
+.sm-adpick:hover {
+  background: var(--c-hover);
+}
+.sm-adpick > img,
+.sm-adpick > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--c-hover);
+  color: var(--c-text-2);
+  font-size: 11px;
+  font-weight: 600;
+  object-fit: cover;
+}
+.sm-adpick .g-num {
+  color: var(--c-text-3);
+}
+.sm-adpick[aria-pressed='true'] {
+  border-color: var(--c-ink);
+  background: var(--c-ink);
+  color: var(--c-bg);
+}
+.sm-adpick[aria-pressed='true'] .g-num {
+  color: inherit;
+  opacity: 0.72;
+}
+.sm-adpick:focus-visible,
+.sm-adcard__open:focus-visible,
+.sm-adcards-list button:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 2px;
+}
+.sm-ads > .sm-ads__more {
+  border-top: 0;
+}
+
+.sm-masonry {
+  --gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  grid-auto-rows: 4px;
+  align-items: start;
+  column-gap: var(--gap);
+}
+.sm-masonry__cell {
+  min-width: 0;
+}
+
+.sm-adcard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  background: var(--c-card);
+  cursor: pointer;
+  transition: border-color var(--g-dur-snap) var(--g-ease-snap);
+}
+.sm-adcard:hover {
+  border-color: color-mix(in srgb, var(--c-text) 24%, transparent);
+}
+.sm-adcard:has(.sm-adcard__open:focus-visible) {
+  border-color: var(--c-ink);
+}
+.sm-adcard__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 10px;
+}
+.sm-adface {
+  display: grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--c-hover);
+  color: var(--c-text-2);
+  font-weight: 600;
+}
+.sm-adface img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sm-adcard__who {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+.sm-adcard__who b,
+.sm-adcard__who a {
+  overflow: hidden;
+  color: var(--c-text);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-adcard__who a:hover {
+  text-decoration: underline;
+}
+.sm-adcard__who > span {
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-adstate.is-on {
+  color: var(--g-success);
+  font-weight: 600;
+}
+.sm-adplat {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-text-3);
+}
+.sm-adplat svg {
+  display: block;
+}
+.sm-adplat__more {
+  font-size: 11.5px;
+}
+.sm-adcard__body {
+  display: -webkit-box;
+  /* A margin, not padding: the clamp would show the cut line in the padding. */
+  margin: 0 12px 12px;
+  overflow: hidden;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.sm-adcard__body.is-quiet {
+  color: var(--c-text-3);
+}
+
+/* One creative: a frame of its own shape. Taller than the cap, it shows whole, centred. */
+.sm-cr {
+  margin: 0;
+}
+.sm-cr__frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-height: var(--cap, 560px);
+  aspect-ratio: var(--ar, 1 / 1);
+  overflow: hidden;
+  background: var(--c-hover);
+}
+.sm-cr__frame > img,
+.sm-cr__frame > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.sm-cr__none {
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-cr__play {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  /* Light on any still: Meta's video stills are often a black first frame. */
+  background: rgb(255 255 255 / 0.94);
+  color: #0a0a0b;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.28);
+  cursor: pointer;
+  transition:
+    background var(--g-dur-snap) var(--g-ease-snap),
+    scale var(--g-dur-snap) var(--g-ease-snap);
+}
+.sm-cr__play .sm-icon {
+  translate: 2px 0;
+}
+.sm-cr__play:hover {
+  background: #fff;
+  scale: 1.05;
+}
+.sm-cr__play:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgb(10 10 11 / 0.85);
+}
+.sm-cr__gone {
+  padding: 8px 12px;
+  background: var(--c-hover);
+  color: var(--c-text-2);
+  font-size: 12px;
+}
+.sm-cr__gone a {
+  color: var(--c-text);
+}
+
+/* Several creatives: a strip that snaps one at a time. */
+.sm-crs {
+  position: relative;
+}
+.sm-crs__strip {
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.sm-crs__strip::-webkit-scrollbar {
+  display: none;
+}
+.sm-crs__slide {
+  display: flex;
+  flex: 0 0 100%;
+  align-items: center;
+  background: var(--c-hover);
+  scroll-snap-align: start;
+}
+.sm-crs__slide > .sm-cr {
+  width: 100%;
+}
+.sm-crs__count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 0 8px;
+  border-radius: var(--g-radius-pill);
+  background: rgb(10 10 11 / 0.62);
+  color: #fff;
+  font-size: 11.5px;
+  line-height: 20px;
+  pointer-events: none;
+}
+.sm-crs__arrow {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--c-card);
+  color: var(--c-text);
+  box-shadow: var(--g-shadow-sm);
+  cursor: pointer;
+  opacity: 0;
+  translate: 0 -50%;
+  transition: opacity var(--g-dur-snap) var(--g-ease-snap);
+}
+.sm-crs__arrow--prev {
+  left: 8px;
+}
+.sm-crs__arrow--next {
+  right: 8px;
+}
+.sm-crs:hover .sm-crs__arrow,
+.sm-crs:focus-within .sm-crs__arrow {
+  opacity: 1;
+}
+.sm-crs__arrow:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 2px;
+}
+.sm-crs .sm-crs__arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+@media (hover: none) {
+  .sm-crs__arrow {
+    opacity: 1;
+  }
+}
+
+/* Where the ad leads, with its button's words on the right. */
+.sm-adlink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--c-line-2);
+  background: var(--c-panel);
+  color: var(--c-text);
+  text-decoration: none;
+}
+a.sm-adlink:hover {
+  background: var(--c-hover);
+}
+a.sm-adlink:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: -2px;
+}
+.sm-adlink__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+.sm-adlink__host,
+.sm-adlink__desc {
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-adlink__text b {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+.sm-adlink__cta {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: var(--c-control);
+  padding: 0 12px;
+  border-radius: var(--c-radius);
+  background: var(--c-active);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sm-adcard__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--c-line-2);
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-adcard__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 28px;
+  padding: 0 0 0 6px;
+  border: 0;
+  background: none;
+  color: var(--c-text-2);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sm-adcard__open:hover {
+  color: var(--c-text);
+}
+
+/* The pop-up: the creative large on the dark stage the post viewer uses, everything else beside. */
+.sm-addlg {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 1fr);
+  height: 100%;
+}
+.sm-addlg--text {
+  grid-template-columns: minmax(0, 1fr);
+}
+.sm-addlg__stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #0b0b0c;
+}
+.sm-addlg__stage > .sm-cr,
+.sm-addlg__stage > .sm-crs {
+  flex: 1;
+  min-height: 0;
+}
+.sm-addlg__stage .sm-crs__strip,
+.sm-addlg__stage .sm-crs__slide,
+.sm-addlg__stage .sm-cr {
+  height: 100%;
+}
+.sm-addlg__stage .sm-cr {
+  display: flex;
+  flex-direction: column;
+}
+.sm-addlg__stage .sm-cr__frame {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto;
+  background: transparent;
+}
+.sm-addlg__stage .sm-crs__slide {
+  background: transparent;
+}
+/* The stage sets the size; the picture fits inside it whole, whatever its shape. */
+.sm-addlg__stage .sm-crs {
+  display: flex;
+  flex-direction: column;
+}
+.sm-addlg__stage .sm-crs__strip {
+  flex: 1;
+  min-height: 0;
+}
+.sm-addlg__stage .sm-cr__frame > img,
+.sm-addlg__stage .sm-cr__frame > video {
+  position: absolute;
+  inset: 0;
+}
+.sm-addlg__stage .sm-cr__gone {
+  background: #1b1b1d;
+  color: #d6d6d6;
+}
+.sm-addlg__stage .sm-cr__gone a {
+  color: #fff;
+}
+.sm-addlg__thumbs {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  padding: 10px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.sm-addlg__thumbs button {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: 56px;
+  aspect-ratio: var(--ar, 1 / 1);
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: #222225;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0.62;
+}
+.sm-addlg__thumbs button:hover {
+  opacity: 0.9;
+}
+.sm-addlg__thumbs button[aria-pressed='true'] {
+  border-color: #fff;
+  opacity: 1;
+}
+.sm-addlg__thumbs button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.sm-addlg__thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sm-addlg__thumbs .sm-icon {
+  position: absolute;
+}
+.sm-addlg__side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--c-line);
+}
+.sm-addlg--text .sm-addlg__side {
+  border-left: 0;
+}
+.sm-addlg__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 52px 10px 14px;
+  border-bottom: 1px solid var(--c-line);
+}
+.sm-addlg__steps {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+.sm-addlg__scroll {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+}
+.sm-addlg__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+.sm-addlg__body {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.sm-addlg__scroll > .sm-adlink {
+  border: 1px solid var(--c-line);
+  border-radius: var(--c-radius);
+}
+.sm-addlg__sub {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+.sm-addl {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) minmax(0, 1fr);
+  margin: -6px 0 0;
+  column-gap: 16px;
+}
+.sm-addl dt,
+.sm-addl dd {
+  margin: 0;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--c-line-2);
+}
+.sm-addl dt {
+  color: var(--c-text-2);
+}
+.sm-addl dd {
+  overflow-wrap: anywhere;
+}
+.sm-addl__url {
+  color: var(--c-text);
+  word-break: break-all;
+}
+.sm-adcards-list {
+  display: grid;
+  margin: -4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sm-adcards-list button {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--c-radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sm-adcards-list button:hover,
+.sm-adcards-list button[aria-current='true'] {
+  background: var(--c-hover);
+}
+.sm-adcards-list button > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.sm-adcards-list b {
+  font-weight: 600;
+}
+.sm-adcards-list__n {
+  flex: none;
+  width: 18px;
+  color: var(--c-text-3);
+}
+.sm-adcards-list__url {
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-addlg__foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 14px;
+  border-top: 1px solid var(--c-line);
+}
+.sm-addlg__foot .g-btn {
+  gap: 6px;
+}
+@media (max-width: 600px) {
+  /* The phone: search and status across, the other filters two to a row. */
+  .sm-adsbar__row > .sm-search,
+  .sm-adsbar__row > .g-segmented,
+  .sm-adsbar__dates {
+    flex: 1 1 100%;
+  }
+  .sm-adsbar__row > .g-segmented > button {
+    flex: 1;
+  }
+  .sm-adsbar__row > select {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+  .sm-adsbar__dates .g-input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+@media (max-width: 800px) {
+  .sm-addlg {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 46%) minmax(0, 1fr);
+  }
+  .sm-addlg--text {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .sm-addlg__side {
+    border-top: 1px solid var(--c-line);
+    border-left: 0;
+  }
+  .sm-addlg__thumbs {
+    padding: 6px 8px;
+  }
+  .sm-addlg__thumbs button {
+    height: 40px;
+  }
+  /* The close button sits over the stage here: the counter moves left and the button gets a ground. */
+  .sm-addlg__stage .sm-crs__count {
+    right: auto;
+    left: 8px;
+  }
+  .sm-modal:has(.sm-addlg__stage) .sm-modal__close {
+    background: var(--c-card);
+  }
+  .sm-addlg:not(.sm-addlg--text) .sm-addlg__head {
+    padding-right: 14px;
+  }
+  .sm-masonry {
+    --gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sm-adcard,
+  .sm-cr__play,
+  .sm-crs__arrow {
+    transition: none;
+  }
+  .sm-crs__strip {
+    scroll-behavior: auto;
+  }
+}
+
 .sm-admin__dash .sm-inline {
   align-items: center;
   gap: 8px 16px;
