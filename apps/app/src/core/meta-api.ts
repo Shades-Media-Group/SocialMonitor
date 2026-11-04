@@ -237,6 +237,12 @@ export function connection(db: DB, brandId: number) {
   }
 }
 
+/** The connected account's id and its Page token, for the stories reader (core/meta-stories.ts). */
+export function metaToken(db: DB, brandId: number, network: 'facebook' | 'instagram') {
+  const r = row(db, brandId, network)
+  return r ? { id: r.open_id, token: r.access_token } : null
+}
+
 export const metaConnected = (db: DB, brandId: number, network: string) =>
   (network === 'facebook' || network === 'instagram') && !!row(db, brandId, network)
 

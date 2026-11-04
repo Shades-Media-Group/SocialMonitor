@@ -1,0 +1,76 @@
+{
+  "AllViewed": false,
+  "CurrentPosition": "0",
+  "HasMoreAfter": false,
+  "HasMoreBefore": false,
+  "LastStoryCreatedAt": "1793748647001",
+  "MaxCursor": "1793748647001",
+  "MinCursor": "1793713182033",
+  "TotalCount": "2",
+  "extra": { "fatal_item_ids": [], "logid": "20261104083711000000000000000000", "now": 1793781431000 },
+  "itemList": [
+    {
+      "id": "7704091736330505493",
+      "createTime": 1793748647,
+      "desc": "",
+      "author": { "id": "7458635402229253126", "uniqueId": "tavelo.md", "UserStoryStatus": 1 },
+      "isAd": false,
+      "music": { "authorName": "Tavelo", "title": "original sound", "original": true },
+      "stats": { "collectCount": 0, "commentCount": 0, "diggCount": 12, "playCount": 373, "shareCount": 2 },
+      "statsV2": { "collectCount": "0", "commentCount": "0", "diggCount": "12", "playCount": "373", "repostCount": "0", "shareCount": "2" },
+      "stickersOnItem": [{ "stickerText": ["Autumn bags are in", "@lumio.store"], "stickerType": 4 }],
+      "story": { "ExpiredAt": 1793835047000, "IsOfficial": false, "Viewed": false },
+      "video": {
+        "width": 576,
+        "height": 1024,
+        "duration": 10,
+        "codecType": "h264",
+        "cover": "https://p16-sign.tiktokcdn.example/cover.jpeg",
+        "originCover": "https://p16-sign.tiktokcdn.example/origin-cover.jpeg",
+        "playAddr": "https://v16-webapp.tiktok.example/play-540.mp4",
+        "downloadAddr": "https://v16-webapp.tiktok.example/download-540.mp4",
+        "bitrateInfo": [
+          {
+            "GearName": "adapt_lower_720_1",
+            "Bitrate": 281681,
+            "CodecType": "h265_hvc1",
+            "PlayAddr": { "DataSize": 352348, "Height": 1280, "Width": 720, "UrlList": ["https://v16-webapp.tiktok.example/720.mp4", "https://v19-webapp.tiktok.example/720.mp4"] }
+          },
+          {
+            "GearName": "lowest_540_0",
+            "Bitrate": 233283,
+            "CodecType": "h264",
+            "PlayAddr": { "DataSize": 291809, "Height": 1024, "Width": 576, "UrlList": ["https://v16-webapp.tiktok.example/540.mp4"] }
+          },
+          {
+            "GearName": "adapt_540_1",
+            "Bitrate": 205721,
+            "CodecType": "h265_hvc1",
+            "PlayAddr": { "DataSize": 257332, "Height": 1024, "Width": 576, "UrlList": ["https://v16-webapp.tiktok.example/540-hevc.mp4"] }
+          }
+        ]
+      }
+    },
+    {
+      "id": "7703939409133014294",
+      "createTime": 1793713182,
+      "desc": "New in store, see you there @tavelo.official",
+      "author": { "id": "7458635402229253126", "uniqueId": "tavelo.md", "UserStoryStatus": 1 },
+      "isAd": false,
+      "imagePost": {
+        "cover": { "imageHeight": 1280, "imageWidth": 720, "imageURL": { "urlList": ["https://p16-sign.tiktokcdn.example/photo-cover.jpeg"] } },
+        "images": [
+          { "imageHeight": 1280, "imageWidth": 720, "imageURL": { "urlList": ["https://p16-sign.tiktokcdn.example/photo-1.jpeg", "https://p19-sign.tiktokcdn.example/photo-1.jpeg"] } }
+        ]
+      },
+      "music": { "authorName": "Night Drive", "title": "Wanted" },
+      "stats": { "collectCount": 0, "commentCount": 0, "diggCount": 62, "playCount": 198, "shareCount": 1 },
+      "story": { "ExpiredAt": 1793799582000, "IsOfficial": false, "Viewed": false },
+      "video": { "width": 0, "height": 0, "duration": 0, "cover": "https://p16-sign.tiktokcdn.example/photo-cover.jpeg" }
+    }
+  ],
+  "log_pb": { "impr_id": "20261104083711000000000000000000" },
+  "statusCode": 0,
+  "status_code": 0,
+  "status_msg": ""
+}

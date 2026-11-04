@@ -52,7 +52,11 @@ export const tiktok: Collector = {
  * run and the real page is there. Returns a `Get` that fetches from inside that page, so the
  * visitor cookies the check handed out go with each request, and the profile's secUid.
  */
-async function openProfile(context: BrowserContext, profile: Profile, opt: CollectOptions) {
+export async function openProfile(
+  context: BrowserContext,
+  profile: Pick<Profile, 'url' | 'handle'>,
+  opt: Pick<CollectOptions, 'log'>,
+) {
   const page = await context.newPage()
   // The profile's HTML as it arrives. The check answers the first load with its own page, runs
   // its script and reloads; the HTML that comes after that carries the profile. Reading it from
@@ -89,7 +93,7 @@ async function openProfile(context: BrowserContext, profile: Profile, opt: Colle
   )
   // A person looks at the profile before opening anything.
   await pause(3000, 6000)
-  return { get: pageGet(page), secUid }
+  return { get: pageGet(page), secUid, data: seen.data, page }
 }
 
 /**
@@ -97,7 +101,7 @@ async function openProfile(context: BrowserContext, profile: Profile, opt: Colle
  * visitor cookies TikTok's check handed this page go with it. If the page reloaded itself in the
  * meantime, it waits for the new page and asks once more.
  */
-const pageGet =
+export const pageGet =
   (page: Page): Get =>
   async (url) => {
     await pause(1500, 4000)
