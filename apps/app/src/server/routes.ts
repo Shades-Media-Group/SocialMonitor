@@ -70,7 +70,7 @@ import type { AuditEvent } from '../core/audit.ts'
 import { setBranding } from '../core/branding.ts'
 import * as campaigns from '../core/campaigns.ts'
 import { adminUsage } from '../core/admin.ts'
-import { dashboards } from '../core/ads.ts'
+import { LIMIT_REACHED, plan, rivalsInPlan } from '../core/plan.ts'
 import { activePause, afterPause, catchUpState } from '../core/ai-limit.ts'
 
 export class HttpError extends Error {
@@ -222,10 +222,13 @@ const byBrand = (c: Signed) => {
   if (brand) sees(c, id(brand))
   else if (!c.user.super) throw new HttpError(403, 'Choose a brand.')
 }
-/** Share of voice and its rivals answer only while a super admin leaves them on for the brand. */
+/**
+ * Share of voice and its rivals answer a brand's own people only while its plan has them; super
+ * admins, who set the plan, always.
+ */
 const voiceOn = (c: Signed) => {
-  if (!store.competitionOn(c.db, id(c.params.id)))
-    throw new HttpError(404, 'Share of voice is off for this brand.')
+  if (!c.user.super && !store.competitionOn(c.db, id(c.params.id)))
+    throw new HttpError(403, 'Share of voice is not in this brand’s plan.')
 }
 const seeVoice = (c: Signed) => {
   seeBrand(c)
@@ -442,15 +445,20 @@ export const routes: Route[] = [
       store.listBrands(c.db).filter((br) => !br.competitor_of),
       (br) => br.id,
     ).map((brand) => {
-      const dash = dashboards(c.db, brand.id)
+      const p = plan(c.db, brand.id)
       return {
         my_role: roleFor(c.db, c.user, brand.id),
         ...brand,
         profiles: store.listProfiles(c.db, brand.id),
         counts: store.labelCounts(c.db, brand.id),
-        // Which dashboards it has. The Ads switch is the owner's: only super admins hear of it.
-        competition: dash.competition,
-        ...(c.user.super ? { ads: dash.ads } : {}),
+        // Which dashboards its plan gives its people. The Ads switch and the plan itself are the
+        // owner's: only super admins hear of them.
+        competition: p.competition,
+        stories: p.stories || p.rival_stories,
+        rival_stories: p.rival_stories,
+        // How many competitors it may track, so its admins see the limit before they reach it.
+        rival_limit: p.rival_limit,
+        ...(c.user.super ? { ads: p.ads, plan: p } : {}),
       }
     }),
   ),
@@ -895,15 +903,33 @@ export const routes: Route[] = [
       }),
   ),
   // The rivals a brand watches, with their profiles: its people see them, its admins change them.
-  r('GET', '/api/brands/:id/competitors', seeVoice, ({ db, params }) =>
-    store.listCompetitors(db, id(params.id)).map((c) => ({
+  // Rivals past the plan's competitor limit come back paused: kept, but not read.
+  r('GET', '/api/brands/:id/competitors', seeVoice, ({ db, params }) => {
+    const paused = new Set(
+      rivalsInPlan(db, id(params.id))
+        .filter((r) => r.paused)
+        .map((r) => r.id),
+    )
+    return store.listCompetitors(db, id(params.id)).map((c) => ({
       ...c,
+      paused: paused.has(c.id),
       profiles: store.listProfiles(db, c.id),
-    })),
-  ),
+    }))
+  }),
   r('POST', '/api/brands/:id/competitors', adminVoice, (c) => {
     const x = b(c) as { name?: string; links?: string[] }
-    return store.addCompetitor(c.db, id(c.params.id), String(x.name ?? ''), x.links ?? [])
+    try {
+      return store.addCompetitor(c.db, id(c.params.id), String(x.name ?? ''), x.links ?? [])
+    } catch (e) {
+      // The message's template goes too, so the dashboard says it in the reader's language.
+      if (e instanceof store.RivalLimit)
+        throw new HttpError(409, e.message, {
+          template: LIMIT_REACHED,
+          vars: { n: e.limit },
+          limit: e.limit,
+        })
+      throw e
+    }
   }),
   r('DELETE', '/api/brands/:id/competitors/:rival', adminVoice, ({ db, params }) => {
     const rival = store.getBrand(db, id(params.rival))

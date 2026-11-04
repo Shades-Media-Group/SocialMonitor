@@ -18,6 +18,7 @@ import type {
 import { NETWORKS, scheduleRange } from './types.ts'
 import { TEMPLATES } from './categories.ts'
 import { placeBrand, placePost } from './campaigns.ts'
+import { LIMIT_REACHED, RIVAL_LIMIT_MAX, activeRivals, plan } from './plan.ts'
 
 type Row = Record<string, unknown>
 const all = <T>(db: DB, sql: string, ...args: (string | number | null)[]) =>
@@ -128,49 +129,43 @@ export const listCompetitors = (db: DB, brandId: number) =>
   all<Brand>(db, 'SELECT * FROM brands WHERE competitor_of = ? ORDER BY name', brandId)
 
 /**
- * Whether a brand's Share of voice is on (its Admin switch; on unless a super admin turned it
- * off). A rival answers for the brand that watches it.
+ * Whether a brand's Share of voice is on in its plan (on unless a super admin turned it off). A
+ * rival answers for the brand that watches it.
  */
-export function competitionOn(db: DB, brandId: number) {
-  const owner =
-    one<{ competitor_of: number | null }>(
-      db,
-      'SELECT competitor_of FROM brands WHERE id = ?',
-      brandId,
-    )?.competitor_of ?? brandId
-  return (
-    one<{ v: number }>(
-      db,
-      'SELECT coalesce((SELECT competition FROM brand_dashboards WHERE brand_id = ?), 1) AS v',
-      owner,
-    )?.v !== 0
-  )
-}
+export const competitionOn = (db: DB, brandId: number) => plan(db, brandId).competition
 
 /**
  * Brands with the rivals each one watches, for updates: reading a brand reads its rivals too,
- * unless its Share of voice is off, since nobody sees them then.
+ * unless its Share of voice is off, since nobody sees them then. Rivals past the plan's limit are
+ * paused and not read.
  */
 export const withCompetitors = (db: DB, brandIds: number[]) => [
   ...new Set(
-    brandIds.flatMap((id) => [
-      id,
-      ...(competitionOn(db, id) ? listCompetitors(db, id).map((c) => c.id) : []),
-    ]),
+    brandIds.flatMap((id) => [id, ...(competitionOn(db, id) ? activeRivals(db, id) : [])]),
   ),
 ]
 
+/** Thrown at the plan's competitor limit, with the limit for the dashboard's translation. */
+export class RivalLimit extends Error {
+  readonly limit: number
+  constructor(limit: number) {
+    super(LIMIT_REACHED.replace('{n}', String(limit)))
+    this.limit = limit
+  }
+}
+
 /**
  * Adds a rival to a brand from its public profile links. It takes the brand's categories, so
- * comments on both are sorted the same way. Five at most: the charts have six colours.
+ * comments on both are sorted the same way. As many as the brand's plan tracks, five at most: the
+ * charts have six colours.
  */
 export function addCompetitor(db: DB, brandId: number, name: string, links: string[]) {
   const owner = getBrand(db, brandId)
   if (!owner || owner.competitor_of) throw new Error('Rivals belong to one of your brands.')
   if (!name.trim()) throw new Error('Name the rival.')
   if (!links.filter(Boolean).length) throw new Error('Add at least one profile link.')
-  if (listCompetitors(db, brandId).length >= 5)
-    throw new Error('A brand watches five rivals at most.')
+  const limit = Math.min(RIVAL_LIMIT_MAX, plan(db, brandId).rival_limit)
+  if (listCompetitors(db, brandId).length >= limit) throw new RivalLimit(limit)
   if (one(db, 'SELECT id FROM brands WHERE lower(name) = lower(?)', name.trim()))
     throw new Error('There is already a brand with this name.')
   for (const link of links.filter(Boolean)) parseProfile(link)

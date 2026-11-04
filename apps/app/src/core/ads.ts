@@ -5,7 +5,8 @@ import { saveImage, savedImageSize } from './media.ts'
 import { beginSideJob, endSideJob } from './run.ts'
 import { Challenge, openLoggedOut, pause } from './collect/browser.ts'
 import type { LibraryAd } from './collect/ad-library.ts'
-import { country, linkExpiry, pageIdFrom, readAdvertiser } from './collect/ad-library.ts'
+import { linkExpiry, pageIdFrom, readAdvertiser } from './collect/ad-library.ts'
+import { plan, setPlan } from './plan.ts'
 
 /**
  * The Ads dashboard: what Meta's public Ad Library shows for a brand's own Facebook Page and its
@@ -23,35 +24,22 @@ export interface Dashboards {
   ads_country: string
 }
 
-const DEFAULTS: Dashboards = { competition: true, ads: false, ads_country: 'MD' }
-
+/** The Dashboards part of the brand's plan (core/plan.ts), which keeps these switches now. */
 export function dashboards(db: DB, brandId: number): Dashboards {
-  const row = db
-    .prepare('SELECT competition, ads, ads_country FROM brand_dashboards WHERE brand_id = ?')
-    .get(brandId) as { competition: number; ads: number; ads_country: string } | undefined
-  if (!row) return { ...DEFAULTS }
-  return { competition: !!row.competition, ads: !!row.ads, ads_country: row.ads_country }
+  const p = plan(db, brandId)
+  return { competition: p.competition, ads: p.ads, ads_country: p.ads_country }
 }
 
-/** Changes a brand's switches (super admins only, checked by the route). */
+/** Changes a brand's switches (super admins only, checked by the route), in its plan. */
 export function setDashboards(db: DB, brandId: number, patch: unknown, userId: number | null) {
   const p = (patch ?? {}) as Record<string, unknown>
-  const next = dashboards(db, brandId)
-  if (p.competition !== undefined) next.competition = p.competition === true
-  if (p.ads !== undefined) next.ads = p.ads === true
-  if (p.ads_country !== undefined) {
-    const cc = country(String(p.ads_country))
-    if (!cc) throw new Error('The country is a two-letter code, such as MD, or ALL.')
-    next.ads_country = cc
-  }
-  db.prepare(
-    `INSERT INTO brand_dashboards (brand_id, competition, ads, ads_country, updated_at, updated_by)
-     VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT (brand_id) DO UPDATE SET competition = excluded.competition, ads = excluded.ads,
-       ads_country = excluded.ads_country, updated_at = excluded.updated_at,
-       updated_by = excluded.updated_by`,
-  ).run(brandId, next.competition ? 1 : 0, next.ads ? 1 : 0, next.ads_country, now(), userId)
-  return next
+  const next = setPlan(
+    db,
+    brandId,
+    { competition: p.competition, ads: p.ads, ads_country: p.ads_country },
+    userId,
+  )
+  return { competition: next.competition, ads: next.ads, ads_country: next.ads_country }
 }
 
 // Advertisers
@@ -658,6 +646,8 @@ export interface Deps {
 }
 
 let reading = false
+/** Whether an Ads read is on now (the stories check waits for it: both open a browser). */
+export const adsReading = () => reading
 
 /**
  * Starts reading a brand's advertisers in the background and returns the read's id. One read at a

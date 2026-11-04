@@ -52,6 +52,9 @@ export const AUDIT_EVENTS = [
   // A super admin turned a brand's Share of voice or Ads dashboard on or off. Kept without the
   // brand's id, so only super admins see it.
   'dashboards.changed',
+  // A super admin changed a brand's plan: its dashboards, stories and competitor limit. Kept
+  // without the brand's id too.
+  'plan.changed',
 ] as const
 export type AuditEvent = (typeof AUDIT_EVENTS)[number]
 
