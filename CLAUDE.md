@@ -19,7 +19,7 @@ Use Node 22: `export PATH=$HOME/.nvm/versions/node/v22.23.1/bin:$PATH`; the shel
 
 ## Non-negotiables
 
-- **Free forever:** no payments, plans, limits, accounts or upgrade prompts.
+- **Free forever:** no payments, accounts or upgrade prompts in the product. The one exception, asked for by the owner (2026-11-04): on Shades Media Group's own install, super admins set each brand's plan in Admin (which dashboards its people see, how many competitors it tracks, [docs/stories.md](docs/stories.md)); at the competitor limit a brand admin reads "Ask SocialMonitor to raise it". Nothing in the product takes a payment.
 - **The dashboard is never hosted.** It runs on the user's computer and binds to `127.0.0.1` only. Only the website is deployed.
 - **Data stays local:** the database, the browser profile and reports live in `data/` (git-ignored). No analytics or remote logging. The outbound flows are text sent to Claude for sorting and the five-character password prefix sent to Have I Been Pwned's range API; each must stay described exactly in PRIVACY.md and on the site.
 - **Manual by default:** nothing runs until the user presses Update or turns on a schedule.

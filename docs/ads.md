@@ -4,16 +4,16 @@ The Ads dashboard shows what Meta's public [Ad Library](https://www.facebook.com
 
 ## Who sees it
 
-Only super admins. A super admin turns it on per brand in that brand's **Admin** tab, under **Dashboards**; it is off for every brand until then. A brand's own admins and viewers never see it, even when it is on:
+Only super admins. A super admin turns it on per brand in that brand's **Admin** tab, under **Plan**; it is off for every brand until then. A brand's own admins and viewers never see it, even when it is on:
 
 - the **Ads** tab is drawn only for super admins;
-- every `/api/brands/:id/ads…` and `/api/brands/:id/dashboards` route answers 403 to anyone else, and 404 while the brand's switch is off;
+- every `/api/brands/:id/ads…`, `/api/brands/:id/dashboards` and `/api/brands/:id/plan` route answers 403 to anyone else, and 404 while the brand's switch is off;
 - `/api/brands` tells a brand's own people nothing about the switch;
 - the ad and Page pictures under `/media/ads/` answer 404 to anyone but a super admin, by any spelling of the path;
 - nothing about ads goes into exports, PDF and Excel reports, emails, the MCP server or search;
 - turning a switch on or off is kept in the audit log without the brand's id, so only super admins read it.
 
-The same **Dashboards** box holds the **Share of voice** switch. It is on for every brand until a super admin turns it off. Off, the tab, its rivals in Settings and their routes are gone for everyone, and updates skip the rivals; what was already read stays.
+The same **Plan** box holds **Share of voice**, Stories and the competitor limit ([Stories](stories.md)). Share of voice is on for every brand until a super admin turns it off. Off, the tab, its rivals in Settings and their routes are gone for the brand's people (403), super admins still see it, and updates skip the rivals; what was already read stays.
 
 ## What it reads
 
