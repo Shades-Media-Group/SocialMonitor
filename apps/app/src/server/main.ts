@@ -10,7 +10,9 @@ import { shadesRoutes } from './shades-routes.ts'
 import { backupRoutes } from './backup-routes.ts'
 import { shadesRolesRoutes } from './shades-roles-routes.ts'
 import { adsRoutes } from './ads-routes.ts'
-import { mediaFile } from './media.ts'
+import { byteRange, mediaFile } from './media.ts'
+import { maySeeStory, storiesRoutes, storyOwner } from './stories-routes.ts'
+import { closeStaleStoryRuns } from '../core/stories.ts'
 import { closeStaleAdRuns } from '../core/ads.ts'
 import {
   cookieAge,
@@ -22,6 +24,7 @@ import {
   seedAdmin,
   sessionCookie,
 } from '../core/auth.ts'
+import type { User } from '../core/auth.ts'
 import { seedFromFile } from './seed.ts'
 import { clientOf, gate, publicHost } from './access.ts'
 import { closeStaleRuns } from '../core/store.ts'
@@ -61,6 +64,7 @@ seedAdmin(db)
 seedFromFile(db)
 closeStaleRuns(db)
 closeStaleAdRuns(db)
+closeStaleStoryRuns(db)
 startScheduler(db)
 // Photos and stickers for older TikTok comments, from public pages, a few seconds after start.
 setTimeout(() => void fillTikTok(db, (l) => console.log(l)).catch(() => {}), 5000)
@@ -71,6 +75,7 @@ const ALL = [
   ...shadesRolesRoutes,
   ...backupRoutes,
   ...adsRoutes,
+  ...storiesRoutes,
   ...routes,
 ]
 
@@ -86,6 +91,7 @@ const TYPES: Record<string, string> = {
   '.avif': 'image/avif',
   '.woff2': 'font/woff2',
   '.json': 'application/json',
+  '.mp4': 'video/mp4',
 }
 
 async function body(req: IncomingMessage): Promise<unknown> {
@@ -200,7 +206,7 @@ const server = createServer(async (req, res) => {
     return
   }
   if (!url.pathname.startsWith('/api/')) {
-    if (url.pathname.startsWith('/media/')) return serveMedia(res, url.pathname, !!user?.super)
+    if (url.pathname.startsWith('/media/')) return serveMedia(req, res, url.pathname, user)
     return serveStatic(res, url.pathname)
   }
   try {
@@ -285,13 +291,46 @@ const server = createServer(async (req, res) => {
   }
 })
 
-function serveMedia(res: ServerResponse, path: string, isSuper: boolean) {
-  const file = mediaFile(join(DATA_DIR, 'media'), path, isSuper)
+function serveMedia(req: IncomingMessage, res: ServerResponse, path: string, user: User | null) {
+  // A story's files go only to someone its brand and plan let see that story.
+  const story = (watcher: number, storyId: number) => {
+    const s = storyOwner(db, storyId)
+    return !!user && !!s && s.watcher_id === watcher && maySeeStory(db, user, watcher, s.brand_id)
+  }
+  const file = mediaFile(join(DATA_DIR, 'media'), path, !!user?.super, story)
   if (!file) return send(res, 404, { error: 'No such file.' })
+  const type = TYPES[extname(file)] ?? 'application/octet-stream'
+  // Private: a story's file is checked per person, so no shared cache may keep it.
+  const cache = path.startsWith('/media/stories/') ? 'private, max-age=86400' : 'max-age=86400'
+  const size = statSync(file).size
+  const range = byteRange(req.headers.range, size)
+  if (range === 'bad') {
+    res.writeHead(416, { 'content-range': `bytes */${size}` })
+    return res.end()
+  }
+  if (range) {
+    res.writeHead(206, {
+      'content-type': type,
+      'cache-control': cache,
+      'accept-ranges': 'bytes',
+      'content-range': `bytes ${range.start}-${range.end}/${size}`,
+      'content-length': range.end - range.start + 1,
+    })
+    const stream = createReadStream(file, { start: range.start, end: range.end })
+    stream.on('error', () => res.destroy())
+    return stream.pipe(res)
+  }
   res.writeHead(200, {
-    'content-type': TYPES[extname(file)] ?? 'application/octet-stream',
-    'cache-control': 'max-age=86400',
+    'content-type': type,
+    'cache-control': cache,
+    'accept-ranges': 'bytes',
+    'content-length': size,
   })
+  if (size > 4 * 1024 * 1024) {
+    const stream = createReadStream(file)
+    stream.on('error', () => res.destroy())
+    return stream.pipe(res)
+  }
   res.end(readFileSync(file))
 }
 
