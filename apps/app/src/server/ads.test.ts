@@ -187,21 +187,35 @@ describe('the Ads dashboard is for super admins only', () => {
 })
 
 describe('Share of voice behind its switch', () => {
-  it('leaves the tab, the routes and the rivals’ reads when off, for everyone', async () => {
-    const { db, brand, rival, owner, lead } = setup()
+  it('when off: the brand’s people lose the tab and the routes (403), updates skip the rivals, super admins still see it', async () => {
+    const { db, brand, rival, owner, lead, viewer } = setup()
     const voice = find('GET', '/api/brands/1/voice')
     const rivals = find('GET', '/api/brands/1/competitors')
     const params = { id: String(brand.id) }
     await call(voice, ctx(db, lead, params))
     expect(withCompetitors(db, [brand.id])).toEqual([brand.id, rival.id])
     setDashboards(db, brand.id, { competition: false }, owner.id)
-    for (const who of [lead, owner]) {
-      await expect(call(voice, ctx(db, who, params))).rejects.toThrow(/off for this brand/)
-      await expect(call(rivals, ctx(db, who, params))).rejects.toThrow(/off for this brand/)
-      expect(tabsFor({ my_role: 'admin', competition: false }, who.super === 1)).not.toContainEqual(
-        ['voice', 'Share of voice'],
-      )
+    for (const who of [lead, viewer]) {
+      for (const route of [voice, rivals]) {
+        let status = 0
+        try {
+          await call(route, ctx(db, who, params))
+        } catch (e) {
+          status = (e as { status?: number }).status ?? 0
+        }
+        expect(status, who.email).toBe(403)
+      }
+      expect(tabsFor({ my_role: 'admin', competition: false }, false)).not.toContainEqual([
+        'voice',
+        'Share of voice',
+      ])
     }
+    await call(voice, ctx(db, owner, params))
+    expect(await call(rivals, ctx(db, owner, params))).toHaveLength(1)
+    expect(tabsFor({ my_role: 'admin', competition: false }, true)).toContainEqual([
+      'voice',
+      'Share of voice',
+    ])
     expect(withCompetitors(db, [brand.id])).toEqual([brand.id])
   })
 })
