@@ -77,6 +77,7 @@ const EN_NOUNS: Record<string, [string, string]> = {
   hour: ['hour', 'hours'],
   day: ['day', 'days'],
   event: ['event', 'events'],
+  story: ['story', 'stories'],
 }
 
 /** The noun for n in the chosen language: "1 comment", "5 comentarii", "5 комментариев". */

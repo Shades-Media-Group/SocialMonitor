@@ -2,6 +2,150 @@ import type { Dict } from '../i18n.ts'
 
 export const fr: Dict = {
   strings: {
+    // Stories, the plan and the competitor limit.
+    Expired: 'Expirée',
+    'Live, ends within the hour': 'En ligne, disparaît dans l’heure',
+    'Live, ends in {time}': 'En ligne, disparaît dans {time}',
+    'The stories did not load.': 'Les stories ne se sont pas chargées.',
+    Archive: 'Archive',
+    Stories: 'Stories',
+    '{shown} of {n} stories': '{shown} stories sur {n}',
+    '{n} stories': '{n} stories',
+    Live: 'En ligne',
+    'Any type': 'Tout type',
+    'Mentions and reposts': 'Mentions et republications',
+    'Any mentions': 'Toutes les mentions',
+    'Names another account': 'Mentionne un autre compte',
+    Reposts: 'Republications',
+    Posted: 'Publiées',
+    'Any date': 'Toute date',
+    Today: 'Aujourd’hui',
+    'No stories match these filters.': 'Aucune story ne correspond à ces filtres.',
+    'No stories kept yet.': 'Aucune story conservée pour l’instant.',
+    'Stories last a day. SocialMonitor checks every three hours and keeps each one it finds, with its video or picture, after it is gone. They show here, newest first.':
+      'Une story dure une journée. SocialMonitor vérifie toutes les trois heures et garde chaque story trouvée, avec sa vidéo ou son image, même après sa disparition. Elles s’affichent ici, les plus récentes d’abord.',
+    'Checked every three hours, read logged out':
+      'Vérifiées toutes les trois heures, lues sans compte',
+    'Checking the accounts for stories now.': 'Vérification des stories des comptes en cours.',
+    'TikTok asked to prove a person was there, so the check stopped. Nothing was signed in to. It tries again in three hours.':
+      'TikTok a demandé de prouver qu’une personne était là, la vérification s’est donc arrêtée. Aucun compte n’a été utilisé. Nouvel essai dans trois heures.',
+    'The last check failed. It tries again in three hours.':
+      'La dernière vérification a échoué. Nouvel essai dans trois heures.',
+    'Last checked {when}: {read} found, {fresh} new.':
+      'Dernière vérification {when} : {read} trouvées, {fresh} nouvelles.',
+    'Not checked yet.': 'Pas encore vérifié.',
+    'Checking…': 'Vérification…',
+    'Check stories now': 'Vérifier les stories maintenant',
+    'Instagram and Facebook stories come through Meta for the brand’s own connected Page, with their reach and replies.':
+      'Les stories Instagram et Facebook passent par Meta pour la Page connectée de la marque, avec leur couverture et leurs réponses.',
+    'Instagram and Facebook stories start once the brand connects its Facebook Page on About.':
+      'Les stories Instagram et Facebook commencent dès que la marque connecte sa Page Facebook dans À propos.',
+    'Instagram and Facebook stories start once Meta approves SocialMonitor and the brand connects its Facebook Page on About. Competitors’ stories come from TikTok only.':
+      'Les stories Instagram et Facebook commencent dès que Meta approuve SocialMonitor et que la marque connecte sa Page Facebook dans À propos. Les stories des concurrents viennent seulement de TikTok.',
+    'Stories are off in this brand’s plan: only super admins see this tab, and checks run only when one presses the button. Turn them on in Admin.':
+      'Les stories sont désactivées dans le forfait de cette marque : seuls les super admins voient cet onglet, et les vérifications ne se font qu’au bouton. Activez-les dans Admin.',
+    'Being saved': 'Enregistrement',
+    'No file kept': 'Aucun fichier conservé',
+    '{n} pictures': '{n} images',
+    Replies: 'Réponses',
+    'Taps forward': 'Appuis suivant',
+    'Taps back': 'Appuis précédent',
+    Exits: 'Sorties',
+    Follows: 'Abonnements',
+    'Profile visits': 'Visites du profil',
+    Music: 'Musique',
+    'Story by {name}': 'Story de {name}',
+    'The file is being saved.': 'Le fichier est en cours d’enregistrement.',
+    'No file was kept for this story.': 'Aucun fichier n’a été conservé pour cette story.',
+    Play: 'Lire',
+    'Previous story': 'Story précédente',
+    'Next story': 'Story suivante',
+    'Claude could not read this story yet; it tries again later.':
+      'Claude n’a pas encore pu lire cette story ; il réessaiera plus tard.',
+    'Claude reads each story once its file is saved.':
+      'Claude lit chaque story une fois son fichier enregistré.',
+    'Reposted from': 'Republiée depuis',
+    'Accounts named': 'Comptes mentionnés',
+    'Words on the story': 'Texte sur la story',
+    Caption: 'Légende',
+    Stickers: 'Stickers',
+    Links: 'Liens',
+    'The best quality the network served, kept for {n} days':
+      'La meilleure qualité fournie par le réseau, conservée {n} jours',
+    'Download original ({left} left)': 'Télécharger l’original (encore {left})',
+    'No stories in this period yet.': 'Aucune story sur cette période pour l’instant.',
+    'Each story kept counts here: how often every account posts, at what hours, what kind of story, and whom it names.':
+      'Chaque story conservée compte ici : à quelle fréquence chaque compte publie, à quelles heures, quel genre de story, et qui il mentionne.',
+    'Stories per day': 'Stories par jour',
+    'The brand and each competitor': 'La marque et chaque concurrent',
+    'A day on average': 'Par jour en moyenne',
+    'Days with a story': 'Jours avec une story',
+    'Views on average': 'Vues en moyenne',
+    'When they post': 'Quand ils publient',
+    'Hours in UTC': 'Heures en UTC',
+    'What they post': 'Ce qu’ils publient',
+    'As Claude reads it': 'Selon la lecture de Claude',
+    'Accounts they name most': 'Comptes les plus mentionnés',
+    'No story named another account in this period.':
+      'Aucune story n’a mentionné un autre compte sur cette période.',
+    'No reposts in this period.': 'Aucune republication sur cette période.',
+    'Reach and replies': 'Couverture et réponses',
+    'The brand’s own Instagram stories, through Meta':
+      'Les stories Instagram de la marque, via Meta',
+    'on average': 'en moyenne',
+    'Reach, replies, taps and exits come once the brand’s Instagram is connected and Meta approves SocialMonitor. Networks do not show these for other accounts.':
+      'Couverture, réponses, appuis et sorties arrivent quand l’Instagram de la marque est connecté et que Meta approuve SocialMonitor. Les réseaux ne les montrent pas pour d’autres comptes.',
+    Promotion: 'Promotion',
+    Announcement: 'Annonce',
+    'Behind the scenes': 'Coulisses',
+    'Customer content': 'Contenu de clients',
+    Repost: 'Republication',
+    Plan: 'Forfait',
+    'What the brand’s people see. Only super admins change it.':
+      'Ce que voient les membres de la marque. Seuls les super admins le modifient.',
+    'The brand against its competitors, for everyone who sees the brand.':
+      'La marque face à ses concurrents, pour tous ceux qui voient la marque.',
+    'Hidden from the brand’s people, Settings included. Updates skip the competitors; what they read stays.':
+      'Masqué pour les membres de la marque, Réglages compris. Les mises à jour ignorent les concurrents ; ce qui a été lu reste.',
+    'Competitors tracked': 'Concurrents suivis',
+    '{n} tracked now; {paused} past the limit are paused: kept, not read.':
+      '{n} suivis ; {paused} au-delà de la limite sont en pause : conservés, non lus.',
+    '{n} tracked now. Admins of the brand add them up to this number.':
+      '{n} suivis. Les admins de la marque en ajoutent jusqu’à ce nombre.',
+    'The brand’s own stories, checked every three hours and kept with their files, originals for {n} days.':
+      'Les stories de la marque, vérifiées toutes les trois heures et conservées avec leurs fichiers, les originaux pendant {n} jours.',
+    'Open Stories': 'Ouvrir Stories',
+    'Competitor stories': 'Stories des concurrents',
+    'The tracked competitors’ TikTok stories, in the same archive.':
+      'Les stories TikTok des concurrents suivis, dans la même archive.',
+    '{n} files': '{n} fichiers',
+    'Story copies': 'Copies de stories',
+    'kept for good': 'conservées pour toujours',
+    'Story originals': 'Originaux des stories',
+    'for download, then deleted': 'à télécharger, puis supprimés',
+    'Space saved': 'Espace économisé',
+    'of {n} read at best quality': 'sur {n} lus en meilleure qualité',
+    'Reading stories': 'Lecture des stories',
+    'Paused: past your plan’s limit, so not read. What was read stays.':
+      'En pause : au-delà de la limite du forfait, donc non lu. Ce qui a été lu reste.',
+    'Your plan tracks up to {n} competitors. Ask SocialMonitor to raise it.':
+      'Votre forfait suit jusqu’à {n} concurrents. Demandez à SocialMonitor d’augmenter la limite.',
+    'Plan changed': 'Forfait modifié',
+    'Stories are not in this brand’s plan.':
+      'Les stories ne font pas partie du forfait de cette marque.',
+    'Share of voice is not in this brand’s plan.':
+      'Share of voice ne fait pas partie du forfait de cette marque.',
+    'Stories are being checked already. Wait for that check to end.':
+      'Les stories sont déjà en cours de vérification. Attendez la fin.',
+    'Ads are being read. Try again when that read ends.':
+      'Les publicités sont en cours de lecture. Réessayez quand elle sera finie.',
+    'No TikTok profile to check: add one on the About tab.':
+      'Aucun profil TikTok à vérifier : ajoutez-en un dans l’onglet À propos.',
+    'The original is no longer kept. Download the compact copy instead.':
+      'L’original n’est plus conservé. Téléchargez plutôt la copie compacte.',
+    'The compact copy is not ready yet.': 'La copie compacte n’est pas encore prête.',
+    'The competitor limit is a whole number from 0 to 5.':
+      'La limite de concurrents est un nombre entier de 0 à 5.',
     // The Ads cards, their pop-up and filters (super admins).
     '{shown} of {n} ads': '{shown} sur {n} publicités',
     '{n} ads': '{n} publicités',
@@ -1535,6 +1679,7 @@ export const fr: Dict = {
   },
   nouns: {
     event: { one: 'événement', many: 'd’événements', other: 'événements' },
+    story: { one: 'story', many: 'de stories', other: 'stories' },
     day: { one: 'jour', many: 'de jours', other: 'jours' },
     comment: { one: 'commentaire', many: 'de commentaires', other: 'commentaires' },
     like: { one: 'j’aime', many: 'de j’aime', other: 'j’aime' },

@@ -6152,3 +6152,401 @@ a.sm-adlink:focus-visible {
   align-items: center;
   gap: 8px 16px;
 }
+
+/* Stories: the accounts and the check on top, then the archive a day at a time, each story a
+   tile at its own shape; the player keeps the Ads pop-up's dark stage, with a story's bars. */
+.sm-stories__switch {
+  display: flex;
+  justify-content: flex-start;
+}
+.sm-stsrc__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+.sm-stsrc__list {
+  display: grid;
+  flex: 1 1 420px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sm-stsrc__list li {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--c-line-2);
+}
+.sm-stsrc__list li:last-child {
+  border-bottom: 0;
+}
+.sm-stsrc__sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  min-width: 0;
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-stsrc__sub a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--c-text-2);
+  text-decoration: none;
+}
+.sm-stsrc__sub a:hover {
+  color: var(--c-text);
+  text-decoration: underline;
+}
+.sm-stsrc__n {
+  color: var(--c-text-2);
+  font-size: 12px;
+}
+.sm-stsrc__check {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  max-width: 460px;
+}
+.sm-stsrc__check .sm-ads__status {
+  margin: 0;
+  text-align: right;
+}
+
+.sm-stdays {
+  display: grid;
+  gap: 28px;
+}
+.sm-stday__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 650;
+}
+.sm-stday__head::first-letter {
+  text-transform: uppercase;
+}
+.sm-stday__head .g-num {
+  color: var(--c-text-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+.sm-sttiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  align-items: start;
+  gap: 20px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sm-sttile {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sm-sttile__frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  aspect-ratio: var(--ar, 9 / 16);
+  border-radius: 12px;
+  background: #18181a;
+  transition: scale var(--g-dur-snap) var(--g-ease-snap);
+}
+.sm-sttile__frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sm-sttile:hover .sm-sttile__frame {
+  scale: 1.015;
+}
+.sm-sttile:focus-visible {
+  outline: none;
+}
+.sm-sttile:focus-visible .sm-sttile__frame {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 3px;
+}
+.sm-sttile__none {
+  padding: 12px;
+  color: #c9c9c9;
+  font-size: 12px;
+  text-align: center;
+}
+/* The account and the time sit on the picture, on a shade only as deep as the words need. */
+.sm-sttile__top,
+.sm-sttile__foot {
+  position: absolute;
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 9px;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.sm-sttile__top {
+  top: 0;
+  background: linear-gradient(rgb(0 0 0 / 0.55), transparent);
+}
+.sm-sttile__top span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sm-sttile__foot {
+  bottom: 0;
+  justify-content: space-between;
+  background: linear-gradient(transparent, rgb(0 0 0 / 0.55));
+}
+.sm-sttile__dur {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.sm-sttile__life {
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-sttile__life.is-live {
+  color: var(--g-success);
+  font-weight: 600;
+}
+.sm-sttile__about {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-top: -2px;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.sm-stplay__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 22px 16px 16px;
+  cursor: pointer;
+  touch-action: pan-y;
+  user-select: none;
+}
+.sm-stplay__bars {
+  position: absolute;
+  top: 10px;
+  inset-inline: 16px;
+  display: flex;
+  gap: 4px;
+}
+.sm-stplay__bars span {
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.3);
+}
+.sm-stplay__bars i {
+  display: block;
+  height: 100%;
+  background: #fff;
+}
+.sm-stplay__media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: var(--ar, 9 / 16);
+  overflow: hidden;
+  border-radius: 12px;
+}
+.sm-stplay__media img,
+.sm-stplay__media video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.sm-stplay__media .sm-cr__none {
+  color: #c9c9c9;
+}
+.sm-stplay__pause {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+}
+.sm-stplay__pause .g-icon-btn {
+  background: rgb(255 255 255 / 0.92);
+  color: #0a0a0b;
+}
+.sm-stplay__about {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+.sm-stplay__about.is-quiet {
+  color: var(--c-text-3);
+  font-size: 13px;
+}
+.sm-stplay__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.sm-stplay__tags span {
+  padding: 1px 9px;
+  border-radius: var(--g-radius-pill);
+  background: var(--c-active);
+  font-size: 12px;
+  font-weight: 600;
+}
+.sm-stplay__handles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.sm-stplay__handles a,
+.sm-addl dd a {
+  color: var(--c-text);
+}
+.sm-stplay__foot {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+}
+.sm-stplay__foot a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.sm-stplay__foot .g-num {
+  opacity: 0.72;
+  font-weight: 400;
+}
+
+.sm-sttable td b {
+  display: block;
+  font-weight: 600;
+}
+.sm-sttable tr.is-current td {
+  background: var(--c-panel);
+}
+.sm-stbars {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sm-stbars li {
+  display: grid;
+  grid-template-columns: minmax(96px, 9rem) minmax(0, 1fr) 3ch;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.sm-stbars__track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--g-radius-pill);
+  background: var(--c-hover);
+}
+.sm-stbars__track i {
+  display: block;
+  height: 100%;
+  border-radius: var(--g-radius-pill);
+  background: var(--sm-c-question);
+}
+.sm-stbars b {
+  font-weight: 600;
+  text-align: right;
+}
+.sm-strank {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: rank;
+}
+.sm-strank li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--c-line-2);
+  font-size: 13px;
+}
+.sm-strank li:last-child {
+  border-bottom: 0;
+}
+.sm-strank a {
+  color: var(--c-text);
+}
+.sm-strank .g-num {
+  color: var(--c-text-3);
+}
+
+@media (max-width: 600px) {
+  .sm-sttiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 10px;
+  }
+  .sm-stsrc__list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .sm-stsrc__sub {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .sm-stsrc__check {
+    justify-content: flex-start;
+  }
+  .sm-stsrc__check .sm-ads__status {
+    text-align: left;
+  }
+}
+@media (max-width: 800px) {
+  .sm-stplay {
+    grid-template-rows: minmax(0, 54%) minmax(0, 1fr);
+  }
+  /* The close button sits over the stage here: the bars end before it. */
+  .sm-stplay__bars {
+    right: 60px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sm-sttile__frame {
+    transition: none;
+  }
+}
+.sm-admin__dash .sm-admin__limit {
+  width: auto;
+  min-width: 88px;
+}

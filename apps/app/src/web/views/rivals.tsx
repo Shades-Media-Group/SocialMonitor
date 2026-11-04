@@ -15,6 +15,8 @@ const PLACEHOLDER: Record<Network, string> = {
 export interface Rival {
   id: number
   name: string
+  /** Past the plan's competitor limit: kept, but not read. */
+  paused?: boolean
   profiles: { network: Network; handle: string }[]
 }
 
@@ -73,6 +75,7 @@ export function Rivals({ brand, notify }: { brand: BrandRow; notify: (text: stri
   }
 
   if (!rivals) return null
+  const limit = Math.min(5, brand.rival_limit ?? 5)
   return (
     <section class="sm-box">
       <header class="sm-box__head">
@@ -84,6 +87,8 @@ export function Rivals({ brand, notify }: { brand: BrandRow; notify: (text: stri
           <span class="sm-inline">
             <span class="sm-quiet">
               {r.profiles.map((p) => `${NETWORK_NAME[p.network]} @${p.handle}`).join(', ')}
+              {r.paused &&
+                ` · ${t('Paused: past your plan’s limit, so not read. What was read stays.')}`}
             </span>
             <button class="g-btn g-btn--ghost g-btn--sm" type="button" onClick={() => remove(r)}>
               {t('Remove')}
@@ -91,7 +96,7 @@ export function Rivals({ brand, notify }: { brand: BrandRow; notify: (text: stri
           </span>
         </Row>
       ))}
-      {rivals.length < 5 ? (
+      {rivals.length < limit ? (
         <form class="sm-form" onSubmit={add}>
           <Row label={t('New rival')}>
             <input
@@ -122,7 +127,13 @@ export function Rivals({ brand, notify }: { brand: BrandRow; notify: (text: stri
           </div>
         </form>
       ) : (
-        <p class="sm-quiet">{t('Five rivals at most: remove one to add another.')}</p>
+        <p class="sm-quiet">
+          {limit >= 5
+            ? t('Five rivals at most: remove one to add another.')
+            : t('Your plan tracks up to {n} competitors. Ask SocialMonitor to raise it.', {
+                n: limit,
+              })}
+        </p>
       )}
     </section>
   )

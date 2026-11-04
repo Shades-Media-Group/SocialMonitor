@@ -4,6 +4,7 @@ export const TABS = [
   ['posts', 'Posts'],
   ['stats', 'Statistics'],
   ['voice', 'Share of voice'],
+  ['stories', 'Stories'],
   ['ads', 'Ads'],
   ['comments', 'Comments'],
   ['calendar', 'Calendar'],
@@ -19,11 +20,17 @@ export type Tab = (typeof TABS)[number][0]
 const ADMIN_TABS: string[] = ['schedules', 'settings']
 
 /**
- * The tabs someone sees on a brand: by their role, with Share of voice only while its switch is
- * on, and Admin and Ads for super admins alone (Ads only while its switch is on).
+ * The tabs someone sees on a brand, by their role and the brand's plan: Share of voice and
+ * Stories while the plan has them, Admin and Ads for super admins alone (Ads only while its switch
+ * is on). Super admins, who set the plan, see Share of voice and Stories whatever it says.
  */
 export const tabsFor = (
-  brand: { my_role: string | null | undefined; competition?: boolean; ads?: boolean },
+  brand: {
+    my_role: string | null | undefined
+    competition?: boolean
+    ads?: boolean
+    stories?: boolean
+  },
   isSuper = false,
 ) =>
   TABS.filter(([k]) =>
@@ -32,6 +39,8 @@ export const tabsFor = (
       : k === 'ads'
         ? isSuper && brand.ads === true
         : k === 'voice'
-          ? brand.competition !== false
-          : brand.my_role === 'admin' || !ADMIN_TABS.includes(k),
+          ? isSuper || brand.competition !== false
+          : k === 'stories'
+            ? isSuper || brand.stories === true
+            : brand.my_role === 'admin' || !ADMIN_TABS.includes(k),
   )

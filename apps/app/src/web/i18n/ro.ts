@@ -2,6 +2,149 @@ import type { Dict } from '../i18n.ts'
 
 export const ro: Dict = {
   strings: {
+    // Stories, the plan and the competitor limit.
+    Expired: 'Expirat',
+    'Live, ends within the hour': 'Activ, dispare în mai puțin de o oră',
+    'Live, ends in {time}': 'Activ, dispare în {time}',
+    'The stories did not load.': 'Story-urile nu s-au încărcat.',
+    Archive: 'Arhivă',
+    Stories: 'Story-uri',
+    '{shown} of {n} stories': '{shown} din {n} story-uri',
+    '{n} stories': '{n} story-uri',
+    Live: 'Active',
+    'Any type': 'Orice tip',
+    'Mentions and reposts': 'Mențiuni și redistribuiri',
+    'Any mentions': 'Orice mențiuni',
+    'Names another account': 'Menționează alt cont',
+    Reposts: 'Redistribuiri',
+    Posted: 'Publicate',
+    'Any date': 'Orice dată',
+    Today: 'Azi',
+    'No stories match these filters.': 'Niciun story nu corespunde acestor filtre.',
+    'No stories kept yet.': 'Încă nu e păstrat niciun story.',
+    'Stories last a day. SocialMonitor checks every three hours and keeps each one it finds, with its video or picture, after it is gone. They show here, newest first.':
+      'Un story durează o zi. SocialMonitor verifică la fiecare trei ore și păstrează fiecare story găsit, cu video-ul sau imaginea lui, și după ce dispare. Apar aici, cele mai noi primele.',
+    'Checked every three hours, read logged out':
+      'Verificate la fiecare trei ore, citite fără cont',
+    'Checking the accounts for stories now.': 'Se verifică acum story-urile conturilor.',
+    'TikTok asked to prove a person was there, so the check stopped. Nothing was signed in to. It tries again in three hours.':
+      'TikTok a cerut dovada că e o persoană, așa că verificarea s-a oprit. Nu s-a intrat în niciun cont. Se reîncearcă peste trei ore.',
+    'The last check failed. It tries again in three hours.':
+      'Ultima verificare a eșuat. Se reîncearcă peste trei ore.',
+    'Last checked {when}: {read} found, {fresh} new.':
+      'Verificat ultima dată {when}: {read} găsite, {fresh} noi.',
+    'Not checked yet.': 'Încă neverificat.',
+    'Checking…': 'Se verifică…',
+    'Check stories now': 'Verifică story-urile acum',
+    'Instagram and Facebook stories come through Meta for the brand’s own connected Page, with their reach and replies.':
+      'Story-urile de pe Instagram și Facebook vin prin Meta pentru Pagina conectată a brandului, cu acoperirea și răspunsurile lor.',
+    'Instagram and Facebook stories start once the brand connects its Facebook Page on About.':
+      'Story-urile de pe Instagram și Facebook încep după ce brandul își conectează Pagina de Facebook în Despre.',
+    'Instagram and Facebook stories start once Meta approves SocialMonitor and the brand connects its Facebook Page on About. Competitors’ stories come from TikTok only.':
+      'Story-urile de pe Instagram și Facebook încep după ce Meta aprobă SocialMonitor și brandul își conectează Pagina de Facebook în Despre. Story-urile concurenților vin doar de pe TikTok.',
+    'Stories are off in this brand’s plan: only super admins see this tab, and checks run only when one presses the button. Turn them on in Admin.':
+      'Story-urile sunt oprite în planul acestui brand: doar super adminii văd această filă, iar verificările rulează doar când cineva apasă butonul. Pornește-le în Admin.',
+    'Being saved': 'Se salvează',
+    'No file kept': 'Niciun fișier păstrat',
+    '{n} pictures': '{n} imagini',
+    Replies: 'Răspunsuri',
+    'Taps forward': 'Atingeri înainte',
+    'Taps back': 'Atingeri înapoi',
+    Exits: 'Ieșiri',
+    Follows: 'Urmăriri noi',
+    'Profile visits': 'Vizite pe profil',
+    Music: 'Muzică',
+    'Story by {name}': 'Story de la {name}',
+    'The file is being saved.': 'Fișierul se salvează.',
+    'No file was kept for this story.': 'Pentru acest story nu s-a păstrat niciun fișier.',
+    Play: 'Redă',
+    'Previous story': 'Story-ul anterior',
+    'Next story': 'Story-ul următor',
+    'Claude could not read this story yet; it tries again later.':
+      'Claude nu a putut citi încă acest story; reîncearcă mai târziu.',
+    'Claude reads each story once its file is saved.':
+      'Claude citește fiecare story după ce fișierul lui e salvat.',
+    'Reposted from': 'Redistribuit de la',
+    'Accounts named': 'Conturi menționate',
+    'Words on the story': 'Textul de pe story',
+    Caption: 'Descriere',
+    Stickers: 'Stickere',
+    Links: 'Linkuri',
+    'The best quality the network served, kept for {n} days':
+      'Cea mai bună calitate oferită de rețea, păstrată {n} zile',
+    'Download original ({left} left)': 'Descarcă originalul (mai sunt {left})',
+    'No stories in this period yet.': 'Încă niciun story în această perioadă.',
+    'Each story kept counts here: how often every account posts, at what hours, what kind of story, and whom it names.':
+      'Fiecare story păstrat se numără aici: cât de des publică fiecare cont, la ce ore, ce fel de story-uri și pe cine menționează.',
+    'Stories per day': 'Story-uri pe zi',
+    'The brand and each competitor': 'Brandul și fiecare concurent',
+    'A day on average': 'Pe zi, în medie',
+    'Days with a story': 'Zile cu story',
+    'Views on average': 'Vizualizări, în medie',
+    'When they post': 'Când publică',
+    'Hours in UTC': 'Ore în UTC',
+    'What they post': 'Ce publică',
+    'As Claude reads it': 'Așa cum le citește Claude',
+    'Accounts they name most': 'Conturile menționate cel mai des',
+    'No story named another account in this period.':
+      'Niciun story nu a menționat alt cont în această perioadă.',
+    'No reposts in this period.': 'Nicio redistribuire în această perioadă.',
+    'Reach and replies': 'Acoperire și răspunsuri',
+    'The brand’s own Instagram stories, through Meta':
+      'Story-urile de Instagram ale brandului, prin Meta',
+    'on average': 'în medie',
+    'Reach, replies, taps and exits come once the brand’s Instagram is connected and Meta approves SocialMonitor. Networks do not show these for other accounts.':
+      'Acoperirea, răspunsurile, atingerile și ieșirile apar după ce Instagramul brandului e conectat și Meta aprobă SocialMonitor. Rețelele nu le arată pentru alte conturi.',
+    Promotion: 'Promoție',
+    Announcement: 'Anunț',
+    'Behind the scenes': 'În culise',
+    'Customer content': 'Conținut de la clienți',
+    Repost: 'Redistribuire',
+    Plan: 'Plan',
+    'What the brand’s people see. Only super admins change it.':
+      'Ce văd oamenii brandului. Doar super adminii îl schimbă.',
+    'The brand against its competitors, for everyone who sees the brand.':
+      'Brandul față de concurenții lui, pentru toți cei care văd brandul.',
+    'Hidden from the brand’s people, Settings included. Updates skip the competitors; what they read stays.':
+      'Ascuns pentru oamenii brandului, inclusiv în Setări. Actualizările sar peste concurenți; ce s-a citit rămâne.',
+    'Competitors tracked': 'Concurenți urmăriți',
+    '{n} tracked now; {paused} past the limit are paused: kept, not read.':
+      '{n} urmăriți acum; {paused} peste limită sunt în pauză: păstrați, dar necitiți.',
+    '{n} tracked now. Admins of the brand add them up to this number.':
+      '{n} urmăriți acum. Adminii brandului pot adăuga până la acest număr.',
+    'The brand’s own stories, checked every three hours and kept with their files, originals for {n} days.':
+      'Story-urile brandului, verificate la fiecare trei ore și păstrate cu fișierele lor, originalele timp de {n} zile.',
+    'Open Stories': 'Deschide Story-uri',
+    'Competitor stories': 'Story-urile concurenților',
+    'The tracked competitors’ TikTok stories, in the same archive.':
+      'Story-urile de TikTok ale concurenților urmăriți, în aceeași arhivă.',
+    '{n} files': '{n} fișiere',
+    'Story copies': 'Copii ale story-urilor',
+    'kept for good': 'păstrate definitiv',
+    'Story originals': 'Originalele story-urilor',
+    'for download, then deleted': 'de descărcat, apoi șterse',
+    'Space saved': 'Spațiu economisit',
+    'of {n} read at best quality': 'din {n} citiți la cea mai bună calitate',
+    'Reading stories': 'Citirea story-urilor',
+    'Paused: past your plan’s limit, so not read. What was read stays.':
+      'În pauză: peste limita planului, deci nu se citește. Ce s-a citit rămâne.',
+    'Your plan tracks up to {n} competitors. Ask SocialMonitor to raise it.':
+      'Planul tău urmărește cel mult {n} concurenți. Cere SocialMonitor să mărească limita.',
+    'Plan changed': 'Plan schimbat',
+    'Stories are not in this brand’s plan.': 'Story-urile nu sunt în planul acestui brand.',
+    'Share of voice is not in this brand’s plan.':
+      'Share of voice nu este în planul acestui brand.',
+    'Stories are being checked already. Wait for that check to end.':
+      'Story-urile se verifică deja. Așteaptă să se termine verificarea.',
+    'Ads are being read. Try again when that read ends.':
+      'Se citesc reclamele. Încearcă din nou după ce se termină.',
+    'No TikTok profile to check: add one on the About tab.':
+      'Niciun profil TikTok de verificat: adaugă unul în fila Despre.',
+    'The original is no longer kept. Download the compact copy instead.':
+      'Originalul nu mai este păstrat. Descarcă în schimb copia compactă.',
+    'The compact copy is not ready yet.': 'Copia compactă nu este gata încă.',
+    'The competitor limit is a whole number from 0 to 5.':
+      'Limita de concurenți este un număr întreg de la 0 la 5.',
     // The Ads cards, their pop-up and filters (super admins).
     '{shown} of {n} ads': '{shown} din {n} reclame',
     '{n} ads': '{n} reclame',
@@ -1526,6 +1669,7 @@ export const ro: Dict = {
   },
   nouns: {
     event: { one: 'eveniment', few: 'evenimente', other: 'de evenimente' },
+    story: { one: 'story', few: 'story-uri', other: 'de story-uri' },
     day: { one: 'zi', few: 'zile', other: 'de zile' },
     comment: { one: 'comentariu', few: 'comentarii', other: 'de comentarii' },
     like: { one: 'apreciere', few: 'aprecieri', other: 'de aprecieri' },

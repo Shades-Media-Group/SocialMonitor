@@ -54,6 +54,7 @@ const EVENT: Record<string, string> = {
   'backup.restore_started': t('Restore started'),
   'backup.restored': t('Backup restored'),
   'dashboards.changed': t('Dashboards changed'),
+  'plan.changed': t('Plan changed'),
 }
 
 const KINDS: [string, string][] = [

@@ -31,6 +31,7 @@ export const TAB_ICON: Record<Tab, IconName> = {
   posts: 'image',
   stats: 'arrowOutward',
   voice: 'contrast',
+  stories: 'motion',
   ads: 'badge',
   calendar: 'calendar',
   reports: 'file',

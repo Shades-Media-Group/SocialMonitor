@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import type { BrandView } from '../app.tsx'
-import type { Network } from '../api.ts'
+import type { Network, Plan } from '../api.ts'
 import { api } from '../api.ts'
 import { LineChart } from '../charts.tsx'
 import { JsonPanel } from '../json.tsx'
@@ -38,6 +38,15 @@ interface Usage {
     usd_per_1000_sorted: number | null
     projected_month_usd: number | null
     recorded_days: number
+  }
+  stories?: {
+    stories: number
+    files: number
+    originals_held: number
+    originals_read: number
+    compact: number
+    posters: number
+    removed: number
   }
   brands: {
     id: number
@@ -146,6 +155,7 @@ const TASK: Record<string, string> = {
   reply: 'Reply drafts',
   translate: 'Translations',
   'limit-check': 'Limit check',
+  'describe-story': 'Reading stories',
 }
 
 /** As runs.status records it; a status this list does not know shows as it is. */
@@ -286,20 +296,32 @@ export function Admin(props: BrandView) {
   )
 }
 
+interface PlanView extends Plan {
+  rivals: number
+  original_days: number
+}
+
 /**
- * The owner's switches for this brand: Share of voice (on for every brand until turned off) and
- * the Ads dashboard (off until turned on, and only ever shown to super admins).
+ * The brand's plan, which only super admins see and change: which dashboards its people get
+ * (Share of voice, Stories, competitors' stories), the owner's Ads dashboard, and how many
+ * competitors it tracks. Rivals past the limit stay, paused.
  */
-function Dashboards({ brand, reload }: BrandView) {
+function Dashboards({ brand, reload, version }: BrandView) {
+  const [p, setP] = useState<PlanView | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const competition = brand.competition !== false
-  const ads = brand.ads === true
-  const set = async (patch: { competition?: boolean; ads?: boolean }) => {
+  useEffect(() => {
+    api
+      .get<PlanView>(`/api/brands/${brand.id}/plan`)
+      .then(setP)
+      .catch((e: Error) => setError(e.message))
+  }, [brand.id, version])
+  const set = async (patch: Partial<Plan>) => {
     setBusy(true)
     setError('')
     try {
-      await api.put(`/api/brands/${brand.id}/dashboards`, patch)
+      const next = await api.put<Plan>(`/api/brands/${brand.id}/plan`, patch)
+      setP((old) => (old ? { ...old, ...next } : old))
       await reload()
     } catch (e) {
       setError((e as Error).message)
@@ -307,32 +329,84 @@ function Dashboards({ brand, reload }: BrandView) {
       setBusy(false)
     }
   }
+  if (!p) return error ? <p class="g-error">{error}</p> : null
+  const toggle = (key: 'competition' | 'ads' | 'stories' | 'rival_stories') => (
+    <label class="g-check">
+      <input
+        class="g-switch"
+        type="checkbox"
+        checked={p[key]}
+        disabled={busy}
+        onChange={(e) => void set({ [key]: (e.target as HTMLInputElement).checked })}
+      />
+      {p[key] ? t('On') : t('Off')}
+    </label>
+  )
+  const paused = Math.max(0, p.rivals - p.rival_limit)
   return (
     <section class="sm-box sm-admin__dash">
       <header class="sm-box__head">
-        <h2>{t('Dashboards')}</h2>
-        <span class="sm-box__meta">{t('Only super admins change these')}</span>
+        <h2>{t('Plan')}</h2>
+        <span class="sm-box__meta">
+          {t('What the brand’s people see. Only super admins change it.')}
+        </span>
       </header>
       <Row
         label={t('Share of voice')}
         hint={
-          competition
-            ? t('The brand against its rivals, for everyone who sees the brand.')
+          p.competition
+            ? t('The brand against its competitors, for everyone who sees the brand.')
             : t(
-                'Hidden for everyone, Settings included. Updates skip the rivals; what they read stays.',
+                'Hidden from the brand’s people, Settings included. Updates skip the competitors; what they read stays.',
               )
         }
       >
-        <label class="g-check">
-          <input
-            class="g-switch"
-            type="checkbox"
-            checked={competition}
-            disabled={busy}
-            onChange={(e) => void set({ competition: (e.target as HTMLInputElement).checked })}
-          />
-          {competition ? t('On') : t('Off')}
-        </label>
+        {toggle('competition')}
+      </Row>
+      <Row
+        label={t('Competitors tracked')}
+        hint={
+          paused
+            ? t('{n} tracked now; {paused} past the limit are paused: kept, not read.', {
+                n: p.rivals,
+                paused,
+              })
+            : t('{n} tracked now. Admins of the brand add them up to this number.', { n: p.rivals })
+        }
+      >
+        <select
+          class="g-select sm-select-sm sm-admin__limit"
+          aria-label={t('Competitors tracked')}
+          value={p.rival_limit}
+          disabled={busy}
+          onChange={(e) => void set({ rival_limit: Number((e.target as HTMLSelectElement).value) })}
+        >
+          {[0, 1, 2, 3, 4, 5].map((n) => (
+            <option value={n}>{n}</option>
+          ))}
+        </select>
+      </Row>
+      <Row
+        label={t('Stories')}
+        hint={t(
+          'The brand’s own stories, checked every three hours and kept with their files, originals for {n} days.',
+          { n: p.original_days },
+        )}
+      >
+        <span class="sm-inline">
+          {toggle('stories')}
+          {(p.stories || p.rival_stories) && (
+            <a class="sm-box__link" href={`/b/${brand.id}/stories`}>
+              {t('Open Stories')}
+            </a>
+          )}
+        </span>
+      </Row>
+      <Row
+        label={t('Competitor stories')}
+        hint={t('The tracked competitors’ TikTok stories, in the same archive.')}
+      >
+        {toggle('rival_stories')}
       </Row>
       <Row
         label={t('Ads')}
@@ -341,17 +415,8 @@ function Dashboards({ brand, reload }: BrandView) {
         )}
       >
         <span class="sm-inline">
-          <label class="g-check">
-            <input
-              class="g-switch"
-              type="checkbox"
-              checked={ads}
-              disabled={busy}
-              onChange={(e) => void set({ ads: (e.target as HTMLInputElement).checked })}
-            />
-            {ads ? t('On') : t('Off')}
-          </label>
-          {ads && (
+          {toggle('ads')}
+          {p.ads && (
             <a class="sm-box__link" href={`/b/${brand.id}/ads`}>
               {t('Open Ads')}
             </a>
@@ -418,6 +483,32 @@ function Usage({ brand, mode, version }: BrandView) {
         <dd class="g-num">{bytes(v.media_bytes)}</dd>
         <dt>{t('Saved reports')}</dt>
         <dd class="g-num">{bytes(v.report_bytes)}</dd>
+        {!!u.stories?.stories && (
+          <>
+            <dt>{t('Stories')}</dt>
+            <dd class="g-num">
+              {fmt(u.stories.stories)}
+              <span>{t('{n} files', { n: fmt(u.stories.files) })}</span>
+            </dd>
+            <dt>{t('Story copies')}</dt>
+            <dd class="g-num">
+              {bytes(u.stories.compact + u.stories.posters)}
+              <span>{t('kept for good')}</span>
+            </dd>
+            <dt>{t('Story originals')}</dt>
+            <dd class="g-num">
+              {bytes(u.stories.originals_held)}
+              <span>{t('for download, then deleted')}</span>
+            </dd>
+            <dt>{t('Space saved')}</dt>
+            <dd class="g-num">
+              {bytes(Math.max(0, u.stories.originals_read - u.stories.compact - u.stories.posters))}
+              <span>
+                {t('of {n} read at best quality', { n: bytes(u.stories.originals_read) })}
+              </span>
+            </dd>
+          </>
+        )}
       </dl>
     </section>
   )

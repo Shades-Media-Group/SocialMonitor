@@ -2,6 +2,140 @@ import type { Dict } from '../i18n.ts'
 
 export const zh: Dict = {
   strings: {
+    // Stories, the plan and the competitor limit.
+    Expired: '已过期',
+    'Live, ends within the hour': '进行中，一小时内结束',
+    'Live, ends in {time}': '进行中，{time}后结束',
+    'The stories did not load.': '快拍未能加载。',
+    Archive: '存档',
+    Stories: '快拍',
+    '{shown} of {n} stories': '{n} 条快拍中的 {shown} 条',
+    '{n} stories': '{n} 条快拍',
+    Live: '进行中',
+    'Any type': '任何类型',
+    'Mentions and reposts': '提及与转发',
+    'Any mentions': '任何提及',
+    'Names another account': '提及其他账号',
+    Reposts: '转发',
+    Posted: '发布时间',
+    'Any date': '任何日期',
+    Today: '今天',
+    'No stories match these filters.': '没有符合这些筛选条件的快拍。',
+    'No stories kept yet.': '还没有保存任何快拍。',
+    'Stories last a day. SocialMonitor checks every three hours and keeps each one it finds, with its video or picture, after it is gone. They show here, newest first.':
+      '快拍只保留一天。SocialMonitor 每三小时检查一次，保存找到的每条快拍及其视频或图片，即使它已消失。它们会显示在这里，最新的在前。',
+    'Checked every three hours, read logged out': '每三小时检查一次，无需登录读取',
+    'Checking the accounts for stories now.': '正在检查这些账号的快拍。',
+    'TikTok asked to prove a person was there, so the check stopped. Nothing was signed in to. It tries again in three hours.':
+      'TikTok 要求证明是真人，因此检查已停止。没有登录任何账号。三小时后再试。',
+    'The last check failed. It tries again in three hours.': '上次检查失败。三小时后再试。',
+    'Last checked {when}: {read} found, {fresh} new.':
+      '上次检查于{when}：找到 {read} 条，新增 {fresh} 条。',
+    'Not checked yet.': '尚未检查。',
+    'Checking…': '正在检查…',
+    'Check stories now': '立即检查快拍',
+    'Instagram and Facebook stories come through Meta for the brand’s own connected Page, with their reach and replies.':
+      'Instagram 和 Facebook 快拍通过 Meta 从品牌已连接的主页读取，包含覆盖人数和回复。',
+    'Instagram and Facebook stories start once the brand connects its Facebook Page on About.':
+      '品牌在“关于”中连接 Facebook 主页后，即开始读取 Instagram 和 Facebook 快拍。',
+    'Instagram and Facebook stories start once Meta approves SocialMonitor and the brand connects its Facebook Page on About. Competitors’ stories come from TikTok only.':
+      'Meta 批准 SocialMonitor 且品牌在“关于”中连接 Facebook 主页后，即开始读取 Instagram 和 Facebook 快拍。竞争对手的快拍仅来自 TikTok。',
+    'Stories are off in this brand’s plan: only super admins see this tab, and checks run only when one presses the button. Turn them on in Admin.':
+      '此品牌的套餐未开启快拍：只有超级管理员能看到此标签页，且只有按下按钮才会检查。请在“管理”中开启。',
+    'Being saved': '正在保存',
+    'No file kept': '未保存文件',
+    '{n} pictures': '{n} 张图片',
+    Replies: '回复',
+    'Taps forward': '向前点击',
+    'Taps back': '向后点击',
+    Exits: '退出',
+    Follows: '新关注',
+    'Profile visits': '主页访问',
+    Music: '音乐',
+    'Story by {name}': '{name} 的快拍',
+    'The file is being saved.': '文件正在保存。',
+    'No file was kept for this story.': '此快拍没有保存文件。',
+    Play: '播放',
+    'Previous story': '上一条快拍',
+    'Next story': '下一条快拍',
+    'Claude could not read this story yet; it tries again later.':
+      'Claude 暂时无法读取此快拍，稍后会再试。',
+    'Claude reads each story once its file is saved.': '每条快拍的文件保存后，Claude 会读取它。',
+    'Reposted from': '转发自',
+    'Accounts named': '提及的账号',
+    'Words on the story': '快拍上的文字',
+    Caption: '说明文字',
+    Stickers: '贴纸',
+    Links: '链接',
+    'The best quality the network served, kept for {n} days': '平台提供的最高画质，保留 {n} 天',
+    'Download original ({left} left)': '下载原始文件（还剩 {left}）',
+    'No stories in this period yet.': '此期间还没有快拍。',
+    'Each story kept counts here: how often every account posts, at what hours, what kind of story, and whom it names.':
+      '每条保存的快拍都计入这里：每个账号发布的频率、时段、快拍类型以及提及的账号。',
+    'Stories per day': '每日快拍数',
+    'The brand and each competitor': '品牌与每个竞争对手',
+    'A day on average': '日均',
+    'Days with a story': '有快拍的天数',
+    'Views on average': '平均观看',
+    'When they post': '发布时间分布',
+    'Hours in UTC': 'UTC 时间',
+    'What they post': '发布内容',
+    'As Claude reads it': '按 Claude 的读取',
+    'Accounts they name most': '最常提及的账号',
+    'No story named another account in this period.': '此期间没有快拍提及其他账号。',
+    'No reposts in this period.': '此期间没有转发。',
+    'Reach and replies': '覆盖与回复',
+    'The brand’s own Instagram stories, through Meta': '品牌自己的 Instagram 快拍，通过 Meta',
+    'on average': '平均',
+    'Reach, replies, taps and exits come once the brand’s Instagram is connected and Meta approves SocialMonitor. Networks do not show these for other accounts.':
+      '品牌的 Instagram 连接且 Meta 批准 SocialMonitor 后，才会显示覆盖、回复、点击和退出。平台不会为其他账号显示这些数据。',
+    Promotion: '促销',
+    Announcement: '公告',
+    'Behind the scenes': '幕后',
+    'Customer content': '顾客内容',
+    Repost: '转发',
+    Plan: '套餐',
+    'What the brand’s people see. Only super admins change it.':
+      '品牌成员能看到的内容。只有超级管理员可以更改。',
+    'The brand against its competitors, for everyone who sees the brand.':
+      '品牌与竞争对手的对比，所有能看到该品牌的人可见。',
+    'Hidden from the brand’s people, Settings included. Updates skip the competitors; what they read stays.':
+      '对品牌成员隐藏，包括设置。更新会跳过竞争对手；已读取的内容保留。',
+    'Competitors tracked': '跟踪的竞争对手',
+    '{n} tracked now; {paused} past the limit are paused: kept, not read.':
+      '当前跟踪 {n} 个；超出上限的 {paused} 个已暂停：保留但不再读取。',
+    '{n} tracked now. Admins of the brand add them up to this number.':
+      '当前跟踪 {n} 个。品牌管理员最多可添加到此数量。',
+    'The brand’s own stories, checked every three hours and kept with their files, originals for {n} days.':
+      '品牌自己的快拍，每三小时检查一次并连同文件保存，原始文件保留 {n} 天。',
+    'Open Stories': '打开快拍',
+    'Competitor stories': '竞争对手快拍',
+    'The tracked competitors’ TikTok stories, in the same archive.':
+      '所跟踪竞争对手的 TikTok 快拍，存于同一存档。',
+    '{n} files': '{n} 个文件',
+    'Story copies': '快拍副本',
+    'kept for good': '永久保存',
+    'Story originals': '快拍原始文件',
+    'for download, then deleted': '供下载，到期删除',
+    'Space saved': '节省的空间',
+    'of {n} read at best quality': '最高画质共读取 {n}',
+    'Reading stories': '读取快拍',
+    'Paused: past your plan’s limit, so not read. What was read stays.':
+      '已暂停：超出套餐上限，不再读取。已读取的内容保留。',
+    'Your plan tracks up to {n} competitors. Ask SocialMonitor to raise it.':
+      '你的套餐最多跟踪 {n} 个竞争对手。请联系 SocialMonitor 提高上限。',
+    'Plan changed': '套餐已更改',
+    'Stories are not in this brand’s plan.': '此品牌的套餐不包含快拍。',
+    'Share of voice is not in this brand’s plan.': '此品牌的套餐不包含 Share of voice。',
+    'Stories are being checked already. Wait for that check to end.':
+      '快拍正在检查中。请等待检查结束。',
+    'Ads are being read. Try again when that read ends.': '正在读取广告。读取结束后再试。',
+    'No TikTok profile to check: add one on the About tab.':
+      '没有可检查的 TikTok 主页：请在“关于”标签页添加。',
+    'The original is no longer kept. Download the compact copy instead.':
+      '原始文件已不再保留。请下载压缩副本。',
+    'The compact copy is not ready yet.': '压缩副本尚未就绪。',
+    'The competitor limit is a whole number from 0 to 5.': '竞争对手上限是 0 到 5 之间的整数。',
     // The Ads cards, their pop-up and filters (super admins).
     '{shown} of {n} ads': '{n} 条广告中的 {shown} 条',
     '{n} ads': '{n} 条广告',
@@ -1451,6 +1585,7 @@ export const zh: Dict = {
   },
   nouns: {
     event: { other: '条记录' },
+    story: { other: '条快拍' },
     day: { other: '天' },
     comment: { other: '条评论' },
     like: { other: '个赞' },

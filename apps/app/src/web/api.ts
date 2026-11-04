@@ -10,6 +10,21 @@ export type BrandRow = Brand & {
   competition: boolean
   /** The Ads dashboard is on; sent to super admins only. */
   ads?: boolean
+  /** The plan shows its people the Stories tab (its own stories, or its competitors'). */
+  stories?: boolean
+  rival_stories?: boolean
+  /** How many competitors the plan tracks. */
+  rival_limit?: number
+  /** The whole plan; sent to super admins only. */
+  plan?: Plan
+}
+export interface Plan {
+  competition: boolean
+  ads: boolean
+  ads_country: string
+  stories: boolean
+  rival_stories: boolean
+  rival_limit: number
 }
 export type PostRow = Post & {
   brand_id: number
@@ -99,8 +114,12 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   if (!res.ok) {
     // Claude's usage limit names when it can be tried again, shown in the reader's own clock.
     const until = (data as { until?: string }).until
+    // A message the server sends with its template (the plan's competitor limit) is said in the
+    // reader's language, its numbers filled in.
+    const { template, vars } = data as { template?: string; vars?: Record<string, string | number> }
     throw new ApiError(
-      t((data as { error?: string }).error ?? 'The server answered {status}.', {
+      t(template ?? (data as { error?: string }).error ?? 'The server answered {status}.', {
+        ...vars,
         status: res.status,
         time: until
           ? new Date(until).toLocaleString(locale, {

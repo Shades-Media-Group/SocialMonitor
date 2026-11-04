@@ -17,6 +17,7 @@ import { BrandSettings } from './views/brand-settings.tsx'
 import { Voice } from './views/voice.tsx'
 import { Admin } from './views/admin.tsx'
 import { Ads } from './views/ads.tsx'
+import { Stories } from './views/stories.tsx'
 
 /** One brand: its name and what it is, its own menu, and a network switch that filters every tab. */
 export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
@@ -142,8 +143,10 @@ export function BrandPage(props: AppState & { brand: BrandRow; tab: Tab }) {
           <Posts {...view} />
         ) : tab === 'stats' ? (
           <Stats {...view} />
-        ) : tab === 'voice' && brand.competition !== false ? (
+        ) : tab === 'voice' && (props.me.super || brand.competition !== false) ? (
           <Voice {...view} />
+        ) : tab === 'stories' && (props.me.super || brand.stories) ? (
+          <Stories {...view} />
         ) : tab === 'ads' && props.me.super && brand.ads ? (
           <Ads {...view} />
         ) : tab === 'reports' ? (

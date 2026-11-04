@@ -2,6 +2,148 @@ import type { Dict } from '../i18n.ts'
 
 export const ru: Dict = {
   strings: {
+    // Stories, the plan and the competitor limit.
+    Expired: 'Истекла',
+    'Live, ends within the hour': 'Активна, исчезнет в течение часа',
+    'Live, ends in {time}': 'Активна, исчезнет через {time}',
+    'The stories did not load.': 'Истории не загрузились.',
+    Archive: 'Архив',
+    Stories: 'Истории',
+    '{shown} of {n} stories': '{shown} из {n} историй',
+    '{n} stories': 'Историй: {n}',
+    Live: 'Активные',
+    'Any type': 'Любой тип',
+    'Mentions and reposts': 'Упоминания и репосты',
+    'Any mentions': 'Любые упоминания',
+    'Names another account': 'Упоминает другой аккаунт',
+    Reposts: 'Репосты',
+    Posted: 'Опубликованы',
+    'Any date': 'Любая дата',
+    Today: 'Сегодня',
+    'No stories match these filters.': 'Нет историй под эти фильтры.',
+    'No stories kept yet.': 'Пока не сохранено ни одной истории.',
+    'Stories last a day. SocialMonitor checks every three hours and keeps each one it finds, with its video or picture, after it is gone. They show here, newest first.':
+      'История живёт сутки. SocialMonitor проверяет каждые три часа и сохраняет каждую найденную историю с её видео или картинкой, даже когда она исчезнет. Они появятся здесь, новые сверху.',
+    'Checked every three hours, read logged out':
+      'Проверяются каждые три часа, без входа в аккаунт',
+    'Checking the accounts for stories now.': 'Сейчас проверяем истории аккаунтов.',
+    'TikTok asked to prove a person was there, so the check stopped. Nothing was signed in to. It tries again in three hours.':
+      'TikTok попросил подтвердить, что это человек, поэтому проверка остановлена. Ни в какой аккаунт не входили. Новая попытка через три часа.',
+    'The last check failed. It tries again in three hours.':
+      'Последняя проверка не удалась. Новая попытка через три часа.',
+    'Last checked {when}: {read} found, {fresh} new.':
+      'Последняя проверка {when}: найдено {read}, новых {fresh}.',
+    'Not checked yet.': 'Ещё не проверялось.',
+    'Checking…': 'Проверяем…',
+    'Check stories now': 'Проверить истории сейчас',
+    'Instagram and Facebook stories come through Meta for the brand’s own connected Page, with their reach and replies.':
+      'Истории Instagram и Facebook приходят через Meta для подключённой страницы бренда, с охватом и ответами.',
+    'Instagram and Facebook stories start once the brand connects its Facebook Page on About.':
+      'Истории Instagram и Facebook появятся, когда бренд подключит свою страницу Facebook в разделе «О бренде».',
+    'Instagram and Facebook stories start once Meta approves SocialMonitor and the brand connects its Facebook Page on About. Competitors’ stories come from TikTok only.':
+      'Истории Instagram и Facebook появятся, когда Meta одобрит SocialMonitor, а бренд подключит свою страницу Facebook в разделе «О бренде». Истории конкурентов берутся только из TikTok.',
+    'Stories are off in this brand’s plan: only super admins see this tab, and checks run only when one presses the button. Turn them on in Admin.':
+      'В тарифе этого бренда истории выключены: вкладку видят только суперадмины, а проверка запускается только кнопкой. Включите их в разделе «Админ».',
+    'Being saved': 'Сохраняется',
+    'No file kept': 'Файл не сохранён',
+    '{n} pictures': 'Картинок: {n}',
+    Replies: 'Ответы',
+    'Taps forward': 'Касания вперёд',
+    'Taps back': 'Касания назад',
+    Exits: 'Выходы',
+    Follows: 'Подписки',
+    'Profile visits': 'Переходы в профиль',
+    Music: 'Музыка',
+    'Story by {name}': 'История {name}',
+    'The file is being saved.': 'Файл сохраняется.',
+    'No file was kept for this story.': 'Для этой истории файл не сохранён.',
+    Play: 'Воспроизвести',
+    'Previous story': 'Предыдущая история',
+    'Next story': 'Следующая история',
+    'Claude could not read this story yet; it tries again later.':
+      'Claude пока не смог прочитать эту историю; попробует позже.',
+    'Claude reads each story once its file is saved.':
+      'Claude читает каждую историю после сохранения её файла.',
+    'Reposted from': 'Репост от',
+    'Accounts named': 'Упомянутые аккаунты',
+    'Words on the story': 'Текст на истории',
+    Caption: 'Подпись',
+    Stickers: 'Стикеры',
+    Links: 'Ссылки',
+    'The best quality the network served, kept for {n} days':
+      'Лучшее качество, которое отдала сеть, хранится {n} дн.',
+    'Download original ({left} left)': 'Скачать оригинал (осталось {left})',
+    'No stories in this period yet.': 'За этот период историй пока нет.',
+    'Each story kept counts here: how often every account posts, at what hours, what kind of story, and whom it names.':
+      'Здесь учитывается каждая сохранённая история: как часто публикует каждый аккаунт, в какие часы, какие истории и кого упоминает.',
+    'Stories per day': 'Историй в день',
+    'The brand and each competitor': 'Бренд и каждый конкурент',
+    'A day on average': 'В среднем в день',
+    'Days with a story': 'Дней с историей',
+    'Views on average': 'Просмотров в среднем',
+    'When they post': 'Когда публикуют',
+    'Hours in UTC': 'Часы по UTC',
+    'What they post': 'Что публикуют',
+    'As Claude reads it': 'Как это прочитал Claude',
+    'Accounts they name most': 'Чаще всего упоминают',
+    'No story named another account in this period.':
+      'За этот период ни одна история не упоминала другой аккаунт.',
+    'No reposts in this period.': 'За этот период репостов нет.',
+    'Reach and replies': 'Охват и ответы',
+    'The brand’s own Instagram stories, through Meta':
+      'Истории Instagram самого бренда, через Meta',
+    'on average': 'в среднем',
+    'Reach, replies, taps and exits come once the brand’s Instagram is connected and Meta approves SocialMonitor. Networks do not show these for other accounts.':
+      'Охват, ответы, касания и выходы появятся, когда Instagram бренда будет подключён и Meta одобрит SocialMonitor. Для чужих аккаунтов сети их не показывают.',
+    Promotion: 'Акция',
+    Announcement: 'Объявление',
+    'Behind the scenes': 'За кадром',
+    'Customer content': 'Контент клиентов',
+    Repost: 'Репост',
+    Plan: 'Тариф',
+    'What the brand’s people see. Only super admins change it.':
+      'Что видят люди бренда. Меняют только суперадмины.',
+    'The brand against its competitors, for everyone who sees the brand.':
+      'Бренд против конкурентов, для всех, кто видит бренд.',
+    'Hidden from the brand’s people, Settings included. Updates skip the competitors; what they read stays.':
+      'Скрыто от людей бренда, включая настройки. Обновления пропускают конкурентов; прочитанное остаётся.',
+    'Competitors tracked': 'Отслеживаемые конкуренты',
+    '{n} tracked now; {paused} past the limit are paused: kept, not read.':
+      'Сейчас отслеживается {n}; {paused} сверх лимита на паузе: сохранены, но не читаются.',
+    '{n} tracked now. Admins of the brand add them up to this number.':
+      'Сейчас отслеживается {n}. Админы бренда добавляют их до этого числа.',
+    'The brand’s own stories, checked every three hours and kept with their files, originals for {n} days.':
+      'Истории самого бренда: проверка каждые три часа, хранятся с файлами, оригиналы {n} дн.',
+    'Open Stories': 'Открыть истории',
+    'Competitor stories': 'Истории конкурентов',
+    'The tracked competitors’ TikTok stories, in the same archive.':
+      'Истории TikTok отслеживаемых конкурентов, в том же архиве.',
+    '{n} files': 'Файлов: {n}',
+    'Story copies': 'Копии историй',
+    'kept for good': 'хранятся всегда',
+    'Story originals': 'Оригиналы историй',
+    'for download, then deleted': 'для скачивания, затем удаляются',
+    'Space saved': 'Сэкономлено места',
+    'of {n} read at best quality': 'из {n} в лучшем качестве',
+    'Reading stories': 'Чтение историй',
+    'Paused: past your plan’s limit, so not read. What was read stays.':
+      'На паузе: сверх лимита тарифа, поэтому не читается. Прочитанное остаётся.',
+    'Your plan tracks up to {n} competitors. Ask SocialMonitor to raise it.':
+      'Ваш тариф отслеживает до {n} конкурентов. Попросите SocialMonitor увеличить лимит.',
+    'Plan changed': 'Тариф изменён',
+    'Stories are not in this brand’s plan.': 'Истории не входят в тариф этого бренда.',
+    'Share of voice is not in this brand’s plan.': 'Share of voice не входит в тариф этого бренда.',
+    'Stories are being checked already. Wait for that check to end.':
+      'Истории уже проверяются. Дождитесь окончания проверки.',
+    'Ads are being read. Try again when that read ends.':
+      'Сейчас читается реклама. Попробуйте, когда чтение закончится.',
+    'No TikTok profile to check: add one on the About tab.':
+      'Нет профиля TikTok для проверки: добавьте его на вкладке «О бренде».',
+    'The original is no longer kept. Download the compact copy instead.':
+      'Оригинал больше не хранится. Скачайте компактную копию.',
+    'The compact copy is not ready yet.': 'Компактная копия ещё не готова.',
+    'The competitor limit is a whole number from 0 to 5.':
+      'Лимит конкурентов — целое число от 0 до 5.',
     // The Ads cards, their pop-up and filters (super admins).
     '{shown} of {n} ads': '{shown} из {n} объявлений',
     '{n} ads': 'Объявлений: {n}',
@@ -1523,6 +1665,7 @@ export const ru: Dict = {
   },
   nouns: {
     event: { one: 'событие', few: 'события', many: 'событий', other: 'события' },
+    story: { one: 'история', few: 'истории', many: 'историй', other: 'истории' },
     day: { one: 'день', few: 'дня', many: 'дней', other: 'дня' },
     comment: { one: 'комментарий', few: 'комментария', many: 'комментариев', other: 'комментария' },
     like: { one: 'лайк', few: 'лайка', many: 'лайков', other: 'лайка' },
