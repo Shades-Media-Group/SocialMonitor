@@ -31,7 +31,7 @@ Know what people say about a brand on social media without reading every comment
 
 A free, open-source social listening tool that runs on your own computer:
 
-- **No subscription:** free forever, with no seats, plans or limits.
+- **No subscription:** free forever, with no seats or payments. On a shared install, the owner decides per brand what its people see.
 - **Your data stays yours:** the database and reports never leave your machine.
 - **AI that explains, not only counts:** each post described and each comment sorted, with the reason.
 - **Claude-native:** an MCP server lets Claude answer questions about the data.
@@ -51,7 +51,8 @@ Made by Shades Media Group.
 
 **Constraints**
 
-- **Free forever:** no payments, tiers, limits, trials or upgrade prompts.
+- **Free forever:** no payments, trials or upgrade prompts in the product.
+- **Plans, set by the owner:** super admins set each brand's plan in Admin: which dashboards its people see (Share of voice, Stories, Competitor stories, Ads) and how many competitors it tracks. At the limit a brand admin reads "Ask SocialMonitor to raise it". The plan never takes a payment; any charge is agreed outside the product ([docs/stories.md](docs/stories.md)).
 - **Local only:** no SocialMonitor server, accounts, analytics or remote logging. The one outbound flow is comment and post text sent to Claude for sorting, through the user's own Claude Code or API key.
 - **Licence:** MIT © Shades Media Group. The name and logo are reserved (TRADEMARKS.md).
 
