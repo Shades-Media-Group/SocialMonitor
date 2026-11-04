@@ -378,6 +378,96 @@ CREATE TABLE IF NOT EXISTS ad_runs (
   stats TEXT
 );
 CREATE INDEX IF NOT EXISTS ad_runs_brand ON ad_runs(brand_id, started_at DESC);
+
+-- A brand's plan (core/plan.ts), set by super admins: which dashboards its people may see and
+-- how many competitors it tracks. It takes over brand_dashboards, which stays as it was (db.ts
+-- copies it in once per brand) and is no longer written.
+CREATE TABLE IF NOT EXISTS brand_plans (
+  brand_id INTEGER PRIMARY KEY REFERENCES brands(id) ON DELETE CASCADE,
+  competition INTEGER NOT NULL DEFAULT 1,
+  ads INTEGER NOT NULL DEFAULT 0,
+  ads_country TEXT NOT NULL DEFAULT 'MD',
+  stories INTEGER NOT NULL DEFAULT 0,
+  rival_stories INTEGER NOT NULL DEFAULT 0,
+  rival_limit INTEGER NOT NULL DEFAULT 3,
+  updated_at TEXT,
+  updated_by INTEGER
+);
+-- Every story read (core/stories.ts), never deleted: a story that ends keeps its row and its
+-- compact files. watcher_id is the brand whose dashboard shows it; brand_id the account's own
+-- brand (the watcher itself, or one of its rivals). No foreign keys, so removing a rival or a
+-- brand keeps the archive. Lists are JSON; ai_* come from Claude, empty until it has read it.
+CREATE TABLE IF NOT EXISTS stories (
+  id INTEGER PRIMARY KEY,
+  watcher_id INTEGER NOT NULL,
+  brand_id INTEGER NOT NULL,
+  network TEXT NOT NULL,
+  ext_id TEXT NOT NULL,
+  handle TEXT NOT NULL,
+  posted_at TEXT,
+  expires_at TEXT,
+  first_seen_at TEXT NOT NULL,
+  last_seen_at TEXT NOT NULL,
+  caption TEXT NOT NULL DEFAULT '',
+  stickers TEXT NOT NULL DEFAULT '[]',
+  mentions TEXT NOT NULL DEFAULT '[]',
+  links TEXT NOT NULL DEFAULT '[]',
+  music TEXT,
+  views INTEGER,
+  likes INTEGER,
+  shares INTEGER,
+  replies INTEGER,
+  insights TEXT,
+  permalink TEXT,
+  is_ad INTEGER NOT NULL DEFAULT 0,
+  ai_about TEXT,
+  ai_kind TEXT,
+  ai_text TEXT,
+  ai_accounts TEXT NOT NULL DEFAULT '[]',
+  ai_tone TEXT,
+  ai_repost_of TEXT,
+  ai_at TEXT,
+  ai_error TEXT,
+  ai_tried_at TEXT,
+  UNIQUE (watcher_id, network, ext_id)
+);
+CREATE INDEX IF NOT EXISTS stories_watcher ON stories(watcher_id, posted_at DESC);
+-- A story's files, in order (a photo story can hold several). The original stays downloadable
+-- until original_until, then the daily cleanup removes it (original_removed_at); the compact copy
+-- and the poster stay. Sizes in bytes. status: pending (not encoded yet), done, failed, missing.
+CREATE TABLE IF NOT EXISTS story_media (
+  story_id INTEGER NOT NULL,
+  position INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  width INTEGER,
+  height INTEGER,
+  duration REAL,
+  codec TEXT,
+  original_path TEXT,
+  original_bytes INTEGER,
+  original_until TEXT,
+  original_removed_at TEXT,
+  compact_path TEXT,
+  compact_bytes INTEGER,
+  poster_path TEXT,
+  poster_bytes INTEGER,
+  status TEXT NOT NULL DEFAULT 'pending',
+  error TEXT,
+  PRIMARY KEY (story_id, position)
+);
+-- Each stories check: who or what started it, and what it found.
+CREATE TABLE IF NOT EXISTS story_runs (
+  id INTEGER PRIMARY KEY,
+  brand_id INTEGER NOT NULL,
+  trigger TEXT NOT NULL,
+  started_by INTEGER,
+  started_at TEXT NOT NULL,
+  finished_at TEXT,
+  status TEXT NOT NULL DEFAULT 'running',
+  log TEXT NOT NULL DEFAULT '',
+  stats TEXT
+);
+CREATE INDEX IF NOT EXISTS story_runs_brand ON story_runs(brand_id, started_at DESC);
 `
 
 export type DB = DatabaseSync
@@ -600,6 +690,16 @@ function migrate(db: DatabaseSync) {
   )`)
   // A schedule for 'new' posts always ran as 'due' (new posts plus the numbers that are due).
   db.exec("UPDATE schedules SET range = 'due' WHERE range = 'new'")
+  // The plan takes over the Dashboards switches: every brand without a plan gets one carrying
+  // its switches as they stood (defaults where it never set them), the new dashboards off, and
+  // room for at least as many competitors as it tracks already, so nothing its people see goes.
+  // Brands that have a plan keep it; brand_dashboards itself is left as it was.
+  db.exec(`INSERT OR IGNORE INTO brand_plans (brand_id, competition, ads, ads_country, stories,
+      rival_stories, rival_limit, updated_at, updated_by)
+    SELECT b.id, coalesce(d.competition, 1), coalesce(d.ads, 0), coalesce(d.ads_country, 'MD'), 0, 0,
+      max(3, (SELECT count(*) FROM brands r WHERE r.competitor_of = b.id)), d.updated_at, d.updated_by
+    FROM brands b LEFT JOIN brand_dashboards d ON d.brand_id = b.id
+    WHERE b.competitor_of IS NULL`)
 }
 
 export const now = () => new Date().toISOString()
