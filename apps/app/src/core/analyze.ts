@@ -78,7 +78,7 @@ const clip = (s: string, n: number) => {
   return t.length > n ? t.slice(0, n - 1) + '…' : t
 }
 
-type Engine = 'claude' | 'api'
+export type Engine = 'claude' | 'api'
 
 export function pickEngine(s: Settings): Engine | null {
   const key = !!process.env.ANTHROPIC_API_KEY
@@ -453,6 +453,104 @@ export async function describePost(
   const pics = imagePath ? [{ label: "The post's picture", path: imagePath }] : []
   const text = await ask(engine, DESCRIBE(brand), input, pics, use && { ...use, items: 1 })
   return clip(text, 300)
+}
+
+/** What a story is, as Claude sorts it. */
+export const STORY_KINDS = [
+  'promo',
+  'product',
+  'event',
+  'repost',
+  'behind-the-scenes',
+  'user-content',
+  'announcement',
+  'other',
+] as const
+export type StoryKind = (typeof STORY_KINDS)[number]
+export const STORY_TONES = ['positive', 'neutral', 'negative'] as const
+
+export interface StoryReading {
+  about: string
+  kind: StoryKind
+  /** The words shown on the story itself, as read from the picture; null when there are none. */
+  text: string | null
+  /** Accounts it names or tags, lower case, no @. */
+  accounts: string[]
+  tone: (typeof STORY_TONES)[number]
+  /** The account whose content it shares, for a repost. */
+  repostOf: string | null
+}
+
+const STORY = (brand: string, account: string) =>
+  `Brand: ${brand}. Below is what a story posted by @${account} carries; its picture (frames of a video side by side) is attached.
+Reply with exactly these six lines, in English, nothing else:
+about|one sentence of at most 25 words: what the story shows and what it promotes
+kind|one of ${STORY_KINDS.join(', ')} (repost: it shares another account's post or video; user-content: made by a customer or fan)
+text|the words shown on the story itself, as written, joined with " / ", or -
+accounts|every @handle it names or tags, on the picture or below, separated by spaces, or -
+tone|one of ${STORY_TONES.join(', ')}
+repost|the @handle whose content it shares, or -`
+
+const HANDLE_WORD = /^@?([a-z0-9_.]{2,30})$/i
+
+/** Reads Claude's six lines; a line missing or out of range falls back to an empty value. */
+export function parseStoryReading(text: string): StoryReading | null {
+  const lines = new Map<string, string>()
+  for (const line of text.split('\n')) {
+    const m = /^\s*([a-z]+)\s*\|(.*)$/i.exec(line)
+    if (m) lines.set(m[1]!.toLowerCase(), m[2]!.trim())
+  }
+  const about = lines.get('about')
+  if (!about) return null
+  const none = (v: string | undefined) => !v || v === '-' || /^none$/i.test(v)
+  const kind = lines.get('kind')?.toLowerCase().replace(/\s+/g, '-') as StoryKind | undefined
+  const tone = lines.get('tone')?.toLowerCase() as StoryReading['tone'] | undefined
+  const handle = (w: string) =>
+    HANDLE_WORD.exec(w.replace(/[,;]+$/, ''))?.[1]
+      ?.replace(/\.+$/, '')
+      .toLowerCase() ?? null
+  const accounts = none(lines.get('accounts'))
+    ? []
+    : [
+        ...new Set(
+          lines
+            .get('accounts')!
+            .split(/[\s,]+/)
+            .map(handle)
+            .filter((h): h is string => !!h),
+        ),
+      ]
+  const repost = none(lines.get('repost')) ? null : handle(lines.get('repost')!.split(/\s+/)[0]!)
+  return {
+    about: clip(about, 300),
+    kind: kind && STORY_KINDS.includes(kind) ? kind : 'other',
+    text: none(lines.get('text')) ? null : clip(lines.get('text')!, 600),
+    accounts: accounts.slice(0, 20),
+    tone: tone && STORY_TONES.includes(tone) ? tone : 'neutral',
+    repostOf: repost,
+  }
+}
+
+/** One story read by Claude from its metadata and its picture. */
+export async function describeStory(
+  engine: Engine,
+  brand: string,
+  account: string,
+  facts: { caption: string; stickers: string[]; mentions: string[]; music: string | null },
+  imagePath: string | null,
+  use?: UsageContext,
+): Promise<StoryReading | null> {
+  const input = [
+    `Caption: ${clip(facts.caption, 600) || '(none)'}`,
+    facts.stickers.length ? `Stickers: ${facts.stickers.map((s) => clip(s, 160)).join(' / ')}` : '',
+    facts.mentions.length ? `Tagged: ${facts.mentions.map((h) => `@${h}`).join(' ')}` : '',
+    facts.music ? `Music: ${clip(facts.music, 120)}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+  const pics = imagePath ? [{ label: "The story's picture", path: imagePath }] : []
+  const text = await ask(engine, STORY(brand, account), input, pics, use && { ...use, items: 1 })
+  return parseStoryReading(text)
 }
 
 const SUMMARY = (brand: string, about: string) =>

@@ -4,6 +4,7 @@ import type { Schedule } from './types.ts'
 import { SCHEDULE_POSTS } from './types.ts'
 import { catchUp, queueRun } from './run.ts'
 import { sendDigests } from './alerts.ts'
+import { storiesTick } from './stories.ts'
 
 /** A few random minutes on every start, so updates never land on the same second twice. */
 const jitter = (maxMinutes: number) => Math.round(Math.random() * maxMinutes * 60_000)
@@ -85,6 +86,9 @@ export function startScheduler(db: DB) {
     void catchUp(db).catch((e: Error) => console.error(`Catch-up: ${e.message}`))
     // Weekly and monthly summary emails, each sent once when its time comes.
     void sendDigests(db)
+    // Stories: the brands due for a check (every three hours), the day's cleanup of old originals,
+    // and compact copies and Claude's reading left from before a restart.
+    void storiesTick(db).catch((e: Error) => console.error(`Stories: ${e.message}`))
   }
   tick()
   return setInterval(tick, 60_000)

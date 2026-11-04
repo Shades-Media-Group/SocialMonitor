@@ -6,6 +6,7 @@ import type { Tally } from './store.ts'
 import { withCompetitors } from './store.ts'
 import type { Network } from './types.ts'
 import { NETWORKS } from './types.ts'
+import { storyStorage } from './story-view.ts'
 
 /**
  * The Admin tab: what a brand's AI work used, in tokens and API-equivalent USD, next to how much
@@ -154,6 +155,8 @@ export function adminUsage(db: DB, brandId: number, at = Date.now()) {
       projected_month_usd: days ? (last30.cost_usd / days) * 30 : null,
       recorded_days: Math.ceil(days),
     },
+    // Stories' files: the originals still held, the compact copies kept, and what that saved.
+    stories: storyStorage(db, brandId),
     brands: allBrands(db, since30),
     updates: adminUpdates(db, brandId),
   }

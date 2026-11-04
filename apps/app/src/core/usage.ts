@@ -19,6 +19,7 @@ export const AI_TASKS = [
   'reply',
   'translate',
   'limit-check',
+  'describe-story',
 ] as const
 export type AiTask = (typeof AI_TASKS)[number]
 
