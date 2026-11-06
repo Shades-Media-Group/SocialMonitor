@@ -71,5 +71,9 @@
     "preact": "^10",
     "shades-gradient": "https://github.com/Shades-Media-Group/gradient/releases/download/v0.11.0/shades-gradient-0.11.0.tgz",
     "uqr": "0.1.3"
+  },
+  "resolutions": {
+    "body-parser": "^2.4.0",
+    "undici": "^7.30.1"
   }
 }
