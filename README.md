@@ -40,7 +40,7 @@ SocialMonitor is an app you run on your own computer. There is no SocialMonitor 
 
 ## Run it
 
-Requires Node 22.18 or newer (see `.nvmrc`) and Yarn 1.
+Requires Node 22.23.4 or newer (see `.nvmrc`) and Yarn 1.
 
 ```bash
 git clone https://github.com/Shades-Media-Group/SocialMonitor.git

@@ -14,7 +14,7 @@ Copy `data/` without `data/browser/`; the browser profile belongs to the old mac
 
 ## Install
 
-You need Node 22.18 or newer, Yarn 1 and Git. Google Chrome is optional; without it, install Playwright's Chromium.
+You need Node 22.23.4 or newer, Yarn 1 and Git. Google Chrome is optional; without it, install Playwright's Chromium.
 
 ```bash
 git clone https://github.com/Shades-Media-Group/SocialMonitor.git

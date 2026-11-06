@@ -8,7 +8,7 @@ SocialMonitor ships an MCP server, so Claude can read your data and run updates 
 claude mcp add socialmonitor --scope user -- node /path/to/SocialMonitor/apps/app/src/mcp/main.ts
 ```
 
-Use Node 22.18 or newer. `SOCIALMONITOR_URL` changes the address (default `http://127.0.0.1:4400`).
+Use Node 22.23.4 or newer. `SOCIALMONITOR_URL` changes the address (default `http://127.0.0.1:4400`).
 
 ## Tools
 
