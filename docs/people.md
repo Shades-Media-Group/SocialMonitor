@@ -43,9 +43,9 @@ With one of these, signing in asks for it after the password instead of emailing
 
 Super admins are asked to add a passkey or an authenticator app right after they sign in, and Settings reminds them until they do. Until then they keep signing in with the emailed code.
 
-## Shades login
+## Continue with Shades ID
 
-Shades Media Group's own people can sign in with their Shades account instead of a SocialMonitor password. Under "Forgot your password?" the sign-in page then shows **Shades login**, which opens Shades ID's sign-in page (an @shades.md email or username, the Shades password and Shades ID's second step) and comes back signed in. Only verified @shades.md accounts get in; a blocked account stays blocked.
+Shades Media Group's own people can sign in with their Shades account instead of a SocialMonitor password. Under "Forgot your password?" the sign-in page then shows **Continue with Shades ID**, which opens Shades ID's sign-in page (an @shades.md email or username, the Shades password and Shades ID's second step) and comes back signed in. Only verified @shades.md accounts get in; a blocked account stays blocked.
 
 It is off unless `.env` names Shades ID and the dashboard has a public address (see [remote access](remote-access.md)). With any of these empty, there is no link and its endpoints answer 404:
 
@@ -57,10 +57,10 @@ SHADES_ID_CLIENT_SECRET=                # from Shades ID; never in a chat, a log
 
 Register this redirect URI at Shades ID, built from `SOCIALMONITOR_PUBLIC_HOST`: `https://<SOCIALMONITOR_PUBLIC_HOST>/api/auth/shades/callback` (for Shades, `https://socialmonitor-app.shades.md/api/auth/shades/callback`), and `https://<SOCIALMONITOR_PUBLIC_HOST>/` as the address to return to after signing out.
 
-- **New people start with no access.** The first Shades login of someone SocialMonitor doesn't know makes an account with no password, no brand and no super admin role. They see "Ask a super admin for access" until a super admin gives them a role under **People → Change access** (they show there as "No access"). Roles stay SocialMonitor's own: a brand's viewer or admin, or super admin.
-- **Matching:** someone who already has an account with the same email is linked to their Shades account at their first Shades login and keeps their roles; after that, the link decides, whatever the email. An email already linked to another Shades account is refused.
+- **New people start with no access.** The first Shades ID sign-in of someone SocialMonitor doesn't know makes an account with no password, no brand and no super admin role. They see "Ask a super admin for access" until a super admin gives them a role under **People → Change access** (they show there as "No access"). Roles stay SocialMonitor's own: a brand's viewer or admin, or super admin.
+- **Matching:** someone who already has an account with the same email is linked to their Shades account at their first Shades ID sign-in and keeps their roles; after that, the link decides, whatever the email. An email already linked to another Shades account is refused.
 - **The second step:** Shades ID reports its own second step in the sign-in, and then SocialMonitor doesn't ask for another. Without that report, SocialMonitor asks for its own, as after a password.
-- **Signing out** of a session that came from Shades login also signs out at Shades ID.
+- **Signing out** of a session that came from Shades ID sign-in also signs out at Shades ID.
 
 ## Forgotten and changed passwords
 
