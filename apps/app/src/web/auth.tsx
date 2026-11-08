@@ -126,11 +126,11 @@ export interface AuthInfo {
 
 /** Why a Shades login came back to the sign-in page, as the callback names it (?shades=…). */
 const SHADES_WHY: Record<string, string> = {
-  failed: 'Shades login did not work. Try again.',
-  expired: 'Shades login took too long. Try again.',
+  failed: 'Signing in with Shades ID did not work. Try again.',
+  expired: 'Signing in with Shades ID took too long. Try again.',
   unavailable: 'Shades ID cannot be reached right now. Try again in a moment.',
-  cancelled: 'Shades login was cancelled.',
-  domain: 'Shades login is only for @shades.md accounts.',
+  cancelled: 'Signing in with Shades ID was cancelled.',
+  domain: 'Shades ID is only for @shades.md accounts.',
   unverified: 'Confirm your email at Shades ID first, then try again.',
   blocked: 'This account is blocked. Ask a super admin.',
   conflict: 'This email belongs to another Shades account here. Ask a super admin.',
@@ -861,13 +861,13 @@ export function AuthScreen({ info, onIn }: { info: AuthInfo; onIn: (me: Me) => v
       <button class="g-btn g-btn--ghost" type="button" onClick={() => setStep('forgot')}>
         {t('Forgot your password?')}
       </button>
-      {/* Gradient's Shades login (auth.css, g-auth-or and g-auth-sso), the same in every product. */}
+      {/* Gradient's Continue with Shades ID (auth.css, g-auth-or and g-auth-sso), the same in every product. */}
       {info.shades && (
         <>
           <p class="g-auth-or">{t('or')}</p>
           <a class="g-auth-sso" href={`/api/auth/shades/start${f.keep ? '?keep=1' : ''}`}>
             <ShadesMark />
-            {t('Shades login')}
+            {t('Continue with Shades ID')}
           </a>
         </>
       )}

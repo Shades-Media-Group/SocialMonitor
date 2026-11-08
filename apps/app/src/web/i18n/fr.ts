@@ -502,28 +502,28 @@ export const fr: Dict = {
     Continue: 'Continuer',
     'Forgot your password?': 'Mot de passe oublié ?',
     or: 'ou',
-    'Shades login': 'Connexion Shades',
+    'Continue with Shades ID': 'Continuer avec Shades ID',
     'Ask a super admin for access': 'Demandez l’accès à un super admin',
     'Your Shades account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.':
       'Votre compte Shades fonctionne, mais il n’a pas encore accès à SocialMonitor. Demandez à un super admin de vous donner un rôle, puis reconnectez-vous.',
     'Your account works, but it has no access to SocialMonitor yet. Ask a super admin to give you a role, then sign in again.':
       'Votre compte fonctionne, mais il n’a pas encore accès à SocialMonitor. Demandez à un super admin de vous donner un rôle, puis reconnectez-vous.',
     'Sign in again': 'Se reconnecter',
-    'Shades login did not work. Try again.': 'La connexion Shades n’a pas abouti. Réessayez.',
-    'Shades login took too long. Try again.':
-      'La connexion Shades a pris trop de temps. Réessayez.',
+    'Signing in with Shades ID did not work. Try again.':
+      'La connexion avec Shades ID n’a pas abouti. Réessayez.',
+    'Signing in with Shades ID took too long. Try again.':
+      'La connexion avec Shades ID a pris trop de temps. Réessayez.',
     'Shades ID cannot be reached right now. Try again in a moment.':
       'Shades ID est injoignable pour le moment. Réessayez dans un instant.',
-    'Shades login was cancelled.': 'La connexion Shades a été annulée.',
-    'Shades login is only for @shades.md accounts.':
-      'La connexion Shades est réservée aux comptes @shades.md.',
+    'Signing in with Shades ID was cancelled.': 'La connexion avec Shades ID a été annulée.',
+    'Shades ID is only for @shades.md accounts.': 'Shades ID est réservé aux comptes @shades.md.',
     'Confirm your email at Shades ID first, then try again.':
       'Confirmez d’abord votre e-mail dans Shades ID, puis réessayez.',
     'This account is blocked. Ask a super admin.':
       'Ce compte est bloqué. Demandez à un super admin.',
     'This email belongs to another Shades account here. Ask a super admin.':
       'Ici, cet e-mail appartient à un autre compte Shades. Demandez à un super admin.',
-    'Joined with Shades login': 'Arrivé par la connexion Shades',
+    'Joined with Shades ID': 'Arrivé avec Shades ID',
     'All networks': 'Tous les réseaux',
     Period: 'Période',
     'Last 7 days': '7 derniers jours',
