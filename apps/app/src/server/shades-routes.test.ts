@@ -430,7 +430,7 @@ describe('Shades login, callback', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     await signInWithShades(db, { aud: 'crm' })
     const text = [...warn.mock.calls, ...log.mock.calls].flat().join('\n')
-    expect(text).toContain('Shades login refused')
+    expect(text).toContain('Shades ID sign-in refused')
     for (const secret of ['the-code', 'not-a-real-secret', 'eyJ'])
       expect(text).not.toContain(secret)
   })

@@ -40,7 +40,9 @@ export const shadesRoutes = [
       c.cookies.push(shades.stateCookie(state))
       return { __redirect: url }
     } catch (e) {
-      console.warn(`Shades login could not start: ${e instanceof Error ? e.message : String(e)}`)
+      console.warn(
+        `Shades ID sign-in could not start: ${e instanceof Error ? e.message : String(e)}`,
+      )
       return refused('unavailable')
     }
   }),
@@ -106,7 +108,7 @@ export const shadesRoutes = [
     } catch (e) {
       const err = e instanceof shades.ShadesError ? e : new shades.ShadesError('failed', String(e))
       auth.noteFailure(`ip:${c.ip}`)
-      console.warn(`Shades login refused: ${err.message}`)
+      console.warn(`Shades ID sign-in refused: ${err.message}`)
       later(
         signInFailed(c.db, {
           userId,
