@@ -39,13 +39,14 @@ Business Discovery lets one Instagram professional account look up another by it
 
 How SocialMonitor uses it: once any Instagram account is connected, every other brand's Instagram profile is read this way instead of the browser. Posts and their counts land in the same posts and history as before (the post ids are the website's, worked out from each post's shortcode, so a post read from the web earlier stays the same post). Each update logs that comment text is not available through this route. If Meta refuses (the account is not professional, the permission is missing, the hour's calls are used up), the log says so in plain words and that update reads the profile from the web as before.
 
-### Facebook: Page Public Content Access (off until approved)
+### Facebook: Page Public Content Access (approved 21 November 2026)
 
 Page Public Content Access (PPCA) is a feature, not a permission: it lets an app read public data of Pages it has no role on: posts, engagement counts and public comments, through `/{page}/feed`, `/{page}/posts`, `/{post}` and `/{post}/comments`, plus the Pages Search API. Docs: [Page Public Content Access](https://developers.facebook.com/docs/features-reference/page-public-content-access).
 
 - **What it needs.** App Review for the feature and a verified business (Meta may also ask for extra terms). Until it is approved, the app can read only Pages whose admins have a role on the app, so it cannot read a Page like the test brand's.
 - **Allowed use.** Meta allows it for analysing or showing posts and engagement on Pages. Requests for other uses come back "not needed based on your submission details".
-- **What SocialMonitor reads with it.** `META_PPCA=on` in `.env` turns it on (it is off by default). Every other brand's Facebook profile is then read from `GET /{page-name}/posts` with each post's text, time, link, picture and its reaction, comment and share counts, using a connected Page's token. Comment text is not read on this route yet. Without approval Meta refuses every call; the log explains that and the browser reads the Page.
+- **What SocialMonitor reads with it.** `META_PPCA=on` in `.env` turns it on (it is off by default). Every other brand's Facebook profile is then read from `GET /{page-name}/posts` with each post's text, time, link, picture and its reaction, comment and share counts. It reads with the app's own token (`META_APP_ID|META_APP_SECRET`), so no Page has to be connected; without the app keys it falls back to a connected Page's token. Meta returns comment counts on this route but no comment text: `/{post}/comments` comes back empty even with the feature approved. Without approval Meta refuses every call; the log explains that and the browser reads the Page.
+- **Live mode.** Advanced access works only while the app is in Live mode (the App Mode switch at the top of the app dashboard). In Development mode Meta answers every public Page with error 100.
 
 **Submitting it for App Review:**
 

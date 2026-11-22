@@ -11,6 +11,7 @@ import {
   list,
   metaCollect,
   metaConnected,
+  metaReady,
 } from './meta-api.ts'
 import type { FbPost, IgMedia } from './meta-api.ts'
 
@@ -21,8 +22,10 @@ import type { FbPost, IgMedia } from './meta-api.ts'
  *   (through the Page of any brand) may look up another professional account by its username and
  *   read its public posts with their counts. Meta gives no comment text this way.
  * - Facebook, Page Public Content Access (PPCA): a feature Meta grants after App Review and
- *   business verification. With it, a public Page's posts and counts can be read. Off until
- *   META_PPCA=on in .env, because without Meta's approval every call is refused.
+ *   business verification. With it, a public Page's posts and counts can be read with the app's
+ *   own token (META_APP_ID|META_APP_SECRET), so no Page needs to be connected. Off until
+ *   META_PPCA=on in .env, because without Meta's approval every call is refused. Meta returns
+ *   comment counts this way but no comment text.
  *
  * Which route reads a profile is decided by metaRoute; the browser stays the fallback.
  */
@@ -47,15 +50,21 @@ export function metaRoute(db: DB, p: Pick<Profile, 'brand_id' | 'network'>): Met
   if (p.network !== 'instagram' && p.network !== 'facebook') return 'browser'
   if (metaConnected(db, p.brand_id, p.network)) return 'connected'
   if (p.network === 'instagram') return source(db, 'instagram') ? 'discovery' : 'browser'
-  return ppcaOn() && source(db, 'facebook') ? 'ppca' : 'browser'
+  return ppcaOn() && (metaReady() || source(db, 'facebook')) ? 'ppca' : 'browser'
 }
+
+/** The token PPCA reads with: the app's own when its keys are set, else a connected Page's. */
+const ppcaToken = (db: DB) =>
+  metaReady()
+    ? `${process.env.META_APP_ID!.trim()}|${process.env.META_APP_SECRET!.trim()}`
+    : source(db, 'facebook')?.access_token
 
 /** Whose account the official route reads through, for the About tab; never the token. */
 export function routeVia(db: DB, route: MetaRoute) {
   const s =
     route === 'discovery'
       ? source(db, 'instagram')
-      : route === 'ppca'
+      : route === 'ppca' && !metaReady()
         ? source(db, 'facebook')
         : undefined
   if (!s) return null
@@ -151,20 +160,20 @@ function pageRef(profile: Profile) {
 
 /** Page Public Content Access: a public Page's latest posts and their counts. */
 async function ppca(db: DB, profile: Profile, opt: CollectOptions) {
-  const src = source(db, 'facebook')
-  if (!src) return null
+  const token = ppcaToken(db)
+  if (!token) return null
   const ref = pageRef(profile)
   if (!/^[\w.-]{1,100}$/.test(ref)) throw new Error(`${profile.url} is not a Facebook Page link.`)
   const max = Math.max(opt.limit, 25)
   const all = await list<FbPost>(
     `/${ref}/posts`,
-    { access_token: src.access_token, fields: FB_POST_FIELDS, limit: String(Math.min(max, 100)) },
+    { access_token: token, fields: FB_POST_FIELDS, limit: String(Math.min(max, 100)) },
     max,
   )
   const posts = pick(all.map(fbPost), (x) => x.ext_id, opt)
   opt.step?.(posts.length, posts.length)
   opt.log(
-    `Facebook ${ref}: ${posts.length} posts and their counts read through Meta's official API (Page Public Content Access). Comments are not read this way yet.`,
+    `Facebook ${ref}: ${posts.length} posts and their counts read through Meta's official API (Page Public Content Access). Meta gives comment counts but no comment text this way.`,
   )
   return posts
 }

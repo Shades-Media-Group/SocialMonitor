@@ -159,6 +159,32 @@ describe('choosing the route', () => {
     process.env.META_PPCA = 'on'
     expect(metaRoute(db, profile('facebook'))).toBe('ppca')
   })
+
+  it('reads public Facebook Pages with the app token when no Page is connected', async () => {
+    const { db, profile } = setup()
+    process.env.META_PPCA = 'on'
+    expect(metaRoute(db, profile('facebook'))).toBe('browser')
+    process.env.META_APP_ID = 'app1'
+    process.env.META_APP_SECRET = 'sec1'
+    try {
+      expect(metaRoute(db, profile('facebook'))).toBe('ppca')
+      expect(routeVia(db, 'ppca')).toBeNull()
+      const urls: string[] = []
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (url: string) => {
+          urls.push(url)
+          return new Response(JSON.stringify({ data: [{ id: '1_22', message: 'Hi' }] }))
+        }),
+      )
+      const posts = await officialCollect(db, profile('facebook'), opt(), 'ppca')
+      expect(new URL(urls[0]!).searchParams.get('access_token')).toBe('app1|sec1')
+      expect(posts![0]).toMatchObject({ ext_id: '22' })
+    } finally {
+      delete process.env.META_APP_ID
+      delete process.env.META_APP_SECRET
+    }
+  })
 })
 
 describe('Business Discovery', () => {
