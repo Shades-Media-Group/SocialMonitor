@@ -4803,6 +4803,157 @@ p.sm-postcamps .sm-postcamps__label {
   font-size: 13px;
   font-weight: 600;
 }
+/* The card's body opens the update's details. */
+.sm-run__open {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sm-run__open:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.sm-run__more {
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+.sm-run__open:hover .sm-run__more {
+  color: var(--c-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.sm-run__links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Update details: where it is, the three stages, what happened in plain words. */
+.sm-act {
+  display: grid;
+  gap: 20px;
+  font-size: 13px;
+}
+.sm-act__now {
+  display: grid;
+  gap: 8px;
+}
+.sm-act__headline {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.sm-act__bar {
+  height: 8px;
+}
+.sm-act__meta,
+.sm-act__sum {
+  margin: 0;
+  color: var(--c-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.sm-act__stages {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sm-act__stage {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  color: var(--c-text-3);
+}
+.sm-act__dot {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+.sm-act__stage--done,
+.sm-act__stage--now {
+  color: var(--c-text);
+}
+.sm-act__stage--done .sm-act__dot {
+  border-color: var(--c-text);
+  background: var(--c-text);
+}
+.sm-act__stage--now {
+  font-weight: 600;
+}
+.sm-act__stage--now .sm-act__dot {
+  border-color: #3b5bdb;
+  background: #3b5bdb;
+}
+.sm-act__state {
+  color: var(--c-text-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+.sm-act__h {
+  margin: 4px 0 -8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.sm-act__feed {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sm-act__item {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+}
+.sm-act__item time {
+  color: var(--c-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.sm-act__item p {
+  margin: 0;
+}
+.sm-act__item--note p:first-child {
+  color: var(--c-text-2);
+}
+.sm-act__item--warn p:first-child {
+  color: var(--g-danger, #c92a2a);
+  font-weight: 600;
+}
+.sm-act__detail {
+  margin-top: 2px !important;
+  color: var(--c-text-3);
+  font-size: 12.5px;
+}
+.sm-act__raw summary {
+  color: var(--c-text-3);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.sm-act__raw pre {
+  max-height: 280px;
+  margin: 8px 0 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--c-panel);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 /* Update sheet: what each account would get. */
 .sm-update__what {
   margin: -4px 0 6px;

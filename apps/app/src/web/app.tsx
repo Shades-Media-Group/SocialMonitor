@@ -9,6 +9,7 @@ import { Icon, Mark, Menu, Modal, ago, fmt } from './ui.tsx'
 import type { IconName } from 'shades-gradient'
 import { Palette } from './palette.tsx'
 import { UpdateSheet } from './update.tsx'
+import { RunActivity, progressShare, readProgress } from './run-activity.tsx'
 import { SettingsSheet } from './settings.tsx'
 import type { ViewMode } from './json.tsx'
 import { readMode, saveMode } from './json.tsx'
@@ -544,6 +545,7 @@ function Dashboard({ me }: { me: Me }) {
         running={running}
         finished={finished}
         brands={brands}
+        version={version}
         onClose={() => setFinished(null)}
       />
       <UpdateSheet
@@ -615,34 +617,29 @@ function RunNotice({
   running,
   finished,
   brands,
+  version,
   onClose,
 }: {
   running: RunRow | null
   finished: RunRow | null
   brands: BrandRow[]
+  version: number
   onClose: () => void
 }) {
   const [stopping, setStopping] = useState(false)
+  const [details, setDetails] = useState<number | null>(null)
   useEffect(() => setStopping(false), [running?.id])
+  const sheet = details !== null && (
+    <RunActivity
+      runId={details}
+      version={version}
+      open
+      onClose={() => setDetails(null)}
+    />
+  )
   if (running) {
-    const p = JSON.parse(running.progress || '{}') as {
-      step?: 'read' | 'sort'
-      brand?: string
-      network?: string
-      profile?: number
-      profiles?: number
-      done?: number
-      total?: number
-    }
-    // Reading counts per profile; the bar moves across profiles, then through each one's posts.
-    const share =
-      p.step === 'sort'
-        ? p.total
-          ? (p.done ?? 0) / p.total
-          : 0
-        : p.profiles
-          ? ((p.profile ?? 1) - 1 + (p.total ? (p.done ?? 0) / p.total : 0)) / p.profiles
-          : 0
+    const p = readProgress(running)
+    const share = progressShare(p)
     const text =
       p.step === 'sort'
         ? t('Sorting comments with AI: post {done} of {total}', {
@@ -673,14 +670,23 @@ function RunNotice({
             {stopping ? t('Stopping…') : t('Stop')}
           </button>
         </div>
-        <p class="sm-run__text">{text}</p>
-        <span class="sm-run__bar">
-          <span style={{ width: `${Math.max(3, Math.round(share * 100))}%` }} />
-        </span>
+        <button
+          class="sm-run__open"
+          type="button"
+          aria-label={t('Show what the update is doing')}
+          onClick={() => setDetails(running.id)}
+        >
+          <span class="sm-run__text">{text}</span>
+          <span class="sm-run__bar">
+            <span style={{ width: `${Math.max(3, Math.round(share * 100))}%` }} />
+          </span>
+          <span class="sm-run__more">{t('Show details')}</span>
+        </button>
+        {sheet}
       </div>
     )
   }
-  if (!finished) return null
+  if (!finished) return sheet || null
   const scope = JSON.parse(finished.scope || '{}') as { brandIds?: number[] }
   const brandId = scope.brandIds?.find((id) => brands.some((b) => b.id === id))
   return (
@@ -699,11 +705,17 @@ function RunNotice({
           <Icon name="close" size={14} />
         </button>
       </div>
-      {brandId && (
-        <a class="sm-run__link" href={`/b/${brandId}/reports`} onClick={onClose}>
-          {t('Open the report')}
-        </a>
-      )}
+      <div class="sm-run__links">
+        {brandId && (
+          <a class="sm-run__link" href={`/b/${brandId}/reports`} onClick={onClose}>
+            {t('Open the report')}
+          </a>
+        )}
+        <button class="sm-textbtn" type="button" onClick={() => setDetails(finished.id)}>
+          {t('What happened')}
+        </button>
+      </div>
+      {sheet}
     </div>
   )
 }
