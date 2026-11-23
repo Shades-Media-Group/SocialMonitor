@@ -3,6 +3,12 @@ import type { Dict } from '../i18n.ts'
 export const zh: Dict = {
   strings: {
     // Update details: the corner card opened.
+    "Posts checked for comments: {n}": "已检查评论的帖子：{n}",
+    "Older posts with fresh numbers: {n}": "刷新数据的旧帖子：{n}",
+    "Update started": "更新已开始",
+    "The AI reached its usage limit, so this update moves to {time}.": "AI 已达到用量上限，本次更新改到 {time}。",
+    "A TikTok page did not load at first, so a private browser opened it instead.": "一个 TikTok 页面一开始没有加载，所以改用隐私浏览器打开。",
+    "{n} Facebook posts read from the connected Page": "从已连接的主页读取了 {n} 条 Facebook 帖子",
     "Show what the update is doing": "查看更新正在做什么",
     "Show details": "查看详情",
     "What happened": "发生了什么",

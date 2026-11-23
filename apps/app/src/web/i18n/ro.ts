@@ -3,6 +3,12 @@ import type { Dict } from '../i18n.ts'
 export const ro: Dict = {
   strings: {
     // Update details: the corner card opened.
+    "Posts checked for comments: {n}": "Postări verificate pentru comentarii: {n}",
+    "Older posts with fresh numbers: {n}": "Postări mai vechi cu cifre noi: {n}",
+    "Update started": "Actualizarea a început",
+    "The AI reached its usage limit, so this update moves to {time}.": "AI a atins limita de utilizare, așa că actualizarea se mută la {time}.",
+    "A TikTok page did not load at first, so a private browser opened it instead.": "O pagină TikTok nu s-a încărcat din prima, așa că a deschis-o un browser privat.",
+    "{n} Facebook posts read from the connected Page": "{n} postări Facebook citite de pe pagina conectată",
     "Show what the update is doing": "Arată ce face actualizarea",
     "Show details": "Arată detaliile",
     "What happened": "Ce s-a întâmplat",

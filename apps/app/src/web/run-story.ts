@@ -42,6 +42,17 @@ const QUIET = [/public profile opened in a logged-out browser/i]
 export function retell(log: string, t: Tr = english): Story {
   const story: Story = { items: [], accounts: 0, newComments: 0, sorted: 0, problems: 0 }
   let slowed = false
+  /** The account being read: its posts and new comments are told under it, not line by line. */
+  let current: { item: StoryItem; posts: number; fresh: number; refreshed: number } | null = null
+  const tell = () => {
+    if (!current) return
+    const parts = [
+      current.posts ? t('Posts checked for comments: {n}', { n: current.posts }) : '',
+      current.refreshed ? t('Older posts with fresh numbers: {n}', { n: current.refreshed }) : '',
+      current.fresh ? t('New comments: {n}', { n: current.fresh }) : '',
+    ].filter(Boolean)
+    current.item.detail = parts.length ? parts.join(' · ') : undefined
+  }
   const push = (item: StoryItem) => {
     const last = story.items.at(-1)
     if (last && last.text === item.text && last.kind === item.kind) return
@@ -72,16 +83,51 @@ export function retell(log: string, t: Tr = english): Story {
           ),
         })
       slowed = true
-    } else if ((x = line.match(/^(.+): reading (instagram|facebook|tiktok) @(.+)\.$/i))) {
+    } else if ((x = line.match(/^(.+): reading (instagram|facebook|tiktok) @(.+?)\.?$/i))) {
       story.accounts++
-      push({
+      const item: StoryItem = {
         time,
         kind: 'step',
         text: t('Reading {brand} on {network}', { brand: x[1]!, network: net(x[2]!) }),
-      })
+      }
+      story.items.push(item)
+      current = { item, posts: 0, fresh: 0, refreshed: 0 }
+    } else if (/^TikTok: \d+ · \d+ comments read$/.test(line)) {
+      if (current) {
+        current.posts++
+        tell()
+      }
+    } else if ((x = line.match(/^TikTok: fresh numbers for (\d+) older posts/))) {
+      if (current) {
+        current.refreshed += Number(x[1])
+        tell()
+      }
     } else if ((x = line.match(/^(\d+) new comments on /))) {
       story.newComments += Number(x[1])
-      add(time, 'good', 'new', Number(x[1]), (n) => t('New comments found: {n}', { n }))
+      if (current) {
+        current.fresh += Number(x[1])
+        tell()
+      } else add(time, 'good', 'new', Number(x[1]), (n) => t('New comments found: {n}', { n }))
+    } else if (line === 'Starting.') {
+      push({ time, kind: 'step', text: t('Update started') })
+    } else if ((x = line.match(/^Claude is at its usage limit until (\S+)\. This update moves to (\S+)\.$/))) {
+      push({
+        time,
+        kind: 'warn',
+        text: t('The AI reached its usage limit, so this update moves to {time}.', { time: x[2]! }),
+      })
+    } else if (/^TikTok public pages: the profile @\S+ did not load/.test(line)) {
+      push({
+        time,
+        kind: 'note',
+        text: t('A TikTok page did not load at first, so a private browser opened it instead.'),
+      })
+    } else if ((x = line.match(/^Facebook \(connected Page\): (\d+) posts read/))) {
+      push({
+        time,
+        kind: 'good',
+        text: t('{n} Facebook posts read from the connected Page', { n: x[1]! }),
+      })
     } else if ((x = line.match(/^Facebook (\S+): (\d+) posts .*Page Public Content Access/))) {
       push({
         time,
@@ -113,6 +159,7 @@ export function retell(log: string, t: Tr = english): Story {
         ),
       })
     } else if ((x = line.match(/^Sorting (\d+) comments on /))) {
+      current = null
       story.sorted += Number(x[1])
       add(time, 'step', 'sort', Number(x[1]), (n) =>
         t('AI sorts the new comments by topic and mood: {n} so far', { n }),
