@@ -29,6 +29,7 @@ describe('report branding', () => {
   it('knows a logo by its bytes, not its name', () => {
     expect(sniff(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]))).toBe('png')
     expect(sniff(Buffer.from([0xff, 0xd8, 0xff, 0xe0]))).toBe('jpg')
+    expect(sniff(Buffer.from('RIFF\x10\x00\x00\x00WEBPVP8 ', 'latin1'))).toBe('webp')
     expect(sniff(Buffer.from('<?xml version="1.0"?>\n<svg viewBox="0 0 1 1"/>'))).toBe('svg')
     expect(sniff(Buffer.from(String.fromCharCode(0xfeff) + '<!-- logo --><svg xmlns="x">'))).toBe(
       'svg',

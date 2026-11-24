@@ -3,47 +3,61 @@ import type { Dict } from '../i18n.ts'
 export const ru: Dict = {
   strings: {
     // Update details: the corner card opened.
-    "Posts checked for comments: {n}": "Проверено публикаций: {n}",
-    "Older posts with fresh numbers: {n}": "Старых публикаций с новыми цифрами: {n}",
-    "Update started": "Обновление началось",
-    "The AI reached its usage limit, so this update moves to {time}.": "ИИ достиг лимита, поэтому обновление переносится на {time}.",
-    "A TikTok page did not load at first, so a private browser opened it instead.": "Страница TikTok сразу не загрузилась, поэтому её открыл приватный браузер.",
-    "{n} Facebook posts read from the connected Page": "{n} публикаций Facebook прочитано с подключённой страницы",
-    "Show what the update is doing": "Показать, что делает обновление",
-    "Show details": "Подробнее",
-    "What happened": "Что произошло",
-    "Update details": "Подробности обновления",
-    "Loading the update…": "Загрузка обновления…",
-    "Reading {brand} on {network}": "Читаем {brand} в {network}",
-    "Read the accounts ({n} of {total})": "Чтение аккаунтов ({n} из {total})",
-    "Read the accounts": "Чтение аккаунтов",
-    "Sort new comments with AI": "Сортировка новых комментариев с ИИ",
-    "Write the report": "Составление отчёта",
-    "{pct}% · running for {time}": "{pct}% · идёт {time}",
-    "Took {time}": "Заняло {time}",
-    "Accounts read: {n}": "Прочитано аккаунтов: {n}",
-    "New comments: {n}": "Новых комментариев: {n}",
-    "Needs attention: {n}": "Требует внимания: {n}",
-    "No problems": "Проблем нет",
-    "Nothing has happened yet. The first account opens in a moment.": "Пока ничего не произошло. Первый аккаунт откроется через мгновение.",
-    "Technical log": "Технический журнал",
-    "TikTok asked for a pause, so its pages open in a private browser instead. Slower, but nothing is wrong.": "TikTok попросил паузу, поэтому его страницы открываются в приватном браузере. Медленнее, но всё в порядке.",
-    "New comments found: {n}": "Найдено новых комментариев: {n}",
-    "{n} Facebook posts and their numbers, from Meta's official data": "{n} публикаций Facebook и их показатели из официальных данных Meta",
-    "Meta shares how many comments there are this way, not their text.": "Так Meta сообщает число комментариев, но не их текст.",
-    "{n} Instagram posts and their numbers, from Meta's official data": "{n} публикаций Instagram и их показатели из официальных данных Meta",
-    "{network} could not be read this time": "{network} не удалось прочитать в этот раз",
-    "{network} comments were read less than {h} hours ago, so only the numbers are refreshed.": "Комментарии {network} читались менее {h} ч назад, поэтому обновляются только показатели.",
-    "AI sorts the new comments by topic and mood: {n} so far": "ИИ сортирует новые комментарии по теме и настроению: пока {n}",
-    "The AI reached its usage limit. Sorting goes on by itself after {time}.": "ИИ достиг лимита. Сортировка продолжится сама после {time}.",
-    "AI sorting paused": "Сортировка ИИ приостановлена",
-    "Posts added to their campaigns: {n}": "Публикаций добавлено в кампании: {n}",
-    "Comments older than {d} days cleared out, as set in Settings: {n}": "Удалено комментариев старше {d} дн., как указано в настройках: {n}",
-    "Stopped as asked. Everything read until then is kept.": "Остановлено по запросу. Всё прочитанное сохранено.",
-    "Finished": "Завершено",
-    "{network}: the official route said no, so the page is read from the web instead": "{network}: официальный путь отказал, поэтому страница читается из интернета",
-    "{n} s": "{n} с",
-    "{h} h {m} min": "{h} ч {m} мин",
+    'Posts checked for comments: {n}': 'Проверено публикаций: {n}',
+    'Older posts with fresh numbers: {n}': 'Старых публикаций с новыми цифрами: {n}',
+    'Update started': 'Обновление началось',
+    'The AI reached its usage limit, so this update moves to {time}.':
+      'ИИ достиг лимита, поэтому обновление переносится на {time}.',
+    'A TikTok page did not load at first, so a private browser opened it instead.':
+      'Страница TikTok сразу не загрузилась, поэтому её открыл приватный браузер.',
+    '{n} Facebook posts read from the connected Page':
+      '{n} публикаций Facebook прочитано с подключённой страницы',
+    'Show what the update is doing': 'Показать, что делает обновление',
+    'Show details': 'Подробнее',
+    'What happened': 'Что произошло',
+    'Update details': 'Подробности обновления',
+    'Loading the update…': 'Загрузка обновления…',
+    'Reading {brand} on {network}': 'Читаем {brand} в {network}',
+    'Read the accounts ({n} of {total})': 'Чтение аккаунтов ({n} из {total})',
+    'Read the accounts': 'Чтение аккаунтов',
+    'Sort new comments with AI': 'Сортировка новых комментариев с ИИ',
+    'Write the report': 'Составление отчёта',
+    '{pct}% · running for {time}': '{pct}% · идёт {time}',
+    'Took {time}': 'Заняло {time}',
+    'Accounts read: {n}': 'Прочитано аккаунтов: {n}',
+    'New comments: {n}': 'Новых комментариев: {n}',
+    'Needs attention: {n}': 'Требует внимания: {n}',
+    'No problems': 'Проблем нет',
+    'Nothing has happened yet. The first account opens in a moment.':
+      'Пока ничего не произошло. Первый аккаунт откроется через мгновение.',
+    'Technical log': 'Технический журнал',
+    'TikTok asked for a pause, so its pages open in a private browser instead. Slower, but nothing is wrong.':
+      'TikTok попросил паузу, поэтому его страницы открываются в приватном браузере. Медленнее, но всё в порядке.',
+    'New comments found: {n}': 'Найдено новых комментариев: {n}',
+    "{n} Facebook posts and their numbers, from Meta's official data":
+      '{n} публикаций Facebook и их показатели из официальных данных Meta',
+    'Meta shares how many comments there are this way, not their text.':
+      'Так Meta сообщает число комментариев, но не их текст.',
+    "{n} Instagram posts and their numbers, from Meta's official data":
+      '{n} публикаций Instagram и их показатели из официальных данных Meta',
+    '{network} could not be read this time': '{network} не удалось прочитать в этот раз',
+    '{network} comments were read less than {h} hours ago, so only the numbers are refreshed.':
+      'Комментарии {network} читались менее {h} ч назад, поэтому обновляются только показатели.',
+    'AI sorts the new comments by topic and mood: {n} so far':
+      'ИИ сортирует новые комментарии по теме и настроению: пока {n}',
+    'The AI reached its usage limit. Sorting goes on by itself after {time}.':
+      'ИИ достиг лимита. Сортировка продолжится сама после {time}.',
+    'AI sorting paused': 'Сортировка ИИ приостановлена',
+    'Posts added to their campaigns: {n}': 'Публикаций добавлено в кампании: {n}',
+    'Comments older than {d} days cleared out, as set in Settings: {n}':
+      'Удалено комментариев старше {d} дн., как указано в настройках: {n}',
+    'Stopped as asked. Everything read until then is kept.':
+      'Остановлено по запросу. Всё прочитанное сохранено.',
+    Finished: 'Завершено',
+    '{network}: the official route said no, so the page is read from the web instead':
+      '{network}: официальный путь отказал, поэтому страница читается из интернета',
+    '{n} s': '{n} с',
+    '{h} h {m} min': '{h} ч {m} мин',
     // Stories, the plan and the competitor limit.
     Expired: 'Истекла',
     'Live, ends within the hour': 'Активна, исчезнет в течение часа',
@@ -1241,8 +1255,11 @@ export const ru: Dict = {
     'No such rival.': 'Такого конкурента нет.',
     'Report branding': 'Оформление отчётов',
     Logo: 'Логотип',
-    'PNG, JPG or SVG, up to 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.':
-      'PNG, JPG или SVG, до 1 МБ. Заменяет логотип SocialMonitor в верхней части PDF-отчётов.',
+    'Any picture or SVG. A large one is made smaller to fit 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.':
+      'Любое изображение или SVG. Большое уменьшается до 1 МБ. Заменяет логотип SocialMonitor в верхней части PDF-отчётов.',
+    'Optimizing photo…': 'Оптимизируем изображение…',
+    'This picture could not be opened. Save it as PNG or JPG and try again.':
+      'Не удалось открыть изображение. Сохраните его как PNG или JPG и попробуйте снова.',
     '{brand} logo': 'Логотип {brand}',
     Replace: 'Заменить',
     'Upload logo': 'Загрузить логотип',

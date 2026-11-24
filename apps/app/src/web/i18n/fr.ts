@@ -3,47 +3,61 @@ import type { Dict } from '../i18n.ts'
 export const fr: Dict = {
   strings: {
     // Update details: the corner card opened.
-    "Posts checked for comments: {n}": "Publications vérifiées : {n}",
-    "Older posts with fresh numbers: {n}": "Anciennes publications aux chiffres mis à jour : {n}",
-    "Update started": "Mise à jour lancée",
-    "The AI reached its usage limit, so this update moves to {time}.": "L’IA a atteint sa limite : cette mise à jour est reportée à {time}.",
-    "A TikTok page did not load at first, so a private browser opened it instead.": "Une page TikTok ne s’est pas chargée tout de suite : un navigateur privé l’a ouverte.",
-    "{n} Facebook posts read from the connected Page": "{n} publications Facebook lues depuis la Page connectée",
-    "Show what the update is doing": "Voir ce que fait la mise à jour",
-    "Show details": "Voir les détails",
-    "What happened": "Ce qui s’est passé",
-    "Update details": "Détails de la mise à jour",
-    "Loading the update…": "Chargement de la mise à jour…",
-    "Reading {brand} on {network}": "Lecture de {brand} sur {network}",
-    "Read the accounts ({n} of {total})": "Lecture des comptes ({n} sur {total})",
-    "Read the accounts": "Lecture des comptes",
-    "Sort new comments with AI": "Tri des nouveaux commentaires par l’IA",
-    "Write the report": "Rédaction du rapport",
-    "{pct}% · running for {time}": "{pct} % · en cours depuis {time}",
-    "Took {time}": "Durée : {time}",
-    "Accounts read: {n}": "Comptes lus : {n}",
-    "New comments: {n}": "Nouveaux commentaires : {n}",
-    "Needs attention: {n}": "À vérifier : {n}",
-    "No problems": "Aucun problème",
-    "Nothing has happened yet. The first account opens in a moment.": "Rien ne s’est encore passé. Le premier compte s’ouvre dans un instant.",
-    "Technical log": "Journal technique",
-    "TikTok asked for a pause, so its pages open in a private browser instead. Slower, but nothing is wrong.": "TikTok a demandé une pause : ses pages s’ouvrent donc dans un navigateur privé. C’est plus lent, mais tout va bien.",
-    "New comments found: {n}": "Nouveaux commentaires trouvés : {n}",
-    "{n} Facebook posts and their numbers, from Meta's official data": "{n} publications Facebook et leurs chiffres, depuis les données officielles de Meta",
-    "Meta shares how many comments there are this way, not their text.": "Par cette voie, Meta donne le nombre de commentaires, pas leur texte.",
-    "{n} Instagram posts and their numbers, from Meta's official data": "{n} publications Instagram et leurs chiffres, depuis les données officielles de Meta",
-    "{network} could not be read this time": "{network} n’a pas pu être lu cette fois",
-    "{network} comments were read less than {h} hours ago, so only the numbers are refreshed.": "Les commentaires {network} ont été lus il y a moins de {h} h : seuls les chiffres sont mis à jour.",
-    "AI sorts the new comments by topic and mood: {n} so far": "L’IA trie les nouveaux commentaires par sujet et ton : {n} pour l’instant",
-    "The AI reached its usage limit. Sorting goes on by itself after {time}.": "L’IA a atteint sa limite d’utilisation. Le tri reprend tout seul après {time}.",
-    "AI sorting paused": "Tri par l’IA en pause",
-    "Posts added to their campaigns: {n}": "Publications ajoutées à leurs campagnes : {n}",
-    "Comments older than {d} days cleared out, as set in Settings: {n}": "Commentaires de plus de {d} jours supprimés, comme réglé dans les paramètres : {n}",
-    "Stopped as asked. Everything read until then is kept.": "Arrêtée comme demandé. Tout ce qui a été lu est conservé.",
-    "Finished": "Terminé",
-    "{network}: the official route said no, so the page is read from the web instead": "{network} : la voie officielle a refusé, la page est donc lue depuis le web",
-    "{n} s": "{n} s",
-    "{h} h {m} min": "{h} h {m} min",
+    'Posts checked for comments: {n}': 'Publications vérifiées : {n}',
+    'Older posts with fresh numbers: {n}': 'Anciennes publications aux chiffres mis à jour : {n}',
+    'Update started': 'Mise à jour lancée',
+    'The AI reached its usage limit, so this update moves to {time}.':
+      'L’IA a atteint sa limite : cette mise à jour est reportée à {time}.',
+    'A TikTok page did not load at first, so a private browser opened it instead.':
+      'Une page TikTok ne s’est pas chargée tout de suite : un navigateur privé l’a ouverte.',
+    '{n} Facebook posts read from the connected Page':
+      '{n} publications Facebook lues depuis la Page connectée',
+    'Show what the update is doing': 'Voir ce que fait la mise à jour',
+    'Show details': 'Voir les détails',
+    'What happened': 'Ce qui s’est passé',
+    'Update details': 'Détails de la mise à jour',
+    'Loading the update…': 'Chargement de la mise à jour…',
+    'Reading {brand} on {network}': 'Lecture de {brand} sur {network}',
+    'Read the accounts ({n} of {total})': 'Lecture des comptes ({n} sur {total})',
+    'Read the accounts': 'Lecture des comptes',
+    'Sort new comments with AI': 'Tri des nouveaux commentaires par l’IA',
+    'Write the report': 'Rédaction du rapport',
+    '{pct}% · running for {time}': '{pct} % · en cours depuis {time}',
+    'Took {time}': 'Durée : {time}',
+    'Accounts read: {n}': 'Comptes lus : {n}',
+    'New comments: {n}': 'Nouveaux commentaires : {n}',
+    'Needs attention: {n}': 'À vérifier : {n}',
+    'No problems': 'Aucun problème',
+    'Nothing has happened yet. The first account opens in a moment.':
+      'Rien ne s’est encore passé. Le premier compte s’ouvre dans un instant.',
+    'Technical log': 'Journal technique',
+    'TikTok asked for a pause, so its pages open in a private browser instead. Slower, but nothing is wrong.':
+      'TikTok a demandé une pause : ses pages s’ouvrent donc dans un navigateur privé. C’est plus lent, mais tout va bien.',
+    'New comments found: {n}': 'Nouveaux commentaires trouvés : {n}',
+    "{n} Facebook posts and their numbers, from Meta's official data":
+      '{n} publications Facebook et leurs chiffres, depuis les données officielles de Meta',
+    'Meta shares how many comments there are this way, not their text.':
+      'Par cette voie, Meta donne le nombre de commentaires, pas leur texte.',
+    "{n} Instagram posts and their numbers, from Meta's official data":
+      '{n} publications Instagram et leurs chiffres, depuis les données officielles de Meta',
+    '{network} could not be read this time': '{network} n’a pas pu être lu cette fois',
+    '{network} comments were read less than {h} hours ago, so only the numbers are refreshed.':
+      'Les commentaires {network} ont été lus il y a moins de {h} h : seuls les chiffres sont mis à jour.',
+    'AI sorts the new comments by topic and mood: {n} so far':
+      'L’IA trie les nouveaux commentaires par sujet et ton : {n} pour l’instant',
+    'The AI reached its usage limit. Sorting goes on by itself after {time}.':
+      'L’IA a atteint sa limite d’utilisation. Le tri reprend tout seul après {time}.',
+    'AI sorting paused': 'Tri par l’IA en pause',
+    'Posts added to their campaigns: {n}': 'Publications ajoutées à leurs campagnes : {n}',
+    'Comments older than {d} days cleared out, as set in Settings: {n}':
+      'Commentaires de plus de {d} jours supprimés, comme réglé dans les paramètres : {n}',
+    'Stopped as asked. Everything read until then is kept.':
+      'Arrêtée comme demandé. Tout ce qui a été lu est conservé.',
+    Finished: 'Terminé',
+    '{network}: the official route said no, so the page is read from the web instead':
+      '{network} : la voie officielle a refusé, la page est donc lue depuis le web',
+    '{n} s': '{n} s',
+    '{h} h {m} min': '{h} h {m} min',
     // Stories, the plan and the competitor limit.
     Expired: 'Expirée',
     'Live, ends within the hour': 'En ligne, disparaît dans l’heure',
@@ -1245,8 +1259,11 @@ export const fr: Dict = {
     'No such rival.': "Ce concurrent n'existe pas.",
     'Report branding': 'Identité des rapports',
     Logo: 'Logo',
-    'PNG, JPG or SVG, up to 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.':
-      'PNG, JPG ou SVG, jusqu’à 1 Mo. Il remplace le logo SocialMonitor en haut des rapports PDF.',
+    'Any picture or SVG. A large one is made smaller to fit 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.':
+      'Toute image ou SVG. Une grande image est réduite pour tenir dans 1 Mo. Il remplace le logo SocialMonitor en haut des rapports PDF.',
+    'Optimizing photo…': 'Optimisation de l’image…',
+    'This picture could not be opened. Save it as PNG or JPG and try again.':
+      'Impossible d’ouvrir cette image. Enregistrez-la en PNG ou JPG et réessayez.',
     '{brand} logo': 'Logo de {brand}',
     Replace: 'Remplacer',
     'Upload logo': 'Importer le logo',

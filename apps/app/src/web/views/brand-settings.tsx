@@ -7,6 +7,14 @@ import { RUN } from '../../core/types.ts'
 import { api } from '../api.ts'
 import { BadReport } from '../bad-report.tsx'
 import { t } from '../i18n.ts'
+import { browserCodec, fitImage } from '../fit-image.ts'
+
+/** The server keeps logos up to 1 MB; larger ones are made smaller here first. */
+const LOGO_FIT = {
+  maxBytes: 1024 * 1024,
+  maxEdge: 2048,
+  keep: ['image/png', 'image/jpeg', 'image/webp'],
+}
 import { NETWORK_NAME, NetworkMark, Row, Segmented, when } from '../ui.tsx'
 import { brandCategories } from '../rate.tsx'
 import {
@@ -609,11 +617,22 @@ function ReportBranding({ brand, reload, notify }: Pick<BrandView, 'brand' | 're
       setBusy(false)
     }
   }
-  const upload = (f: File) => {
-    if (f.size > 1024 * 1024) return notify(t('The logo is larger than 1 MB.'))
+  const [fitting, setFitting] = useState(false)
+  const upload = async (f: File) => {
+    let fit: Blob | null = f
+    if (f.type !== 'image/svg+xml') {
+      setFitting(true)
+      try {
+        fit = await fitImage(f, LOGO_FIT, browserCodec)
+      } finally {
+        setFitting(false)
+      }
+    }
+    if (!fit)
+      return notify(t('This picture could not be opened. Save it as PNG or JPG and try again.'))
     const r = new FileReader()
     r.onload = () => void save({ logo: String(r.result) }, t('Logo saved.'))
-    r.readAsDataURL(f)
+    r.readAsDataURL(fit)
   }
   const setColor = (v: string) => {
     const c = validColor(v)
@@ -630,7 +649,7 @@ function ReportBranding({ brand, reload, notify }: Pick<BrandView, 'brand' | 're
       <Row
         label={t('Logo')}
         hint={t(
-          'PNG, JPG or SVG, up to 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.',
+          'Any picture or SVG. A large one is made smaller to fit 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.',
         )}
       >
         <span class="sm-inline sm-brandlogo">
@@ -640,10 +659,10 @@ function ReportBranding({ brand, reload, notify }: Pick<BrandView, 'brand' | 're
           <button
             class="g-btn g-btn--sm"
             type="button"
-            disabled={busy}
+            disabled={busy || fitting}
             onClick={() => file.current?.click()}
           >
-            {brand.report_logo ? t('Replace') : t('Upload logo')}
+            {fitting ? t('Optimizing photo…') : brand.report_logo ? t('Replace') : t('Upload logo')}
           </button>
           {brand.report_logo && (
             <button
@@ -658,11 +677,11 @@ function ReportBranding({ brand, reload, notify }: Pick<BrandView, 'brand' | 're
           <input
             ref={file}
             type="file"
-            accept="image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg"
+            accept="image/*,.heic,.heif"
             hidden
             onChange={(e) => {
               const f = (e.target as HTMLInputElement).files?.[0]
-              if (f) upload(f)
+              if (f) void upload(f)
               ;(e.target as HTMLInputElement).value = ''
             }}
           />

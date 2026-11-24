@@ -14,10 +14,13 @@ import { validColor } from './color.ts'
 export const LOGO_MAX = 1024 * 1024
 
 /** What a picture is, from its first bytes; the type it claims is not trusted. */
-export function sniff(data: Buffer): 'png' | 'jpg' | 'svg' | null {
+export function sniff(data: Buffer): 'png' | 'jpg' | 'webp' | 'svg' | null {
   if (data.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])))
     return 'png'
   if (data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) return 'jpg'
+  // The dashboard sends a large picture as WebP, made smaller to fit.
+  if (data.toString('latin1', 0, 4) === 'RIFF' && data.toString('latin1', 8, 12) === 'WEBP')
+    return 'webp'
   // SVG is text: an <svg> root, after an optional BOM, XML declaration, doctype or comments.
   // (JavaScript's \s covers the BOM.)
   const head = data.subarray(0, 4096).toString('utf8')

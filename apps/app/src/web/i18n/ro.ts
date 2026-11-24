@@ -3,47 +3,61 @@ import type { Dict } from '../i18n.ts'
 export const ro: Dict = {
   strings: {
     // Update details: the corner card opened.
-    "Posts checked for comments: {n}": "Postări verificate pentru comentarii: {n}",
-    "Older posts with fresh numbers: {n}": "Postări mai vechi cu cifre noi: {n}",
-    "Update started": "Actualizarea a început",
-    "The AI reached its usage limit, so this update moves to {time}.": "AI a atins limita de utilizare, așa că actualizarea se mută la {time}.",
-    "A TikTok page did not load at first, so a private browser opened it instead.": "O pagină TikTok nu s-a încărcat din prima, așa că a deschis-o un browser privat.",
-    "{n} Facebook posts read from the connected Page": "{n} postări Facebook citite de pe pagina conectată",
-    "Show what the update is doing": "Arată ce face actualizarea",
-    "Show details": "Arată detaliile",
-    "What happened": "Ce s-a întâmplat",
-    "Update details": "Detaliile actualizării",
-    "Loading the update…": "Se încarcă actualizarea…",
-    "Reading {brand} on {network}": "Se citește {brand} pe {network}",
-    "Read the accounts ({n} of {total})": "Citirea conturilor ({n} din {total})",
-    "Read the accounts": "Citirea conturilor",
-    "Sort new comments with AI": "Sortarea comentariilor noi cu AI",
-    "Write the report": "Scrierea raportului",
-    "{pct}% · running for {time}": "{pct}% · rulează de {time}",
-    "Took {time}": "A durat {time}",
-    "Accounts read: {n}": "Conturi citite: {n}",
-    "New comments: {n}": "Comentarii noi: {n}",
-    "Needs attention: {n}": "Necesită atenție: {n}",
-    "No problems": "Nicio problemă",
-    "Nothing has happened yet. The first account opens in a moment.": "Încă nu s-a întâmplat nimic. Primul cont se deschide imediat.",
-    "Technical log": "Jurnal tehnic",
-    "TikTok asked for a pause, so its pages open in a private browser instead. Slower, but nothing is wrong.": "TikTok a cerut o pauză, așa că paginile lui se deschid într-un browser privat. E mai lent, dar nu e nicio problemă.",
-    "New comments found: {n}": "Comentarii noi găsite: {n}",
-    "{n} Facebook posts and their numbers, from Meta's official data": "{n} postări Facebook și cifrele lor, din datele oficiale Meta",
-    "Meta shares how many comments there are this way, not their text.": "Pe această cale Meta dă numărul comentariilor, nu și textul lor.",
-    "{n} Instagram posts and their numbers, from Meta's official data": "{n} postări Instagram și cifrele lor, din datele oficiale Meta",
-    "{network} could not be read this time": "{network} nu a putut fi citit de data aceasta",
-    "{network} comments were read less than {h} hours ago, so only the numbers are refreshed.": "Comentariile de pe {network} au fost citite acum mai puțin de {h} ore, așa că se actualizează doar cifrele.",
-    "AI sorts the new comments by topic and mood: {n} so far": "AI sortează comentariile noi după subiect și ton: {n} până acum",
-    "The AI reached its usage limit. Sorting goes on by itself after {time}.": "AI a atins limita de utilizare. Sortarea continuă singură după {time}.",
-    "AI sorting paused": "Sortarea cu AI e pe pauză",
-    "Posts added to their campaigns: {n}": "Postări adăugate în campanii: {n}",
-    "Comments older than {d} days cleared out, as set in Settings: {n}": "Comentarii mai vechi de {d} zile șterse, conform setărilor: {n}",
-    "Stopped as asked. Everything read until then is kept.": "Oprită la cerere. Tot ce s-a citit până atunci se păstrează.",
-    "Finished": "Gata",
-    "{network}: the official route said no, so the page is read from the web instead": "{network}: calea oficială a refuzat, așa că pagina se citește de pe web",
-    "{n} s": "{n} s",
-    "{h} h {m} min": "{h} h {m} min",
+    'Posts checked for comments: {n}': 'Postări verificate pentru comentarii: {n}',
+    'Older posts with fresh numbers: {n}': 'Postări mai vechi cu cifre noi: {n}',
+    'Update started': 'Actualizarea a început',
+    'The AI reached its usage limit, so this update moves to {time}.':
+      'AI a atins limita de utilizare, așa că actualizarea se mută la {time}.',
+    'A TikTok page did not load at first, so a private browser opened it instead.':
+      'O pagină TikTok nu s-a încărcat din prima, așa că a deschis-o un browser privat.',
+    '{n} Facebook posts read from the connected Page':
+      '{n} postări Facebook citite de pe pagina conectată',
+    'Show what the update is doing': 'Arată ce face actualizarea',
+    'Show details': 'Arată detaliile',
+    'What happened': 'Ce s-a întâmplat',
+    'Update details': 'Detaliile actualizării',
+    'Loading the update…': 'Se încarcă actualizarea…',
+    'Reading {brand} on {network}': 'Se citește {brand} pe {network}',
+    'Read the accounts ({n} of {total})': 'Citirea conturilor ({n} din {total})',
+    'Read the accounts': 'Citirea conturilor',
+    'Sort new comments with AI': 'Sortarea comentariilor noi cu AI',
+    'Write the report': 'Scrierea raportului',
+    '{pct}% · running for {time}': '{pct}% · rulează de {time}',
+    'Took {time}': 'A durat {time}',
+    'Accounts read: {n}': 'Conturi citite: {n}',
+    'New comments: {n}': 'Comentarii noi: {n}',
+    'Needs attention: {n}': 'Necesită atenție: {n}',
+    'No problems': 'Nicio problemă',
+    'Nothing has happened yet. The first account opens in a moment.':
+      'Încă nu s-a întâmplat nimic. Primul cont se deschide imediat.',
+    'Technical log': 'Jurnal tehnic',
+    'TikTok asked for a pause, so its pages open in a private browser instead. Slower, but nothing is wrong.':
+      'TikTok a cerut o pauză, așa că paginile lui se deschid într-un browser privat. E mai lent, dar nu e nicio problemă.',
+    'New comments found: {n}': 'Comentarii noi găsite: {n}',
+    "{n} Facebook posts and their numbers, from Meta's official data":
+      '{n} postări Facebook și cifrele lor, din datele oficiale Meta',
+    'Meta shares how many comments there are this way, not their text.':
+      'Pe această cale Meta dă numărul comentariilor, nu și textul lor.',
+    "{n} Instagram posts and their numbers, from Meta's official data":
+      '{n} postări Instagram și cifrele lor, din datele oficiale Meta',
+    '{network} could not be read this time': '{network} nu a putut fi citit de data aceasta',
+    '{network} comments were read less than {h} hours ago, so only the numbers are refreshed.':
+      'Comentariile de pe {network} au fost citite acum mai puțin de {h} ore, așa că se actualizează doar cifrele.',
+    'AI sorts the new comments by topic and mood: {n} so far':
+      'AI sortează comentariile noi după subiect și ton: {n} până acum',
+    'The AI reached its usage limit. Sorting goes on by itself after {time}.':
+      'AI a atins limita de utilizare. Sortarea continuă singură după {time}.',
+    'AI sorting paused': 'Sortarea cu AI e pe pauză',
+    'Posts added to their campaigns: {n}': 'Postări adăugate în campanii: {n}',
+    'Comments older than {d} days cleared out, as set in Settings: {n}':
+      'Comentarii mai vechi de {d} zile șterse, conform setărilor: {n}',
+    'Stopped as asked. Everything read until then is kept.':
+      'Oprită la cerere. Tot ce s-a citit până atunci se păstrează.',
+    Finished: 'Gata',
+    '{network}: the official route said no, so the page is read from the web instead':
+      '{network}: calea oficială a refuzat, așa că pagina se citește de pe web',
+    '{n} s': '{n} s',
+    '{h} h {m} min': '{h} h {m} min',
     // Stories, the plan and the competitor limit.
     Expired: 'Expirat',
     'Live, ends within the hour': 'Activ, dispare în mai puțin de o oră',
@@ -1245,8 +1259,11 @@ export const ro: Dict = {
     'No such rival.': 'Acest concurent nu există.',
     'Report branding': 'Identitatea rapoartelor',
     Logo: 'Logo',
-    'PNG, JPG or SVG, up to 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.':
-      'PNG, JPG sau SVG, până la 1 MB. Înlocuiește logoul SocialMonitor în partea de sus a rapoartelor PDF.',
+    'Any picture or SVG. A large one is made smaller to fit 1 MB. It replaces the SocialMonitor logo at the top of PDF reports.':
+      'Orice imagine sau SVG. Una mare este micșorată ca să încapă în 1 MB. Înlocuiește logoul SocialMonitor în partea de sus a rapoartelor PDF.',
+    'Optimizing photo…': 'Se optimizează imaginea…',
+    'This picture could not be opened. Save it as PNG or JPG and try again.':
+      'Imaginea nu a putut fi deschisă. Salveaz-o ca PNG sau JPG și încearcă din nou.',
     '{brand} logo': 'Logoul {brand}',
     Replace: 'Înlocuiește',
     'Upload logo': 'Încarcă logoul',
