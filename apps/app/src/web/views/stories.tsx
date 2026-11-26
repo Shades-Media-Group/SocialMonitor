@@ -245,7 +245,12 @@ export function Stories({ brand, mode, version, me }: BrandView) {
     }
   }, [])
 
-  if (failed && !v) return <Empty title={t('The stories did not load.')}>{failed}</Empty>
+  if (failed && !v)
+    return (
+      <Empty art="error" title={t('The stories did not load.')}>
+        {failed}
+      </Empty>
+    )
   if (!v) return null
   if (mode === 'json') return <JsonPanel value={v} />
 
@@ -400,11 +405,11 @@ export function Stories({ brand, mode, version, me }: BrandView) {
             )}
             {!v.stories.length &&
               (v.accounts.some((a) => a.total > 0) ? (
-                <Empty title={t('No stories match these filters.')}>
+                <Empty art="filter" title={t('No stories match these filters.')}>
                   {t('Clear a filter to see more.')}
                 </Empty>
               ) : (
-                <Empty title={t('No stories kept yet.')}>
+                <Empty art="photo" title={t('No stories kept yet.')}>
                   {t(
                     'Stories last a day. SocialMonitor checks every three hours and keeps each one it finds, with its video or picture, after it is gone. They show here, newest first.',
                   )}
@@ -915,7 +920,12 @@ function StoryStats({ brandId, version }: { brandId: number; version: number }) 
       .then(setS)
       .catch((e: Error) => setFailed(e.message))
   }, [brandId, days, version])
-  if (failed && !s) return <Empty title={t('The figures did not load.')}>{failed}</Empty>
+  if (failed && !s)
+    return (
+      <Empty art="people-error" title={t('The figures did not load.')}>
+        {failed}
+      </Empty>
+    )
   if (!s) return null
   const any = s.series.some((x) => x.total > 0)
   const weekdays = Array.from({ length: 7 }, (_, d) =>
@@ -943,7 +953,7 @@ function StoryStats({ brandId, version }: { brandId: number; version: number }) 
         </select>
       </div>
       {!any ? (
-        <Empty title={t('No stories in this period yet.')}>
+        <Empty art="chart" title={t('No stories in this period yet.')}>
           {t(
             'Each story kept counts here: how often every account posts, at what hours, what kind of story, and whom it names.',
           )}

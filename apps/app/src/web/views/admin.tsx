@@ -443,7 +443,12 @@ function Usage({ brand, mode, version }: BrandView) {
       .catch((e: Error) => setFailed(e.message))
   }, [brand.id, version])
 
-  if (failed) return <Empty title={t('The figures did not load.')}>{failed}</Empty>
+  if (failed)
+    return (
+      <Empty art="people-offline" title={t('The figures did not load.')}>
+        {failed}
+      </Empty>
+    )
   if (!u) return null
   if (mode === 'json') return <JsonPanel value={u} />
 
@@ -524,7 +529,7 @@ function Usage({ brand, mode, version }: BrandView) {
         <>
           <div class="sm-layout">
             <div class="sm-span-8">
-              <Empty title={t('No AI usage recorded yet.')}>
+              <Empty art="nothing" title={t('No AI usage recorded yet.')}>
                 {t(
                   'Recording starts with this release: the next update, summary or reply draft shows here.',
                 )}

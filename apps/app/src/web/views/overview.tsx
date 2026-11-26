@@ -1,3 +1,4 @@
+import { Illustration } from '../illustration.tsx'
 import { useEffect, useState } from 'preact/hooks'
 import type { BrandView } from '../app.tsx'
 import type { CommentRow, Network, PostRow, Profile } from '../api.ts'
@@ -379,6 +380,7 @@ export function Overview(v: BrandView) {
   if (total === 0)
     return (
       <div class="sm-empty sm-empty--page">
+        <Illustration name="people-welcome" />
         <p class="sm-empty__title">
           {network
             ? t('Nothing read on {network} yet.', { network: NETWORK_NAME[network] })

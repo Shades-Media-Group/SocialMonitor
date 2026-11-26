@@ -185,7 +185,7 @@ export function Reports(view: BrandView) {
         <SavedFiles brand={brand} version={version} notify={notify} />
         <GrowthBox {...view} />
         <CampaignBox brand={brand} version={version} />
-        <Empty title={t('No reports yet.')}>
+        <Empty art="folder" title={t('No reports yet.')}>
           {t(
             'Every update ends with one: the posts read, the comments to answer, and what changed.',
           )}{' '}

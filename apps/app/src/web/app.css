@@ -1184,6 +1184,25 @@
   color: var(--g-text-3);
   font-size: 14px;
 }
+/* Gradient's spot drawing above an empty state: objects about 200 px, people about 300 px. */
+.sm-ill {
+  display: block;
+  justify-self: center;
+  width: min(200px, 60%);
+  margin: 0 auto 6px;
+  line-height: 0;
+}
+.sm-ill--people {
+  width: min(300px, 82%);
+}
+.sm-ill > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.sm-empty:has(> .sm-ill) {
+  justify-items: center;
+}
 
 /* The JSON side of a screen. Monospace, because it is code someone edits. */
 .sm-json {

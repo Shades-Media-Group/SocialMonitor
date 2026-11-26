@@ -59,7 +59,9 @@ export function Stats({ brand, network, days, version }: BrandView) {
   if (posts === null) return null
   if (!posts.length)
     return (
-      <Empty title={t('No posts yet.')}>{t('Read the latest posts and their comments.')}</Empty>
+      <Empty art="people-chart" title={t('No posts yet.')}>
+        {t('Read the latest posts and their comments.')}
+      </Empty>
     )
 
   const since = days ? new Date(Date.now() - days * 86400_000).toISOString() : ''

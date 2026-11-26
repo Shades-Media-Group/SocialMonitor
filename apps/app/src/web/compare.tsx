@@ -156,7 +156,7 @@ export function Compare({ brands, mode, actions, notify, version }: AppState) {
       </Head>
       <div class="sm-body sm-stack">
         {ids.length < 2 ? (
-          <Empty title={t('Choose two brands or more.')}>
+          <Empty art="people-pick" title={t('Choose two brands or more.')}>
             {t('Pick up to four above to see them side by side.')}
           </Empty>
         ) : !rows ? null : mode === 'json' ? (

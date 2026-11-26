@@ -43,7 +43,7 @@ export function Voice({ brand, network, days, version, mode }: BrandView) {
   if (!rows || !rivals) return null
   if (rows.length < 2)
     return (
-      <Empty title={t('No rivals yet.')}>
+      <Empty art="people-team" title={t('No rivals yet.')}>
         {brand.my_role === 'admin' ? (
           <>
             {t('Add the brands you compete with in Settings, then press Update.')}{' '}

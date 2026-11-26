@@ -1,3 +1,4 @@
+import { Illustration } from './illustration.tsx'
 import { useEffect, useState } from 'preact/hooks'
 import type { IconName } from 'shades-gradient'
 import type { AppState } from './app.tsx'
@@ -142,6 +143,7 @@ export function Home({
           <NewBrand reload={reload} notify={notify} />
         ) : (
           <div class="sm-empty sm-empty--page">
+            <Illustration name="people-locked" />
             <p class="sm-empty__title">{t('No brands for you yet.')}</p>
             <p class="sm-empty__body">{t('Ask an admin to give you access to a brand.')}</p>
           </div>

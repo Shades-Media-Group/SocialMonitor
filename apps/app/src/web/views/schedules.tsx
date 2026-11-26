@@ -158,7 +158,7 @@ export function Schedules({ brand, brands, notify, mode }: BrandView) {
         </ul>
       ) : (
         !form && (
-          <Empty title={t('No schedules.')}>
+          <Empty art="people-calendar" title={t('No schedules.')}>
             {t('Add one to update a brand every few hours, daily, or at set times.')}
           </Empty>
         )

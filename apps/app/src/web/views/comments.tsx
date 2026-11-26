@@ -818,7 +818,7 @@ export function Comments({
           </Scroller>
         )
       ) : (
-        <Empty title={t('No comments match.')}>
+        <Empty art="people-search" title={t('No comments match.')}>
           {t('Change the filters, or press Update to read new ones.')}
         </Empty>
       )}

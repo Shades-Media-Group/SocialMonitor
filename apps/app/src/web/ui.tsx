@@ -5,6 +5,7 @@ import { renderIcon } from 'shades-gradient'
 import { MARK, WORDMARK } from './brand.ts'
 import type { Network } from './api.ts'
 import { lang, locale, noun, t } from './i18n.ts'
+import { Illustration, type ArtName } from './illustration.tsx'
 
 const MARK_FILLS = ['var(--sm-red)', 'var(--sm-rose)', 'var(--sm-ink)']
 
@@ -151,9 +152,18 @@ export const Head = ({
   </header>
 )
 
-/** Two lines: what to do, and what you'll get. */
-export const Empty = ({ title, children }: { title: string; children?: ComponentChildren }) => (
+/** The drawing that means this screen, then two lines: what to do, and what you'll get. */
+export const Empty = ({
+  title,
+  art,
+  children,
+}: {
+  title: string
+  art: ArtName
+  children?: ComponentChildren
+}) => (
   <div class="sm-empty">
+    <Illustration name={art} />
     <p class="sm-empty__title">{title}</p>
     {children && <p class="sm-empty__body">{children}</p>}
   </div>

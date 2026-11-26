@@ -243,7 +243,12 @@ export function Ads({ brand, mode, version }: BrandView) {
     return () => clearInterval(timer)
   }, [live])
 
-  if (failed && !v) return <Empty title={t('The ads did not load.')}>{failed}</Empty>
+  if (failed && !v)
+    return (
+      <Empty art="offline" title={t('The ads did not load.')}>
+        {failed}
+      </Empty>
+    )
   if (!v) return null
   if (mode === 'json') return <JsonPanel value={v} />
 
@@ -486,11 +491,11 @@ export function Ads({ brand, mode, version }: BrandView) {
           )}
           {!v.ads.length &&
             (v.advertisers.some((a) => a.total > 0) ? (
-              <Empty title={t('No ads match these filters.')}>
+              <Empty art="people-lookup" title={t('No ads match these filters.')}>
                 {t('Clear a filter to see more.')}
               </Empty>
             ) : (
-              <Empty title={t('Nothing read yet.')}>
+              <Empty art="inbox" title={t('Nothing read yet.')}>
                 {t('Press Update ads to read what the Ad Library shows for these Pages.')}
               </Empty>
             ))}
@@ -817,7 +822,7 @@ function Advertisers({
           </table>
         </div>
       ) : (
-        <Empty title={t('No Pages yet.')}>
+        <Empty art="people-empty" title={t('No Pages yet.')}>
           {t(
             'Add the brand’s own Facebook Page and its competitors’ by Page ID. The Ad Library link of a Page carries it after view_all_page_id=.',
           )}

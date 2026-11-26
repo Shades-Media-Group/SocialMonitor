@@ -255,7 +255,7 @@ export function Posts({
     )
   if (!all.length)
     return (
-      <Empty title={t('No posts yet.')}>
+      <Empty art="people-inbox" title={t('No posts yet.')}>
         {t('Read the latest posts and their comments.')}{' '}
         <button class="sm-textbtn" type="button" onClick={() => openUpdate(brand.id)}>
           {t('Update now')}
@@ -302,7 +302,9 @@ export function Posts({
       {rows.length > 1 && <WhatWorks rows={rows} />}
       <PostIdeas brand={brand} notify={notify} />
       {!rows.length ? (
-        <Empty title={t('No posts in this period.')}>{t('Choose a longer period above.')}</Empty>
+        <Empty art="calendar" title={t('No posts in this period.')}>
+          {t('Choose a longer period above.')}
+        </Empty>
       ) : look === 'table' ? (
         <section class="sm-box">
           <header class="sm-box__head">
