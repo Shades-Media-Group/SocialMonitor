@@ -59,7 +59,7 @@ export function Stats({ brand, network, days, version }: BrandView) {
   if (posts === null) return null
   if (!posts.length)
     return (
-      <Empty art="people-chart" title={t('No posts yet.')}>
+      <Empty art="duo-chart" title={t('No posts yet.')}>
         {t('Read the latest posts and their comments.')}
       </Empty>
     )

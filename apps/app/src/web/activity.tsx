@@ -196,7 +196,7 @@ export function Activity({ brands, me, mode, actions }: AppState) {
       {mode === 'json' ? (
         <JsonPanel value={rows} />
       ) : data && !rows.length ? (
-        <Empty art="people-checklist" title={t('Nothing here yet')}>
+        <Empty art="duo-checklist" title={t('Nothing here yet')}>
           {t('Sign-ins, changes to people and brands, and downloads show up here as they happen.')}
         </Empty>
       ) : (

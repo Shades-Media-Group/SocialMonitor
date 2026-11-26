@@ -922,7 +922,7 @@ function StoryStats({ brandId, version }: { brandId: number; version: number }) 
   }, [brandId, days, version])
   if (failed && !s)
     return (
-      <Empty art="people-error" title={t('The figures did not load.')}>
+      <Empty art="duo-error" title={t('The figures did not load.')}>
         {failed}
       </Empty>
     )

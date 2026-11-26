@@ -255,7 +255,7 @@ export function Posts({
     )
   if (!all.length)
     return (
-      <Empty art="people-inbox" title={t('No posts yet.')}>
+      <Empty art="duo-inbox" title={t('No posts yet.')}>
         {t('Read the latest posts and their comments.')}{' '}
         <button class="sm-textbtn" type="button" onClick={() => openUpdate(brand.id)}>
           {t('Update now')}

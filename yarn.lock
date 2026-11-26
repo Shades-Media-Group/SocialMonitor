@@ -2604,9 +2604,9 @@ setprototypeof@~1.2.0:
   resolved "https://registry.yarnpkg.com/setprototypeof/-/setprototypeof-1.2.0.tgz#66c9a24a73f9fc28cbe66b09fed3d33dcaf1b424"
   integrity sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==
 
-"shades-gradient@https://github.com/Shades-Media-Group/gradient/releases/download/v0.16.0/shades-gradient-0.16.0.tgz":
-  version "0.16.0"
-  resolved "https://github.com/Shades-Media-Group/gradient/releases/download/v0.16.0/shades-gradient-0.16.0.tgz#d6fc64cf9ec9254061a6cde070504b9280aaa7b3"
+"shades-gradient@https://github.com/Shades-Media-Group/gradient/releases/download/v0.18.0/shades-gradient-0.18.0.tgz":
+  version "0.18.0"
+  resolved "https://github.com/Shades-Media-Group/gradient/releases/download/v0.18.0/shades-gradient-0.18.0.tgz#acdedc0fb8229776943e764759e682a51a3e596c"
 
 sharp@0.35.5:
   version "0.35.5"
